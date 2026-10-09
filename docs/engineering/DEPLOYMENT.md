@@ -27,4 +27,5 @@ Keep prior images and backward-compatible database migrations for rollback. Neve
 `release-images.yml` manually selects frontend/backend, checks successful CI and exports
 an image candidate; it does not upload to a registry or deploy. A separately approved
 production environment/release process must approve promotion after these checks, including `publication-hygiene`.
-No production deployment, publication, GPU work or training is authorized here.
+For the authorized Vercel/Render target, use the GitHub deployment workflow and
+[provider setup guide](VERCEL_RENDER.md). GPU work and training require their own scope.
