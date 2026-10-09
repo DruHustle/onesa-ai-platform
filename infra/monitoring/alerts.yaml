@@ -1,0 +1,24 @@
+# Load into the deployment's private Prometheus; routing and paging require operator setup.
+groups:
+  - name: onesa-platform
+    rules:
+      - alert: OnesaBackendDown
+        expr: up{job="onesa-api"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Onesa backend scrape unavailable"}
+      - alert: OnesaDependenciesUnavailable
+        expr: onesa_dependency_available == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Onesa readiness dependency unavailable"}
+      - alert: OnesaApiErrors
+        expr: sum(rate(onesa_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(onesa_http_requests_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Onesa API error rate exceeds 5 percent"}
+      - alert: OnesaInferenceFailures
+        expr: sum(rate(onesa_generation_total{status="failed"}[5m])) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Onesa inference requests are failing"}

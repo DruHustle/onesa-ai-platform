@@ -1,0 +1,80 @@
+name: onesa-platform
+services:
+  db:
+    image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+    environment:
+      POSTGRES_USER: onesa
+      POSTGRES_DB: onesa
+      POSTGRES_PASSWORD: ${ONESA_DB_PASSWORD:?Set ONESA_DB_PASSWORD in .env}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U onesa -d onesa"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    stop_grace_period: 135s
+    restart: unless-stopped
+  migrate:
+    build: {context: ./onesa-ai-platform-backend, dockerfile: Dockerfile}
+    environment: &api-env
+      ONESA_ENVIRONMENT: ${ONESA_ENVIRONMENT:-development}
+      ONESA_SESSION_HOURS: ${ONESA_SESSION_HOURS:-24}
+      ONESA_AUTH_PEER_RATE_LIMIT: ${ONESA_AUTH_PEER_RATE_LIMIT:-100}
+      ONESA_AUTH_HASH_CONCURRENCY: ${ONESA_AUTH_HASH_CONCURRENCY:-4}
+      ONESA_KNOWLEDGE_UPLOAD_CONCURRENCY: ${ONESA_KNOWLEDGE_UPLOAD_CONCURRENCY:-1}
+      ONESA_AUTH_RATE_LIMIT: ${ONESA_AUTH_RATE_LIMIT:-10}
+      ONESA_DATABASE_URL: postgresql+psycopg://onesa:${ONESA_DB_PASSWORD}@db:5432/onesa
+      ONESA_PUBLIC_ORIGIN: ${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}
+      ONESA_SECURE_COOKIES: ${ONESA_SECURE_COOKIES:-false}
+      ONESA_MODEL_BACKEND: ${ONESA_MODEL_BACKEND:-mock}
+      ONESA_MODEL_NAME: ${ONESA_MODEL_NAME:-Qwen/Qwen3-4B-Instruct-2507}
+      ONESA_MODEL_BASE_URL: ${ONESA_MODEL_BASE_URL:-http://inference:8000/v1}
+      ONESA_MODEL_API_KEY: ${ONESA_MODEL_API_KEY:-}
+      ONESA_MODEL_QUANTIZATION: ${ONESA_MODEL_QUANTIZATION:-}
+      ONESA_MODEL_REVISION: ${ONESA_MODEL_REVISION:-}
+      ONESA_MODEL_CONTEXT_LENGTH: ${ONESA_MODEL_CONTEXT_LENGTH:-8192}
+      ONESA_MODEL_MAX_OUTPUT_TOKENS: ${ONESA_MODEL_MAX_OUTPUT_TOKENS:-1024}
+      ONESA_MODEL_TEMPERATURE: ${ONESA_MODEL_TEMPERATURE:-0.7}
+      ONESA_GENERATION_TIMEOUT: ${ONESA_GENERATION_TIMEOUT:-60}
+      ONESA_EMBEDDING_BACKEND: ${ONESA_EMBEDDING_BACKEND:-lexical}
+      ONESA_EMBEDDING_NAME: ${ONESA_EMBEDDING_NAME:-onesa-lexical-256-v1}
+      ONESA_EMBEDDING_REVISION: ${ONESA_EMBEDDING_REVISION:-1}
+      ONESA_EMBEDDING_BASE_URL: ${ONESA_EMBEDDING_BASE_URL:-http://embeddings:8000/v1}
+      ONESA_EMBEDDING_API_KEY: ${ONESA_EMBEDDING_API_KEY:-}
+      ONESA_METRICS_TOKEN: ${ONESA_METRICS_TOKEN:-}
+    command: [alembic, upgrade, head]
+    healthcheck: {disable: true}
+    depends_on: {db: {condition: service_healthy}}
+  api:
+    build: {context: ./onesa-ai-platform-backend, dockerfile: Dockerfile}
+    environment: *api-env
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+    stop_grace_period: 135s
+    restart: unless-stopped
+  chat:
+    environment:
+      ONESA_PROXY_TIMEOUT_SECONDS: ${ONESA_PROXY_TIMEOUT_SECONDS:-135}
+      ONESA_API_URL: ${ONESA_API_URL:-http://api:8000}
+      ONESA_UI_LOCALE: ${ONESA_UI_LOCALE:-en}
+    build:
+      context: ./onesa-ai-platform-frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_ONESA_DOCUMENTATION_URL: ${NEXT_PUBLIC_ONESA_DOCUMENTATION_URL:-http://localhost:3200}
+        NEXT_PUBLIC_ONESA_ENGINEERING_DOCUMENTATION_URL: ${NEXT_PUBLIC_ONESA_ENGINEERING_DOCUMENTATION_URL:-http://localhost:3201}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+    ports: ["127.0.0.1:${ONESA_CHAT_PORT:-3100}:3000"]
+    depends_on: {api: {condition: service_healthy}}
+    stop_grace_period: 135s
+    restart: unless-stopped
+volumes:
+  postgres-data:

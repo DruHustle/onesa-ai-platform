@@ -1,0 +1,8 @@
+flowchart TB
+  Browser[Loopback web port 3100] --> Chat[Next.js container]
+  DB[(Private PostgreSQL)] --> Migration[Alembic migration]
+  Migration --> API[Private API - readiness gate]
+  Chat --> API
+  API --> DB
+  API --> Host[Native host inference gateway]
+  Static[Optional docs container - port 3200]

@@ -1,0 +1,6 @@
+flowchart TB
+Input[Destination / duration / budget / preferences] --> Planner[Shared mock or model planner]
+Planner --> Validate[Typed consecutive-day itinerary validation]
+Validate --> Save[Owned saved trip]
+Save --> Revise[Optimistic revision checks]
+Providers[Live providers - absent] -. unavailable .-> Planner

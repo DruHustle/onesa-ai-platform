@@ -1,0 +1,9 @@
+# Native host Ollama; no inference container and no published inference port.
+services:
+  api:
+    environment:
+      ONESA_MODEL_BACKEND: ollama
+      ONESA_MODEL_NAME: ${ONESA_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
+      ONESA_MODEL_BASE_URL: http://host.docker.internal:11434/v1
+      ONESA_MODEL_CONTEXT_LENGTH: ${ONESA_MODEL_CONTEXT_LENGTH:-8192}
+      ONESA_MODEL_QUANTIZATION: ${ONESA_MODEL_QUANTIZATION:-Q4_K_M}

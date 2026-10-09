@@ -1,0 +1,12 @@
+flowchart TB
+  Upload[Owned TXT or PDF upload] --> Parse[Validate and extract text]
+  Parse --> Chunk[Bounded chunking]
+  Chunk --> Embed[Versioned lexical embeddings - 256]
+  Embed --> PG[(pgvector storage)]
+  Question[User question] --> Query[Query embedding]
+  Query --> Retrieve[Owner and version filtered retrieval]
+  PG --> Retrieve
+  Retrieve --> Context[Untrusted attributed context]
+  Context --> Adapter[Shared model adapter]
+  Adapter --> Answer[Answer and persisted sources]
+  Semantic[Semantic HTTP adapter - unqualified] -. optional replacement .-> Embed

@@ -1,0 +1,59 @@
+{
+  "braces": {
+    "upstream_version": "3.0.3",
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "archive": "onesa-ai-platform-frontend/apps/docs/vendor/onesa-braces-3.0.3-onesa.2.tgz",
+    "archive_sha256": "b2e966b33be476507eace922d39036a9373a7ef9f13e3f3c697a8ab7d0acc3e5",
+    "npm_integrity": "sha512-HWuqefkGgW6i5R5+2vOoW5QooOHwzSmdgU01pCmd3voZHxxVuuRTQBmDZ87MOvEVEIn7s25fxfiOK3aPNNjDhQ==",
+    "source_files": {
+      "LICENSE": "35bdd8a44339719441900fb50fbefc5e2dca1ca662cbaed7a687de842c8b70f2",
+      "README.md": "b7e519f158fc96d6938ec9cc605443f7f110b8df9ab3918cc12030cc27ce1b8b",
+      "index.js": "332ea07c7b006361aad12aa994ca75dc1db8e8382b884909e2f38f10b85c88a4",
+      "lib/compile.js": "15042dc1f5558cc32e1ba25c52100aa9a5b35dc474ac78d1553153136525153e",
+      "lib/constants.js": "c18ac5adb57308f1ce42a28552da3a31f5d83709743ebd9a636336813a744d4b",
+      "lib/depth.js": "47d125be20677cb3704b8086484558ef0e127e4df4b12c8a626fb0ec7b92a6d3",
+      "lib/expand.js": "44fc59c050b6649397baa44cb3477fdca946bca948480f0a6d032529178ca506",
+      "lib/parse.js": "68c736c2645745bd3fb919f58193bd7362e8b3d44ecf11741d66bba232adde0e",
+      "lib/stringify.js": "db0934fc723e037bda736a2603f5c2e7953293280b31daa34618a6d09800e2a8",
+      "lib/utils.js": "b5a7596aa67730412b3c029ef09e84e6b67b8e445cffd35d1d295549c89066c7",
+      "package.json": "2cdace9a692b864d66681a8787ef974386e6db5429b66ac7b034ebd99120c3fe",
+      "security.patch": "3fade77957bf69cec621f8a637038d9c90ee3aa664d5aff1c84b91b54b763acc"
+    },
+    "shipped_files": {
+      "LICENSE": "35bdd8a44339719441900fb50fbefc5e2dca1ca662cbaed7a687de842c8b70f2",
+      "README.md": "b7e519f158fc96d6938ec9cc605443f7f110b8df9ab3918cc12030cc27ce1b8b",
+      "index.js": "332ea07c7b006361aad12aa994ca75dc1db8e8382b884909e2f38f10b85c88a4",
+      "lib/compile.js": "15042dc1f5558cc32e1ba25c52100aa9a5b35dc474ac78d1553153136525153e",
+      "lib/constants.js": "c18ac5adb57308f1ce42a28552da3a31f5d83709743ebd9a636336813a744d4b",
+      "lib/depth.js": "47d125be20677cb3704b8086484558ef0e127e4df4b12c8a626fb0ec7b92a6d3",
+      "lib/expand.js": "44fc59c050b6649397baa44cb3477fdca946bca948480f0a6d032529178ca506",
+      "lib/parse.js": "68c736c2645745bd3fb919f58193bd7362e8b3d44ecf11741d66bba232adde0e",
+      "lib/stringify.js": "db0934fc723e037bda736a2603f5c2e7953293280b31daa34618a6d09800e2a8",
+      "lib/utils.js": "b5a7596aa67730412b3c029ef09e84e6b67b8e445cffd35d1d295549c89066c7",
+      "package.json": "2cdace9a692b864d66681a8787ef974386e6db5429b66ac7b034ebd99120c3fe",
+      "security.patch": "3fade77957bf69cec621f8a637038d9c90ee3aa664d5aff1c84b91b54b763acc"
+    }
+  },
+  "sprintf-js": {
+    "upstream_version": "1.1.3",
+    "advisory": "GHSA-hp3w-g68c-fv3c",
+    "archive": "onesa-ai-platform-frontend/apps/docs/vendor/onesa-sprintf-js-1.1.3-onesa.2.tgz",
+    "archive_sha256": "b41f3efc1d1bd97d2703ad274666e887cdb161b8ba31ba2719f4487fdecb8d91",
+    "npm_integrity": "sha512-ODkMniV2u/je8+c23ZPJq9VouQtm4+LgEbulAla6ITkNU927idMEJu1tmcRGy/OQKvSwMZh0Hqr+Beg84jW4nA==",
+    "source_files": {
+      "LICENSE": "f8287e4dd9480be58c56aca4a55c23b782c43a86e69aabad78fff4df0d29edef",
+      "README.md": "56740fb988ed5bb14a83d04bab3c8e178277bfbb38f8b07f8b0fafc6ae3612c8",
+      "UPSTREAM_README.md": "7ad0f2cd7d75197c892c08dfa0321d7340197e5b6d090aafef791db3dc2f275b",
+      "package.json": "e86a2558ab44fa87aae4a2ea8964eb36c4fb2f20d7b169ea65ccd8a2f4b68bef",
+      "security.patch": "ea7bf9a056a191103a7b0ee5ca806fae738b3363bc65f08c518e0eca4e533890",
+      "src/sprintf.js": "1a381216e997617d8226d126994feeb07a84c94bf1b07979ae4fb34c9e6a7a3f"
+    },
+    "shipped_files": {
+      "LICENSE": "f8287e4dd9480be58c56aca4a55c23b782c43a86e69aabad78fff4df0d29edef",
+      "README.md": "56740fb988ed5bb14a83d04bab3c8e178277bfbb38f8b07f8b0fafc6ae3612c8",
+      "package.json": "e86a2558ab44fa87aae4a2ea8964eb36c4fb2f20d7b169ea65ccd8a2f4b68bef",
+      "security.patch": "ea7bf9a056a191103a7b0ee5ca806fae738b3363bc65f08c518e0eca4e533890",
+      "src/sprintf.js": "1a381216e997617d8226d126994feeb07a84c94bf1b07979ae4fb34c9e6a7a3f"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+erDiagram
+  document_chunks {
+    UUID document_id FK
+    INTEGER position
+    VARCHAR text
+    VARCHAR_256_ embedding_version
+    VECTOR_256_ embedding
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  documents {
+    UUID user_id FK
+    VARCHAR_200_ title
+    VARCHAR_80_ media_type
+    VARCHAR text
+    VARCHAR_64_ checksum
+    VARCHAR_256_ embedding_version
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  messages {
+    UUID conversation_id FK
+    VARCHAR_20_ role
+    JSONB content
+    VARCHAR_20_ status
+    INTEGER sequence
+    VARCHAR_80_ model_id
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  users {
+    VARCHAR_254_ email UK
+    VARCHAR_256_ password_hash
+    VARCHAR_80_ display_name
+    VARCHAR_20_ status
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  documents ||--o{ document_chunks : "document_id"
+  users ||--o{ documents : "user_id"

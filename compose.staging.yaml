@@ -1,0 +1,23 @@
+# Local mock rehearsal in a separate Compose namespace and database volume.
+services:
+  api:
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    pids_limit: 128
+  chat:
+    read_only: true
+    tmpfs: [/tmp, /app/apps/chat/.next/cache]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    pids_limit: 128
+    ports: !reset []
+  proxy:
+    image: caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    ports: ["127.0.0.1:${ONESA_STAGING_PORT:-3120}:8080", "127.0.0.1:${ONESA_BFF_STAGING_PORT:-3121}:8081"]
+    volumes: ["./infra/proxy/Caddyfile.staging:/etc/caddy/Caddyfile:ro"]
+    depends_on: {chat: {condition: service_healthy}}
+    restart: unless-stopped

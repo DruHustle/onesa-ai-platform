@@ -1,0 +1,55 @@
+name: Independent release candidate image
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: Application to package for reviewed deployment
+        type: choice
+        options: [frontend, backend]
+        required: true
+permissions:
+  contents: read
+  checks: read
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require successful checks on this exact revision
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runs = await github.paginate(github.rest.checks.listForRef, {
+              ...context.repo, ref: context.sha, per_page: 100
+            });
+            for (const name of ['backend', 'frontend', 'browser', 'documentation', 'containers', 'tls-acceptance', 'publication-hygiene']) {
+              const run = runs.filter(item => item.name === name).sort((a, b) => b.id - a.id)[0];
+              if (!run || run.conclusion !== 'success') core.setFailed(`Required successful check missing: ${name}`);
+            }
+      - name: Build selected application
+        env:
+          APPLICATION: ${{ inputs.application }}
+        run: docker build -t "onesa-${APPLICATION}:${GITHUB_SHA}" "onesa-ai-platform-${APPLICATION}"
+      - name: Export candidate
+        env:
+          APPLICATION: ${{ inputs.application }}
+        run: docker save "onesa-${APPLICATION}:${GITHUB_SHA}" -o candidate.tar
+      - name: Record candidate identity
+        env:
+          APPLICATION: ${{ inputs.application }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os, subprocess
+          from pathlib import Path
+          app, revision = os.environ['APPLICATION'], os.environ['GITHUB_SHA']
+          image = subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{.Id}}', f'onesa-{app}:{revision}'], text=True).strip()
+          Path('candidate.json').write_text(json.dumps({'application': app, 'source_revision': revision, 'image_id': image, 'publication_authorized': False}, indent=2) + '\n')
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onesa-${{ inputs.application }}-${{ github.sha }}
+          path: |
+            candidate.tar
+            candidate.json
+          retention-days: 7
+# Packaging only. A production environment approval and verified gates precede deployment.

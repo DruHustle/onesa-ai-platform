@@ -1,0 +1,21 @@
+{
+    auto_https disable_redirects
+}
+https://localhost:443 {
+    tls internal
+    @backend path /api/v1/* /health /ready
+    handle @backend {
+        reverse_proxy api:8000 {
+            flush_interval -1
+        }
+    }
+    handle {
+        reverse_proxy chat:3000 {
+            flush_interval -1
+        }
+    }
+    header Strict-Transport-Security "max-age=31536000"
+    header X-Content-Type-Options "nosniff"
+    header Referrer-Policy "same-origin"
+    header X-Frame-Options "DENY"
+}

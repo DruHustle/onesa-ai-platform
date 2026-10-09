@@ -1,0 +1,10 @@
+# Candidate versions from PyPI metadata; GPU/CUDA compatibility is NOT yet validated.
+# Install only in a separate, explicitly configured GPU training environment.
+torch==2.14.1
+transformers==5.19.0
+datasets==5.1.0
+peft==0.21.2
+trl==1.15.0
+accelerate==1.15.0
+bitsandbytes==0.50.2
+safetensors==0.8.0

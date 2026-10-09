@@ -1,0 +1,7 @@
+flowchart TB
+  API[Application API] -. proposed private routing .-> Router[Proposed inference router]
+  Router -. replica .-> A[Qualified GPU host A]
+  Router -. replica .-> B[Qualified GPU host B]
+  A -. optional explicit tensor parallel .-> Network[Qualified high-speed interconnect]
+  B -. optional explicit tensor parallel .-> Network
+  Note[No distributed deployment is implemented or verified]

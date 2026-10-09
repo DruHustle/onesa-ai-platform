@@ -1,0 +1,1439 @@
+[
+  {
+    "id": "system",
+    "title": "System architecture",
+    "view": "logical",
+    "status": "Implemented software; deployment qualifications explicitly separated",
+    "source": "docs/diagrams/system.mmd",
+    "url": "/docs/architecture/SYSTEM_ARCHITECTURE",
+    "nodes": [
+      {
+        "id": "Chat",
+        "label": "Onesa Chat",
+        "responsibility": "Onesa Chat. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "API",
+        "label": "Onesa API",
+        "responsibility": "Onesa API. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Travel",
+        "label": "Onesa Travel",
+        "responsibility": "Onesa Travel. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Auth",
+        "label": "Authentication and sessions",
+        "responsibility": "Authentication and sessions. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Conversations",
+        "label": "Conversation management",
+        "responsibility": "Conversation management. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Agent",
+        "label": "Agent runtime",
+        "responsibility": "Agent runtime. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "RAG",
+        "label": "Knowledge and RAG",
+        "responsibility": "Knowledge and RAG. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared model adapter",
+        "responsibility": "Shared model adapter. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "PG",
+        "label": "PostgreSQL",
+        "responsibility": "PostgreSQL. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Ollama",
+        "label": "Ollama - real Apple M3",
+        "responsibility": "Ollama - real Apple M3. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Mock",
+        "label": "Mock - deterministic",
+        "responsibility": "Mock - deterministic. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "VLLM",
+        "label": "vLLM - NVIDIA",
+        "responsibility": "vLLM - NVIDIA. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Prep",
+        "label": "Dataset preparation",
+        "responsibility": "Dataset preparation. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Eval",
+        "label": "Evaluation framework",
+        "responsibility": "Evaluation framework. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Train",
+        "label": "Fine-tuning infrastructure",
+        "responsibility": "Fine-tuning infrastructure. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Registry",
+        "label": "File-based model registry",
+        "responsibility": "File-based model registry. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      }
+    ]
+  },
+  {
+    "id": "inference",
+    "title": "AI inference pipeline",
+    "view": "logical",
+    "status": "Real Ollama path verified; mock labelled; NVIDIA target unverified",
+    "source": "docs/diagrams/inference.mmd",
+    "url": "/docs/architecture/MODEL_SERVING",
+    "nodes": [
+      {
+        "id": "User",
+        "label": "User",
+        "responsibility": "User. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "Web",
+        "label": "Next.js frontend",
+        "responsibility": "Next.js frontend. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "API",
+        "label": "Authenticated API",
+        "responsibility": "Authenticated API. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared ModelClient",
+        "responsibility": "Shared ModelClient. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "Ollama",
+        "label": "Native Ollama",
+        "responsibility": "Native Ollama. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "Mock",
+        "label": "Deterministic mock",
+        "responsibility": "Deterministic mock. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "VLLM",
+        "label": "Private vLLM",
+        "responsibility": "Private vLLM. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "Stream",
+        "label": "Response stream",
+        "responsibility": "Response stream. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/MODEL_SERVING"
+      }
+    ]
+  },
+  {
+    "id": "components",
+    "title": "Components and service boundaries",
+    "view": "logical",
+    "status": "Application modules share one API process; not independent microservices",
+    "source": "docs/diagrams/components.mmd",
+    "url": "/docs/architecture/COMPONENTS",
+    "nodes": [
+      {
+        "id": "Web",
+        "label": "Next.js - HTTP and SSE",
+        "responsibility": "Next.js - HTTP and SSE. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "API",
+        "label": "FastAPI - single modular service",
+        "responsibility": "FastAPI - single modular service. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Migration",
+        "label": "Alembic - one-shot service",
+        "responsibility": "Alembic - one-shot service. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "PG",
+        "label": "PostgreSQL and pgvector",
+        "responsibility": "PostgreSQL and pgvector. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Model",
+        "label": "OpenAI-compatible model server",
+        "responsibility": "OpenAI-compatible model server. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Embeddings",
+        "label": "Semantic embeddings - unqualified",
+        "responsibility": "Semantic embeddings - unqualified. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Modules",
+        "label": "Auth / Chat / Knowledge / Agents / Travel",
+        "responsibility": "Auth / Chat / Knowledge / Agents / Travel. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Offline",
+        "label": "Separate training and registry tools",
+        "responsibility": "Separate training and registry tools. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/COMPONENTS"
+      }
+    ]
+  },
+  {
+    "id": "rag",
+    "title": "Knowledge and RAG",
+    "view": "logical",
+    "status": "Lexical vectors verified; semantic HTTP adapter not qualified",
+    "source": "docs/diagrams/rag.mmd",
+    "url": "/docs/architecture/DATA_FLOWS",
+    "nodes": [
+      {
+        "id": "Upload",
+        "label": "Owned TXT or PDF upload",
+        "responsibility": "Owned TXT or PDF upload. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Parse",
+        "label": "Validate and extract text",
+        "responsibility": "Validate and extract text. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Chunk",
+        "label": "Bounded chunking",
+        "responsibility": "Bounded chunking. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Embed",
+        "label": "Versioned lexical embeddings - 256",
+        "responsibility": "Versioned lexical embeddings - 256. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "PG",
+        "label": "pgvector storage",
+        "responsibility": "pgvector storage. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Question",
+        "label": "User question",
+        "responsibility": "User question. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Query",
+        "label": "Query embedding",
+        "responsibility": "Query embedding. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Retrieve",
+        "label": "Owner and version filtered retrieval",
+        "responsibility": "Owner and version filtered retrieval. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Context",
+        "label": "Untrusted attributed context",
+        "responsibility": "Untrusted attributed context. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared model adapter",
+        "responsibility": "Shared model adapter. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Answer",
+        "label": "Answer and persisted sources",
+        "responsibility": "Answer and persisted sources. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      },
+      {
+        "id": "Semantic",
+        "label": "Semantic HTTP adapter - unqualified",
+        "responsibility": "Semantic HTTP adapter - unqualified. See the linked source for boundaries and interfaces.",
+        "url": "/docs/architecture/DATA_FLOWS"
+      }
+    ]
+  },
+  {
+    "id": "agents",
+    "title": "Bounded agent runtime",
+    "view": "logical",
+    "status": "Local tools verified; no arbitrary shell or external effects",
+    "source": "docs/diagrams/agents.mmd",
+    "url": "/docs/design/AGENT_DESIGN",
+    "nodes": [
+      {
+        "id": "Goal",
+        "label": "User goal and grants",
+        "responsibility": "User goal and grants. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Plan",
+        "label": "Mock or model planner",
+        "responsibility": "Mock or model planner. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared model adapter",
+        "responsibility": "Shared model adapter. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Validate",
+        "label": "Bounded plan and argument validation",
+        "responsibility": "Bounded plan and argument validation. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Permission",
+        "label": "Caller grants intersect registry",
+        "responsibility": "Caller grants intersect registry. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Registry",
+        "label": "Arithmetic and text_stats registry",
+        "responsibility": "Arithmetic and text_stats registry. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Execute",
+        "label": "Timed local tool execution",
+        "responsibility": "Timed local tool execution. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Feedback",
+        "label": "Owned step outcomes and history",
+        "responsibility": "Owned step outcomes and history. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "User",
+        "label": "Response to user",
+        "responsibility": "Response to user. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Cancel",
+        "label": "Cancellation or deadline",
+        "responsibility": "Cancellation or deadline. See the linked source for boundaries and interfaces.",
+        "url": "/docs/design/AGENT_DESIGN"
+      }
+    ]
+  },
+  {
+    "id": "apple-silicon",
+    "title": "Apple Silicon development",
+    "view": "deployment",
+    "status": "Actually verified Apple M3; loopback model server",
+    "source": "docs/diagrams/apple-silicon.mmd",
+    "url": "/docs/models/OLLAMA_SETUP",
+    "nodes": [
+      {
+        "id": "Browser",
+        "label": "Browser - localhost 3100",
+        "responsibility": "Browser - localhost 3100. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Chat",
+        "label": "Docker Next.js",
+        "responsibility": "Docker Next.js. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "API",
+        "label": "Docker FastAPI",
+        "responsibility": "Docker FastAPI. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "PG",
+        "label": "Docker PostgreSQL",
+        "responsibility": "Docker PostgreSQL. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Gateway",
+        "label": "Docker Desktop host gateway",
+        "responsibility": "Docker Desktop host gateway. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Ollama",
+        "label": "Native Ollama - 127.0.0.1:11434",
+        "responsibility": "Native Ollama - 127.0.0.1:11434. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Model",
+        "label": "Qwen3 4B Q4_K_M - context 8192",
+        "responsibility": "Qwen3 4B Q4_K_M - context 8192. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Reader",
+        "label": "Documentation reader - localhost 3200",
+        "responsibility": "Documentation reader - localhost 3200. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      },
+      {
+        "id": "Docs",
+        "label": "Separate static documentation portal",
+        "responsibility": "Separate static documentation portal. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/OLLAMA_SETUP"
+      }
+    ]
+  },
+  {
+    "id": "compose",
+    "title": "Docker Compose infrastructure",
+    "view": "deployment",
+    "status": "Local stack verified; database and API have no published ports",
+    "source": "docs/diagrams/compose.mmd",
+    "url": "/docs/deployment/LOCAL_DEVELOPMENT",
+    "nodes": [
+      {
+        "id": "Browser",
+        "label": "Loopback web port 3100",
+        "responsibility": "Loopback web port 3100. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "Chat",
+        "label": "Next.js container",
+        "responsibility": "Next.js container. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "DB",
+        "label": "Private PostgreSQL",
+        "responsibility": "Private PostgreSQL. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "Migration",
+        "label": "Alembic migration",
+        "responsibility": "Alembic migration. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "API",
+        "label": "Private API - readiness gate",
+        "responsibility": "Private API - readiness gate. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "Host",
+        "label": "Native host inference gateway",
+        "responsibility": "Native host inference gateway. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      },
+      {
+        "id": "Static",
+        "label": "Optional docs container - port 3200",
+        "responsibility": "Optional docs container - port 3200. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+      }
+    ]
+  },
+  {
+    "id": "nvidia",
+    "title": "NVIDIA inference deployment",
+    "view": "deployment",
+    "status": "Configuration validated; target-host execution unverified",
+    "source": "docs/diagrams/nvidia.mmd",
+    "url": "/docs/models/VLLM_DEPLOYMENT",
+    "nodes": [
+      {
+        "id": "Web",
+        "label": "Next.js application host",
+        "responsibility": "Next.js application host. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "API",
+        "label": "FastAPI",
+        "responsibility": "FastAPI. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "PG",
+        "label": "PostgreSQL",
+        "responsibility": "PostgreSQL. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "VLLM",
+        "label": "vLLM on Ubuntu NVIDIA host",
+        "responsibility": "vLLM on Ubuntu NVIDIA host. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "CUDA",
+        "label": "Qualified driver and container toolkit",
+        "responsibility": "Qualified driver and container toolkit. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "Model",
+        "label": "Revision-pinned Qwen foundation",
+        "responsibility": "Revision-pinned Qwen foundation. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      },
+      {
+        "id": "LoRA",
+        "label": "Reviewed LoRA adapter",
+        "responsibility": "Reviewed LoRA adapter. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/VLLM_DEPLOYMENT"
+      }
+    ]
+  },
+  {
+    "id": "distributed",
+    "title": "Proposed distributed GPU deployment",
+    "view": "deployment",
+    "status": "Proposed only; GPU memory is not implicitly pooled",
+    "source": "docs/diagrams/distributed.mmd",
+    "url": "/docs/deployment/HOME_GPU_CLUSTER",
+    "nodes": [
+      {
+        "id": "API",
+        "label": "Application API",
+        "responsibility": "Application API. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      },
+      {
+        "id": "Router",
+        "label": "Proposed inference router",
+        "responsibility": "Proposed inference router. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      },
+      {
+        "id": "A",
+        "label": "Qualified GPU host A",
+        "responsibility": "Qualified GPU host A. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      },
+      {
+        "id": "B",
+        "label": "Qualified GPU host B",
+        "responsibility": "Qualified GPU host B. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      },
+      {
+        "id": "Network",
+        "label": "Qualified high-speed interconnect",
+        "responsibility": "Qualified high-speed interconnect. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      },
+      {
+        "id": "Note",
+        "label": "No distributed deployment is implemented or verified",
+        "responsibility": "No distributed deployment is implemented or verified. See the linked source for boundaries and interfaces.",
+        "url": "/docs/deployment/HOME_GPU_CLUSTER"
+      }
+    ]
+  },
+  {
+    "id": "lifecycle",
+    "title": "Model development lifecycle",
+    "view": "logical",
+    "status": "Preparation/evaluation/registry exist; training and promotion pending",
+    "source": "docs/diagrams/lifecycle.mmd",
+    "url": "/docs/training/MODEL_RELEASE",
+    "nodes": [
+      {
+        "id": "Base",
+        "label": "Open-weight base model",
+        "responsibility": "Open-weight base model. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Baseline",
+        "label": "Measured base evaluation",
+        "responsibility": "Measured base evaluation. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Data",
+        "label": "Approved extensible datasets",
+        "responsibility": "Approved extensible datasets. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Prep",
+        "label": "Validate / deduplicate / split",
+        "responsibility": "Validate / deduplicate / split. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Train",
+        "label": "LoRA or QLoRA training - not run",
+        "responsibility": "LoRA or QLoRA training - not run. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Eval",
+        "label": "Held-out and base regression evaluation",
+        "responsibility": "Held-out and base regression evaluation. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Registry",
+        "label": "Immutable file-based candidate registry",
+        "responsibility": "Immutable file-based candidate registry. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Deploy",
+        "label": "Deployment behind stable default alias",
+        "responsibility": "Deployment behind stable default alias. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      },
+      {
+        "id": "Rollback",
+        "label": "Rollback to reviewed base or adapter",
+        "responsibility": "Rollback to reviewed base or adapter. See the linked source for boundaries and interfaces.",
+        "url": "/docs/training/MODEL_RELEASE"
+      }
+    ]
+  },
+  {
+    "id": "persistence",
+    "title": "Conversation data lifecycle",
+    "view": "logical",
+    "status": "Completed output persists; failures and cancellations do not save partial assistants",
+    "source": "docs/diagrams/persistence.mmd",
+    "url": "/docs/database/SCHEMA",
+    "nodes": [
+      {
+        "id": "Request",
+        "label": "Authenticated chat request",
+        "responsibility": "Authenticated chat request. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Owner",
+        "label": "Owner and lease check",
+        "responsibility": "Owner and lease check. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Commit",
+        "label": "Commit user message and inference run",
+        "responsibility": "Commit user message and inference run. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Stream",
+        "label": "Bounded model stream",
+        "responsibility": "Bounded model stream. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Complete",
+        "label": "Complete assistant and sources",
+        "responsibility": "Complete assistant and sources. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Release",
+        "label": "Clear lease and finish run",
+        "responsibility": "Clear lease and finish run. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Fail",
+        "label": "Failure or disconnect",
+        "responsibility": "Failure or disconnect. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "Cancel",
+        "label": "Mark failed or cancelled / no partial assistant",
+        "responsibility": "Mark failed or cancelled / no partial assistant. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      },
+      {
+        "id": "History",
+        "label": "Owned conversation history",
+        "responsibility": "Owned conversation history. See the linked source for boundaries and interfaces.",
+        "url": "/docs/database/SCHEMA"
+      }
+    ]
+  },
+  {
+    "id": "registry",
+    "title": "Model registry data relationships",
+    "view": "logical",
+    "status": "Registry and datasets are files, not invented database tables",
+    "source": "docs/diagrams/registry.mmd",
+    "url": "/docs/models/MODEL_REGISTRY",
+    "nodes": [
+      {
+        "id": "Source",
+        "label": "Dataset source and approval metadata",
+        "responsibility": "Dataset source and approval metadata. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Manifest",
+        "label": "Prepared split manifest and hashes",
+        "responsibility": "Prepared split manifest and hashes. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Adapter",
+        "label": "Candidate adapter artifact",
+        "responsibility": "Candidate adapter artifact. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Base",
+        "label": "Base identifier and revision",
+        "responsibility": "Base identifier and revision. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Candidate",
+        "label": "Immutable candidate manifest",
+        "responsibility": "Immutable candidate manifest. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Eval",
+        "label": "Held-out report and config hashes",
+        "responsibility": "Held-out report and config hashes. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Registry",
+        "label": "File-based registry directory",
+        "responsibility": "File-based registry directory. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Active",
+        "label": "One active backend and model",
+        "responsibility": "One active backend and model. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      },
+      {
+        "id": "Runs",
+        "label": "PostgreSQL inference_runs / safe assistant metadata",
+        "responsibility": "PostgreSQL inference_runs / safe assistant metadata. See the linked source for boundaries and interfaces.",
+        "url": "/docs/models/MODEL_REGISTRY"
+      }
+    ]
+  },
+  {
+    "id": "database",
+    "title": "Implemented database ERD",
+    "view": "logical",
+    "status": "Generated from actual SQLAlchemy metadata; migration provenance supplied",
+    "source": "docs/diagrams/database.mmd",
+    "url": "/database",
+    "nodes": []
+  },
+  {
+    "id": "backend",
+    "title": "FastAPI backend",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/backend.mmd",
+    "url": "/docs/architecture/COMPONENTS",
+    "nodes": [
+      {
+        "id": "Request",
+        "label": "HTTP request",
+        "responsibility": "HTTP request",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Limits",
+        "label": "Body bounds and request ID",
+        "responsibility": "Body bounds and request ID",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Auth",
+        "label": "Session / Origin / CSRF",
+        "responsibility": "Session / Origin / CSRF",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Router",
+        "label": "Versioned routers",
+        "responsibility": "Versioned routers",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Domain",
+        "label": "Domain modules",
+        "responsibility": "Domain modules",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "DB",
+        "label": "SQLAlchemy / PostgreSQL",
+        "responsibility": "SQLAlchemy / PostgreSQL",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared ModelClient",
+        "responsibility": "Shared ModelClient",
+        "url": "/docs/architecture/COMPONENTS"
+      },
+      {
+        "id": "Error",
+        "label": "Sanitized failure envelope",
+        "responsibility": "Sanitized failure envelope",
+        "url": "/docs/architecture/COMPONENTS"
+      }
+    ]
+  },
+  {
+    "id": "application",
+    "title": "Application architecture",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/application.mmd",
+    "url": "/docs/design/FRONTEND_DESIGN",
+    "nodes": [
+      {
+        "id": "User",
+        "label": "User",
+        "responsibility": "User",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Web",
+        "label": "Next.js same-origin application",
+        "responsibility": "Next.js same-origin application",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Chat",
+        "label": "Chat",
+        "responsibility": "Chat",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Knowledge",
+        "label": "Knowledge",
+        "responsibility": "Knowledge",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Agent",
+        "label": "Agents",
+        "responsibility": "Agents",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Travel",
+        "label": "Travel",
+        "responsibility": "Travel",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "Docs",
+        "label": "Public Documentation",
+        "responsibility": "Public Documentation",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      },
+      {
+        "id": "API",
+        "label": "Shared authenticated API",
+        "responsibility": "Shared authenticated API",
+        "url": "/docs/design/FRONTEND_DESIGN"
+      }
+    ]
+  },
+  {
+    "id": "travel",
+    "title": "Travel application",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/travel.mmd",
+    "url": "/docs/design/AGENT_DESIGN",
+    "nodes": [
+      {
+        "id": "Input",
+        "label": "Destination / duration / budget / preferences",
+        "responsibility": "Destination / duration / budget / preferences",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Planner",
+        "label": "Shared mock or model planner",
+        "responsibility": "Shared mock or model planner",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Validate",
+        "label": "Typed consecutive-day itinerary validation",
+        "responsibility": "Typed consecutive-day itinerary validation",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Save",
+        "label": "Owned saved trip",
+        "responsibility": "Owned saved trip",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Revise",
+        "label": "Optimistic revision checks",
+        "responsibility": "Optimistic revision checks",
+        "url": "/docs/design/AGENT_DESIGN"
+      },
+      {
+        "id": "Providers",
+        "label": "Live providers - absent",
+        "responsibility": "Live providers - absent",
+        "url": "/docs/design/AGENT_DESIGN"
+      }
+    ]
+  },
+  {
+    "id": "authentication",
+    "title": "Authentication and authorization",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/authentication.mmd",
+    "url": "/docs/api/AUTHENTICATION",
+    "nodes": [
+      {
+        "id": "Credentials",
+        "label": "Credentials and configured Origin",
+        "responsibility": "Credentials and configured Origin",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Hash",
+        "label": "Argon2id verification",
+        "responsibility": "Argon2id verification",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Session",
+        "label": "Hashed opaque session",
+        "responsibility": "Hashed opaque session",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Cookie",
+        "label": "HttpOnly cookie and CSRF cookie",
+        "responsibility": "HttpOnly cookie and CSRF cookie",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Check",
+        "label": "Session validity and owner checks",
+        "responsibility": "Session validity and owner checks",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Mutation",
+        "label": "Origin and CSRF validation",
+        "responsibility": "Origin and CSRF validation",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Docs",
+        "label": "Engineering ID allowlist",
+        "responsibility": "Engineering ID allowlist",
+        "url": "/docs/api/AUTHENTICATION"
+      },
+      {
+        "id": "Internal",
+        "label": "Protected internal pages and all assets",
+        "responsibility": "Protected internal pages and all assets",
+        "url": "/docs/api/AUTHENTICATION"
+      }
+    ]
+  },
+  {
+    "id": "monitoring",
+    "title": "Monitoring and observability",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/monitoring.mmd",
+    "url": "/docs/operations/MONITORING",
+    "nodes": [
+      {
+        "id": "API",
+        "label": "API",
+        "responsibility": "API",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Logs",
+        "label": "Safe request logs / no content or tokens",
+        "responsibility": "Safe request logs / no content or tokens",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Generation",
+        "label": "Bounded generation outcomes and timing",
+        "responsibility": "Bounded generation outcomes and timing",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Metrics",
+        "label": "Bearer-protected metrics",
+        "responsibility": "Bearer-protected metrics",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Health",
+        "label": "Process health",
+        "responsibility": "Process health",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Ready",
+        "label": "Model and migration readiness",
+        "responsibility": "Model and migration readiness",
+        "url": "/docs/operations/MONITORING"
+      },
+      {
+        "id": "Alerts",
+        "label": "Scraping / retention / alerts",
+        "responsibility": "Scraping / retention / alerts",
+        "url": "/docs/operations/MONITORING"
+      }
+    ]
+  },
+  {
+    "id": "release",
+    "title": "CI and release flow",
+    "view": "logical",
+    "status": "Implemented software boundaries; remote operations remain unverified",
+    "source": "docs/diagrams/release.mmd",
+    "url": "/docs/testing/TEST_STRATEGY",
+    "nodes": [
+      {
+        "id": "Change",
+        "label": "Local change",
+        "responsibility": "Local change",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Checks",
+        "label": "Backend / frontend / docs checks",
+        "responsibility": "Backend / frontend / docs checks",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Build",
+        "label": "Separate public and internal artifacts",
+        "responsibility": "Separate public and internal artifacts",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Isolation",
+        "label": "Classification / link / schema / asset checks",
+        "responsibility": "Classification / link / schema / asset checks",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Review",
+        "label": "Review and release qualification",
+        "responsibility": "Review and release qualification",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Publish",
+        "label": "Remote publication - not executed",
+        "responsibility": "Remote publication - not executed",
+        "url": "/docs/testing/TEST_STRATEGY"
+      },
+      {
+        "id": "Rollback",
+        "label": "Reviewed rollback procedures",
+        "responsibility": "Reviewed rollback procedures",
+        "url": "/docs/testing/TEST_STRATEGY"
+      }
+    ]
+  },
+  {
+    "id": "public-system",
+    "title": "Shared platform architecture",
+    "view": "logical",
+    "status": "Public high-level view; mock and proposed work labelled",
+    "source": "docs/diagrams/public-system.mmd",
+    "url": "/docs/public/architecture",
+    "nodes": [
+      {
+        "id": "Applications",
+        "label": "Chat / Knowledge / Agents / Travel",
+        "responsibility": "Chat / Knowledge / Agents / Travel",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "API",
+        "label": "Authenticated application API",
+        "responsibility": "Authenticated application API",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Ownership",
+        "label": "User-owned persisted resources",
+        "responsibility": "User-owned persisted resources",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared model abstraction",
+        "responsibility": "Shared model abstraction",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Real",
+        "label": "Configured local inference",
+        "responsibility": "Configured local inference",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Mock",
+        "label": "Clearly labelled mock",
+        "responsibility": "Clearly labelled mock",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Training",
+        "label": "Fine-tuning - proposed qualification",
+        "responsibility": "Fine-tuning - proposed qualification",
+        "url": "/docs/public/architecture"
+      }
+    ]
+  },
+  {
+    "id": "public-inference",
+    "title": "Public inference lifecycle",
+    "view": "logical",
+    "status": "Public high-level view; mock and proposed work labelled",
+    "source": "docs/diagrams/public-inference.mmd",
+    "url": "/docs/public/architecture",
+    "nodes": [
+      {
+        "id": "User",
+        "label": "User",
+        "responsibility": "User",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Frontend",
+        "label": "Onesa frontend",
+        "responsibility": "Onesa frontend",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "API",
+        "label": "Authenticated versioned API",
+        "responsibility": "Authenticated versioned API",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Adapter",
+        "label": "Shared model adapter",
+        "responsibility": "Shared model adapter",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Server",
+        "label": "Configured model server",
+        "responsibility": "Configured model server",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Stream",
+        "label": "Incremental response stream",
+        "responsibility": "Incremental response stream",
+        "url": "/docs/public/architecture"
+      }
+    ]
+  },
+  {
+    "id": "public-rag",
+    "title": "Knowledge usage pipeline",
+    "view": "logical",
+    "status": "Public high-level view; mock and proposed work labelled",
+    "source": "docs/diagrams/public-rag.mmd",
+    "url": "/docs/public/architecture",
+    "nodes": [
+      {
+        "id": "Document",
+        "label": "Owned document upload",
+        "responsibility": "Owned document upload",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Extract",
+        "label": "Validate / extract / chunk",
+        "responsibility": "Validate / extract / chunk",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Index",
+        "label": "Versioned lexical baseline",
+        "responsibility": "Versioned lexical baseline",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Question",
+        "label": "User question",
+        "responsibility": "User question",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Retrieval",
+        "label": "Owned source retrieval",
+        "responsibility": "Owned source retrieval",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Context",
+        "label": "Attributed untrusted context",
+        "responsibility": "Attributed untrusted context",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Model",
+        "label": "Configured model",
+        "responsibility": "Configured model",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Answer",
+        "label": "Answer with saved sources",
+        "responsibility": "Answer with saved sources",
+        "url": "/docs/public/architecture"
+      }
+    ]
+  },
+  {
+    "id": "public-agent",
+    "title": "Granted local tools",
+    "view": "logical",
+    "status": "Public high-level view; mock and proposed work labelled",
+    "source": "docs/diagrams/public-agent.mmd",
+    "url": "/docs/public/architecture",
+    "nodes": [
+      {
+        "id": "Goal",
+        "label": "Goal and explicit grants",
+        "responsibility": "Goal and explicit grants",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Plan",
+        "label": "Bounded planner proposal",
+        "responsibility": "Bounded planner proposal",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Permissions",
+        "label": "Registry and permission validation",
+        "responsibility": "Registry and permission validation",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Tool",
+        "label": "Timed local arithmetic or text_stats",
+        "responsibility": "Timed local arithmetic or text_stats",
+        "url": "/docs/public/architecture"
+      },
+      {
+        "id": "Result",
+        "label": "Owned outcomes and history",
+        "responsibility": "Owned outcomes and history",
+        "url": "/docs/public/architecture"
+      }
+    ]
+  },
+  {
+    "id": "database-auth",
+    "title": "Auth data relationships",
+    "view": "implemented schema",
+    "status": "Generated from actual SQLAlchemy tables; migrations integration tested",
+    "source": "docs/diagrams/database-auth.mmd",
+    "url": "/database",
+    "nodes": [
+      {
+        "id": "auth_sessions",
+        "label": "auth_sessions",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      }
+    ]
+  },
+  {
+    "id": "database-chat",
+    "title": "Chat data relationships",
+    "view": "implemented schema",
+    "status": "Generated from actual SQLAlchemy tables; migrations integration tested",
+    "source": "docs/diagrams/database-chat.mmd",
+    "url": "/database",
+    "nodes": [
+      {
+        "id": "conversations",
+        "label": "conversations",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "messages",
+        "label": "messages",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      }
+    ]
+  },
+  {
+    "id": "database-knowledge",
+    "title": "Knowledge data relationships",
+    "view": "implemented schema",
+    "status": "Generated from actual SQLAlchemy tables; migrations integration tested",
+    "source": "docs/diagrams/database-knowledge.mmd",
+    "url": "/database",
+    "nodes": [
+      {
+        "id": "document_chunks",
+        "label": "document_chunks",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "documents",
+        "label": "documents",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "messages",
+        "label": "messages",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      }
+    ]
+  },
+  {
+    "id": "database-agents",
+    "title": "Agents data relationships",
+    "view": "implemented schema",
+    "status": "Generated from actual SQLAlchemy tables; migrations integration tested",
+    "source": "docs/diagrams/database-agents.mmd",
+    "url": "/database",
+    "nodes": [
+      {
+        "id": "agent_runs",
+        "label": "agent_runs",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      }
+    ]
+  },
+  {
+    "id": "database-travel",
+    "title": "Travel data relationships",
+    "view": "implemented schema",
+    "status": "Generated from actual SQLAlchemy tables; migrations integration tested",
+    "source": "docs/diagrams/database-travel.mmd",
+    "url": "/database",
+    "nodes": [
+      {
+        "id": "trips",
+        "label": "trips",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
+        "url": "/database"
+      }
+    ]
+  }
+]

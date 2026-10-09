@@ -1,0 +1,9 @@
+flowchart TB
+  Source[Dataset source and approval metadata] --> Manifest[Prepared split manifest and hashes]
+  Manifest -. training pending .-> Adapter[Candidate adapter artifact]
+  Base[Base identifier and revision] --> Candidate[Immutable candidate manifest]
+  Adapter --> Candidate
+  Eval[Held-out report and config hashes] --> Candidate
+  Candidate --> Registry[File-based registry directory]
+  Registry -. reviewed manual configuration .-> Active[One active backend and model]
+  Active --> Runs[PostgreSQL inference_runs / safe assistant metadata]

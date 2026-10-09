@@ -1,0 +1,10 @@
+flowchart TB
+  Goal[User goal and grants] --> Plan[Mock or model planner]
+  Adapter[Shared model adapter] --> Plan
+  Plan --> Validate[Bounded plan and argument validation]
+  Validate --> Permission[Caller grants intersect registry]
+  Registry[Arithmetic and text_stats registry] --> Permission
+  Permission --> Execute[Timed local tool execution]
+  Execute --> Feedback[Owned step outcomes and history]
+  Feedback --> User[Response to user]
+  Cancel[Cancellation or deadline] --> Execute

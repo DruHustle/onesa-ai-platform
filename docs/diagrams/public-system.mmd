@@ -1,0 +1,7 @@
+flowchart TB
+Applications[Chat / Knowledge / Agents / Travel] --> API[Authenticated application API]
+API --> Ownership[User-owned persisted resources]
+API --> Adapter[Shared model abstraction]
+Adapter --> Real[Configured local inference]
+Adapter --> Mock[Clearly labelled mock]
+Training[Fine-tuning - proposed qualification] -. evaluated configuration .-> Adapter

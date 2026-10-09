@@ -1,0 +1,37 @@
+services:
+  db:
+    mem_limit: ${ONESA_DB_MEMORY_LIMIT:-2g}
+    cpus: ${ONESA_DB_CPU_LIMIT:-2}
+  api:
+    mem_limit: ${ONESA_API_MEMORY_LIMIT:-1g}
+    cpus: ${ONESA_API_CPU_LIMIT:-2}
+    pids_limit: 128
+    environment:
+      ONESA_DATABASE_URL: ${ONESA_APP_DATABASE_URL:?Configure the least-privilege application database URL}
+      ONESA_ENVIRONMENT: production
+      ONESA_SECURE_COOKIES: "true"
+      ONESA_PUBLIC_ORIGIN: https://${ONESA_DOMAIN:?Configure the production domain}
+      ONESA_METRICS_TOKEN: ${ONESA_METRICS_TOKEN:?Set a protected metrics credential}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  chat:
+    mem_limit: ${ONESA_FRONTEND_MEMORY_LIMIT:-512m}
+    cpus: ${ONESA_FRONTEND_CPU_LIMIT:-1}
+    pids_limit: 128
+    ports: !reset []
+    read_only: true
+    tmpfs: [/tmp, /app/apps/chat/.next/cache]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  proxy:
+    image: caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    ports: ["80:80", "443:443"]
+    environment: {ONESA_DOMAIN: "${ONESA_DOMAIN:?Configure a domain}"}
+    volumes: ["./infra/proxy/Caddyfile:/etc/caddy/Caddyfile:ro", "caddy-data:/data", "caddy-config:/config"]
+    depends_on: [chat]
+    restart: unless-stopped
+volumes:
+  caddy-data:
+  caddy-config:

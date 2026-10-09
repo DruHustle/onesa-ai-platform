@@ -1,0 +1,8 @@
+flowchart TB
+  Browser[Browser - localhost 3100] --> Chat[Docker Next.js]
+  Chat --> API[Docker FastAPI]
+  API --> PG[(Docker PostgreSQL)]
+  API --> Gateway[Docker Desktop host gateway]
+  Gateway --> Ollama[Native Ollama - 127.0.0.1:11434]
+  Ollama --> Model[Qwen3 4B Q4_K_M - context 8192]
+  Reader[Documentation reader - localhost 3200] --> Docs[Separate static documentation portal]

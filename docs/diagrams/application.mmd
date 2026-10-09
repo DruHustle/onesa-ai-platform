@@ -1,0 +1,11 @@
+flowchart TB
+User[User] --> Web[Next.js same-origin application]
+Web --> Chat[Chat]
+Web --> Knowledge[Knowledge]
+Web --> Agent[Agents]
+Web --> Travel[Travel]
+Web --> Docs[Public Documentation]
+Chat --> API[Shared authenticated API]
+Knowledge --> API
+Agent --> API
+Travel --> API

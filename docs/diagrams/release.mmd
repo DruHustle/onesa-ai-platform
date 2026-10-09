@@ -1,0 +1,7 @@
+flowchart TB
+Change[Local change] --> Checks[Backend / frontend / docs checks]
+Checks --> Build[Separate public and internal artifacts]
+Build --> Isolation[Classification / link / schema / asset checks]
+Isolation --> Review[Review and release qualification]
+Review -. explicitly authorized .-> Publish[Remote publication - not executed]
+Publish --> Rollback[Reviewed rollback procedures]

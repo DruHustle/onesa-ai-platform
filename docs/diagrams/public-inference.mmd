@@ -1,0 +1,7 @@
+flowchart TB
+User[User] --> Frontend[Onesa frontend]
+Frontend --> API[Authenticated versioned API]
+API --> Adapter[Shared model adapter]
+Adapter --> Server[Configured model server]
+Server --> Stream[Incremental response stream]
+Stream --> Frontend

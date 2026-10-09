@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "default_classification": "internal",
+  "public_sources": [
+    "docs/public/introduction.md",
+    "docs/public/quickstart.md",
+    "docs/public/authentication.md",
+    "docs/public/applications.md",
+    "docs/public/integration.md",
+    "docs/public/streaming.md",
+    "docs/public/models.md",
+    "docs/public/architecture.md",
+    "docs/public/roadmap.md",
+    "docs/public/release-notes.md",
+    "docs/public/glossary.md",
+    "docs/public/privacy.md",
+    "docs/public/troubleshooting.md",
+    "docs/public/tutorials.md",
+    "docs/public/examples.md"
+  ],
+  "public_diagrams": [
+    "public-system",
+    "public-inference",
+    "public-rag",
+    "public-agent"
+  ],
+  "public_screenshots": [
+    "authentication",
+    "registration",
+    "chat",
+    "knowledge",
+    "agents",
+    "travel",
+    "settings"
+  ],
+  "public_pdfs": [
+    "technical-overview",
+    "api-reference",
+    "developer-getting-started",
+    "agent-framework",
+    "knowledge-rag",
+    "security-data-protection",
+    "model-serving"
+  ]
+}

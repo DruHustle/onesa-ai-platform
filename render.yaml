@@ -1,0 +1,43 @@
+# Apply only after provider access, scoped database credentials and launch settings are supplied.
+services:
+  - type: web
+    name: onesa-ai-platform-backend
+    runtime: docker
+    region: frankfurt
+    plan: 1c-2g
+    branch: main
+    rootDir: onesa-ai-platform-backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh -c 'exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --no-proxy-headers --no-access-log --limit-concurrency 128 --timeout-keep-alive 5 --timeout-graceful-shutdown 130'
+    healthCheckPath: /ready
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ONESA_ENVIRONMENT
+        value: production
+      - key: ONESA_SECURE_COOKIES
+        value: 'true'
+      - key: ONESA_DATABASE_URL
+        sync: false
+      - key: ONESA_PUBLIC_ORIGIN
+        sync: false
+      - key: ONESA_METRICS_TOKEN
+        generateValue: true
+      - key: ONESA_MODEL_BACKEND
+        value: mock
+      - key: ONESA_MODEL_NAME
+        value: onesa-mock
+      - key: ONESA_EMBEDDING_BACKEND
+        value: lexical
+      - key: ONESA_AUTH_HASH_CONCURRENCY
+        value: '2'
+    buildFilter:
+      paths: [onesa-ai-platform-backend/**, render.yaml]
+databases:
+  - name: onesa-ai-platform-db
+    region: frankfurt
+    plan: 0.5c-1g
+    databaseName: onesa
+    user: onesa_owner
+    postgresMajorVersion: '16'
+    ipAllowList: []

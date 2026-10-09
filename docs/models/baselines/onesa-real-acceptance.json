@@ -1,0 +1,282 @@
+{
+  "source": "real-authenticated-Onesa-API",
+  "model": {
+    "id": "default",
+    "name": "Onesa Chat",
+    "backend": "ollama",
+    "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+    "context_tokens": 8192,
+    "modalities": [
+      "text"
+    ],
+    "quantization": "Q4_K_M",
+    "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+    "real_inference": true
+  },
+  "first_turn": {
+    "response": "I'm sorry, but I can't recall or respond to that project codename. If you have any other questions or need assistance with something else, feel free to ask!",
+    "text_deltas": 35,
+    "first_delta_seconds": 2.70842854201328,
+    "end_to_end_seconds": 3.9491960830055177,
+    "completion": {
+      "message_id": "a5721625-0480-43fe-864c-5144a98a207a",
+      "model": {
+        "id": "default",
+        "name": "Onesa Chat",
+        "backend": "ollama",
+        "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+        "context_tokens": 8192,
+        "modalities": [
+          "text"
+        ],
+        "quantization": "Q4_K_M",
+        "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "real_inference": true
+      },
+      "metrics": {
+        "input_tokens": 25,
+        "output_tokens": 36,
+        "latency_ms": 3924,
+        "time_to_first_token_ms": 2694,
+        "output_tokens_per_second": 9.17230002797174
+      }
+    }
+  },
+  "second_turn": {
+    "response": "ALDER-731",
+    "text_deltas": 6,
+    "first_delta_seconds": 0.1573105840361677,
+    "end_to_end_seconds": 0.37271037499886006,
+    "completion": {
+      "message_id": "79e9b641-5032-49e3-bd5f-da994b27679c",
+      "model": {
+        "id": "default",
+        "name": "Onesa Chat",
+        "backend": "ollama",
+        "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+        "context_tokens": 8192,
+        "modalities": [
+          "text"
+        ],
+        "quantization": "Q4_K_M",
+        "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "real_inference": true
+      },
+      "metrics": {
+        "input_tokens": 84,
+        "output_tokens": 7,
+        "latency_ms": 350,
+        "time_to_first_token_ms": 139,
+        "output_tokens_per_second": 19.9786062232468
+      }
+    }
+  },
+  "persisted_messages": 4,
+  "grounded_chat": {
+    "response": "The inspection interval of asset AX-17 is 42 days, as stated in the Factory-Note.txt: \\\"Synthetic factory note: Asset AX-17 has an inspection interval of 42 days.\\\"",
+    "text_deltas": 45,
+    "first_delta_seconds": 0.6066891250084154,
+    "end_to_end_seconds": 2.187930707994383,
+    "completion": {
+      "message_id": "b0202340-7853-4ad1-97a2-9fca7c56d2ae",
+      "model": {
+        "id": "default",
+        "name": "Onesa Chat",
+        "backend": "ollama",
+        "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+        "context_tokens": 8192,
+        "modalities": [
+          "text"
+        ],
+        "quantization": "Q4_K_M",
+        "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "real_inference": true
+      },
+      "metrics": {
+        "input_tokens": 188,
+        "output_tokens": 46,
+        "latency_ms": 2175,
+        "time_to_first_token_ms": 598,
+        "output_tokens_per_second": 21.148350844699593
+      }
+    }
+  },
+  "model_planned_agent": {
+    "id": "fa9a1852-8772-463a-a493-c11da219a339",
+    "goal": "Count the words in: hello local model",
+    "status": "completed",
+    "steps": [
+      {
+        "tool": "text_stats",
+        "result": {
+          "words": 3,
+          "characters": 17
+        },
+        "status": "completed"
+      }
+    ],
+    "created_at": "2026-10-09T11:03:12.520148Z"
+  },
+  "ungranted_tool_denied": true,
+  "model_generated_trip": {
+    "id": "934e5158-5bfb-4ae9-ab38-4b71e6c0336d",
+    "destination": "Berlin",
+    "duration": 2,
+    "budget": 250.0,
+    "currency": "EUR",
+    "preferences": "",
+    "revision": 1,
+    "itinerary": {
+      "days": [
+        {
+          "day": 1,
+          "activities": [
+            {
+              "title": "Explore Berlin's Historic Center",
+              "notes": "Walk through the historic streets of Berlin, visiting key landmarks such as the Brandenburg Gate, Berlin Wall Memorial, and the Reichstag Building. The area offers a mix of architectural styles and historical significance, providing a strong sense of the city's past."
+            },
+            {
+              "title": "Visit the Museum Island",
+              "notes": "Stroll across Museum Island, home to five world-renowned museums including the Pergamon Museum and the Neues Museum. This cultural hub highlights Berlin's artistic and intellectual heritage."
+            },
+            {
+              "title": "Stroll through Friedrichshain and Kreuzberg",
+              "notes": "Enjoy a relaxed walk through vibrant neighborhoods known for their diverse culture, street art, and creative atmosphere. Explore local caf\u00e9s and markets to experience Berlin's contemporary lifestyle."
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "activities": [
+            {
+              "title": "Day trip to Potsdam and Sanssouci Palace",
+              "notes": "Take a scenic train journey to Potsdam, a historic city 100 km from Berlin. Visit the Sanssouci Palace, a Baroque-style palace with beautiful gardens and historical significance. This excursion offers a relaxing escape from city life."
+            },
+            {
+              "title": "Visit the Berlin Zoo and Tiergarten",
+              "notes": "Enjoy a leisurely walk through the Tiergarten, Berlin's large urban park, and take a guided tour of the Berlin Zoo, home to a wide variety of animals and exhibits."
+            },
+            {
+              "title": "Evening at a local brewery or pub",
+              "notes": "End the day with a relaxed evening at a local craft brewery or pub, enjoying traditional German beverages and local food in a relaxed setting."
+            }
+          ]
+        }
+      ],
+      "assumptions": [
+        "Berlin is accessible by public transportation and tourist-friendly routes.",
+        "The destination is within a 2-day travel window from the user's location.",
+        "Activities are based on general public access and do not require special tickets or bookings.",
+        "The user prefers cultural and historical experiences over commercial or high-cost activities.",
+        "Budget of 250 EUR is sufficient for transportation, entry fees, and food during the trip.",
+        "Weather conditions are favorable for outdoor activities.",
+        "All activities are available and accessible to visitors without prior reservations."
+      ],
+      "providers": [
+        {
+          "provider": "weather",
+          "status": "unavailable",
+          "verified": false
+        },
+        {
+          "provider": "maps",
+          "status": "unavailable",
+          "verified": false
+        },
+        {
+          "provider": "flights",
+          "status": "unavailable",
+          "verified": false
+        },
+        {
+          "provider": "accommodation",
+          "status": "unavailable",
+          "verified": false
+        },
+        {
+          "provider": "places",
+          "status": "unavailable",
+          "verified": false
+        },
+        {
+          "provider": "transport",
+          "status": "unavailable",
+          "verified": false
+        }
+      ],
+      "backend": "ollama"
+    },
+    "created_at": "2026-10-09T11:03:35.321874Z",
+    "updated_at": "2026-10-09T11:03:35.321294Z",
+    "live_data_verified": false,
+    "notice": "Suggestions only. Current prices, availability, opening hours, travel times and bookings have not been verified."
+  },
+  "disconnect": {
+    "elapsed_to_close_seconds": 0.38575508299982175,
+    "no_partial_assistant_saved": true
+  },
+  "after_disconnect": {
+    "response": "READY",
+    "text_deltas": 1,
+    "first_delta_seconds": 0.17154450004454702,
+    "end_to_end_seconds": 0.22285975003615022,
+    "completion": {
+      "message_id": "44c00d3e-04b3-4a11-a3e4-70cfa9a56671",
+      "model": {
+        "id": "default",
+        "name": "Onesa Chat",
+        "backend": "ollama",
+        "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+        "context_tokens": 8192,
+        "modalities": [
+          "text"
+        ],
+        "quantization": "Q4_K_M",
+        "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "real_inference": true
+      },
+      "metrics": {
+        "input_tokens": 31,
+        "output_tokens": 2,
+        "latency_ms": 190,
+        "time_to_first_token_ms": 149,
+        "output_tokens_per_second": 10.497397284950335
+      }
+    }
+  },
+  "after_ollama_restart": {
+    "response": "ALDER-731",
+    "text_deltas": 6,
+    "first_delta_seconds": 1.47675445798086,
+    "end_to_end_seconds": 1.6804863329743966,
+    "completion": {
+      "message_id": "f0eee3c2-8b17-497e-bc7b-5be8e77b2b75",
+      "model": {
+        "id": "default",
+        "name": "Onesa Chat",
+        "backend": "ollama",
+        "model_identifier": "qwen3:4b-instruct-2507-q4_K_M",
+        "context_tokens": 8192,
+        "modalities": [
+          "text"
+        ],
+        "quantization": "Q4_K_M",
+        "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "real_inference": true
+      },
+      "metrics": {
+        "input_tokens": 122,
+        "output_tokens": 7,
+        "latency_ms": 1665,
+        "time_to_first_token_ms": 1469,
+        "output_tokens_per_second": 4.203751426094118
+      }
+    }
+  },
+  "restart_recovery": {
+    "readiness_failed_while_down": true,
+    "session_preserved": true,
+    "no_partial_failure_saved": true,
+    "genuine_generation_recovered": true
+  }
+}

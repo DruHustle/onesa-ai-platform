@@ -1,0 +1,8 @@
+flowchart TB
+  Web[Next.js - HTTP and SSE] --> API[FastAPI - single modular service]
+  Migration[Alembic - one-shot service] --> PG[(PostgreSQL and pgvector)]
+  API --> PG
+  API --> Model[OpenAI-compatible model server]
+  API -. optional HTTP .-> Embeddings[Semantic embeddings - unqualified]
+  API --> Modules[Auth / Chat / Knowledge / Agents / Travel]
+  Offline[Separate training and registry tools] -. reviewed configuration .-> Model

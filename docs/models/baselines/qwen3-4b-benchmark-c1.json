@@ -1,0 +1,242 @@
+{
+  "created_at": "2026-10-09T10:52:34.312496+00:00",
+  "runtime_before": {
+    "backend": "ollama",
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "configured_revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+    "context_tokens": 8192,
+    "configured_quantization": "Q4_K_M",
+    "modalities": [
+      "text"
+    ],
+    "server_version": "0.40.2",
+    "model_details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "4.0B",
+      "quantization_level": "Q4_K_M"
+    },
+    "capabilities": [
+      "tools",
+      "thinking",
+      "completion"
+    ],
+    "installed_artifact": {
+      "name": "qwen3:4b-instruct-2507-q4_K_M",
+      "model": "qwen3:4b-instruct-2507-q4_K_M",
+      "modified_at": "2026-10-09T12:41:12.642725979+02:00",
+      "size": 2497293803,
+      "digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen3",
+        "families": [
+          "qwen3"
+        ],
+        "parameter_size": "4.0B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 2560,
+        "runner": "ggml"
+      },
+      "capabilities": [
+        "tools",
+        "thinking",
+        "completion"
+      ]
+    },
+    "resident_models": [
+      {
+        "name": "qwen3:4b-instruct-2507-q4_K_M",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "size": 3800291082,
+        "digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "4.0B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-09T12:56:20.995754+02:00",
+        "size_vram": 3800291082,
+        "context_length": 8192,
+        "runner": "llamacpp"
+      }
+    ]
+  },
+  "benchmark_client_hardware": {
+    "os": "macOS-27.0.1-arm64-arm-64bit",
+    "architecture": "arm64",
+    "memory_bytes": "25769803776",
+    "chip": "Apple M3"
+  },
+  "source": "measured-real-inference",
+  "settings": {
+    "max_output_tokens": 96,
+    "temperature": 0.0,
+    "timeout_seconds": 60.0
+  },
+  "human_review_required": true,
+  "requests": 6,
+  "concurrency": 1,
+  "results": [
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.4112660830141976,
+      "first_token_seconds": 0.16781337501015514,
+      "output_tokens_per_second": 28.142043940229463
+    },
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.289399750006851,
+      "first_token_seconds": 0.050893833045847714,
+      "output_tokens_per_second": 29.184655954266447
+    },
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.1626221669721417,
+      "first_token_seconds": 0.05874408298404887,
+      "output_tokens_per_second": 30.35455863256321
+    },
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.077422625035979,
+      "first_token_seconds": 0.044424124993383884,
+      "output_tokens_per_second": 31.194935404388158
+    },
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.1946984169771895,
+      "first_token_seconds": 0.04732162499567494,
+      "output_tokens_per_second": 30.04978482157787
+    },
+    {
+      "success": true,
+      "error_type": null,
+      "response": "Private self-hosted AI refers to running artificial intelligence models on a personal device or local server, rather than using cloud-based services. This allows individuals to use AI tools—like language models or image generators—without relying on external servers, ensuring data privacy, security, and full control over personal information. By hosting AI locally, users avoid internet data transmission, reduce reliance on third parties, and can customize or modify models according to their needs, making it ideal for sensitive or confidential applications",
+      "prompt_characters": 54,
+      "input_tokens": 20,
+      "output_tokens": 96,
+      "total_seconds": 3.23951866698917,
+      "first_token_seconds": 0.060921458003576845,
+      "output_tokens_per_second": 29.634032048725015
+    }
+  ],
+  "success_rate": 1.0,
+  "error_rate": 0.0,
+  "mean_latency_seconds": 3.2291546181659214,
+  "wall_seconds": 19.37587020796491,
+  "cancellation": {
+    "client_cancel_seconds": 0.0005350839928723872,
+    "followup_success": true,
+    "followup_seconds": 0.21898991602938622,
+    "server_compute_stop_verified": false
+  },
+  "runtime_after": {
+    "backend": "ollama",
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "configured_revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+    "context_tokens": 8192,
+    "configured_quantization": "Q4_K_M",
+    "modalities": [
+      "text"
+    ],
+    "server_version": "0.40.2",
+    "model_details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "4.0B",
+      "quantization_level": "Q4_K_M"
+    },
+    "capabilities": [
+      "tools",
+      "thinking",
+      "completion"
+    ],
+    "installed_artifact": {
+      "name": "qwen3:4b-instruct-2507-q4_K_M",
+      "model": "qwen3:4b-instruct-2507-q4_K_M",
+      "modified_at": "2026-10-09T12:41:12.642725979+02:00",
+      "size": 2497293803,
+      "digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen3",
+        "families": [
+          "qwen3"
+        ],
+        "parameter_size": "4.0B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 2560,
+        "runner": "ggml"
+      },
+      "capabilities": [
+        "tools",
+        "thinking",
+        "completion"
+      ]
+    },
+    "resident_models": [
+      {
+        "name": "qwen3:4b-instruct-2507-q4_K_M",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "size": 3800291082,
+        "digest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "4.0B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-09T12:57:54.053456+02:00",
+        "size_vram": 3800291082,
+        "context_length": 8192,
+        "runner": "llamacpp"
+      }
+    ]
+  }
+}

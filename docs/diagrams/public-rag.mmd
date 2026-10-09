@@ -1,0 +1,8 @@
+flowchart TB
+Document[Owned document upload] --> Extract[Validate / extract / chunk]
+Extract --> Index[Versioned lexical baseline]
+Question[User question] --> Retrieval[Owned source retrieval]
+Index --> Retrieval
+Retrieval --> Context[Attributed untrusted context]
+Context --> Model[Configured model]
+Model --> Answer[Answer with saved sources]

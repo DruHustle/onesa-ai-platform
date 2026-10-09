@@ -1,0 +1,16 @@
+--- upstream/src/sprintf.js
++++ patched/src/sprintf.js
+@@ -38,6 +38,13 @@
+             }
+             else if (typeof parse_tree[i] === 'object') {
+                 ph = parse_tree[i] // convenience purposes only
++                // Bound numeric formatting before native calls or padding allocation.
++                // Clone the cached placeholder; never mutate its shared parsed form.
++                ph = Object.assign({}, ph)
++                if (ph.precision !== undefined && /[efg]/.test(ph.type)) {
++                    ph.precision = String(Math.max(ph.type === 'g' ? 1 : 0, Math.min(100, Number(ph.precision))))
++                }
++                if (ph.width !== undefined) ph.width = Math.min(10000, Number(ph.width))
+                 if (ph.keys) { // keyword argument
+                     arg = argv[cursor]
+                     for (k = 0; k < ph.keys.length; k++) {

@@ -1,0 +1,20 @@
+flowchart TB
+  Chat[Onesa Chat] --> API[Onesa API]
+  Travel[Onesa Travel] --> API
+  API --> Auth[Authentication and sessions]
+  API --> Conversations[Conversation management]
+  API --> Agent[Agent runtime]
+  API --> RAG[Knowledge and RAG]
+  API --> Adapter[Shared model adapter]
+  Auth --> PG[(PostgreSQL)]
+  Conversations --> PG
+  Agent --> PG
+  RAG --> PG
+  Adapter --> Ollama[Ollama - real Apple M3]
+  Adapter --> Mock[Mock - deterministic]
+  Adapter -. unverified target .-> VLLM[vLLM - NVIDIA]
+  Prep[Dataset preparation] --> Eval[Evaluation framework]
+  Prep -. training pending .-> Train[Fine-tuning infrastructure]
+  Train -. candidate artifacts .-> Registry[File-based model registry]
+  Eval --> Registry
+  Registry -. manual reviewed selection .-> Adapter
