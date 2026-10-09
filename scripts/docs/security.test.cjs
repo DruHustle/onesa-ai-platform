@@ -113,3 +113,20 @@ test('valid sprintf/vsprintf, named parameters, flags and real argparse/Remarkab
  const {Remarkable}=docsRequire('remarkable');
  assert.match(new Remarkable().render('# Onesa\n\n**API** docs'),/<strong>API<\/strong>/);
 });
+
+
+test('documentation search refuses access-denied HTML before parsing JSON',async()=>{
+ const source=fs.readFileSync(path.join(root,'onesa-ai-platform-frontend/apps/docs/src/lib/search-index.ts'),'utf8');
+ const code=docsRequire('esbuild').transformSync(source,{loader:'ts',format:'cjs'}).code;
+ const fixture={exports:{}};
+ new Function('module','exports',code)(fixture,fixture.exports);
+ const {readSearchIndex}=fixture.exports;
+ for(const status of [401,403,503]) {
+  let parsed=false;
+  await assert.rejects(readSearchIndex({ok:false,headers:new Headers({'content-type':'text/html'}),json:async()=>{parsed=true;throw new Error('HTML is not JSON');}}),/search is unavailable/);
+  assert.equal(parsed,false,`HTTP ${status} HTML must not be parsed`);
+ }
+ const entries=[{title:'Authentication',url:'/docs/public/authentication',text:'Sessions'}];
+ assert.deepEqual(await readSearchIndex(Response.json(entries)),entries);
+ await assert.rejects(readSearchIndex(Response.json({error:'denied'})),/search is unavailable/);
+});

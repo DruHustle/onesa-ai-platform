@@ -183,3 +183,14 @@ and its lockfile dependencies, and skipping cleanup when staging was never creat
 Patched operations encryption regression passed; its dependency audit has zero findings.
 M3.2 semantic retrieval qualification remains pending. Original Git metadata backup
 is temporary and will be removed at the owner’s request after remote source verification.
+
+## Publication follow-up — 2026-10-09
+
+Fixed the documentation search race after session revocation: access-denied HTML is
+never parsed as JSON, pending fetches are canceled on unmount and unavailability is
+shown without unhandled promise errors. Added denied-response/malformed-index regression
+coverage. Removed the obsolete original-history backup and Ruff caches after source
+commits were verified on GitHub, as requested. The owner chose to leave provider
+Actions secrets empty, so actual Vercel/Render deployment remains pending configuration.
+Portal full GitHub verification passed; its deployment workflow safely failed for
+missing provider configuration. No cloud deployment or production qualification claimed.
