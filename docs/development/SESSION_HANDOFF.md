@@ -168,3 +168,18 @@ Mock is explicitly labelled until a qualified remote inference endpoint is confi
 native Mac Ollama is not exposed to the Internet. Provider authentication, final
 origins, target-host checks and organizational privacy decisions remain incomplete.
 No production readiness or actual remote deployment is claimed from local checks.
+
+## GitHub release verification — 2026-10-09
+
+Source-only main is now published to the private Onesa UG repository. Added manual
+GitHub Actions deployments with exact-commit CI/hygiene gates, pinned Vercel CLI and
+Render live-status/commit verification. Native provider auto-deploys are disabled in
+the deployment standard. Provider projects/secrets and actual target acceptance are
+still required; no cloud deployment or production qualification is claimed.
+
+Resolved first remote CI failures by generating synthetic screenshots in clean docs
+builds, waiting for documentation gateways to listen, updating operations cryptography
+and its lockfile dependencies, and skipping cleanup when staging was never created.
+Patched operations encryption regression passed; its dependency audit has zero findings.
+M3.2 semantic retrieval qualification remains pending. Original Git metadata backup
+is temporary and will be removed at the owner’s request after remote source verification.

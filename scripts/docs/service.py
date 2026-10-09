@@ -80,6 +80,17 @@ def run(action):
                 start_new_session=True,
             )
         pidfile.write_text(str(process.pid))
+        for _ in range(100):
+            if process.poll() is not None:
+                raise SystemExit(
+                    f"{scope} gateway exited; inspect its private runtime log"
+                )
+            with socket.socket() as probe:
+                if probe.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.1)
+        else:
+            raise SystemExit(f"{scope} gateway did not become ready within 10 seconds")
         print(f"Started {scope} protected delivery at http://localhost:{port}.")
 
 
