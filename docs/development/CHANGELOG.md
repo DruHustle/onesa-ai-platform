@@ -155,3 +155,8 @@ and its lockfile dependencies, and skipping cleanup when staging was never creat
 Patched operations encryption regression passed; its dependency audit has zero findings.
 M3.2 semantic retrieval qualification remains pending. Original Git metadata backup
 is temporary and will be removed at the owner’s request after remote source verification.
+
+GitHub plan compatibility: deployment workflows consume repository-level Actions
+secrets without paid deployment-environment features.
+AI documentation browser builds now generate diagrams/manuals before testing actual
+assets; the standalone documentation and TLS/operations jobs passed remotely.

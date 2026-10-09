@@ -51,6 +51,7 @@ jobs:
       - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
       - run: make docs-api
       - run: node scripts/docs/capture.mjs
+      - run: make docs-assets
       - run: .venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo
       - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml up -d --wait
       - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
