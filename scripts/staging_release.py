@@ -4,6 +4,7 @@ import json
 import os
 import secrets
 import sys
+import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -23,6 +24,31 @@ ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "onesa-ai-platform-backend"
 ROLE = "onesa_ai_staging_app"
 REVISION = "20261010_capacity"
+
+
+def save_environment(base, path, token, settings, existing):
+    """Preserve unrelated keys, omit absent optional values and bound transient retries."""
+    for key, value in settings.items():
+        if existing.get(key, "") == value:
+            continue
+        method = "PUT" if value else "DELETE"
+        for attempt in range(4):
+            status = write_json(
+                base,
+                path + "/env-vars/" + key,
+                token,
+                {"value": value} if value else {},
+                method,
+            )
+            if status in ({200, 201} if value else {204}):
+                break
+            if status not in {0, 429, 500, 503} or attempt == 3:
+                print(
+                    json.dumps({"setting_key": key, "save_http_status": status}),
+                    flush=True,
+                )
+                raise ValueError(f"Staging setting {key} save failed (HTTP {status})")
+            time.sleep(2 ** (attempt + 1))
 
 
 def migration_url(raw):
@@ -215,13 +241,7 @@ def main():
             "ONESA_MAIL_PROVIDER": "disabled",
         }
         phase = "private-staging-environment-save"
-        for key, value in settings.items():
-            if write_json(
-                base, path + "/env-vars/" + key, token, {"value": value}, "PUT"
-            ) not in {200, 201}:
-                raise ValueError(
-                    "Staging configuration save failed; inspect privately before retry"
-                )
+        save_environment(base, path, token, settings, environment)
         phase = "staging-runtime-permissions"
         from app.database import make_engine
 
@@ -251,7 +271,7 @@ def main():
             raise ValueError("Staging service layout update failed")
         updated, current = target()
         if (
-            any(current.get(key) != value for key, value in settings.items())
+            any(current.get(key, "") != value for key, value in settings.items())
             or updated.get("branch") != "staging"
         ):
             raise ValueError("Staging configuration readback failed")

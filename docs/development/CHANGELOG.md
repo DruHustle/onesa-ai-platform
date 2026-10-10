@@ -1,5 +1,12 @@
 # Development changelog
 
+## 2026-10-10 — Staging optional provider settings
+
+- Preserve initialized staging data on retries; omit absent optional Render settings,
+  retain unrelated settings and bound transient provider retries.
+- Unconfigured model/embedding URLs default to empty instead of invented service hosts;
+  Compose continues supplying its explicit internal service URLs. Hosted inference stays blocked.
+
 ## 2026-10-10 — Render startup regression
 
 - Made Dockerfile CMD authoritative in AI configuration and added final-image startup,

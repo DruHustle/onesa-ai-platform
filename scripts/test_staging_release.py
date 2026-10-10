@@ -7,6 +7,22 @@ import staging_release as release
 
 
 class StagingReleaseTests(unittest.TestCase):
+    def test_absent_optional_settings_are_not_sent_as_empty_values(self):
+        with patch.object(release, "write_json") as write:
+            release.save_environment("base", "path", "synthetic", {"OPTIONAL": ""}, {})
+            write.assert_not_called()
+
+    def test_transient_save_retries_and_preserves_other_settings(self):
+        with (
+            patch.object(release, "write_json", side_effect=[429, 200]) as write,
+            patch.object(release.time, "sleep"),
+        ):
+            release.save_environment(
+                "base", "path", "synthetic", {"KEY": "synthetic"}, {}
+            )
+            self.assertEqual(write.call_count, 2)
+            self.assertEqual(write.call_args.args[1], "path/env-vars/KEY")
+
     def test_foreign_or_pooled_migration_targets_are_rejected(self):
         for host in ["foreign.invalid", release.DATABASE_HOST]:
             with self.assertRaises(ValueError):
