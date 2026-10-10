@@ -423,3 +423,11 @@ existing roadmap/release documentation, updated links and documentation tooling.
 ## 2026-10-10 — Owner-created AI staging database
 
 Recorded the owner-reported isolated Neon resource `onesa-ai-platform-backend-db-staging`, superseding the Render staging database creation request. Updated staging template and private ignored staging profile without copying the disclosed owner password. Preserved local/production/Portal configuration. Hosted ownership/schema/TLS/roles and migrations remain unverified until fresh private credentials are available.
+
+### Isolated AI staging configuration
+
+Added a scope-checked staging diagnostic and Preview-only configuration/deployment path.
+CI and publication hygiene must pass on the current staging SHA before deployment.
+Recorded actual PostgreSQL 18.6, empty staging schema and privileged-role blocker;
+client TLS is checked separately from the Neon pooler internal connection.
+Production branch and provider settings remain unchanged.

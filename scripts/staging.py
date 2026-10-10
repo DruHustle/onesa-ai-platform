@@ -3,9 +3,12 @@
 import argparse
 import json
 import os
+import re
+from urllib.parse import urlencode
 
 from configuration_inventory import REPOSITORY, public_origin, values
 from inspect_hosting import get_json
+from repair_hosting import write_json
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
@@ -97,6 +100,9 @@ def database_probe(environment):
                 "driver": "psycopg3",
                 "database_identity_matches": True,
                 "tls_enabled_on_server_connection": bool(tls),
+                "client_tls_enabled": bool(
+                    connection.connection.driver_connection.pgconn.ssl_in_use
+                ),
                 "schema_revision": revision
                 if revision == "20261010_capacity"
                 else "missing_or_not_current",
@@ -119,9 +125,85 @@ def database_probe(environment):
         }
 
 
+def configure_preview(service):
+    """Add only a staging-branch Preview variable, preserving all other scopes."""
+    origin = public_origin(service.get("serviceDetails", {}).get("url"))
+    if origin != "https://onesa-ai-platform-backend-staging.onrender.com":
+        raise SystemExit("Staging backend origin could not be verified")
+    project = os.environ.get("VERCEL_PROJECT_ID", "")
+    team = os.environ.get("VERCEL_ORG_ID", "")
+    token = os.environ.get("VERCEL_TOKEN", "")
+    if not token or not re.fullmatch(r"prj_[A-Za-z0-9]+", project):
+        raise SystemExit("Vercel project credentials are unavailable")
+    query = "?" + urlencode({"teamId": team}) if team.startswith("team_") else ""
+    path = "projects/" + project
+    base = "https://api.vercel.com/v9/"
+    metadata, status = get_json(base, path + query, token)
+    link = metadata.get("link", {})
+    if (
+        status != 200
+        or link.get("org") != "DruHustle"
+        or link.get("repo") != "onesa-ai-platform"
+        or link.get("productionBranch") != "main"
+        or metadata.get("rootDirectory") != "onesa-ai-platform-frontend/apps/chat"
+        or (metadata.get("ssoProtection") or {}).get("deploymentType")
+        not in {"all", "all_except_custom_domains", "preview"}
+    ):
+        raise SystemExit("Protected staging Preview project identity is unverified")
+    response, status = get_json(base, path + "/env" + query, token)
+    if status != 200 or not isinstance(response.get("envs"), list):
+        raise SystemExit("Vercel environment inventory unavailable")
+    scoped = [
+        entry
+        for entry in response["envs"]
+        if entry.get("key") == "ONESA_API_URL"
+        and entry.get("gitBranch") == "staging"
+        and "preview" in entry.get("target", [])
+    ]
+    if scoped:
+        if len(scoped) != 1 or scoped[0].get("value") != origin:
+            raise SystemExit(
+                "Existing staging variable conflicts; preserved for review"
+            )
+        return {"already_configured": True, "deployment_requested": False}
+    status = write_json(
+        "https://api.vercel.com/v10/",
+        path + "/env" + query,
+        token,
+        {
+            "key": "ONESA_API_URL",
+            "value": origin,
+            "type": "plain",
+            "target": ["preview"],
+            "gitBranch": "staging",
+        },
+        "POST",
+    )
+    if status not in {200, 201}:
+        raise SystemExit("Staging Preview variable update failed; HTTP " + str(status))
+    response, status = get_json(base, path + "/env" + query, token)
+    verified = status == 200 and any(
+        entry.get("key") == "ONESA_API_URL"
+        and entry.get("gitBranch") == "staging"
+        and entry.get("target") == ["preview"]
+        and entry.get("value") == origin
+        for entry in response.get("envs", [])
+    )
+    if not verified:
+        raise SystemExit("Staging Preview variable readback failed")
+    return {
+        "branch": "staging",
+        "scope": "preview",
+        "readback_verified": True,
+        "deployment_requested": False,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["inspect", "database-probe"])
+    parser.add_argument(
+        "action", choices=["inspect", "database-probe", "configure-preview"]
+    )
     action = parser.parse_args().action
     service, environment = target()
     report = {
@@ -133,6 +215,8 @@ def main():
     }
     if action == "database-probe":
         report["database"] = database_probe(environment)
+    elif action == "configure-preview":
+        report["frontend"] = configure_preview(service)
     else:
         report["configured_keys"] = sorted(environment)
     print(json.dumps(report, indent=2))

@@ -363,3 +363,37 @@ is being made. Finally complete hosted tests and genuine release approvals befor
 production promotion. Production and staging must have separate data and credentials.
 
 Diagnostic commit86ea737 full Platform checks [38065740456](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38065740456) and repository hygiene38065740464 both passed. The new disclosure tests and standalone GPU Compose syntax validation are now included in subsequent CI.
+
+## Isolated staging inspection — 2026-10-10
+
+The owner confirmed rotation of the previously exposed Neon password and saving
+the fresh value on Render staging. Read-only workflow `38075678487` connected to
+that configured database successfully. No credential values were logged.
+
+- Render: `srv-db56mju7bikc73950f60`, environment `evm-db56llvlot8c73dtjvhg`,
+  actual origin `https://onesa-ai-platform-backend-staging.onrender.com`.
+  Currently branch `main`, application root incorrect, only `ONESA_DATABASE_URL`
+  present. This is an inspected configuration, not a successful staging deployment.
+- Neon: actual SQL database `neondb`, PostgreSQL **18.6**, vector installed,
+  zero public tables, Alembic schema not initialized. Preserve this existing
+  database; the earlier PostgreSQL 16 suggestion is superseded by inspection.
+- The current owner-role credential is unsuitable for application runtime.
+  Controlled migration and restricted-role provisioning remain required.
+- Vercel: existing `onesa-ai-platform` project, correct Next.js root, production
+  branch `main`, Preview protection `all_except_custom_domains`. No staging
+  branch variables existed at inspection. No production settings were changed.
+- Probe's `pg_stat_ssl` concerns the pooler-to-server leg; it is not proof of
+  client transport failure. The updated probe separately checks psycopg client TLS.
+
+The staging-only repair workflow now supports protected Preview deployment,
+gated by full CI and publication hygiene on the exact current staging SHA.
+It configures only branch `staging` / target `preview` / `ONESA_API_URL` and
+refuses conflicting existing values. It never requests a production deployment.
+
+Owner prerequisite: save the fresh actual Neon **direct (pooling disabled)**
+connection as GitHub repository secret `STAGING_MIGRATION_DATABASE_URL`.
+This operator secret is supplied to migration processes as `ONESA_DATABASE_URL`;
+it is not a new application configuration key. Do not paste credentials in chat.
+Use a separately restricted credential for the Render runtime after migrations.
+Until schema, runtime role and exact Preview origin are verified, do not deploy
+the staging backend or count hosted database workflows as accepted.

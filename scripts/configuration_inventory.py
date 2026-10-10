@@ -298,7 +298,11 @@ def main():
             "domains": safe_domains,
             "environment_http": frontend_env_status,
             "environment_keys_and_targets": frontend_keys,
-            "prepared_production_ONESA_API_URL": service_origin,
+            (
+                "prepared_preview_ONESA_API_URL"
+                if os.environ.get("GITHUB_REF") == "refs/heads/staging"
+                else "prepared_production_ONESA_API_URL"
+            ): service_origin,
             "configuration_applied": False,
         }
     print(json.dumps(result, indent=2))

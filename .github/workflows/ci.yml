@@ -27,6 +27,7 @@ jobs:
       - run: make check
       - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
       - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
+      - run: python3 -m unittest discover -s scripts -p test_staging.py
       - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
       - run: npm ci --prefix scripts/contract-tools --ignore-scripts
       - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
