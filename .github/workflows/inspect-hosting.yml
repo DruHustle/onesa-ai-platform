@@ -20,3 +20,5 @@ jobs:
         with: {python-version: '3.11'}
       - name: Read configuration and deployment status without revealing credentials
         run: python scripts/inspect_hosting.py
+      - name: Inventory AI resources, domain assignments and redacted setting validity
+        run: python scripts/configuration_inventory.py

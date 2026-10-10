@@ -406,3 +406,7 @@ Eight provider/startup regression tests and the rebuilt image pass. History hygi
 scans report zero findings in all three repositories. The generated Next.js route
 declaration was restored to its production form; generated framework agent guidance
 is included. Provider production readiness remains independent of a source push.
+
+## 2026-10-10 — AI configuration inventory
+
+Added AI-only, read-only provider inventory for actual backend origin, provider identity, linked environment groups, overrides, worker inventory, Vercel domain assignment and redacted configuration validity. No provider configuration or resource provisioning is performed by this workflow. Disclosure and scope tests pass locally.
