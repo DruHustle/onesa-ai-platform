@@ -480,3 +480,7 @@ Eight provider/startup regression tests and the rebuilt image pass. History hygi
 scans report zero findings in all three repositories. The generated Next.js route
 declaration was restored to its production form; generated framework agent guidance
 is included. Provider production readiness remains independent of a source push.
+
+## 2026-10-10 — Specific AI configuration/provisioning review
+
+Read-only provider inventory38065741091 confirms actual AI backend origin, Vercel domain verification, missing Python runtime settings, zero Render databases and no linked groups/AI workers. The [complete configuration matrix and exact provisioning delta](../engineering/AI_CONFIGURATION_INVENTORY.md) supersede generic infrastructure blocker descriptions. Production template preserves semantic candidate and confirmed production domain. Eleven diagnostic tests and147 isolated PostgreSQL integration tests pass; hosted frontend200, API503 remains open. Free-only provisioning boundary and release guard retained. No provider settings/deployment/migrations changed.

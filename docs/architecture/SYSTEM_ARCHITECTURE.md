@@ -161,3 +161,7 @@ security states, retrieval and API contracts are unchanged. Portal lint, platfor
 lint/typecheck, docs typecheck and the public docs build passed. Local locked
 platform dependencies were restored after a missing axe test dependency was found.
 These are local source changes, not a hosted release or legal/operations approval.
+
+## Hosted configuration boundary — 2026-10-10
+
+Production AI uses platform.onesa.eu, independently from corporate/portal origins. Next.js ONESA_API_URL is server-only and takes the exact discovered backend origin; Python ONESA_ENVIRONMENT controls hosted validation. Session tokens are opaque and hashed in PostgreSQL, without a shared SESSION_KEY. The implemented Knowledge upload path stores owned extracted text/vector and bounded staging in PostgreSQL, not Portal S3; original-file archival is not implemented. HTTP semantic embeddings are a separate host dependency. See the [redacted provider matrix](../engineering/AI_CONFIGURATION_INVENTORY.md) for actual inventory and deployment limitations.

@@ -1,0 +1,22 @@
+{
+  "status": "PROPOSED_NOT_PROVISIONED",
+  "provider": "Render",
+  "name": "onesa-ai-db-staging",
+  "environment": "isolated staging; owner must identify staging backend first",
+  "region": "frankfurt",
+  "postgresMajorVersion": "16",
+  "plan": "free",
+  "monthly_subscription_usd": 0,
+  "storage_gb": 1,
+  "expires_after_days": 30,
+  "managed_backups": false,
+  "extension": "vector",
+  "embedding_dimensions": 256,
+  "runtime_setting": "ONESA_DATABASE_URL",
+  "driver": "postgresql+psycopg",
+  "tls": "sslmode=require; validate pg_stat_ssl on actual internal connection",
+  "backup_before_expiry": true,
+  "paid_upgrade_authorized": false,
+  "reuse_portal_credentials": false,
+  "execute_automatically": false
+}

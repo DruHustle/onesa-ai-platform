@@ -498,3 +498,7 @@ Eight provider/startup regression tests and the rebuilt image pass. History hygi
 scans report zero findings in all three repositories. The generated Next.js route
 declaration was restored to its production form; generated framework agent guidance
 is included. Provider production readiness remains independent of a source push.
+
+## 2026-10-10 — AI-only provider configuration handoff
+
+Continue from [AI_CONFIGURATION_INVENTORY.md](../engineering/AI_CONFIGURATION_INVENTORY.md). Exact backend origin verified: https://onesa-ai-platform-backend.onrender.com; production origin https://platform.onesa.eu (Vercel assigned/verifiedTLS). Only misplaced public-docs setting exists on Render; all Settings overrides absent. No Render database/groups/worker. No remote writes performed. Owner next action is isolated Frankfurt PostgreSQL16 Free staging creation ($0,1GB,30-day expiry), then scoped role/migration acceptance. Production GPU proposal remains unapproved under free-only policy. Preserve local Ollama/env/data; hosted503 is still open. Local147passed4skipped; diagnostic11passed.

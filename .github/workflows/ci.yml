@@ -26,6 +26,7 @@ jobs:
       - run: .venv/bin/python scripts/check_secrets.py
       - run: make check
       - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
+      - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
       - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
       - run: npm ci --prefix scripts/contract-tools --ignore-scripts
       - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
@@ -99,6 +100,7 @@ jobs:
       - run: docker compose config --quiet
       - run: ONESA_DOMAIN=example.invalid ONESA_APP_DATABASE_URL=postgresql+psycopg://onesa_app:validation-only@db:5432/onesa docker compose -f compose.yaml -f compose.production.yaml config --quiet
       - run: ONESA_MODEL_API_KEY=validation-only docker compose -f compose.yaml -f compose.gpu.yaml --profile gpu config --quiet
+      - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config --quiet
       - run: docker compose build api chat
       - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml up --wait --wait-timeout 180
       - run: curl --fail http://localhost:3120/ready

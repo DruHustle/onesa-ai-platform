@@ -410,3 +410,5 @@ is included. Provider production readiness remains independent of a source push.
 ## 2026-10-10 — AI configuration inventory
 
 Added AI-only, read-only provider inventory for actual backend origin, provider identity, linked environment groups, overrides, worker inventory, Vercel domain assignment and redacted configuration validity. No provider configuration or resource provisioning is performed by this workflow. Disclosure and scope tests pass locally.
+
+Prepared complete source-backed AI configuration matrix, verified origin/proxy values, temporary free Render PostgreSQL staging proposal and standalone loopback-only vLLM host proposal. Corrected production example to retain semantic embedding candidate; no private environment files or other projects modified. Local isolated PostgreSQL147passed4skipped; hosted API503 remains open.
