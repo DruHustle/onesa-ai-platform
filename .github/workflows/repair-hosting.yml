@@ -76,6 +76,7 @@ jobs:
         if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'
         env:
           RENDER_SERVICE_ID: srv-db56mju7bikc73950f60
+          RENDER_CLEAR_CACHE: clear
         run: python scripts/deploy_render.py
       - name: Verify real hosted staging security, persistence and restart
         if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'

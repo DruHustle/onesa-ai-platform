@@ -95,6 +95,17 @@ def main():
         html = require(clients[0].get("/"), 200, "authorized_preview_html")
         if "Onesa" not in html.text:
             raise ValueError("Expected application HTML is absent")
+        require(
+            clients[2].post(
+                "/api/v1/auth/login",
+                json={
+                    "email": "origin-probe-" + secrets.token_hex(10) + "@example.com",
+                    "password": "synthetic-invalid-password",
+                },
+            ),
+            401,
+            "live_runtime_accepts_current_preview_origin",
+        )
         phase = "synthetic-identity-fixtures"
         sys.path.insert(0, str(BACKEND))
         from app.models import AccessGrant, AuthSession, User, now
