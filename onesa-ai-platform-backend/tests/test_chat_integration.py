@@ -271,6 +271,7 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
 
     signup(api)
     api.app.state.settings.model_backend = "ollama"
+    api.app.state.settings.model_base_url = "https://model.example.invalid/v1"
     api.app.state.settings.model_name = "test-model"
     api.app.state.model_client = OllamaModelClient(
         api.app.state.settings, httpx.MockTransport(handler)

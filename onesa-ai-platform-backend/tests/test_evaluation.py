@@ -24,7 +24,7 @@ def test_report_keeps_missing_usage_unknown(monkeypatch: pytest.MonkeyPatch) -> 
     from app.inference import OllamaModelClient
 
     client = OllamaModelClient(
-        Settings(model_backend="ollama"),
+        Settings(model_backend="ollama", model_base_url="https://model.example.invalid/v1"),
         httpx.MockTransport(
             lambda _: httpx.Response(
                 200, text='data: {"choices":[{"delta":{"content":"Hello"}}]}\n\ndata: [DONE]\n\n'
