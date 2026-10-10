@@ -1,9 +1,19 @@
 # Vercel frontend and Render backend
 
-The repository contains provider configuration, not a completed remote deployment.
+Production remains unqualified. The existing isolated staging deployment and its
+verified provider evidence are recorded in `AI_CONFIGURATION_INVENTORY.md`.
 Use the private `onesa-ug/onesa-ai-platform` GitHub repository and `main`. The frontend and
 backend remain separate release units. Grant the providers access only to the required
 organization repositories. Deploy through `.github/workflows/deploy.yml`, dispatched from GitHub Actions.
+
+For isolated AI staging, dispatch `repair-hosting.yml` on branch `staging` with
+`staging_action=deploy-staging`. It requires successful exact-revision CI/hygiene,
+uses the protected GitHub **Staging** environment, builds Vercel Preview with
+staging-only `ONESA_API_URL` and `NEXT_PUBLIC_ONESA_DOCUMENTATION_URL`, verifies the
+existing Neon schema/restricted role and deploys only the identified free Render
+staging service. Migration and automation-bypass credentials remain private in that
+environment. The workflow verifies real hosted security, restart persistence,
+bounded idle staging-connection recovery and responsive/accessibility checks.
 
 ## Vercel
 

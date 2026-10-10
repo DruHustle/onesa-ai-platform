@@ -11,11 +11,11 @@ from urllib.parse import urlsplit
 import httpx
 from argon2 import PasswordHasher
 from psycopg import Error as PsycopgError
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, select, text, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from staging import target
-from staging_release import BACKEND, SERVICE_ID, migration_url, verified_preview
+from staging_release import BACKEND, ROLE, SERVICE_ID, migration_url, verified_preview
 
 
 def preview_is_protected(response):
@@ -372,6 +372,25 @@ def main():
             clients[0].get("/api/v1/agents/runs/" + run["id"]),
             200,
             "explicit_tool_run_survives_restart",
+        )
+        phase = "scoped-idle-connection-recovery"
+        # Interrupt only idle connections of this verified staging runtime role.
+        # Active queries, owner/migration sessions and other products are untouched.
+        with engine.begin() as connection:
+            recovered_connections = connection.scalars(
+                text(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid IN (SELECT pid FROM pg_stat_activity WHERE usename=:role AND datname='neondb' AND state='idle' AND pid<>pg_backend_pid() LIMIT 5)"
+                ),
+                {"role": ROLE},
+            ).all()
+        if not any(recovered_connections):
+            raise ValueError(
+                "No idle staging connection was available for recovery verification"
+            )
+        require(
+            clients[0].get("/api/v1/conversations/" + conversation),
+            200,
+            "staging_connection_recovers_after_idle_disconnect",
         )
         # Account grants expire in two hours; keep synthetic records for persistence evidence.
         with Session(engine) as db:

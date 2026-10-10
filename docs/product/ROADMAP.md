@@ -41,4 +41,11 @@ Completed instruction logs and duplicate handoffs have been removed; implementat
 history remains in Git and `docs/development/CHANGELOG.md`. Agent policies live only
 in root `AGENTS.md`.
 
-Owner reports Neon staging resource `onesa-ai-platform-backend-db-staging` created. Verify project/branch ownership, Free plan, PostgreSQL version/schema and isolated role permissions; rotate the disclosed owner credential before any connection. No duplicate Render database is needed. Runtime URL and actual staging origin remain unconfigured.
+The existing Neon AI staging database is migrated and connected through a verified
+restricted runtime role. Protected Vercel Preview and the Render staging backend
+deployed `898c224`; real hosted authentication, CSRF, isolation and restart persistence
+passed. Responsive/accessibility completion, documentation-link configuration and
+connection-recovery acceptance remain pending the next hosted run. See
+`docs/engineering/AI_CONFIGURATION_INVENTORY.md` for exact origins/revisions/evidence.
+Hosted inference/embeddings and production acceptance remain blocked; do not recreate
+the staging database, reuse portal credentials or promote staging to production.

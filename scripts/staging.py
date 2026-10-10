@@ -184,41 +184,58 @@ def configure_preview(service):
     response, status = get_json(base, path + "/env" + query, token)
     if status != 200 or not isinstance(response.get("envs"), list):
         raise SystemExit("Vercel environment inventory unavailable")
-    scoped = [
-        entry
-        for entry in response["envs"]
-        if entry.get("key") == "ONESA_API_URL"
-        and entry.get("gitBranch") == "staging"
-        and "preview" in entry.get("target", [])
-    ]
-    if scoped:
-        if len(scoped) != 1 or scoped[0].get("value") != origin:
+    desired = {
+        "ONESA_API_URL": origin,
+        "NEXT_PUBLIC_ONESA_DOCUMENTATION_URL": "https://docs.onesa.eu",
+    }
+    missing = []
+    for key, value in desired.items():
+        scoped = [
+            entry
+            for entry in response["envs"]
+            if entry.get("key") == key
+            and entry.get("gitBranch") == "staging"
+            and "preview" in entry.get("target", [])
+        ]
+        if scoped:
+            if (
+                len(scoped) != 1
+                or scoped[0].get("value") != value
+                or scoped[0].get("target") != ["preview"]
+            ):
+                raise SystemExit(
+                    "Existing staging variable conflicts; preserved for review"
+                )
+        else:
+            missing.append((key, value))
+    for key, value in missing:
+        status = write_json(
+            "https://api.vercel.com/v10/",
+            path + "/env" + query,
+            token,
+            {
+                "key": key,
+                "value": value,
+                "type": "plain",
+                "target": ["preview"],
+                "gitBranch": "staging",
+            },
+            "POST",
+        )
+        if status not in {200, 201}:
             raise SystemExit(
-                "Existing staging variable conflicts; preserved for review"
+                "Staging Preview variable update failed; HTTP " + str(status)
             )
-        return {"already_configured": True, "deployment_requested": False}
-    status = write_json(
-        "https://api.vercel.com/v10/",
-        path + "/env" + query,
-        token,
-        {
-            "key": "ONESA_API_URL",
-            "value": origin,
-            "type": "plain",
-            "target": ["preview"],
-            "gitBranch": "staging",
-        },
-        "POST",
-    )
-    if status not in {200, 201}:
-        raise SystemExit("Staging Preview variable update failed; HTTP " + str(status))
     response, status = get_json(base, path + "/env" + query, token)
-    verified = status == 200 and any(
-        entry.get("key") == "ONESA_API_URL"
-        and entry.get("gitBranch") == "staging"
-        and entry.get("target") == ["preview"]
-        and entry.get("value") == origin
-        for entry in response.get("envs", [])
+    verified = status == 200 and all(
+        any(
+            entry.get("key") == key
+            and entry.get("gitBranch") == "staging"
+            and entry.get("target") == ["preview"]
+            and entry.get("value") == value
+            for entry in response.get("envs", [])
+        )
+        for key, value in desired.items()
     )
     if not verified:
         raise SystemExit("Staging Preview variable readback failed")

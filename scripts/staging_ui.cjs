@@ -33,12 +33,20 @@ async function main() {
         const response = await page.goto(origin + route, {waitUntil:'networkidle'});
         if (!response || response.status() !== 200) throw new Error('Interface route failed');
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2);
-        if (overflow) throw new Error('Horizontal overflow on ' + name + route);
+        if (overflow) {
+          console.log(JSON.stringify({viewport:name,route,horizontal_overflow:true}));
+          throw new Error('Horizontal overflow');
+        }
         const violations = (await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze()).violations.filter(item => ['critical','serious'].includes(item.impact));
-        if (violations.length) throw new Error('Accessibility issues: ' + violations.map(item => item.id).join(','));
+        if (violations.length) {
+          console.log(JSON.stringify({viewport:name,route,accessibility_rule_ids:violations.map(item=>item.id)}));
+          throw new Error('Accessibility issues');
+        }
       }
       const links = await page.locator('a[href]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
-      if (!links.some(link => link && link.startsWith('https://docs.onesa.eu'))) throw new Error('Documentation link unavailable');
+      const documentationLink = links.some(link => link && link.startsWith('https://docs.onesa.eu'));
+      console.log(JSON.stringify({viewport:name,documentation_link_present:documentationLink}));
+      if (!documentationLink) throw new Error('Documentation link unavailable');
       evidence.push({viewport:name, routes:['/','/knowledge','/agents','/travel','/settings'], login:'PASS', overflow:'PASS', automated_accessibility:'PASS'});
       await context.close();
     }
