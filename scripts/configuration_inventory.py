@@ -267,6 +267,31 @@ def main():
             "team_id": team,
             "repository_matches": repository_matches,
             "git_link_present": bool(link),
+            "production_branch_main": link.get("productionBranch") == "main",
+            "preview_protection": (data.get("ssoProtection") or {}).get(
+                "deploymentType"
+            )
+            if (data.get("ssoProtection") or {}).get("deploymentType")
+            in {
+                "all",
+                "preview",
+                "all_except_custom_domains",
+                "prod_deployment_urls_and_all_previews",
+            }
+            else "not_verified",
+            "staging_branch_variables": [
+                {
+                    "key": entry.get("key"),
+                    "branch_scoped": entry.get("gitBranch") == "staging",
+                    "backend_origin": public_origin(entry.get("value"))
+                    if entry.get("key") == "ONESA_API_URL"
+                    else None,
+                }
+                for entry in frontend_env.get("envs", [])
+                if "preview" in entry.get("target", [])
+                and entry.get("key")
+                in {"ONESA_API_URL", "NEXT_PUBLIC_ONESA_DOCUMENTATION_URL"}
+            ],
             "root_matches": data.get("rootDirectory")
             == "onesa-ai-platform-frontend/apps/chat",
             "domains_http": domains_status,

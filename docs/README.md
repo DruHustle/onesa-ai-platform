@@ -1,6 +1,6 @@
 # Documentation index
 
-Read development/IMPLEMENTATION_STATUS.md and SESSION_HANDOFF.md first.
+Read [engineering policies](../AGENTS.md) and [the roadmap](product/ROADMAP.md) first.
 Amendment 001 governs product positioning; distinguish implemented software from proposed
 models/features and unverified GPU/production acceptance.
 
@@ -52,13 +52,12 @@ models/features and unverified GPU/production acceptance.
 - [AMENDMENT_001](development/AMENDMENT_001.md)
 - [AMENDMENT_001_REPORT](development/AMENDMENT_001_REPORT.md)
 - [CHANGELOG](development/CHANGELOG.md)
-- [CONTINUATION_PROMPT](development/CONTINUATION_PROMPT.md)
+- [Engineering policies](../AGENTS.md)
 - [ENGINEERING_REFERENCE](development/ENGINEERING_REFERENCE.md)
-- [IMPLEMENTATION_STATUS](development/IMPLEMENTATION_STATUS.md)
+- [Roadmap](product/ROADMAP.md)
 - [MILESTONE_2_REQUEST](development/MILESTONE_2_REQUEST.md)
 - [MILESTONE_2_REPORT](development/MILESTONE_2_REPORT.md)
 - [NODE_RUNTIME](development/NODE_RUNTIME.md)
-- [SESSION_HANDOFF](development/SESSION_HANDOFF.md)
 
 ## models
 

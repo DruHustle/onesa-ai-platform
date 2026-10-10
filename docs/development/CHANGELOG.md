@@ -412,3 +412,14 @@ is included. Provider production readiness remains independent of a source push.
 Added AI-only, read-only provider inventory for actual backend origin, provider identity, linked environment groups, overrides, worker inventory, Vercel domain assignment and redacted configuration validity. No provider configuration or resource provisioning is performed by this workflow. Disclosure and scope tests pass locally.
 
 Prepared complete source-backed AI configuration matrix, verified origin/proxy values, temporary free Render PostgreSQL staging proposal and standalone loopback-only vLLM host proposal. Corrected production example to retain semantic embedding candidate; no private environment files or other projects modified. Local isolated PostgreSQL147passed4skipped; hosted API503 remains open.
+
+## 2026-10-10 — Instruction documentation cleanup
+
+Removed completed GitHub setup instructions and duplicate status/session-handoff
+logs. Consolidated contribution, security, repository governance and agent policies
+in one root AGENTS.md per independent repository. Preserved unfinished work in
+existing roadmap/release documentation, updated links and documentation tooling.
+
+## 2026-10-10 — Owner-created AI staging database
+
+Recorded the owner-reported isolated Neon resource `onesa-ai-platform-backend-db-staging`, superseding the Render staging database creation request. Updated staging template and private ignored staging profile without copying the disclosed owner password. Preserved local/production/Portal configuration. Hosted ownership/schema/TLS/roles and migrations remain unverified until fresh private credentials are available.

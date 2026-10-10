@@ -104,5 +104,5 @@ project license choice or regulatory/funding claims were made.
 
 For reproduction use [native setup](../models/OLLAMA_SETUP.md),
 [evaluation](../models/MODEL_EVALUATION.md) and
-[handoff](SESSION_HANDOFF.md). Continue the first unchecked status task, preserving
+[Roadmap](../product/ROADMAP.md). Continue the first unchecked status task, preserving
 working components and recording real qualification evidence.

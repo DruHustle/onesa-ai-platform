@@ -27,7 +27,7 @@ Secrets below are never included as values in this document.
 | `ONESA_ENVIRONMENT` | B, API/worker deployment mode | Required on Render; `development`, `test`, `staging`, `production`; only last two on Render | Nonsecret; separate staging/production | Missing. Production target `production`; staging target `staging` after owner identifies isolated service. `NODE_ENV` does not control Python. |
 | `ONESA_PUBLIC_ORIGIN` | B, auth Origin/CSRF and mail links | Required exact HTTPS origin, no path/trailing slash/query/credentials in hosted modes | Nonsecret; separate origins | Missing. Owner-confirmed production `https://platform.onesa.eu`. Staging actual Vercel assignment not yet identified; do not reuse production origin/data or wildcard previews. |
 | `ONESA_SECURE_COOKIES` | B, session cookie | Required `true` in hosted modes (`true`/`false` accepted) | Nonsecret; both hosted environments | Missing; known target `true`. |
-| `ONESA_DATABASE_URL` | B/database.py, worker; migrations/env.py | Required hosted; explicit installed SQLAlchemy psycopg3 scheme `postgresql+psycopg://` | Secret; isolated per product/environment/role | BLOCKED: no Render database in inventory. Actual same-region Internal Database URL after provisioning and role bootstrap; deliberate driver adaptation, preserving escaped credentials/query. Migration owner injected separately under same key, never API owner role. |
+| `ONESA_DATABASE_URL` | B/database.py, worker; migrations/env.py | Required hosted; explicit installed SQLAlchemy psycopg3 scheme `postgresql+psycopg://` | Secret; isolated per product/environment/role | BLOCKED: owner-created Neon staging database reported; ownership/schema/plan and fresh restricted-role credentials pending. Actual Neon pooled runtime URL; deliberate psycopg3 driver adaptation, preserving escaped credentials/query. Production database remains separate and unprovisioned. Migration owner injected separately under same key, never API owner role. |
 | `ONESA_METRICS_TOKEN` | B, protected metrics | Required hosted, >=32 random characters | Secret; per environment | Missing. Generate privately through approved secret mechanism; never copy portal/proxy/previous exposed values. |
 | `ONESA_MODEL_BACKEND` | B/model factory | `mock`, `ollama`, `vllm`; production rejects mock | Nonsecret; model decision per environment | Missing. Local verified `ollama` unchanged. Hosted vLLM proposal is not approval to replace it. |
 | `ONESA_MODEL_NAME` | B/model client | Nonempty served model identifier | Nonsecret; model host | BLOCKED hosted. Local `qwen3:4b-instruct-2507-q4_K_M`; proposed HF `Qwen/Qwen3-4B-Instruct-2507` is a different artifact and requires compatibility acceptance. |
@@ -146,53 +146,61 @@ logs. Resolve them via the existing `RENDER_BACKEND_SERVICE_ID` and
 
 ## D. Concrete provisioning requests and approval boundaries
 
-### Database: one free isolated Render staging database
+### Database: owner-created Neon staging resource
 
-New proposal: [`ai-db-render-free-staging.json`](../../infra/deployment/proposals/ai-db-render-free-staging.json).
-Name `onesa-ai-db-staging`, PostgreSQL16, `vector`, Frankfurt in the inspected owner
-workspace, **Free, $0 subscription, 1GB, 30-day lifetime**. This is a temporary
-qualification database, not a durable production recommendation. Render permits
-only one free PostgreSQL per workspace; its free tier has no managed backups and
-expires after30days. Data deletion follows the14-day upgrade grace period. Do not
-upgrade automatically under the free-only policy. Export synthetic acceptance data
-and perform an isolated restore before expiry. [Render free plan limits](https://render.com/docs/free).
+The owner reports creating **`onesa-ai-platform-backend-db-staging`** on Neon. The supplied
+URL identifies AWS `eu-central-1` (Frankfurt), pooled host `ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech`,
+and SQL database **`neondb`**. The resource label is not the SQL database name.
+This is an owner-reported resource, not an authenticated ownership/plan/schema check.
+No new Render database should be provisioned for this staging setup. The former
+Render Free request is superseded; same-owner Render inventory can remain empty
+while the application uses this separate external Neon database. This external
+connection is not a Render Internal Database URL.
 
-Owner steps: Render Dashboard → New → PostgreSQL → name above → Frankfurt →
-PostgreSQL16 → Free. Place it in an **identified isolated AI staging environment**,
-not the current unclassified public service environment or Portal. Confirm quote$0
-and decline paid upgrades. No resource has been created by this review. If a free
-slot is no longer available, stop; do not choose a paid plan or duplicate resources.
+The owner credential was disclosed in chat. It has not been stored, reused for a
+connection test, copied into another product or submitted to Render. Rotate its
+password in Neon → this project's staging branch → Postgres database → Roles.
+Enter replacement credentials only in an approved private mechanism, not chat.
+[Neon role/password management](https://neon.com/docs/manage/roles).
 
-Once the actual staging API is identified in the same account/region, privately
-use the new database's Internal Database URL with explicitly installed
-`postgresql+psycopg` SQLAlchemy driver. Preserve host/database/escaping and add
-`sslmode=require` on this documented Render internal path; verify `pg_stat_ssl`
-on the actual connection. Render's internal self-signed TLS does not support
-`verify-full`; this is a provider-specific connection requirement, not permission
-to turn off TLS. [Render connection/TLS documentation](https://render.com/docs/postgresql-creating-connecting).
-
-Bootstrap `vector` using an approved admin role; create separate migration owner
-and restricted API/worker role. No superuser, CREATEROLE/CREATEDB or schema CREATE
-in API credentials. Inject migration role privately as ONESA_DATABASE_URL into
-only the migration process. From reviewed backend directory:
+1. Verify the actual Neon project/branch belongs to Onesa AI staging only, its
+   Free plan, PostgreSQL version (16 requested), contents and intended use. Preserve
+   any pre-existing data; inventory and back up before modifying it.
+2. Use a separate migration owner and a restricted API/worker runtime role.
+   `neondb_owner` is not the runtime-role choice. Roles created in the Neon Console
+   may inherit elevated membership; create restricted roles through reviewed SQL
+   and verify no superuser, CREATEROLE/CREATEDB/BYPASSRLS, schema CREATE or elevated
+   inherited membership. Bootstrap `vector` using the approved owner.
+3. Privately save the actual restricted-role pooled URL as **ONESA_DATABASE_URL**
+   in the **AI staging Render API** and appropriate staging worker. SQLAlchemy uses
+   psycopg3; deliberately select scheme **postgresql+psycopg://**, retaining actual
+   host/database, correctly encoded credentials and
+   **sslmode=require&channel_binding=require**. Do not rename `neondb`, inject the
+   owner role into runtime, reuse Portal credentials or modify production settings.
+4. For migrations, obtain the actual direct connection from Neon Connect by
+   disabling pooling; do not guess a direct hostname. Inject its fresh migration
+   credential into **only the migration process's ONESA_DATABASE_URL**, preserving
+   TLS and selecting the installed driver. [Neon connection guidance](https://neon.com/docs/get-started/connect-neon).
+5. Once ownership/isolation and fresh secrets are verified, run from reviewed backend:
 
 ```sh
 python -m alembic upgrade head
 python -m alembic current
 ```
 
-Required head `20261010_capacity`; check `vector`, 256-dimensional embedding column,
-ownership/identity/upload constraints and runtime role denial of DDL. Engine
-pool5, overflow0, pooltimeout2s, connecttimeout3s, statementtimeout5s per process;
-Alembic NullPool. Budget API + worker connections separately. Test backup/restore
-rows and permissions on an isolated target with mail/inference disabled; no local
-or Portal data copied, no live/unidentified migrations. Existing local integration
-suite applies and round-trips migrations on only `onesa_test`, port55432.
+Required head `20261010_capacity`. Validate vector256dimensions, identity/upload
+constraints, role isolation and TLS on the actual hosted connection. Runtime pool5,
+overflow0, pooltimeout2s, connecttimeout3s, statementtimeout5s; migrations NullPool.
+Verify pooled connection startup/session options against Neon before acceptance.
+Perform a synthetic backup/isolated restoration test with mail/model suppressed.
+No hosted connection, live migration, backup or ownership verification occurred.
 
-The older Neon Free proposal remains an **alternative requiring provider decision**;
-it is not an existing database and is not automatically substituted here. A lasting
-free production database/backups decision remains open; an expiring Render database
-must not be promoted as durable production storage.
+Local ignored mode0600 `.env.staging` is prepared with ONESA_ENVIRONMENT=staging,
+secure cookies and a newly generated private metrics token. ONESA_DATABASE_URL
+remains blank until the exposed owner credential is rotated and a restricted runtime
+URL is injected. Production origin/data and existing local `.env` remain unchanged.
+The staging frontend origin is still unidentified; template placeholders are not
+validated deployment values.
 
 ### Model: one concrete vLLM proposal, BLOCKED by free-only budget
 
@@ -293,7 +301,8 @@ Applied: AI diagnostic code, disclosure tests, provider inspection workflow and
 reviewable source templates/proposals/documentation. Diagnostic source was pushed
 to main and its read-only provider workflow succeeded. No provider environment
 values, service resources, plan, DNS, credentials, migrations or deployed application
-were changed in this session.
+were changed. The later owner-reported Neon resource is recorded below; its exposed
+credential was not saved or used.
 
 Prepared: exact production origin/proxy delta, complete redacted matrix, temporary
 free Render PostgreSQL request and bounded paid GPU alternative (unapproved),
@@ -327,7 +336,7 @@ owner task; this inspection did not rotate/reuse exposed values.
   sandbox-denied connection run was superseded by authorized local-network run.
 - BLOCKED: hosted `/api/v1/health` and `/api/v1/ready` both503; direct `/core-ready`
   request timed out. The original hosted503 finding remains OPEN.
-- BLOCKED: deployed revision is older than repaired source, DB/env absent,
+- BLOCKED: deployed revision is older than repaired source, runtime DB settings/env absent (Neon staging resource is owner-reported),
   mandatory model host unprovisioned, embeddings/worker delivery unconfigured.
 - BLOCKED: hosted DB connectivity/schema/role/TLS, sessions/CSRF/proxy, real
   generation/stream/cancel/recovery, semantic retrieval and backups/restore cannot
@@ -338,10 +347,11 @@ owner task; this inspection did not rotate/reuse exposed values.
 
 ## G. Single next owner action and consolidated sequence
 
-**Next owner action: create the isolated `onesa-ai-db-staging` Render PostgreSQL16
-Free database in Frankfurt using the proposal above, confirming the quote is$0.**
-Keep its credentials in Render/approved secrets, never chat. This unblocks identified
-staging database migration/role acceptance; it does not unblock production inference.
+**Next owner action: rotate the exposed Neon owner password in the staging project
+and privately configure separate migration and restricted runtime credentials for
+`onesa-ai-platform-backend-db-staging`.** Do not create a duplicate database or paste
+replacement credentials here. Hosted ownership/schema/TLS verification and migrations
+can proceed once fresh credentials and the isolated target are available.
 
 Then identify the isolated staging API/Vercel project + exact origin, inject that
 DB's restricted runtime credentials and metrics token, and qualify the reviewed

@@ -1,5 +1,5 @@
 {
-  "status": "PROPOSED_NOT_PROVISIONED",
+  "status": "SUPERSEDED_BY_OWNER_SELECTED_NEON_STAGING",
   "provider": "Render",
   "name": "onesa-ai-db-staging",
   "environment": "isolated staging; owner must identify staging backend first",
@@ -18,5 +18,6 @@
   "backup_before_expiry": true,
   "paid_upgrade_authorized": false,
   "reuse_portal_credentials": false,
-  "execute_automatically": false
+  "execute_automatically": false,
+  "replacement_resource": "onesa-ai-platform-backend-db-staging"
 }

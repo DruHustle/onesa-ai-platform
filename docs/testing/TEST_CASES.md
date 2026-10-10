@@ -11,7 +11,7 @@
 | Release | Production config guards, protected metrics, total-body bounds, migration round-trip |
 | Browser | Registration → stream → reopen → rename/delete → login; document chat/tools/travel revisions; mobile keyboard/nav |
 
-See IMPLEMENTATION_STATUS.md for the final passing counts/limitations. Backup/restore and
+See the roadmap and engineering configuration inventory for the final passing counts/limitations. Backup/restore and
 small health-load probes are actual local operations recorded separately. No real-model
 quality, trained language scores, GPU throughput or production certification is asserted.
 

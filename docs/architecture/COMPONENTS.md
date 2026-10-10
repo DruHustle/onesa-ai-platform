@@ -35,6 +35,6 @@ The `onesa-ai-platform` Git root contains the independently buildable frontend a
 backend. `onesa-company-portal` and `onesa-ai-robot` have separate Git roots/history;
 none requires a workspace-level repository or sibling source at build time. The
 organization remotes are private and initially empty. Primary branch is `main`.
-Governance and publication gates are documented in `GITHUB_SETUP.md`; generated
+Governance and publication gates are documented in the root `AGENTS.md`; generated
 internal/public manuals remain a tracked-history review blocker. Candidate packaging
 is manual per application and is separate from approved deployment.
