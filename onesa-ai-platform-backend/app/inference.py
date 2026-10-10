@@ -97,6 +97,8 @@ class OpenAIModelClient:
         self.transport = transport
 
     def connection(self) -> "httpx.AsyncClient":
+        if not self.settings.model_base_url:
+            raise InferenceError()
         return httpx.AsyncClient(
             base_url=self.settings.model_base_url.rstrip("/") + "/",
             timeout=httpx.Timeout(self.settings.generation_timeout, connect=3),

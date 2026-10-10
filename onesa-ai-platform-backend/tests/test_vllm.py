@@ -4,7 +4,31 @@ import httpx
 import pytest
 
 from app.config import Settings
-from app.inference import ModelMessage, VLLMModelClient
+from app.inference import InferenceError, ModelMessage, VLLMModelClient
+
+
+@pytest.fixture(autouse=True)
+def explicit_transport_endpoint(monkeypatch):
+    monkeypatch.setenv("ONESA_MODEL_BASE_URL", "https://model.example.invalid/v1")
+
+
+def test_unconfigured_endpoint_fails_without_transport_request() -> None:
+    def unexpected_request(request):
+        pytest.fail("Unconfigured inference must not issue a network request")
+
+    client = VLLMModelClient(
+        Settings(model_backend="vllm", model_base_url=""),
+        httpx.MockTransport(unexpected_request),
+    )
+
+    async def check():
+        with pytest.raises(InferenceError, match="Inference temporarily unavailable"):
+            await client.healthy()
+        with pytest.raises(InferenceError, match="Inference temporarily unavailable"):
+            async for _ in client.stream([ModelMessage(role="user", content="Hi")]):
+                pass
+
+    asyncio.run(check())
 
 
 def test_vllm_health_and_stream_contract() -> None:

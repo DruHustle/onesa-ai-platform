@@ -94,7 +94,9 @@ def test_production_readiness_accepts_restricted_database_role(pg) -> None:
 def test_readiness_metrics_report_failed_model_without_private_details() -> None:
     from unittest.mock import AsyncMock
 
-    config = Settings(metrics_token="test-metrics-only")
+    config = Settings(
+        metrics_token="test-metrics-only", model_base_url="https://model.example.invalid/v1"
+    )
     with TestClient(create_app(config, MockModelClient())) as api:
         api.app.state.model_client.healthy = AsyncMock(return_value=False)
         assert api.get("/ready").status_code == 503
