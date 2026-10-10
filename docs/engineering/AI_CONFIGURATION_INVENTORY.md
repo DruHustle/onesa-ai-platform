@@ -479,3 +479,36 @@ Rollback uses an exact previously CI-verified, schema-compatible staging SHA wit
 auto-deploy off. Preserve schema/data/role/credentials, keep the frontend and exact
 trusted origin paired, and recheck core readiness/authentication. Do not promote
 this Preview or alter `main`, production DNS or `platform.onesa.eu`.
+
+### Final hosted acceptance — PASS at 21:22 UTC
+
+[Workflow 38086997833](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38086997833)
+completed successfully for application revision
+`4217943553a4b6baa62cec7cbdb419239beea447`, after all eight CI jobs in
+[38086376327](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38086376327) passed.
+
+- Protected frontend: `https://onesa-ai-platform-4bbg0i6xb-druhustles-projects.vercel.app`.
+- Backend: `https://onesa-ai-platform-backend-staging.onrender.com`.
+- Render deployment: `dep-db5anbo473hc73afotvg`; verified restart:
+  `dep-db5ao859fdbs73c735a0`. Both became live at the exact revision above.
+- Schema: `20261010_capacity`, PostgreSQL18.6/vector, restricted pooled role/TLS.
+- Real hosted authentication, cookies, invitation policy, CSRF/origin rejection,
+  input validation, conversation/explicit-tool isolation and persistence, session
+  expiration, logout and revocation all passed again. The current Preview origin
+  was accepted by the live runtime, independently of its control-plane setting.
+- Recovery after interrupting only idle connections of the staging runtime role
+  passed; records and sessions survived the authorized application restart.
+- Chromium desktop1440x900, tablet768x1024 and mobile390x844 passed login, five page
+  routes, horizontal-overflow checks, critical/serious WCAG2A/AA automated checks and
+  public documentation links. `https://docs.onesa.eu` also returned HTTPS200.
+- A preceding cached rollout retained the previous origin in its active runtime
+  despite the saved configuration. The cache-cleared rebuild and live-origin
+  acceptance resolved that observed staging mismatch. Exact-origin enforcement
+  stayed enabled. No production configuration or DNS was modified.
+
+This supersedes the pending responsive/recovery findings above. Real generation,
+streaming/cancellation, semantic retrieval, model-driven planning/travel, durable
+identity-worker email delivery, original-upload archive/internal-docs gateway and
+manual accessibility/production recovery qualification remain unverified or blocked.
+Production remains NO-GO. These later evidence-only documentation changes do not
+claim a different application revision was deployed.
