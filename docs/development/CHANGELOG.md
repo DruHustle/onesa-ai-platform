@@ -352,3 +352,13 @@ TypeScript, and desktop/mobile static acceptance. See
 Hosting/domain verification is not yet completed at this recorded source state.
 No API/model/data configuration, application production guard or paid plan changed.
 Application release remains NO-GO; internal authentication qualification is pending.
+
+
+## Documentation favicon correction — 2026-10-10
+
+Added the owner-approved Onesa orbit ICO as an independent docs static asset and
+configured Docusaurus to emit its favicon link. The publication workflow now
+checks the emitted index and exact bundled icon before upload. No API contracts,
+internal source policy or application release guards changed. Hosted verification
+will be recorded after the deployment completes; company branding is already
+fixed in source but its production deployment remains independently gated.

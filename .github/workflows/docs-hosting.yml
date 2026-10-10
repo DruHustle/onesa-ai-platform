@@ -59,6 +59,26 @@ jobs:
           make docs-assets docs-public
           .venv/bin/python scripts/docs/validate.py --staged
           git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+      - name: Verify emitted favicon link and bundled icon
+        run: |
+          python3 - <<'PYTHON'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Icons(HTMLParser):
+              found = False
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == 'link' and attrs.get('rel') == 'icon' and attrs.get('href') == '/favicon.ico':
+                      self.found = True
+          app = Path('onesa-ai-platform-frontend/apps/docs')
+          parser = Icons()
+          parser.feed((app / 'build-public/index.html').read_text())
+          assert parser.found, 'Public index is missing the favicon link'
+          icon = (app / 'build-public/favicon.ico').read_bytes()
+          assert icon == (app / 'static/favicon.ico').read_bytes()
+          assert icon[:4] == b'\x00\x00\x01\x00', 'Invalid ICO header'
+          print('Public index favicon link and bundled image verified.')
+          PYTHON
       - name: Stop isolated screenshot fixture
         if: always()
         run: docker compose down
