@@ -1,6 +1,12 @@
 name: Repair existing hosting configuration
 on:
   workflow_dispatch:
+    inputs:
+      staging_action:
+        description: Isolated AI staging operation
+        type: choice
+        default: inspect
+        options: [inspect, database-probe]
 permissions:
   contents: read
 jobs:
@@ -18,7 +24,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - name: Install staging database diagnostic dependencies
+        if: github.ref == 'refs/heads/staging'
+        run: python -m pip install -r onesa-ai-platform-backend/requirements.lock
+      - name: Inspect only the authorized AI staging service
+        if: github.ref == 'refs/heads/staging'
+        run: python scripts/staging.py "${{ inputs.staging_action }}"
       - name: Read configuration and deployment status without revealing credentials
+        if: github.ref != 'refs/heads/staging'
         run: python scripts/repair_hosting.py
       - name: Read back repaired configuration
+        if: github.ref != 'refs/heads/staging'
         run: python scripts/inspect_hosting.py
