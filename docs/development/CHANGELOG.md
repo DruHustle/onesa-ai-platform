@@ -312,3 +312,11 @@ across all eight jobs. The proposed migration/docs revision still needs fresh CI
 Hosted model, semantic embedding Linux lock/capacity, actual dedicated database,
 original-file archive requirements, real delivery worker, credential rotation and
 staging/operations/legal qualification remain open. Production remains NO-GO.
+
+
+Expanded hosting readback: the authorized same-owner Render inventory returned zero
+PostgreSQL resources without page truncation, and zero of all 47 AI application
+settings were explicitly nonempty. Optional defaults do not qualify hosted services.
+The proposal and full names-only matrix now record these actual observations. The
+new diagnostic required Ruff formatting on the clean CI runner; formatting repaired
+and the full repository make check is rerun before push. No runtime gate weakened.

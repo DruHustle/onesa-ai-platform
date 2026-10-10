@@ -36,10 +36,20 @@ def environment_checks(entries, required, wrapper=None):
 
 def application_keys():
     """Read setting names statically; never load application config or secret values."""
-    source = Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend/app/config.py"
+    source = (
+        Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend/app/config.py"
+    )
     tree = ast.parse(source.read_text())
-    settings = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Settings")
-    return sorted("ONESA_" + node.target.id.upper() for node in settings.body if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name))
+    settings = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "Settings"
+    )
+    return sorted(
+        "ONESA_" + node.target.id.upper()
+        for node in settings.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+    )
 
 
 def safe_commit(value):
@@ -163,7 +173,15 @@ def render(role, service, required, expected_root, expected_health):
         "required_environment_nonempty": environment_checks(
             env if isinstance(env, list) else [], required, "envVar"
         ),
-        **({"application_environment_nonempty": environment_checks(env if isinstance(env, list) else [], application_keys(), "envVar")} if role == "backend" and expected_root == "onesa-ai-platform-backend" else {}),
+        **(
+            {
+                "application_environment_nonempty": environment_checks(
+                    env if isinstance(env, list) else [], application_keys(), "envVar"
+                )
+            }
+            if role == "backend" and expected_root == "onesa-ai-platform-backend"
+            else {}
+        ),
         "deployment_api_http": deploy_status,
         "latest_deployment_state": state if state in states else "unknown",
         "latest_deployment_commit": safe_commit(latest.get("commit", {}).get("id")),
@@ -284,8 +302,12 @@ def main():
         )
         report["database_inventory_http"] = inventory_status
         report["ai_named_database_candidates"] = []
-        report["database_inventory_returned_count"] = len(inventory) if isinstance(inventory, list) else None
-        report["database_inventory_may_be_truncated"] = isinstance(inventory, list) and len(inventory) == 100
+        report["database_inventory_returned_count"] = (
+            len(inventory) if isinstance(inventory, list) else None
+        )
+        report["database_inventory_may_be_truncated"] = (
+            isinstance(inventory, list) and len(inventory) == 100
+        )
         if (
             service_status == 200
             and inventory_status == 200

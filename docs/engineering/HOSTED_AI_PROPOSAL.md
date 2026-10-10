@@ -10,10 +10,10 @@ Keep the existing local Ollama configuration and user data intact.
 The authenticated, read-only Render inventory returned HTTP 200. The existing AI
 Docker web service is in **Frankfurt**, on `main`; its Docker root, command and
 `/core-ready` configuration were repaired and native auto-deployment disabled.
-No database matching `onesa-ai*` was returned. This does not establish that an
-unrelated name belongs to AI: ownership, environment, schema and intended use must
-be verified before reuse. The diagnostic reports returned count and possible
-100-item truncation; an incomplete inventory needs continuation, not duplicate creation.
+The expanded same-owner inventory returned **zero PostgreSQL resources**, with
+no 100-item truncation. No existing AI-specific Render database was discovered
+in this authorized account. Recheck inventory before creation; any later candidate
+requires ownership, environment, schema and intended-use verification.
 No database connection credentials were retrieved and no live schema was inspected.
 
 Use one approved isolated staging backend/environment first. The existing service's
@@ -53,9 +53,10 @@ its explicit supported driver prefix is `postgresql+psycopg://`. A provider
 `postgresql://` URL must be parsed/checked by the operator and deliberately adapted
 for this installed driver, preserving its actual host, database and correctly
 escaped credentials; do not blindly rewrite an unknown URL or introduce a second
-setting. Require provider-compatible encrypted TLS (`sslmode=require` where
-supported); inspect `pg_stat_ssl` on the actual connection before acceptance.
-Stronger certificate validation requires the provider's supported CA/hostname.
+setting. For Render internal connections, use **sslmode=require** and inspect
+`pg_stat_ssl` on the actual connection before acceptance. Render documents
+self-signed certificates internally and does not support verify-ca/verify-full
+on that path; do not prescribe incompatible certificate verification.
 Never downgrade silently to plaintext or print the URL.
 
 1. Identify the empty isolated staging database and account, region, owner and
