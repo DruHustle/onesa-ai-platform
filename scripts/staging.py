@@ -4,6 +4,8 @@ import argparse
 import json
 import os
 import re
+import sys
+from pathlib import Path
 from urllib.parse import urlencode
 
 from configuration_inventory import REPOSITORY, public_origin, values
@@ -75,15 +77,25 @@ def database_probe(environment, *, direct=False):
                 "Unexpected staging database identity or TLS configuration"
             )
         url = url.set(drivername="postgresql+psycopg")
-        engine = create_engine(
-            url,
-            connect_args={"connect_timeout": 10, "prepare_threshold": None},
-            pool_size=1,
-            max_overflow=0,
-        )
+        if direct:
+            engine = create_engine(
+                url,
+                connect_args={"connect_timeout": 10, "prepare_threshold": None},
+                pool_size=1,
+                max_overflow=0,
+            )
+        else:
+            sys.path.insert(
+                0,
+                str(Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend"),
+            )
+            from app.database import make_engine
+
+            engine = make_engine(url.render_as_string(hide_password=False))
         with engine.connect() as connection, connection.begin():
             connection.execute(text("SET TRANSACTION READ ONLY"))
-            connection.execute(text("SET LOCAL statement_timeout = '10s'"))
+            if direct:
+                connection.execute(text("SET LOCAL statement_timeout = '10s'"))
             role = connection.execute(
                 text(
                     "SELECT rolsuper, rolcreaterole, rolcreatedb, rolbypassrls, (SELECT count(*) FROM pg_auth_members WHERE member=pg_roles.oid) FROM pg_roles WHERE rolname=current_user"
@@ -114,6 +126,8 @@ def database_probe(environment, *, direct=False):
                 "connection": "PASS",
                 "read_only": True,
                 "driver": "psycopg3",
+                "application_pool_configuration_tested": not direct,
+                "statement_timeout": connection.scalar(text("SHOW statement_timeout")),
                 "database_identity_matches": True,
                 "tls_enabled_on_server_connection": bool(tls),
                 "client_tls_enabled": bool(

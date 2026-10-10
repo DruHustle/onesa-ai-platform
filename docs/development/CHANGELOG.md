@@ -1,5 +1,12 @@
 # Development changelog
 
+## 2026-10-10 — Transaction-pooled runtime timeout
+
+- Apply the five-second query limit inside each transaction, preserving bounded
+  pooling and TLS without relying on a session startup option rejected by poolers.
+- Read-only staging probes now use the actual application engine and report its
+  timeout; regression coverage checks new transactions after commit and rollback.
+
 ## 2026-10-10 — Staging optional provider settings
 
 - Preserve initialized staging data on retries; omit absent optional Render settings,

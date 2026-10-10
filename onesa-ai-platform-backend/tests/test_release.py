@@ -91,6 +91,23 @@ def test_production_readiness_accepts_restricted_database_role(pg) -> None:
         assert api.get("/ready").status_code == 200
 
 
+def test_runtime_timeout_is_applied_to_each_transaction(pg) -> None:
+    from sqlalchemy import text
+
+    from app.database import make_engine
+
+    engine = make_engine(pg.url.render_as_string(hide_password=False))
+    try:
+        with engine.connect() as connection:
+            assert connection.scalar(text("SHOW statement_timeout")) == "5s"
+            connection.commit()
+            assert connection.scalar(text("SHOW statement_timeout")) == "5s"
+            connection.rollback()
+            assert connection.scalar(text("SHOW statement_timeout")) == "5s"
+    finally:
+        engine.dispose()
+
+
 def test_readiness_metrics_report_failed_model_without_private_details() -> None:
     from unittest.mock import AsyncMock
 
