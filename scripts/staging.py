@@ -44,12 +44,13 @@ def target():
     return service, values(entries, "envVar")
 
 
-def database_probe(environment):
+def database_probe(environment, *, direct=False):
     raw = environment.get("ONESA_DATABASE_URL", "")
     try:
         url = make_url(raw)
         if (
-            url.host != DATABASE_HOST
+            url.host
+            != (DATABASE_HOST.replace("-pooler", "") if direct else DATABASE_HOST)
             or url.database != "neondb"
             or url.drivername not in {"postgresql", "postgres", "postgresql+psycopg"}
             or url.query.get("sslmode") not in {"require", "verify-full"}
@@ -202,7 +203,8 @@ def configure_preview(service):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "action", choices=["inspect", "database-probe", "configure-preview"]
+        "action",
+        choices=["inspect", "database-probe", "migration-probe", "configure-preview"],
     )
     action = parser.parse_args().action
     service, environment = target()
@@ -213,8 +215,19 @@ def main():
         ),
         "production_modified": False,
     }
-    if action == "database-probe":
-        report["database"] = database_probe(environment)
+    if action in {"database-probe", "migration-probe"}:
+        if action == "migration-probe":
+            environment = {
+                "ONESA_DATABASE_URL": os.environ.get(
+                    "STAGING_MIGRATION_DATABASE_URL", ""
+                )
+            }
+        report["database"] = database_probe(
+            environment, direct=action == "migration-probe"
+        )
+        report["database_role_scope"] = (
+            "migration" if action == "migration-probe" else "runtime"
+        )
     elif action == "configure-preview":
         report["frontend"] = configure_preview(service)
     else:
@@ -235,7 +248,10 @@ def main():
                 deploy.get("commit", {}).get("id")
             )
     print(json.dumps(report, indent=2))
-    if action == "database-probe" and report["database"]["connection"] != "PASS":
+    if (
+        action in {"database-probe", "migration-probe"}
+        and report["database"]["connection"] != "PASS"
+    ):
         raise SystemExit(1)
 
 
