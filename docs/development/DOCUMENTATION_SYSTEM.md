@@ -86,3 +86,20 @@ Use `make up-docs` to preserve the read-only retrieval mounts and private engine
 CI now builds both scopes, renders actual diagrams/manuals, checks schema/source drift and public exposure, and runs original application plus mock documentation browser checks. Its synthetic demonstration account is granted only through the explicit test configuration utility; no public role-grant endpoint exists. Separate `make docs-release-check` requires backport integrity/attack/compatibility tests and an all-severity npm audit; the original blocker is resolved with reviewed local backports. See [dependency security](../security/DOCUMENTATION_DEPENDENCIES.md). Remote CI has not been executed. There is no automatic publication workflow.
 
 The gallery includes actual synthetic screenshots; the database library includes five actual schema relationship groups. The candidate model registry remains file-based, with no invented model/evaluation database tables. Fifteen concrete procedures live in [guided tutorials](../deployment/GUIDED_TUTORIALS.md). English documentation only; German application navigation remains supported.
+
+
+## Public documentation hosting — 2026-10-10
+
+The owner selected docs.onesa.eu and confirmed Vercel public-use eligibility.
+Prepared separate GitHub-built preview/production hosting for the allowlisted
+Docusaurus public site. Only build-public is uploaded; internal engineering stays
+behind its authenticated gateway. Static mode honestly disables documentation
+assistance. Fresh isolated mock screenshots resolve clean-build missing images;
+existing generated local files and the application on port 3100 are preserved.
+The clean build rendered four public diagrams and seven public manuals, passed
+source classification, 13 dependency-security tests, zero npm vulnerabilities,
+TypeScript, and desktop/mobile static acceptance. See
+../engineering/DOCUMENTATION_HOSTING.md for deployment and actual DNS readback.
+Hosting/domain verification is not yet completed at this recorded source state.
+No API/model/data configuration, application production guard or paid plan changed.
+Application release remains NO-GO; internal authentication qualification is pending.

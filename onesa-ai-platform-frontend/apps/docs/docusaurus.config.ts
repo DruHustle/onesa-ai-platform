@@ -2,6 +2,8 @@ import type {Config} from '@docusaurus/types';
 import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 const scope = process.env.ONESA_DOCS_SCOPE === 'internal' ? 'internal' : 'public';
 const internal = scope === 'internal';
+const staticHosting = process.env.ONESA_DOCS_STATIC_HOSTING === 'true';
+if (staticHosting && internal) throw new Error('Internal documentation requires the authenticated gateway, not static hosting.');
 const appUrl = process.env.ONESA_APPLICATION_URL || 'http://localhost:3100';
 const apiUrl = process.env.ONESA_DOCS_API_URL || '';
 if (apiUrl && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(apiUrl)) {
@@ -12,7 +14,7 @@ const config: Config = {
   url:process.env.ONESA_DOCS_URL || `http://localhost:${internal ? 3201 : 3200}`, staticDirectories:[`.generated/${scope}/static`], baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
   onBrokenLinks:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
-  customFields:{documentationVersion:'0.2 · Amendment 002.2', apiUrl, scope, appUrl},
+  customFields:{documentationVersion:'0.2 · Amendment 002.2', apiUrl, scope, appUrl, staticHosting},
   presets:[['classic', {docs:{numberPrefixParser:false,path:`.generated/${scope}/docs`, sidebarPath:'./sidebars.ts', showLastUpdateTime:false}, pages:{path:`.generated/${scope}/pages`}, blog:false, theme:{customCss:'./src/css/custom.css'}} satisfies Options]],
   themeConfig:{
     colorMode:{defaultMode:'light', respectPrefersColorScheme:true},

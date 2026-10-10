@@ -427,3 +427,20 @@ Vercel Hobby commercial restrictions, expiring Render free database, missing fre
 workers, EU model/privacy/capacity and restored backup limits remain material.
 Free inference candidates are unconfigured, not a deployed real-model endpoint.
 Production remains NO-GO; preserve independent products and all original data.
+
+
+## Public documentation hosting — 2026-10-10
+
+The owner selected docs.onesa.eu and confirmed Vercel public-use eligibility.
+Prepared separate GitHub-built preview/production hosting for the allowlisted
+Docusaurus public site. Only build-public is uploaded; internal engineering stays
+behind its authenticated gateway. Static mode honestly disables documentation
+assistance. Fresh isolated mock screenshots resolve clean-build missing images;
+existing generated local files and the application on port 3100 are preserved.
+The clean build rendered four public diagrams and seven public manuals, passed
+source classification, 13 dependency-security tests, zero npm vulnerabilities,
+TypeScript, and desktop/mobile static acceptance. See
+../engineering/DOCUMENTATION_HOSTING.md for deployment and actual DNS readback.
+Hosting/domain verification is not yet completed at this recorded source state.
+No API/model/data configuration, application production guard or paid plan changed.
+Application release remains NO-GO; internal authentication qualification is pending.
