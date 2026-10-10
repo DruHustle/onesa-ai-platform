@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { cookies } from "next/headers";
 import { LocaleProvider, type Locale } from "../lib/i18n";
+import { Analytics } from "@vercel/analytics/next";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Onesa AI",
@@ -25,6 +26,7 @@ export default async function Layout({
     <html lang={locale}>
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        <Analytics />
       </body>
     </html>
   );
