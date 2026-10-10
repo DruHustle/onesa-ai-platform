@@ -28,6 +28,7 @@ jobs:
       - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
       - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
       - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
+      - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
       - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
       - run: npm ci --prefix scripts/contract-tools --ignore-scripts
       - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
@@ -154,6 +155,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build application runtime
         run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+      - name: Verify default production image startup and shutdown
+        if: matrix.application == 'onesa-ai-platform-backend'
+        run: python3 scripts/startup_smoke.py onesa-security-candidate:ci
       - name: Verify native release-image PDF restrictions
         if: matrix.application == 'onesa-ai-platform-backend'
         run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py

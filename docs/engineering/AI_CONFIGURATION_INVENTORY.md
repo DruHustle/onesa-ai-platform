@@ -397,3 +397,31 @@ it is not a new application configuration key. Do not paste credentials in chat.
 Use a separately restricted credential for the Render runtime after migrations.
 Until schema, runtime role and exact Preview origin are verified, do not deploy
 the staging backend or count hosted database workflows as accepted.
+
+The owner has now saved `STAGING_MIGRATION_DATABASE_URL` and
+`VERCEL_AUTOMATION_BYPASS_SECRET` in GitHub environment **Staging**. Names were
+verified without retrieving values. Environment deployment policy was restricted
+to branch `staging` (actual provider readback); production was not changed.
+The staging repair workflow binds that existing environment. Migration credentials
+are injected only into initialization/acceptance steps, never the frontend build.
+
+Controlled `deploy-staging` initializes only the identified empty Neon database,
+within one transaction, and creates `onesa_ai_staging_app` without elevated roles,
+schema creation or migration-table mutation. Existing unidentified data/roles cause
+a refusal. Runtime credentials are generated privately and saved only on the
+fixed Render staging service. Runtime TLS, actual application driver/pooling options,
+permissions and migration revision are verified before requesting deployment.
+
+Vercel Preview packaging on the first attempt failed with a traced Next runtime
+module resolution error; native compilation had passed. Vercel builds now use
+the framework's normal function tracing; standalone output/tracing remains enabled
+for Docker. The repaired revision still needs exact-commit CI and hosted acceptance.
+
+Rollback: keep automatic Render deploys off; retain the previous exact staging SHA
+and deploy it only if compatible with the current schema. Keep the generated role,
+private runtime URL and persistent database. Do not downgrade or drop the schema,
+reuse production credentials, promote the Preview, or change `platform.onesa.eu`.
+Hosted acceptance uses synthetic accounts with two-hour grants; credentials exist
+only in a mode0600 ephemeral runner file removed after browser tests. Reports contain
+check labels and public deployment origins, not passwords, cookies or bypass tokens.
+Model-dependent workflows remain BLOCKED until real authenticated endpoints exist.

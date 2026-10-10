@@ -1,5 +1,13 @@
 # Development changelog
 
+## 2026-10-10 — Render startup regression
+
+- Made Dockerfile CMD authoritative in AI configuration and added final-image startup,
+  PORT, liveness, dependency failure and SIGTERM verification to CI.
+- Added safe provider command classifications and staging revision readback.
+- Local backend integration: 147 passed, four platform-dependent skips; hosted repair
+  remains unverified. No push/deployment or inference-readiness claim.
+
 ## 2026-10-10 — Local semantic retrieval qualification
 
 - Added optional private pinned Qwen3-Embedding-0.6B serving, 256/1024 normalized outputs,
@@ -431,3 +439,9 @@ CI and publication hygiene must pass on the current staging SHA before deploymen
 Recorded actual PostgreSQL 18.6, empty staging schema and privileged-role blocker;
 client TLS is checked separately from the Neon pooler internal connection.
 Production branch and provider settings remain unchanged.
+
+Prepared staging-only controlled migrations, restricted runtime-role provisioning,
+exact-origin configuration and real hosted security/persistence/restart tests.
+Bound the existing GitHub Staging environment and restricted its deployment branch.
+Corrected Vercel tracing separately from Docker standalone packaging.
+Hosted results remain unverified until the new revision passes CI and deployment.

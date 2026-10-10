@@ -7,7 +7,7 @@ import re
 from urllib.parse import urlencode
 
 from configuration_inventory import REPOSITORY, public_origin, values
-from inspect_hosting import get_json
+from inspect_hosting import get_json, safe_commit, startup_override
 from repair_hosting import write_json
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
@@ -219,6 +219,21 @@ def main():
         report["frontend"] = configure_preview(service)
     else:
         report["configured_keys"] = sorted(environment)
+        details = service.get("serviceDetails", {})
+        runtime = details.get("envSpecificDetails", {})
+        report["runtime"] = details.get("runtime", details.get("env"))
+        report["docker_command_mode"] = startup_override(runtime.get("dockerCommand"))
+        report["health_check_path"] = details.get("healthCheckPath")
+        deploys, status = get_json(
+            "https://api.render.com/v1/",
+            "services/" + SERVICE_ID + "/deploys?limit=1",
+            os.environ.get("RENDER_API_KEY", ""),
+        )
+        if status == 200 and isinstance(deploys, list) and deploys:
+            deploy = deploys[0].get("deploy", deploys[0])
+            report["latest_deployment_commit"] = safe_commit(
+                deploy.get("commit", {}).get("id")
+            )
     print(json.dumps(report, indent=2))
     if action == "database-probe" and report["database"]["connection"] != "PASS":
         raise SystemExit(1)
