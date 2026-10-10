@@ -32,6 +32,7 @@ dev = [
   "ruff==0.16.10",
   "mypy==2.4.0",
   "pip-tools==7.6.2",
+  "pip-audit==2.10.1",
   "setuptools==83.0.0",
 ]
 
