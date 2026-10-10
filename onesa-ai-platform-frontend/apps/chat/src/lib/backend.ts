@@ -19,6 +19,9 @@ export async function proxy(request: Request): Promise<Response> {
                         'x-vercel-protection-bypass', 'x-vercel-set-bypass-cookie']) {
       headers.delete(name);
     }
+    for (const name of Array.from(headers.keys())) {
+      if (name.startsWith('x-vercel-')) headers.delete(name);
+    }
     // Provider login/bypass cookies belong to Vercel, never the upstream API.
     const applicationCookies = (headers.get('cookie') || '').split(';')
       .map(cookie => cookie.trim())

@@ -23,6 +23,7 @@ async function main() {
     headers: {
       'x-vercel-protection-bypass': 'synthetic-provider-credential',
       'x-vercel-set-bypass-cookie': 'true',
+      'x-vercel-oidc-token': 'synthetic-provider-identity',
       cookie: '_vercel_sso_token=synthetic-provider-cookie; onesa_session=synthetic-session; onesa_csrf=synthetic-csrf; locale=en',
       'x-csrf-token': 'synthetic-csrf',
       origin: 'https://preview.example.invalid',
@@ -32,6 +33,7 @@ async function main() {
   assert.equal(upstream.url.origin, 'https://staging-api.example.invalid');
   assert.equal(upstream.headers.get('x-vercel-protection-bypass'), null);
   assert.equal(upstream.headers.get('x-vercel-set-bypass-cookie'), null);
+  assert.equal(upstream.headers.get('x-vercel-oidc-token'), null);
   assert.equal(upstream.headers.get('cookie'), 'onesa_session=synthetic-session; onesa_csrf=synthetic-csrf');
   assert.equal(upstream.headers.get('x-csrf-token'), 'synthetic-csrf');
   assert.equal(upstream.headers.get('origin'), 'https://preview.example.invalid');
