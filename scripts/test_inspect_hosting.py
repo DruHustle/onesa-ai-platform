@@ -1,7 +1,11 @@
 """Negative coverage for provider diagnostics and credential disclosure."""
 
 import json
+import os
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import inspect_hosting
@@ -67,6 +71,41 @@ class HostingInspectionTests(unittest.TestCase):
             ]["dockerCommand"],
             "node dist/src/jobs/worker.js",
         )
+
+    def test_api_startup_expands_port_without_nested_shell_quoting(self):
+        command = repair_hosting.configuration(False, False)["serviceDetails"][
+            "envSpecificDetails"
+        ]["dockerCommand"]
+        self.assertEqual(command, "sh /app/start.sh")
+        script = (
+            Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend/start.sh"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            executable = Path(directory) / "python"
+            executable.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+            executable.chmod(0o700)
+            for port in [None, "10000"]:
+                with self.subTest(port=port):
+                    environment = dict(os.environ)
+                    environment["PATH"] = directory + os.pathsep + environment["PATH"]
+                    environment.pop("PORT", None)
+                    if port:
+                        environment["PORT"] = port
+                    result = subprocess.run(
+                        ["sh", str(script)],
+                        env=environment,
+                        text=True,
+                        capture_output=True,
+                        check=True,
+                    ).stdout.splitlines()
+                    self.assertEqual(
+                        result[:3], ["-m", "uvicorn", "app.main:create_app"]
+                    )
+                    self.assertEqual(result[result.index("--port") + 1], port or "8000")
+                    self.assertIn("--no-proxy-headers", result)
+                    self.assertEqual(
+                        result[result.index("--timeout-graceful-shutdown") + 1], "130"
+                    )
 
     def test_configuration_repair_refuses_a_different_repository(self):
         with (

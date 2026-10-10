@@ -21,6 +21,7 @@ RUN apk upgrade --no-cache && apk add --no-cache libffi libstdc++ libseccomp
 COPY --from=build /install /usr/local
 COPY app ./app
 COPY alembic.ini ./
+COPY start.sh ./
 COPY migrations ./migrations
 # Build tooling is not part of the runtime; remove vulnerable vendored copies too.
 RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/bin/pip* && adduser -D -u 10001 onesa
@@ -28,5 +29,5 @@ RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/py
     && python -c "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pip','setuptools','wheel'))"
 USER onesa
 EXPOSE 8000
-HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/core-ready', timeout=5)"
-CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers", "--no-access-log", "--limit-concurrency", "128", "--timeout-keep-alive", "5", "--timeout-graceful-shutdown", "130"]
+HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/core-ready', timeout=5)"
+CMD ["sh", "/app/start.sh"]

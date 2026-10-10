@@ -1,12 +1,12 @@
 @import "tailwindcss";
 @import "highlight.js/styles/github-dark.css";
 :root {
-  --bg: #f8faf8;
-  --ink: #192923;
-  --accent: #16734e;
-  --muted: #66756c;
-  --line: #dde5df;
-  --panel: #12261e;
+  --bg: #f5f7fa;
+  --ink: #10263e;
+  --accent: #2366d1;
+  --muted: #56677b;
+  --line: #dae1e9;
+  --panel: #081b32;
 }
 * {
   box-sizing: border-box;
@@ -33,7 +33,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #60a88b;
+  outline: 3px solid #2366d1;
   outline-offset: 3px;
 }
 button {
@@ -68,7 +68,7 @@ p {
 }
 .sidebar {
   background: var(--panel);
-  color: #eef5f0;
+  color: #f5f7fa;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -81,11 +81,11 @@ p {
 }
 .brand span {
   font-weight: 400;
-  color: #9bbbab;
+  color: #53dbe8;
 }
 .new {
-  background: #244336;
-  border-color: #416151;
+  background: #16445b;
+  border-color: #52789b;
   color: white;
 }
 .sidebar nav {
@@ -97,7 +97,7 @@ p {
 }
 .conversation {
   background: none;
-  color: #bed1c5;
+  color: #c2cfdf;
   border: 0;
   text-align: left;
   overflow: hidden;
@@ -105,12 +105,12 @@ p {
   white-space: nowrap;
 }
 .conversation.selected {
-  background: #28483a;
+  background: #16445b;
   color: white;
 }
 .account {
   font-size: 13px;
-  color: #bad1c3;
+  color: #c2cfdf;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -118,7 +118,7 @@ p {
 .account button {
   background: none;
   color: inherit;
-  border-color: #426153;
+  border-color: #52789b;
 }
 .main {
   display: flex;
@@ -184,13 +184,13 @@ p {
   margin-bottom: 8px;
 }
 .message.user {
-  background: #edf3ee;
+  background: #eaf4fa;
   border-radius: 14px;
   padding: 16px 20px;
   margin: 16px 0;
 }
 .message pre {
-  background: #182722;
+  background: #10263e;
   color: white;
   padding: 16px;
   border-radius: 10px;
@@ -219,7 +219,7 @@ p {
   display: flex;
   gap: 8px;
   align-items: flex-end;
-  box-shadow: 0 6px 24px #10221a08;
+  box-shadow: 0 6px 24px #081b3208;
 }
 .input-wrap textarea {
   border: 0;
@@ -252,7 +252,7 @@ p {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: linear-gradient(130deg, #e4efe6, #f8faf8 70%);
+  background: linear-gradient(130deg, #eaf4fa, #f5f7fa 70%);
 }
 .auth-card {
   min-width: 0;
@@ -261,7 +261,7 @@ p {
   border-radius: 24px;
   padding: 40px;
   width: min(100%, 420px);
-  box-shadow: 0 30px 90px #1929230c;
+  box-shadow: 0 30px 90px #10263e0c;
 }
 .auth-card form {
   min-width: 0;
@@ -281,7 +281,7 @@ p {
 @media (max-width: 390px) {
   .auth-card { padding: 24px; }
 }
-.auth-card .brand span { color: #426c59; }
+.auth-card .brand span { color: #52789b; }
 .auth-card .brand {
   margin-bottom: 36px;
 }
@@ -438,7 +438,7 @@ p {
   gap: 12px;
 }
 .notice {
-  background: #edf5eb;
+  background: #eaf4fa;
   padding: 16px;
   border-radius: 12px;
   line-height: 1.7;
@@ -503,7 +503,7 @@ p {
     inset: 0 0 0 75%;
     border: 0;
     border-radius: 0;
-    background: #12261e33;
+    background: #081b3233;
     z-index: 9;
   }
 }
@@ -526,19 +526,19 @@ p {
   margin: 0;
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
-  color: #456052;
-  background: #eef6f1;
-  border-bottom: 1px solid #dbe7df;
+  color: #56677b;
+  background: #eaf4fa;
+  border-bottom: 1px solid #dae1e9;
   overflow-wrap: anywhere;
 }
 
-.documentation-help { display: inline-block; font-size: .85rem; color: #225c49; margin: .4rem 0; }
+.documentation-help { display: inline-block; font-size: .85rem; color: #2366d1; margin: .4rem 0; }
 /* Feature navigation remains available at narrow widths without horizontal overflow. */
 .feature-shell > header nav{flex-wrap:wrap;min-width:0}
-.feature-shell .brand span{color:#3c6954}
-.sidebar .caption{color:#bed1c5}
+.feature-shell .brand span{color:#2366d1}
+.sidebar .caption{color:#c2cfdf}
 .locale-select select{color:var(--ink);border-color:var(--line)}
-select:focus-visible{outline:3px solid #16734e;outline-offset:3px}
+select:focus-visible{outline:3px solid #2366d1;outline-offset:3px}
 .sidebar .feature-nav{flex-wrap:wrap;min-width:0}
 
 .auth-card > a { display: inline-flex; align-items: center; min-height: 44px; padding-block: 10px; }
@@ -547,3 +547,16 @@ select:focus-visible{outline:3px solid #16734e;outline-offset:3px}
 .feature-card { min-width: 0; grid-template-columns: minmax(0, 1fr); }
 .feature-card label, .feature-card input, .feature-card form { min-width: 0; max-width: 100%; }
 .feature-card ul { overflow-wrap: anywhere; }
+
+/* Onesa identity: company homepage navy, cyan, blue and neutral surfaces. */
+:root { --navy: #081b32; --cyan: #53dbe8; color-scheme: light; }
+h1, h2, h3 { font-weight: 500; letter-spacing: -.045em; }
+.sidebar .brand { letter-spacing: -.07em; }
+.new { background: var(--cyan); color: var(--navy); border-color: var(--cyan); font-weight: 700; }
+button, input, textarea, select { border-radius: 4px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #2366d1; outline-offset: 4px; }
+.sidebar :focus-visible { outline-color: var(--cyan); }
+
+.auth-shell { background: radial-gradient(ellipse at top left, #16445b, var(--navy) 70%); }
+.auth-card { border-radius: 4px; }
+.send { background: var(--cyan); color: var(--navy); font-weight: 700; }

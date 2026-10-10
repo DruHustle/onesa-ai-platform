@@ -143,3 +143,21 @@ checks the emitted index and exact bundled icon before upload. No API contracts,
 internal source policy or application release guards changed. Hosted verification
 will be recorded after the deployment completes; company branding is already
 fixed in source but its production deployment remains independently gated.
+
+Public documentation deployments include the docs app `vercel.json` with
+`git.deploymentEnabled: false`; publishing remains through the checked GitHub Actions
+prebuilt workflow. This disables Git-triggered deployment, not repository connection.
+
+The API image starts via `sh /app/start.sh`, expands the provider PORT, and execs
+`python -m uvicorn` without nested shell quoting. Render overrides use the same
+script. Database/core and inference readiness remain distinct and unchanged.
+
+## Shared Onesa interface identity (2026-10-10)
+
+Public/internal documentation and the AI application now use the company homepage
+navy (#081b32), cyan (#53dbe8), blue (#2366d1), neutral surfaces and Arial typography.
+Docs retain light/dark reading modes and use a navy public hero; application layout,
+security states, retrieval and API contracts are unchanged. Portal lint, platform
+lint/typecheck, docs typecheck and the public docs build passed. Local locked
+platform dependencies were restored after a missing axe test dependency was found.
+These are local source changes, not a hosted release or legal/operations approval.

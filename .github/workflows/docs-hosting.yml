@@ -110,6 +110,7 @@ jobs:
         run: |
           set -eu
           mkdir -p "$RUNNER_TEMP/onesa-docs/.vercel/output/static"
+          cp onesa-ai-platform-frontend/apps/docs/vercel.json "$RUNNER_TEMP/onesa-docs/vercel.json"
           cp -a onesa-ai-platform-frontend/apps/docs/build-public/. "$RUNNER_TEMP/onesa-docs/.vercel/output/static/"
           python3 - <<'PYTHON'
           import json, os

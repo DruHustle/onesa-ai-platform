@@ -436,3 +436,47 @@ checks the emitted index and exact bundled icon before upload. No API contracts,
 internal source policy or application release guards changed. Hosted verification
 will be recorded after the deployment completes; company branding is already
 fixed in source but its production deployment remains independently gated.
+
+## Public docs Git deployment safeguard (2026-10-10)
+
+Added `git.deploymentEnabled: false` in the docs app `vercel.json`. The public
+documentation hosting workflow copies this configuration into its isolated Vercel
+deployment directory. Automatic Git deployments are disabled; the existing checked
+GitHub Actions prebuilt deployment remains available. This does not prevent an
+authorized administrator from connecting Git. JSON validation and diff checks passed;
+no provider settings, deployment or release approval were changed.
+
+## AI Render startup command correction (2026-10-10)
+
+The reported exit 127 treats the quoted Uvicorn command as one executable.
+Replaced nested `sh -c` overrides with `sh /app/start.sh` in both Render
+blueprints and the hosting repair helper. The image includes this startup script
+and uses it as CMD; it expands PORT (default 8000) and execs python -m uvicorn
+with existing concurrency, logging and graceful-shutdown settings. Seven hosting
+regressions, shell syntax, default/custom-port argv and diff checks passed.
+The local Docker image builds successfully. Hosted settings and deployment have
+not been changed; production remains gated.
+
+## Shared Onesa interface identity (2026-10-10)
+
+Public/internal documentation and the AI application now use the company homepage
+navy (#081b32), cyan (#53dbe8), blue (#2366d1), neutral surfaces and Arial typography.
+Docs retain light/dark reading modes and use a navy public hero; application layout,
+security states, retrieval and API contracts are unchanged. Portal lint, platform
+lint/typecheck, docs typecheck and the public docs build passed. Local locked
+platform dependencies were restored after a missing axe test dependency was found.
+These are local source changes, not a hosted release or legal/operations approval.
+
+Final theme acceptance: desktop (1440px) and mobile (390px) browser checks
+passed for docs and the platform signed-out interface, including horizontal
+overflow and keyboard reachability of the docs skip link. The signed-out backend
+remains honestly unavailable in the isolated preview; no authentication bypass
+was used. The docs skip-link and hero spacing overflow were corrected. Robot
+static preview checks passed at the same widths. Authenticated application styling
+was updated in source but not verified against a live signed-in session.
+
+Pre-push review: Docker health check now reads PORT consistently with startup.
+Eight provider/startup regression tests and the rebuilt image pass. History hygiene
+scans report zero findings in all three repositories. The generated Next.js route
+declaration was restored to its production form; generated framework agent guidance
+is included. Provider production readiness remains independent of a source push.
