@@ -467,3 +467,9 @@ exact-origin configuration and real hosted security/persistence/restart tests.
 Bound the existing GitHub Staging environment and restricted its deployment branch.
 Corrected Vercel tracing separately from Docker standalone packaging.
 Hosted results remain unverified until the new revision passes CI and deployment.
+
+### 2026-10-11 — Identity worker lifecycle
+
+Graceful termination stops new claims and disposes connections; bounded one-shot
+execution supports a separately qualified scheduler without changing durable mail
+leases, retries or provider idempotency. Hosted delivery remains unqualified.
