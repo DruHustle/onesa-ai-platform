@@ -44,9 +44,11 @@ in root `AGENTS.md`.
 The existing Neon AI staging database is migrated and connected through a verified
 restricted runtime role. Protected Vercel Preview and the Render staging backend
 deployed `898c224`; real hosted authentication, CSRF, isolation and restart persistence
-passed. Final hosted run `38086997833` qualified application `4217943`: desktop,
+passed. Final hosted run `38088509721` qualified application `43affff`: desktop,
 tablet/mobile, automated accessibility, documentation links and scoped connection
-recovery also passed. Manual accessibility review remains required. See
+recovery also passed. The proxy now strips provider headers/cookies while preserving
+Onesa session/CSRF credentials; its regression and hosted authentication passed.
+Manual accessibility review remains required. See
 `docs/engineering/AI_CONFIGURATION_INVENTORY.md` for exact origins/revisions/evidence.
 Hosted inference/embeddings and production acceptance remain blocked; do not recreate
 the staging database, reuse portal credentials or promote staging to production.

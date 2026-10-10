@@ -512,3 +512,33 @@ identity-worker email delivery, original-upload archive/internal-docs gateway an
 manual accessibility/production recovery qualification remain unverified or blocked.
 Production remains NO-GO. These later evidence-only documentation changes do not
 claim a different application revision was deployed.
+
+### Current qualified application — 43affff, 21:46 UTC
+
+The proxy boundary correction supersedes the earlier qualified application snapshot.
+[CI 38087814693](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38087814693)
+passed all eight jobs, including the real proxy regression, for
+`43affff15f3443d2ca4f4fb7e640a715f5fea5f3`.
+[Hosted workflow 38088509721](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38088509721)
+completed successfully on that exact application revision.
+
+- Current protected Preview: `https://onesa-ai-platform-5ymg8y7lm-druhustles-projects.vercel.app`.
+- API remains `https://onesa-ai-platform-backend-staging.onrender.com`.
+- Initial Render deployment `dep-db5b2b2jnfac739rskeg` and restart
+  `dep-db5b37vlk1mc739ceej0` both became live at the exact revision above.
+- Schema, restricted runtime role and private credentials are preserved. Hosted
+  login/cookies/CSRF/invitation enforcement/isolation/validation/session expiry and
+  revocation passed again. Restart persistence, scoped idle-connection recovery and
+  all fifteen desktop/tablet/mobile page checks passed, including documentation links,
+  overflow and automated critical/serious WCAG2A/AA checks.
+- The BFF now removes every `x-vercel-*` header and forwards only Onesa session/CSRF
+  cookies. A fetch-transport regression verifies the actual proxy implementation
+  strips provider bypass/identity credentials while preserving application auth.
+  Earlier staging test requests had forwarded the bypass header internally to Render.
+  The owner should rotate that Vercel automation bypass credential and replace the
+  matching GitHub **Staging** secret through the providers' private settings.
+
+No failing hosted checks remain for the tested database-backed staging paths. The
+model/embedding, identity-worker/mail, archive/internal-docs and manual-review/production
+qualification limitations above remain. Production remains NO-GO. This final record
+is documentation only; the deployed and tested application SHA is explicitly retained.

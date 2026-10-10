@@ -4,8 +4,9 @@
 
 - Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;
   provider authentication cookies and other frontend cookies stay at the frontend.
-- Added a real proxy regression with an isolated synthetic fetch transport; hosted
-  authentication/CSRF acceptance must pass again on the corrected frontend.
+- Added a real proxy regression with an isolated synthetic fetch transport. All
+  eight CI checks and hosted authentication/CSRF, recovery and responsive acceptance
+  passed for `43affff` in workflow `38088509721`.
 
 ## 2026-10-10 — Transaction-pooled runtime timeout
 
