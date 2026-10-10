@@ -46,8 +46,23 @@ def target():
 
 def database_probe(environment, *, direct=False):
     raw = environment.get("ONESA_DATABASE_URL", "")
+    validation = {"secret_configured": bool(raw), "url_parsed": False}
     try:
         url = make_url(raw)
+        validation.update(
+            {
+                "url_parsed": True,
+                "expected_host_matches": url.host
+                == (DATABASE_HOST.replace("-pooler", "") if direct else DATABASE_HOST),
+                "pooled_host_supplied": url.host == DATABASE_HOST,
+                "database_name_matches": url.database == "neondb",
+                "driver_supported": url.drivername
+                in {"postgresql", "postgres", "postgresql+psycopg"},
+                "tls_required": url.query.get("sslmode") in {"require", "verify-full"},
+                "channel_binding_required": url.query.get("channel_binding")
+                == "require",
+            }
+        )
         if (
             url.host
             != (DATABASE_HOST.replace("-pooler", "") if direct else DATABASE_HOST)
@@ -122,6 +137,7 @@ def database_probe(environment, *, direct=False):
         return {
             "connection": "FAILED",
             "read_only": True,
+            "configuration_checks": validation,
             "details": "Inspect target, URL syntax, rotated credentials, TLS and provider access privately",
         }
 
