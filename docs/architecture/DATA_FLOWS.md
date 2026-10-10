@@ -71,3 +71,13 @@ models, indexes, cookies and API contracts were not changed. No push/deploy here
 ### 2026-10-10 release-candidate delta
 
 Backend packaging now pins Python3.11.17 Alpine3.24 by manifest digest and build-only uv0.13.0 by digest. No pip/setuptools/wheel/uv is shipped in the web runtime; real retrieval, inference clients and Linux PDF seccomp remain. Additive SQL stores hold bounded upload chunks, invitation/reset hashes and persistent encrypted mail work plus shared admission leases. Identity worker command is `python -m app.identity_worker`; provisioning/real delivery need scoped approval. Browser5MiB documents use512KiB authenticated chunks through same-origin BFF; no public storage URL. Invitation policy is explicit configuration, not automatically enabled or existing-user eligibility. Core readiness/database and model readiness are separate; production real authenticated HTTPS inference remains unverified. Source/API/docs classification and existing local models/data are preserved. Release remains NO-GO; exact local evidence and unapplied provider delta are restricted under docs/internal/release-audit.
+
+Staging infrastructure follow-up (owner direction 2026-10-10): reuse an existing
+qualified AI-specific Render database if found; otherwise prepare separate staging
+and production PostgreSQL proposals without provisioning or selecting a paid plan.
+The diagnostic workflow now inventories AI-named database candidates and the actual
+backend region without retrieving connection credentials. Hosted vLLM and semantic
+embedding infrastructure remain blocked pending a costed, approved host; preserve
+native Ollama and local data. Database/core readiness now requires an actual current
+schema even in development; `/health` stays process liveness, while `/core-ready`
+may remain available during an inference outage only with a healthy database.

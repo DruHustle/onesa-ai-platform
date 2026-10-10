@@ -254,6 +254,53 @@ def main():
             else ["ONESA_API_URL"],
         ),
     }
+    if not portal:
+        service, service_status = get_json(
+            "https://api.render.com/v1/",
+            "services/" + os.environ.get("RENDER_BACKEND_SERVICE_ID", ""),
+            os.environ.get("RENDER_API_KEY", ""),
+        )
+        owner = service.get("ownerId", "")
+        details = service.get("serviceDetails", {})
+        regions = {"frankfurt", "oregon", "ohio", "virginia", "singapore"}
+        report["backend_region"] = (
+            details.get("region") if details.get("region") in regions else "unknown"
+        )
+        inventory, inventory_status = get_json(
+            "https://api.render.com/v1/",
+            "postgres?" + urlencode({"ownerId": owner, "limit": 100}),
+            os.environ.get("RENDER_API_KEY", ""),
+        )
+        report["database_inventory_http"] = inventory_status
+        report["ai_named_database_candidates"] = []
+        if (
+            service_status == 200
+            and inventory_status == 200
+            and isinstance(inventory, list)
+        ):
+            for entry in inventory:
+                item = entry.get("postgres", entry)
+                name = item.get("name", "")
+                if re.fullmatch(r"onesa-ai[a-z0-9-]*", name):
+                    report["ai_named_database_candidates"].append(
+                        {
+                            "name": name,
+                            "same_owner": item.get("owner", {}).get("id") == owner,
+                            "same_region": item.get("region") == details.get("region"),
+                            "region": item.get("region")
+                            if item.get("region") in regions
+                            else "unknown",
+                            "paid_plan": item.get("plan") != "free",
+                            "postgres_version": item.get("version")
+                            if item.get("version")
+                            in {"13", "14", "15", "16", "17", "18"}
+                            else "unknown",
+                            "environment_matches": bool(service.get("environmentId"))
+                            and item.get("environmentId")
+                            == service.get("environmentId"),
+                            "schema_and_intended_use_verified": False,
+                        }
+                    )
     if portal:
         candidates, candidate_status = get_json(
             "https://api.render.com/v1/",

@@ -176,14 +176,17 @@ def test_production_refuses_mock_inference():
         )
 
 
-def test_core_health_survives_inference_outage_without_claiming_model_readiness():
+def test_core_health_survives_inference_outage_without_claiming_model_readiness(pg):
     from unittest.mock import AsyncMock
 
     client = MockModelClient()
     client.healthy = AsyncMock(return_value=False)
-    with TestClient(create_app(Settings(), client)) as api:
+    config = Settings(database_url=pg.url.render_as_string(hide_password=False))
+    with TestClient(create_app(config, client)) as api:
         assert api.get("/health").status_code == 200
-        assert api.get("/core-ready").json()["inference"] == "degraded"
+        core = api.get("/core-ready")
+        assert core.status_code == 200
+        assert core.json()["inference"] == "degraded"
         assert api.get("/ready").status_code == 503
 
 

@@ -219,9 +219,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
         model_ready, db_ready = await asyncio.gather(model_probe(), database_probe())
         observability.dependency_available.labels("model").set(int(model_ready))
         observability.dependency_available.labels("database").set(int(db_ready))
-        healthy = (model_ready or request.url.path == "/core-ready") and (
-            db_ready or engine is None
-        )
+        healthy = (model_ready or request.url.path == "/core-ready") and db_ready
         if not healthy:
             return JSONResponse(
                 status_code=503,

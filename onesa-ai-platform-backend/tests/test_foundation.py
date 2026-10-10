@@ -11,12 +11,13 @@ from app.inference import MockModelClient, ModelMessage
 from app.main import create_app
 
 
-def test_liveness_and_mock_readiness() -> None:
-    with TestClient(create_app(Settings())) as api:
+def test_liveness_without_database_is_not_application_readiness() -> None:
+    with TestClient(create_app(Settings(database_url=None))) as api:
         response = api.get("/health", headers={"X-Request-ID": "untrusted"})
         assert response.json() == {"status": "ok"}
         UUID(response.headers["X-Request-ID"])
-        assert api.get("/ready").json() == {"status": "ready", "backend": "mock"}
+        assert api.get("/ready").status_code == 503
+        assert api.get("/core-ready").status_code == 503
 
 
 @pytest.mark.parametrize("failure", [False, RuntimeError("internal secret")])

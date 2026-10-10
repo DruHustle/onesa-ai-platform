@@ -352,3 +352,13 @@ fixtures. Render AI configuration now rejects implicit development/test defaults
 and suppresses input values in configuration validation errors. Fresh platform
 backend checks passed (146 passed, 4 conditional skips); remote full checks remain
 in progress. No production qualification record was fabricated.
+
+Staging infrastructure follow-up (owner direction 2026-10-10): reuse an existing
+qualified AI-specific Render database if found; otherwise prepare separate staging
+and production PostgreSQL proposals without provisioning or selecting a paid plan.
+The diagnostic workflow now inventories AI-named database candidates and the actual
+backend region without retrieving connection credentials. Hosted vLLM and semantic
+embedding infrastructure remain blocked pending a costed, approved host; preserve
+native Ollama and local data. Database/core readiness now requires an actual current
+schema even in development; `/health` stays process liveness, while `/core-ready`
+may remain available during an inference outage only with a healthy database.
