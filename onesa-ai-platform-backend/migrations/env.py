@@ -1,11 +1,12 @@
+import os
+
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from app.config import Settings
 from app.models import Base
 
 config = context.config
-url = Settings().database_url
+url = os.environ.get("ONESA_DATABASE_URL")
 if not url:
     raise RuntimeError("ONESA_DATABASE_URL is required for migrations")
 if context.is_offline_mode():

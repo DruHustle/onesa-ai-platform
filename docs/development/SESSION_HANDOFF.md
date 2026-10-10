@@ -380,3 +380,27 @@ embedding infrastructure remain blocked pending a costed, approved host; preserv
 native Ollama and local data. Database/core readiness now requires an actual current
 schema even in development; `/health` stays process liveness, while `/core-ready`
 may remain available during an inference outage only with a healthy database.
+
+
+## Dedicated hosted AI preparation — 2026-10-10
+
+The owner requires a dedicated AI Render PostgreSQL database and separately approved
+European GPU/vLLM host, with staging first and no unapproved paid provisioning.
+Read-only inventory found the backend in Frankfurt and no AI-named database
+candidate; ownership/schema verification of differently named resources is not
+implied. HOSTED_AI_PROPOSAL.md prepares isolated PostgreSQL 16/vector-256 proposals,
+scoped roles/TLS/pooling/restoration and one costed Paris L4 GPU/CPU-embedding plan.
+Separate staging/production JSON proposals are not applied Blueprints or live URLs.
+HOSTED_AI_CONFIGURATION.md inventories all 47 actual Settings names and process
+scopes without secret values. Expanded diagnostics report only presence booleans.
+
+Alembic now reads ONESA_DATABASE_URL directly instead of requiring complete hosted
+application/model settings. Full application validation remains strict. Fresh
+Ruff/format/mypy passed; 147 backend tests passed, four conditional skips and one
+upstream TestClient deprecation warning. A new isolated PostgreSQL regression proves
+migration independence while invalid production inference configuration is refused.
+GitHub verification for the preceding readiness revision completed successfully
+across all eight jobs. The proposed migration/docs revision still needs fresh CI.
+Hosted model, semantic embedding Linux lock/capacity, actual dedicated database,
+original-file archive requirements, real delivery worker, credential rotation and
+staging/operations/legal qualification remain open. Production remains NO-GO.

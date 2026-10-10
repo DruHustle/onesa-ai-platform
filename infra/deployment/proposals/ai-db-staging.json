@@ -1,0 +1,29 @@
+{
+  "status": "PROPOSED_NOT_PROVISIONED",
+  "approval_required": true,
+  "reuse_verified_existing_resource_first": true,
+  "name": "onesa-ai-db-staging",
+  "provider": "Render PostgreSQL",
+  "region": "frankfurt",
+  "region_must_match_corresponding_backend": true,
+  "postgresMajorVersion": "16",
+  "plan": "0.5c-1g",
+  "diskSizeGB": 5,
+  "diskAutoscalingEnabled": false,
+  "databaseName": "onesa_ai_staging",
+  "databaseUser": "onesa_ai_staging_migrator",
+  "ipAllowList": [],
+  "required_extensions": [
+    "vector"
+  ],
+  "schema_revision": "20261010_capacity",
+  "embedding_dimensions": 256,
+  "runtime_role": "onesa_ai_staging_app",
+  "runtime_role_privileges": "CONNECT, schema USAGE, table SELECT/INSERT/UPDATE/DELETE; no ownership, DDL, CREATEROLE or elevated membership",
+  "connection_setting": "ONESA_DATABASE_URL",
+  "connection_driver": "postgresql+psycopg",
+  "tls": "require verified encrypted connection; use provider-compatible sslmode, verify pg_stat_ssl before acceptance",
+  "monthly_estimate_usd": "20.50",
+  "estimate_excludes": "tax, workspace subscription, extra backup exports, egress, HA, application services and worker",
+  "provisioning_order": "staging first; production requires separate approval and staging acceptance"
+}

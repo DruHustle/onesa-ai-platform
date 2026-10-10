@@ -56,3 +56,19 @@ for the 1024 comparison, failures and exact evidence limits.
 ### 2026-10-10 release-candidate delta
 
 Backend packaging now pins Python3.11.17 Alpine3.24 by manifest digest and build-only uv0.13.0 by digest. No pip/setuptools/wheel/uv is shipped in the web runtime; real retrieval, inference clients and Linux PDF seccomp remain. Additive SQL stores hold bounded upload chunks, invitation/reset hashes and persistent encrypted mail work plus shared admission leases. Identity worker command is `python -m app.identity_worker`; provisioning/real delivery need scoped approval. Browser5MiB documents use512KiB authenticated chunks through same-origin BFF; no public storage URL. Invitation policy is explicit configuration, not automatically enabled or existing-user eligibility. Core readiness/database and model readiness are separate; production real authenticated HTTPS inference remains unverified. Source/API/docs classification and existing local models/data are preserved. Release remains NO-GO; exact local evidence and unapplied provider delta are restricted under docs/internal/release-audit.
+
+
+### Hosted infrastructure preparation — 2026-10-10
+
+The approved direction is a separate AI Render PostgreSQL database and a separately
+provisioned European GPU host; no GPU endpoint/resource purchase is yet approved.
+The actual backend region is Frankfurt. See
+[staging-first proposal](../engineering/HOSTED_AI_PROPOSAL.md) and
+[actual configuration inventory](../engineering/HOSTED_AI_CONFIGURATION.md).
+The GPU proposal uses an authenticated TLS gateway across providers, not Render
+private networking. Semantic embeddings remain a separately authenticated service;
+256-dimensional schema/version boundaries and backed-up per-owner reindex remain.
+Alembic requires only its scoped ONESA_DATABASE_URL; runtime Settings validation
+continues to enforce hosted environment, database and authenticated production
+inference. Liveness is separate from mandatory real database/core readiness.
+No new live database migration or model download was performed.

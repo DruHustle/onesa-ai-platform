@@ -9,6 +9,13 @@ import repair_hosting
 
 
 class HostingInspectionTests(unittest.TestCase):
+    def test_setting_inventory_reads_names_without_importing_configuration(self):
+        keys = inspect_hosting.application_keys()
+        self.assertIn("ONESA_DATABASE_URL", keys)
+        self.assertIn("ONESA_EMBEDDING_API_KEY", keys)
+        self.assertNotIn("ONESA_MODEL_CONFIG", keys)
+        self.assertTrue(all(key.startswith("ONESA_") for key in keys))
+
     def test_only_required_environment_presence_is_returned(self):
         marker = "synthetic-private-value-must-not-be-logged"
         entries = [

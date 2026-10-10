@@ -34,3 +34,13 @@ For the authorized Vercel/Render target, use the GitHub deployment workflow and
 ### 2026-10-10 release-candidate delta
 
 Backend packaging now pins Python3.11.17 Alpine3.24 by manifest digest and build-only uv0.13.0 by digest. No pip/setuptools/wheel/uv is shipped in the web runtime; real retrieval, inference clients and Linux PDF seccomp remain. Additive SQL stores hold bounded upload chunks, invitation/reset hashes and persistent encrypted mail work plus shared admission leases. Identity worker command is `python -m app.identity_worker`; provisioning/real delivery need scoped approval. Browser5MiB documents use512KiB authenticated chunks through same-origin BFF; no public storage URL. Invitation policy is explicit configuration, not automatically enabled or existing-user eligibility. Core readiness/database and model readiness are separate; production real authenticated HTTPS inference remains unverified. Source/API/docs classification and existing local models/data are preserved. Release remains NO-GO; exact local evidence and unapplied provider delta are restricted under docs/internal/release-audit.
+
+
+## Staging-first hosted AI direction — 2026-10-10
+
+Before applying a Blueprint, review [HOSTED_AI_PROPOSAL](HOSTED_AI_PROPOSAL.md)
+and [HOSTED_AI_CONFIGURATION](HOSTED_AI_CONFIGURATION.md). Historical root
+render.yaml names an alternative database; do not create that and the proposed
+staging/production databases together. Reuse a verified isolated AI resource first.
+No paid plan, endpoint, staging service creation or production promotion is approved
+by a checked-in example. Credential values belong only in scoped provider secrets.

@@ -216,3 +216,19 @@ def test_configuration_errors_never_render_secret_input_values():
     with pytest.raises(ValidationError) as error:
         Settings(environment="production", model_api_key=marker, database_url=marker)
     assert marker not in str(error.value)
+
+
+def test_migrations_do_not_require_a_provisioned_inference_service(pg, monkeypatch):
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    monkeypatch.setenv("RENDER", "true")
+    monkeypatch.setenv("ONESA_ENVIRONMENT", "production")
+    monkeypatch.setenv("ONESA_MODEL_BACKEND", "mock")
+    monkeypatch.setenv("ONESA_DATABASE_URL", pg.url.render_as_string(hide_password=False))
+    with pytest.raises(ValidationError):
+        Settings()
+    config = Config(str(Path(__file__).parents[1] / "alembic.ini"))
+    command.upgrade(config, "head")
