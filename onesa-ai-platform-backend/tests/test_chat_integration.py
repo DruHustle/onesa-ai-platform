@@ -53,7 +53,7 @@ def test_login_and_expiry(api: TestClient, pg: Engine) -> None:
     assert api.get("/api/v1/auth/me").status_code == 401
 
 
-def test_origin_and_rate_limit(api: TestClient) -> None:
+def test_origin_and_rate_limit(api: TestClient, fixed_auth_window) -> None:
     data = {"email": "nobody@example.com", "password": "wrong-password-123"}
     api.headers["Origin"] = "https://attacker.invalid"
     assert api.post("/api/v1/auth/login", json=data).status_code == 403
