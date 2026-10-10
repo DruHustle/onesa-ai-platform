@@ -6,6 +6,7 @@ import secrets
 import sys
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 from argon2 import PasswordHasher
@@ -15,6 +16,23 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from staging import target
 from staging_release import BACKEND, SERVICE_ID, migration_url, verified_preview
+
+
+def preview_is_protected(response):
+    if response.status_code in {401, 403}:
+        return True
+    # Vercel Authentication may deny access through its documented login redirect.
+    # Never follow it or accept an arbitrary redirect as protection evidence.
+    location = urlsplit(response.headers.get("location", ""))
+    return (
+        response.status_code in {302, 303, 307}
+        and location.scheme == "https"
+        and location.hostname == "vercel.com"
+        and location.path == "/sso-api"
+        and not location.username
+        and not location.password
+        and location.port in {None, 443}
+    )
 
 
 def main():
@@ -64,7 +82,7 @@ def main():
                 )
         phase = "preview-protection"
         response = httpx.get(origin, timeout=30, follow_redirects=False)
-        if response.status_code not in {401, 403}:
+        if not preview_is_protected(response):
             raise ValueError("Unauthenticated Preview is not access restricted")
         checks.append("unauthorized_preview_denied")
         headers = {"x-vercel-protection-bypass": bypass, "Origin": origin}
