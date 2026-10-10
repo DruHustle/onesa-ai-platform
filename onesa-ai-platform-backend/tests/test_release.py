@@ -198,3 +198,18 @@ def test_core_health_survives_inference_outage_without_claiming_model_readiness(
 def test_exact_public_origin(origin: str):
     with pytest.raises(ValueError, match="exact origin"):
         Settings(public_origin=origin)
+
+
+def test_render_cannot_start_with_implicit_development_defaults(monkeypatch):
+    monkeypatch.setenv("RENDER", "true")
+    with pytest.raises(ValidationError, match="explicit staging or production"):
+        Settings(environment="development")
+    with pytest.raises(ValidationError, match="explicit staging or production"):
+        Settings(environment="test")
+
+
+def test_configuration_errors_never_render_secret_input_values():
+    marker = "synthetic-private-credential-not-for-logs"
+    with pytest.raises(ValidationError) as error:
+        Settings(environment="production", model_api_key=marker, database_url=marker)
+    assert marker not in str(error.value)

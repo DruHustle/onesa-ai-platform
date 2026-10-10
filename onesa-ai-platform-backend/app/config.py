@@ -1,6 +1,7 @@
 """Validated deployment configuration; no implicit backend fallback."""
 
 import ipaddress
+import os
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
@@ -9,7 +10,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="ONESA_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="ONESA_", extra="ignore", hide_input_in_errors=True
+    )
 
     model_backend: Literal["mock", "ollama", "vllm"] = "mock"
     model_name: str = Field(default="Qwen/Qwen3-4B-Instruct-2507", min_length=1)
@@ -68,6 +71,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def production_defaults(self) -> Self:
+        if os.environ.get("RENDER") == "true" and self.environment not in {
+            "staging",
+            "production",
+        }:
+            raise ValueError("Render requires explicit staging or production configuration")
         origin = urlsplit(self.public_origin)
         if (
             not origin.hostname

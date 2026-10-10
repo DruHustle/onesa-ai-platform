@@ -3,17 +3,27 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 from uuid import UUID
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def synthetic_demo(email: str) -> bool:
+    return bool(
+        re.fullmatch(r"documentation-demo(?:-[a-f0-9]{16})?@example\.com", email)
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--grant-test-demo", action="store_true", required=True)
     parser.parse_args()
     demo = json.loads((ROOT / "data/runtime/docs/demo.json").read_text())
-    assert demo["email"] == "documentation-demo@example.com"
+    assert synthetic_demo(demo["email"]), (
+        "Only a synthetic documentation demo can be granted"
+    )
     identifier = str(UUID(demo["id"]))
     path = ROOT / ".env"
     lines = path.read_text().splitlines()
