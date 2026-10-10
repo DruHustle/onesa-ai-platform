@@ -123,3 +123,9 @@ credentials*.json
 *.db-shm
 
 .vercel/
+
+# Restricted audit reports and sanitized local evidence
+/docs/internal/release-audit/
+
+# Owner-supplied corporate facts awaiting publication approval.
+/onesa-ai-platform-backend/records/

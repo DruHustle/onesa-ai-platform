@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     UniqueConstraint,
 )
@@ -101,6 +102,87 @@ class RateBucket(Base):
     __tablename__ = "rate_buckets"
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     count: Mapped[int] = mapped_column(Integer, default=1)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class AccessGrant(Base):
+    __tablename__ = "access_grants"
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    granted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class IdentityToken(Record):
+    __tablename__ = "identity_tokens"
+    purpose: Mapped[str] = mapped_column(String(20))
+    email: Mapped[str] = mapped_column(String(254))
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    grant_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    __table_args__ = (CheckConstraint("purpose IN ('invitation', 'recovery')"),)
+
+
+class IdentityMail(Base):
+    __tablename__ = "identity_mail"
+    token_id: Mapped[UUID] = mapped_column(
+        ForeignKey("identity_tokens.id", ondelete="CASCADE"), primary_key=True
+    )
+    state: Mapped[str] = mapped_column(String(20), default="queued")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lease_id: Mapped[UUID | None]
+    provider_id: Mapped[str | None] = mapped_column(String(200))
+    __table_args__ = (
+        CheckConstraint("state IN ('queued', 'leased', 'accepted', 'failed', 'cancelled')"),
+        CheckConstraint("attempts BETWEEN 0 AND 5"),
+    )
+
+
+class IdentityAudit(Record):
+    __tablename__ = "identity_audit"
+    actor_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    event: Mapped[str] = mapped_column(String(40))
+    record_id: Mapped[UUID | None]
+
+
+class BoundedUpload(Record):
+    __tablename__ = "bounded_uploads"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    filename: Mapped[str] = mapped_column(String(200))
+    media_type: Mapped[str] = mapped_column(String(80))
+    size: Mapped[int] = mapped_column(Integer)
+    checksum: Mapped[str] = mapped_column(String(64))
+    received: Mapped[int] = mapped_column(Integer, default=0)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    __table_args__ = (
+        CheckConstraint("size BETWEEN 1 AND 5242880"),
+        CheckConstraint("received BETWEEN 0 AND size"),
+    )
+
+
+class UploadChunk(Base):
+    __tablename__ = "upload_chunks"
+    upload_id: Mapped[UUID] = mapped_column(
+        ForeignKey("bounded_uploads.id", ondelete="CASCADE"), primary_key=True
+    )
+    sequence: Mapped[int] = mapped_column(Integer, primary_key=True)
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    __table_args__ = (
+        CheckConstraint("sequence BETWEEN 0 AND 9"),
+        CheckConstraint("octet_length(data) BETWEEN 1 AND 524288"),
+    )
+
+
+class ModelLease(Record):
+    __tablename__ = "model_leases"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 

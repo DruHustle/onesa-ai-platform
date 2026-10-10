@@ -1,0 +1,1526 @@
+{
+  "fixture_sha256": "a3cbc662d3623bafe7eb10bdaad2acf93995837e859cd3061c1268b416cefb2b",
+  "scope": "24 synthetic passages / 48 EN-DE questions; local retrieval qualification, not production or broad-language acceptance",
+  "results": {
+    "lexical256": {
+      "top1": 0.25,
+      "recall3": 0.3541666666666667,
+      "mrr": 0.352648511851782,
+      "per_language_top1": {
+        "en": 0.20833333333333334,
+        "de": 0.2916666666666667
+      },
+      "queries": [
+        {
+          "query_id": "remote-access-en",
+          "language": "en",
+          "rank": 21,
+          "top3": [
+            "office-entry",
+            "bearing-maintenance",
+            "document-export"
+          ]
+        },
+        {
+          "query_id": "remote-access-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "remote-access",
+            "software-licenses",
+            "incident-response"
+          ]
+        },
+        {
+          "query_id": "office-entry-en",
+          "language": "en",
+          "rank": 16,
+          "top3": [
+            "document-export",
+            "accessibility",
+            "api-bursts"
+          ]
+        },
+        {
+          "query_id": "office-entry-de",
+          "language": "de",
+          "rank": 3,
+          "top3": [
+            "document-export",
+            "battery-heat",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "offboarding-en",
+          "language": "en",
+          "rank": 3,
+          "top3": [
+            "api-bursts",
+            "network-outage",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "offboarding-de",
+          "language": "de",
+          "rank": 14,
+          "top3": [
+            "battery-heat",
+            "office-entry",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "backup-restore-en",
+          "language": "en",
+          "rank": 14,
+          "top3": [
+            "accessibility",
+            "travel-estimates",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "backup-restore-de",
+          "language": "de",
+          "rank": 17,
+          "top3": [
+            "offboarding",
+            "network-outage",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "password-change-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "password-change",
+            "software-licenses",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "password-change-de",
+          "language": "de",
+          "rank": 17,
+          "top3": [
+            "battery-heat",
+            "meeting-timezones",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "battery-heat-en",
+          "language": "en",
+          "rank": 15,
+          "top3": [
+            "network-outage",
+            "api-bursts",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "battery-heat-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "battery-heat",
+            "content-review",
+            "dataset-consent"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-en",
+          "language": "en",
+          "rank": 5,
+          "top3": [
+            "api-bursts",
+            "dataset-consent",
+            "accessibility"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-de",
+          "language": "de",
+          "rank": 17,
+          "top3": [
+            "content-review",
+            "knowledge-version",
+            "backup-restore"
+          ]
+        },
+        {
+          "query_id": "document-export-en",
+          "language": "en",
+          "rank": 5,
+          "top3": [
+            "accessibility",
+            "release-rollback",
+            "api-bursts"
+          ]
+        },
+        {
+          "query_id": "document-export-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "document-export",
+            "backup-restore",
+            "invoice-approval"
+          ]
+        },
+        {
+          "query_id": "api-bursts-en",
+          "language": "en",
+          "rank": 13,
+          "top3": [
+            "battery-heat",
+            "knowledge-version",
+            "meeting-timezones"
+          ]
+        },
+        {
+          "query_id": "api-bursts-de",
+          "language": "de",
+          "rank": 5,
+          "top3": [
+            "content-review",
+            "document-export",
+            "invoice-approval"
+          ]
+        },
+        {
+          "query_id": "incident-response-en",
+          "language": "en",
+          "rank": 19,
+          "top3": [
+            "api-bursts",
+            "office-entry",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "incident-response-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "incident-response",
+            "backup-restore",
+            "invoice-approval"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-en",
+          "language": "en",
+          "rank": 2,
+          "top3": [
+            "password-change",
+            "upload-quarantine",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-de",
+          "language": "de",
+          "rank": 21,
+          "top3": [
+            "network-outage",
+            "document-export",
+            "incident-response"
+          ]
+        },
+        {
+          "query_id": "content-review-en",
+          "language": "en",
+          "rank": 17,
+          "top3": [
+            "release-rollback",
+            "software-licenses",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "content-review-de",
+          "language": "de",
+          "rank": 8,
+          "top3": [
+            "battery-heat",
+            "database-migrations",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "travel-estimates",
+            "password-change",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-de",
+          "language": "de",
+          "rank": 11,
+          "top3": [
+            "database-migrations",
+            "remote-access",
+            "content-review"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-en",
+          "language": "en",
+          "rank": 11,
+          "top3": [
+            "software-licenses",
+            "invoice-approval",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-de",
+          "language": "de",
+          "rank": 11,
+          "top3": [
+            "password-change",
+            "software-licenses",
+            "invoice-approval"
+          ]
+        },
+        {
+          "query_id": "software-licenses-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "software-licenses",
+            "office-entry",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "software-licenses-de",
+          "language": "de",
+          "rank": 13,
+          "top3": [
+            "content-review",
+            "backup-restore",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-en",
+          "language": "en",
+          "rank": 11,
+          "top3": [
+            "software-licenses",
+            "accessibility",
+            "api-bursts"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "invoice-approval",
+            "content-review",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-en",
+          "language": "en",
+          "rank": 7,
+          "top3": [
+            "api-bursts",
+            "accessibility",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-de",
+          "language": "de",
+          "rank": 20,
+          "top3": [
+            "battery-heat",
+            "meeting-timezones",
+            "travel-estimates"
+          ]
+        },
+        {
+          "query_id": "database-migrations-en",
+          "language": "en",
+          "rank": 8,
+          "top3": [
+            "software-licenses",
+            "incident-response",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "database-migrations-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "database-migrations",
+            "incident-response",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "accessibility-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "accessibility",
+            "api-bursts",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "accessibility-de",
+          "language": "de",
+          "rank": 9,
+          "top3": [
+            "document-export",
+            "invoice-approval",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-en",
+          "language": "en",
+          "rank": 12,
+          "top3": [
+            "bearing-maintenance",
+            "offboarding",
+            "software-licenses"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-de",
+          "language": "de",
+          "rank": 4,
+          "top3": [
+            "database-migrations",
+            "meeting-timezones",
+            "dataset-consent"
+          ]
+        },
+        {
+          "query_id": "network-outage-en",
+          "language": "en",
+          "rank": 3,
+          "top3": [
+            "offboarding",
+            "api-bursts",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "network-outage-de",
+          "language": "de",
+          "rank": 17,
+          "top3": [
+            "incident-response",
+            "battery-heat",
+            "backup-restore"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-en",
+          "language": "en",
+          "rank": 4,
+          "top3": [
+            "api-bursts",
+            "sensor-calibration",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "dataset-consent",
+            "battery-heat",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "release-rollback-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "release-rollback",
+            "offboarding",
+            "accessibility"
+          ]
+        },
+        {
+          "query_id": "release-rollback-de",
+          "language": "de",
+          "rank": 24,
+          "top3": [
+            "battery-heat",
+            "software-licenses",
+            "incident-response"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-en",
+          "language": "en",
+          "rank": 12,
+          "top3": [
+            "offboarding",
+            "accessibility",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-de",
+          "language": "de",
+          "rank": 3,
+          "top3": [
+            "api-bursts",
+            "dataset-consent",
+            "knowledge-version"
+          ]
+        }
+      ]
+    },
+    "qwen256": {
+      "top1": 0.9375,
+      "recall3": 0.9791666666666666,
+      "mrr": 0.9635416666666666,
+      "per_language_top1": {
+        "en": 0.9583333333333334,
+        "de": 0.9166666666666666
+      },
+      "queries": [
+        {
+          "query_id": "remote-access-en",
+          "language": "en",
+          "rank": 4,
+          "top3": [
+            "offboarding",
+            "office-entry",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "remote-access-de",
+          "language": "de",
+          "rank": 2,
+          "top3": [
+            "office-entry",
+            "remote-access",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "office-entry-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "office-entry",
+            "offboarding",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "office-entry-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "office-entry",
+            "remote-access",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "offboarding-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "offboarding",
+            "office-entry",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "offboarding-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "offboarding",
+            "upload-quarantine",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "backup-restore-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "backup-restore",
+            "database-migrations",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "backup-restore-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "backup-restore",
+            "deletion-backups",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "password-change-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "password-change",
+            "offboarding",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "password-change-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "password-change",
+            "offboarding",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "battery-heat-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "battery-heat",
+            "sensor-calibration",
+            "bearing-maintenance"
+          ]
+        },
+        {
+          "query_id": "battery-heat-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "battery-heat",
+            "sensor-calibration",
+            "bearing-maintenance"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "bearing-maintenance",
+            "sensor-calibration",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "bearing-maintenance",
+            "sensor-calibration",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "document-export-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "document-export",
+            "upload-quarantine",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "document-export-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "document-export",
+            "deletion-backups",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "api-bursts-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "api-bursts",
+            "network-outage",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "api-bursts-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "api-bursts",
+            "network-outage",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "incident-response-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "incident-response",
+            "offboarding",
+            "backup-restore"
+          ]
+        },
+        {
+          "query_id": "incident-response-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "incident-response",
+            "offboarding",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "upload-quarantine",
+            "offboarding",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "upload-quarantine",
+            "deletion-backups",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "content-review-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "content-review",
+            "upload-quarantine",
+            "software-licenses"
+          ]
+        },
+        {
+          "query_id": "content-review-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "content-review",
+            "upload-quarantine",
+            "software-licenses"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "travel-estimates",
+            "api-bursts",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "travel-estimates",
+            "meeting-timezones",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "meeting-timezones",
+            "office-entry",
+            "travel-estimates"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "meeting-timezones",
+            "travel-estimates",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "software-licenses-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "software-licenses",
+            "upload-quarantine",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "software-licenses-de",
+          "language": "de",
+          "rank": 2,
+          "top3": [
+            "upload-quarantine",
+            "software-licenses",
+            "dataset-consent"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "invoice-approval",
+            "software-licenses",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "invoice-approval",
+            "upload-quarantine",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "sensor-calibration",
+            "bearing-maintenance",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "sensor-calibration",
+            "bearing-maintenance",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "database-migrations-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "database-migrations",
+            "release-rollback",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "database-migrations-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "database-migrations",
+            "password-change",
+            "knowledge-version"
+          ]
+        },
+        {
+          "query_id": "accessibility-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "accessibility",
+            "password-change",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "accessibility-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "accessibility",
+            "office-entry",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "deletion-backups",
+            "document-export",
+            "backup-restore"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "deletion-backups",
+            "offboarding",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "network-outage-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "network-outage",
+            "api-bursts",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "network-outage-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "network-outage",
+            "remote-access",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "dataset-consent",
+            "document-export",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "dataset-consent",
+            "document-export",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "release-rollback-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "release-rollback",
+            "network-outage",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "release-rollback-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "release-rollback",
+            "database-migrations",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "knowledge-version",
+            "database-migrations",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "knowledge-version",
+            "database-migrations",
+            "release-rollback"
+          ]
+        }
+      ],
+      "batch_latency_seconds": {
+        "median": 0.2349327909760177,
+        "maximum": 1.8481884590000845,
+        "all": [
+          1.8481884590000845,
+          0.31214833399280906,
+          0.36816612497204915,
+          0.3364677079953253,
+          0.21274404099676758,
+          0.2067965419846587,
+          0.2349327909760177,
+          0.19353604200296104,
+          0.20635549997678027
+        ]
+      }
+    },
+    "qwen1024": {
+      "top1": 0.9791666666666666,
+      "recall3": 0.9791666666666666,
+      "mrr": 0.984375,
+      "per_language_top1": {
+        "en": 0.9583333333333334,
+        "de": 1
+      },
+      "queries": [
+        {
+          "query_id": "remote-access-en",
+          "language": "en",
+          "rank": 4,
+          "top3": [
+            "offboarding",
+            "office-entry",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "remote-access-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "remote-access",
+            "office-entry",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "office-entry-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "office-entry",
+            "offboarding",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "office-entry-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "office-entry",
+            "remote-access",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "offboarding-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "offboarding",
+            "password-change",
+            "document-export"
+          ]
+        },
+        {
+          "query_id": "offboarding-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "offboarding",
+            "upload-quarantine",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "backup-restore-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "backup-restore",
+            "database-migrations",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "backup-restore-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "backup-restore",
+            "database-migrations",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "password-change-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "password-change",
+            "offboarding",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "password-change-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "password-change",
+            "offboarding",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "battery-heat-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "battery-heat",
+            "sensor-calibration",
+            "bearing-maintenance"
+          ]
+        },
+        {
+          "query_id": "battery-heat-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "battery-heat",
+            "sensor-calibration",
+            "bearing-maintenance"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "bearing-maintenance",
+            "sensor-calibration",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "bearing-maintenance-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "bearing-maintenance",
+            "sensor-calibration",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "document-export-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "document-export",
+            "upload-quarantine",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "document-export-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "document-export",
+            "deletion-backups",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "api-bursts-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "api-bursts",
+            "network-outage",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "api-bursts-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "api-bursts",
+            "network-outage",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "incident-response-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "incident-response",
+            "offboarding",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "incident-response-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "incident-response",
+            "offboarding",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "upload-quarantine",
+            "offboarding",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "upload-quarantine-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "upload-quarantine",
+            "offboarding",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "content-review-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "content-review",
+            "upload-quarantine",
+            "software-licenses"
+          ]
+        },
+        {
+          "query_id": "content-review-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "content-review",
+            "upload-quarantine",
+            "accessibility"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "travel-estimates",
+            "api-bursts",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "travel-estimates-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "travel-estimates",
+            "api-bursts",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "meeting-timezones",
+            "upload-quarantine",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "meeting-timezones-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "meeting-timezones",
+            "travel-estimates",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "software-licenses-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "software-licenses",
+            "upload-quarantine",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "software-licenses-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "software-licenses",
+            "upload-quarantine",
+            "remote-access"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "invoice-approval",
+            "software-licenses",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "invoice-approval-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "invoice-approval",
+            "upload-quarantine",
+            "software-licenses"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "sensor-calibration",
+            "bearing-maintenance",
+            "battery-heat"
+          ]
+        },
+        {
+          "query_id": "sensor-calibration-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "sensor-calibration",
+            "battery-heat",
+            "bearing-maintenance"
+          ]
+        },
+        {
+          "query_id": "database-migrations-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "database-migrations",
+            "release-rollback",
+            "password-change"
+          ]
+        },
+        {
+          "query_id": "database-migrations-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "database-migrations",
+            "password-change",
+            "release-rollback"
+          ]
+        },
+        {
+          "query_id": "accessibility-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "accessibility",
+            "password-change",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "accessibility-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "accessibility",
+            "offboarding",
+            "office-entry"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "deletion-backups",
+            "database-migrations",
+            "offboarding"
+          ]
+        },
+        {
+          "query_id": "deletion-backups-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "deletion-backups",
+            "offboarding",
+            "incident-response"
+          ]
+        },
+        {
+          "query_id": "network-outage-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "network-outage",
+            "api-bursts",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "network-outage-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "network-outage",
+            "travel-estimates",
+            "api-bursts"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "dataset-consent",
+            "document-export",
+            "upload-quarantine"
+          ]
+        },
+        {
+          "query_id": "dataset-consent-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "dataset-consent",
+            "document-export",
+            "deletion-backups"
+          ]
+        },
+        {
+          "query_id": "release-rollback-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "release-rollback",
+            "network-outage",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "release-rollback-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "release-rollback",
+            "database-migrations",
+            "network-outage"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-en",
+          "language": "en",
+          "rank": 1,
+          "top3": [
+            "knowledge-version",
+            "release-rollback",
+            "database-migrations"
+          ]
+        },
+        {
+          "query_id": "knowledge-version-de",
+          "language": "de",
+          "rank": 1,
+          "top3": [
+            "knowledge-version",
+            "travel-estimates",
+            "database-migrations"
+          ]
+        }
+      ],
+      "batch_latency_seconds": {
+        "median": 0.20240029197884724,
+        "maximum": 0.28909779101377353,
+        "all": [
+          0.2659100830205716,
+          0.2593719579745084,
+          0.28909779101377353,
+          0.18696087499847636,
+          0.20240029197884724,
+          0.20209504204103723,
+          0.20466741599375382,
+          0.1957655829610303,
+          0.1990265830536373
+        ]
+      }
+    }
+  },
+  "acceptance": {
+    "top1_minimum": 0.85,
+    "recall3_minimum": 0.95,
+    "per_language_top1_minimum": 0.8,
+    "maximum_256_top1_drop": 0.05
+  },
+  "passed": true,
+  "model": {
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "weight_sha256": "0437e45c94563b09e13cb7a64478fc406947a93cb34a7e05870fc8dcd48e23fd",
+    "license": "Apache-2.0",
+    "local_directory": "data/models/qwen3-embedding-0.6b/97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3"
+  },
+  "query_instruction": "Given a user question, retrieve relevant document passages that answer the question",
+  "serving_device": "MPS / Apple M3 / float32 / max 2048 tokens / normalized vectors",
+  "production_qualified": false
+}

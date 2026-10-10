@@ -1,21 +1,32 @@
-FROM python:3.11.14-slim@sha256:c8271b1f627d0068857dce5b53e14a9558603b527e46f1f901722f935b786a39 AS build
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+FROM python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929 AS build
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_PYTHON_DOWNLOADS=never
+COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /usr/local/bin/uv
 WORKDIR /build
-COPY requirements.lock ./
-RUN pip install --no-cache-dir --prefix=/install -r requirements.lock setuptools==80.10.2 wheel==0.48.0
+COPY requirements.lock requirements-build.lock ./
+RUN apk upgrade --no-cache && apk add --no-cache --virtual .build-deps build-base libffi-dev
+RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/lib/python3.11/site-packages/pip* /usr/local/bin/pip* \
+    && uv pip install --system --no-cache -r requirements-build.lock \
+    && uv pip install --no-cache --prefix=/install -r requirements.lock
 COPY pyproject.toml ./
 COPY app ./app
-RUN pip install --no-cache-dir setuptools==80.10.2 wheel==0.48.0 && pip install --no-deps --no-build-isolation --prefix=/install .
+RUN uv build --no-build-isolation --wheel --out-dir /wheelhouse . \
+    && uv pip install --no-cache --no-deps --prefix=/install /wheelhouse/*.whl
 
-FROM python:3.11.14-slim@sha256:c8271b1f627d0068857dce5b53e14a9558603b527e46f1f901722f935b786a39 AS runtime
+FROM python:3.11.17-alpine3.24@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929 AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
+# The PDF worker installs its BPF filter through libc.prctl on both Linux ABIs.
+# Compilation tools stay in the build stage; retain only runtime shared libraries.
+RUN apk upgrade --no-cache && apk add --no-cache libffi libstdc++ libseccomp
 COPY --from=build /install /usr/local
 COPY app ./app
 COPY alembic.ini ./
 COPY migrations ./migrations
-RUN useradd --uid 10001 --create-home onesa
+# Build tooling is not part of the runtime; remove vulnerable vendored copies too.
+RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/bin/pip* && adduser -D -u 10001 onesa
+RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/python3.11/site-packages/pkg_resources* /usr/local/lib/python3.11/site-packages/_distutils_hack* /usr/local/lib/python3.11/site-packages/distutils-precedence.pth /usr/local/lib/python3.11/site-packages/wheel* /usr/local/lib/python3.11/site-packages/pip* \
+    && python -c "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pip','setuptools','wheel'))"
 USER onesa
 EXPOSE 8000
-HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=5)"
+HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/core-ready', timeout=5)"
 CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers", "--no-access-log", "--limit-concurrency", "128", "--timeout-keep-alive", "5", "--timeout-graceful-shutdown", "130"]

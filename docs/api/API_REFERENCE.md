@@ -22,6 +22,12 @@ submitted values/passwords. Common statuses: 401 auth, 403 Origin/CSRF/permissio
 | GET `/api/v1/auth/me` | Me | session | none | 200 |
 | POST `/api/v1/auth/refresh` | Refresh | session + CSRF/Origin | none | 200 |
 | POST `/api/v1/auth/logout` | Logout | session + CSRF/Origin | none | 204 |
+| PATCH `/api/v1/auth/profile` | Display name | session + CSRF/Origin | ProfileUpdate | 200 |
+| GET `/api/v1/auth/sessions` | Active sessions | session | none | 200 |
+| POST `/api/v1/auth/sessions/revoke-others` | Revoke other tokens | session + CSRF/Origin | PasswordProof | 204 |
+| POST `/api/v1/auth/password` | Change password, rotate cookies | session + CSRF/Origin | PasswordChange | 200 |
+| POST `/api/v1/account/export` | Bounded private JSON snapshot | session + CSRF/Origin | PasswordProof | 200 |
+| POST `/api/v1/account/delete` | Atomic live account deletion | session + CSRF/Origin | DeleteAccount | 204 |
 | POST `/api/v1/conversations` | Create | session + CSRF/Origin | ConversationCreate | 201 |
 | GET `/api/v1/conversations` | Listing | session | path/query; see OpenAPI | 200 |
 | GET `/api/v1/conversations/{identifier}` | Detail | session | path/query; see OpenAPI | 200 |
@@ -55,7 +61,7 @@ submitted values/passwords. Common statuses: 401 auth, 403 Origin/CSRF/permissio
 - Conversations: `id`, `title`, `selected_model_id`, `created_at`, `updated_at`. List returns
   `items,total,limit,offset`; detail returns `conversation,messages`. Messages contain
   `id,role,content,status,sequence`; content has `text` and optional source records.
-- Models: public `id,name,backend`; list wraps `items`. Internal names/URLs/keys are excluded.
+- Models: safe configured metadata (`id,name,backend,model_identifier,context_tokens,modalities,quantization,revision,real_inference`); list wraps `items`. URLs/keys are excluded.
 - Chat: nonstream `message_id,content,model_id,sources`; streaming lifecycle in STREAMING.md.
 - Documents: `id,title,media_type,embedding_version,created_at`; detail adds `text`; listing
   `items,limit,offset`. Search returns `sources,backend`; sources have document_id/title/chunk/
@@ -108,3 +114,17 @@ provenance; reported run token counts are populated, unknown counts remain null.
 ## Documentation identity and assistance
 
 GET `/api/v1/documentation/access` requires the existing session and returns `engineering` from the private engineering-user-ID allowlist. POST `/api/v1/documentation/answer` requires session, matching Origin and CSRF; body is `{query, scope}` with query length 1–4000 and scope public/internal. Internal retrieval is rejected before reading its collection unless the caller is an authorized engineer. Responses include answer, assigned source links/classifications and actual backend; unavailable retrieval/inference returns a controlled 503. Public documentation OpenAPI excludes these portal-internal routes and all operational/private inference routes.
+
+
+Knowledge, agents, travel and model discovery now use Pydantic response models and
+standard generated TypeScript request/response types. Extensible tool result objects
+remain typed JSON values. Malformed persisted results fail with a sanitized 503;
+unknown debug fields do not escape a strict response contract. Generated-file drift
+checks are separate from the conservative pre-audit compatibility review, which remains
+a release gate. See [authentication](AUTHENTICATION.md) for account data scopes/limits.
+
+
+The private upstream embedding request now explicitly includes `dimensions:256`.
+The configured optional query instruction applies only to search text; uploaded passages
+remain unprefixed. This is an internal provider protocol change, with no public route/
+request/response change. Production HTTP embedding endpoints require authenticated HTTPS.

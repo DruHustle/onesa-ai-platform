@@ -22,7 +22,7 @@ test("real local model streams, remembers context and persists", async ({
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
-  await expect(page.getByText(/Real local inference/)).toBeVisible();
+  await expect(page.getByText(/Real inference/)).toBeVisible();
   await page
     .getByLabel("Message Onesa AI")
     .fill(

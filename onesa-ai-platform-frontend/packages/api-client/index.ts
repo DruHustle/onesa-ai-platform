@@ -1,6 +1,13 @@
 import type { Operations } from "./contracts";
 export type * from "./contracts";
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number, public readonly code: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export const csrf = () =>
   document.cookie.split("; ").find((v) => v.startsWith("onesa_csrf="))
     ?.split("=").slice(1).join("=") || "";
@@ -14,7 +21,7 @@ export async function call(path: string, method = "GET", body?: unknown, signal?
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.error?.message || "Request failed");
+    throw new ApiError(data.error?.message || "Request failed", response.status, data.error?.code || "request_failed");
   }
   return response;
 }

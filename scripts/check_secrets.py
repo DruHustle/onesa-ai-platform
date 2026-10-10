@@ -10,6 +10,9 @@ PATTERNS = [
     re.compile(rb"\bAKIA[0-9A-Z]{16}\b"),
     re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{36,255}\b"),
     re.compile(rb"\bsk-(?:proj-)?[A-Za-z0-9_-]{40,}\b"),
+    re.compile(rb"\bre_[A-Za-z0-9_-]{30,}\b"),
+    re.compile(rb"\bn(?:ak|sk)_live_[A-Za-z0-9_-]{24,}\b"),
+    re.compile(rb"\bnpg_[A-Za-z0-9_-]{12,}\b"),
 ]
 paths = (
     subprocess.check_output(

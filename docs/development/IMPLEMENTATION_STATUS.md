@@ -1,10 +1,12 @@
 # Implementation status
 
-Updated: 2026-10-09 (Europe/Berlin).
-Current milestone: **M3 — Knowledge retrieval qualification**.
-First incomplete task: **M3.2 — qualify a real semantic embedding service** against
-owned-document retrieval and the existing versioned 256-dimensional pgvector contract.
-Preserve the implemented lexical baseline until a measured compatible replacement exists.
+Current release focus (2026-10-10 v1.1): local remediation and release closure, independently NO-GO. The latest appended v1.1 results supersede historical totals/provider claims below. Do not push/deploy/rotate credentials/change DNS without the corresponding scoped authorization. Protected provider503 diagnosis/staging, operations, assurance/accessibility and legal/scope acceptance remain open; private release-closure ledger assigns every original finding. Prior milestone notes and user changes are preserved as history.
+
+Updated: 2026-10-10 (Europe/Berlin).
+Current milestone: **M5 — External travel-provider acceptance**.
+First incomplete ordered task: **M5 provider acceptance** with approved real integrations.
+M3.2 is locally qualified on the stated synthetic EN/DE scope; production embedding
+hosting/reindex remains part of M7 target acceptance. Preserve active lexical data.
 
 ## Ordered task list
 
@@ -23,8 +25,9 @@ Preserve the implemented lexical baseline until a measured compatible replacemen
 - [x] M3.1: owned bounded TXT/PDF uploads, extraction/deduplication, versioned
   256-dimensional pgvector retrieval/reindexing and persisted sources/knowledge UI.
   Default vectors are a labelled lexical baseline; an HTTP semantic adapter exists.
-- [ ] M3.2: qualify real semantic embeddings, retrieval quality/isolation and reindex
-  behavior on approved evaluation documents. A dimensional change needs a migration.
+- [x] M3.2 local: qualified Qwen3-Embedding-0.6B at 256 dimensions on fixed synthetic
+  EN/DE retrieval, real owned pgvector isolation, safe reindex and native grounded chat.
+  1024 comparison and failures retained; production/customer-language acceptance is separate.
 - [x] M4 software: shared-model planner, local registered tools, explicit grants,
   validation/time/step bounds, cancellation and owned history/UI. Real text_stats planning
   and ungranted-tool rejection were checked during M2.
@@ -179,3 +182,154 @@ commits were verified on GitHub, as requested. The owner chose to leave provider
 Actions secrets empty, so actual Vercel/Render deployment remains pending configuration.
 Portal full GitHub verification passed; its deployment workflow safely failed for
 missing provider configuration. No cloud deployment or production qualification claimed.
+
+
+## Final cross-project audit — 2026-10-09
+
+This section supersedes earlier current-state readiness claims. Existing FastAPI / Next.js AI apps preserved; main baseline 6e98c6d4cb07, local uncommitted candidate only. No new push/deployment/publication. Local 105 backend tests passed, one Linux-only skipped and separately checked in Linux; 12 supported browser passes plus one real native model acceptance; frontend lint/type/production build passed. Firefox startup, conservative contract compatibility review, complete ASVS/a11y and hosted operations/legal acceptance remain incomplete. Production release is **NO-GO**, distinct from local passing checks.
+
+Added exact-origin controls, nonce CSP, independent provider examples, standard generated clients/compatibility gate, strict release fingerprint/approval tooling, synthetic restore and current container scanning. Production mock/local inference endpoints now fail closed; bounded SSE runtime parser and non-forcing streaming scroll; core readiness separates model degradation; Python OS HIGH findings still block release. M3.2 semantic embedding remains incomplete.
+
+Restricted release reports and evidence are ignored under docs/internal/release-audit. Read RELEASE_DECISION, RELEASE_BLOCKERS and VERCEL_RENDER_RUNBOOK before promotion. `python3 scripts/release/qualify.py decision` returns NO-GO. Actual provider credentials/origins/storage/inference/monitoring and human legal/content approvals remain required.
+
+Current REST ownership verification: repository is private under DruHustle (User); onesa-ug remote redirects. Intended organization ownership is unverified and release-blocking. No ownership/remote/visibility changed.
+
+
+## Application feature continuation — 2026-10-10 (current)
+
+Implemented account settings (display name, password rotation, active sessions,
+password-confirmed revoke-other-sessions), bounded consistent private JSON export and
+explicit account deletion. Deletion rejects active runs and atomically cascades live
+owned data including document chunks/vectors; other users and external backups are
+not changed. Export scope and limits are explicit, with 413 instead of silent truncation.
+Added extracted-document preview and reindex controls. Knowledge, agents, travel and
+model endpoints now use strict runtime response models and generated browser types.
+A malformed persisted tool outcome fails safely; disappearing cancelled runs do not
+return an uninitialized result. Login/account mutation lock ordering protects password
+changes and prevents revoked sessions from committing later profile changes.
+
+Latest evidence: 112 backend tests passed, one Linux-only skip, one upstream TestClient
+warning; Ruff/format/mypy passed. Frontend lint/types/production build passed. Twelve
+Chromium/WebKit functional cases passed, including download/deletion and five-width
+Settings axe/overflow checks. Public/internal documentation builds/assets validation
+passed. Generated-client drift passes. Conservative baseline compatibility reports 18
+response-schema review findings; the baseline was not reset or gate weakened.
+Evidence commands/logs: ignored data/audit-20261009/evidence/features-*.{json,log}.
+
+Next ordered model task remains M3.2: qualify an approved real semantic embedding
+service; lexical search remains labelled. Email verification/recovery, AI MFA/SSO,
+operator-assisted oversized export and external retention still need design/integration
+and acceptance. Travel providers, training experiments and full production qualification
+remain incomplete. The owner reports Render setup complete; deployed behavior was not
+verified in this continuation. No new commit, push or deployment occurred. Release is
+still NO-GO for outstanding security/image/API/host/operations/legal/ownership findings.
+
+
+## Semantic retrieval continuation — 2026-10-10 (supersedes M3.2 pending)
+
+Qwen3-Embedding-0.6B local qualification completed at the pinned revision and 256-dimensional
+schema. Fixed synthetic EN/DE benchmark: 45/48 top-1 and 47/48 recall@3; 1024 gives 47/48
+and 47/48. Three real pgvector/embedding/native-chat integration cases passed. The separate
+loopback runtime is bearer-protected and bounded; startup checksum/offline loading,
+no-store responses and safe upstream failure are verified. Final optional runtime audit
+has zero known findings after packaging-tool remediation. Core API dependencies unchanged.
+
+Read SEMANTIC_RETRIEVAL_QUALIFICATION.md and embedding_service/README.md. Weights/runtime/
+keys remain ignored under data; the active .env, port3100, existing user databases,
+Ollama chat weights and document indexes are preserved. No cloud service, push, paid
+hosting or production reindex occurred. Production release remains NO-GO; target-host
+embedding security/capacity, approved corpora/languages and controlled reindex/rollback
+remain necessary. Next ordered incomplete task is M5 authorized live travel providers;
+M6 training and M7 target operations remain separately gated. Historical earlier
+M3.2-pending notes are superseded by this narrowly scoped local qualification.
+
+
+Final semantic continuation checks: 116 backend tests passed with four explicit
+optional/platform skips; three opt-in real embedding/pgvector/native-chat cases
+passed separately. Generated-client drift and source/history hygiene pass. The exact
+50-distribution macOS runtime graph is hash-locked and pip's ignore-installed dry-run
+validated it without modifying the tested runtime. Optional runtime vulnerability
+findings: zero. The only new download was the approved Qwen embedding model plus its
+separate runtime packages. Owned temporary test services are stopped after acceptance.
+
+Real semantic UI acceptance: Chromium/WebKit 2 passed; native answer and source
+persistence verified after reopening the conversation. Frontend lint/types and
+public/internal documentation/assets validation passed. Synthetic screenshots and
+private raw evidence remain ignored under data/embeddings and data/audit-20261009.
+
+
+## Domain configuration — 2026-10-10
+
+Owner selected `platform.onesa.eu` for the AI chat frontend. The production example
+now uses this exact `ONESA_PUBLIC_ORIGIN`; Vercel `ONESA_API_URL` remains the actual
+Render API URL. Company and private administration use `onesa.eu` and
+`portal.onesa.eu` in the independent portal repository. Future robot host is
+`robot.onesa.eu`; the robot application is not implemented. Provider assignments,
+DNS/TLS qualification and production delivery remain pending; populated `.env`,
+models, indexes, cookies and API contracts were not changed. No push/deploy here.
+
+
+## Private environment files — 2026-10-10
+
+Created root `.env.local` and `.env.prod`, both ignored by Git and mode 0600.
+Local variables preserve the existing `.env` values and add documented defaults.
+Production settings use `platform.onesa.eu`, Secure cookies and a separately
+generated metrics token; provider DB/inference credentials remain placeholders.
+Lexical retrieval remains the production baseline pending hosted embedding
+qualification. Files parse with the supported Node runtime. Select the files
+explicitly; existing startup defaults and running services were not changed.
+No API contracts, models, indexes, architecture or deployment changed.
+
+## Cross-project review — 2026-10-10
+
+Added Resend/Neon credential detection to source/history checks and explicit missing
+Vercel secret names to deployment diagnostics; no credential values are logged.
+Current isolated verification: backend Ruff/format/mypy and 116 tests pass, four
+skipped (Linux-only/opt-in real provider tests). Frontend lint/types/production build
+and 14 Chromium/WebKit functional/accessibility cases pass; four opt-in real-model
+browser cases skipped in this explicitly labelled mock regression run. Previous real
+semantic/model qualification is separate evidence. Generated API client drift passes.
+Regenerated ignored documentation after detecting source drift; full asset/source
+validation passes in the review copy. All three repository source/history scans pass.
+
+18 conservative response-contract compatibility findings remain. The Python audit
+runtime has unresolved vendor HIGH advisories; release security gates remain intact.
+Hosted staging, operations, manual accessibility and legal/content approval remain
+blocked or unverified. Release qualification remains NO-GO.
+
+GitHub main remains 6e98c6d with passing checks, and Vercel reports the older frontend
+deployment successful. Anonymous live /api/v1/auth/me and /api/v1/models return 503.
+GitHub lacks VERCEL_PROJECT_ID and a passing exact-commit release qualification.
+Render/Vercel integrations and authenticated local CLI access are unavailable.
+No commit, push or production deployment occurred. Preserve private configuration,
+models, indexes and user data. Evidence: ignored data/audit-20261009/evidence/review-*.
+
+## Diagnostic current-state audit — 2026-10-10
+
+This dated diagnostic supersedes historical readiness/coverage statements where different. Application code/configuration/migrations/dependencies and robot were unchanged. Both releases remain independently NO-GO. Current findings, exact dirty-snapshot identity, test totals/limitations, hosted503s and next steps are in docs/internal/release-audit/CURRENT_STATE_AUDIT.md (path relative to repository root). The protected EVIDENCE_INDEX.json records executed commands; NEXT_STEP_CODEX_PROMPT.md contains a bounded continuation. No public deploy/push, DNS, credential rotation, email or real-user mutation occurred. Source tests used disposable synthetic databases; real-model checks used only approved existing local resources.
+
+AI:116backend pass/4skip; separate3real-semantic tests,2native and2semantic browser cases,14mock regression cases,5SSE and13docs-security tests pass; Linux PDF probe passes. Fresh API image44HIGH,18contract reviews, hosted503/inference/ops/legal and recovery/invitation gaps remain. New320px sign-in overflow is measured; no code fix was made during audit.
+
+Generated documentation validation applies to the pre-addendum snapshot; release documentation must be regenerated after future implementation/status changes. Prior successful storage/deployment/model statements are explicitly dated historical evidence rather than current hosted qualification.
+
+
+## Remediation and release closure — 2026-10-10 v1.1
+
+This dated continuation supersedes earlier current-result statements, preserving their historical evidence. Targeted upload/security/contract/UI/operational changes are implemented locally; current application builds and synthetic checks are recorded in the restricted release-closure ledger. No remote mutation, commit, push, email, DNS or public-release approval occurred. Company Portal and AI Platform remain independently **NO-GO** for hosted503s, credential containment, operations/legal and remaining security/manual acceptance. Do not represent the older deployed revision as this dirty candidate.
+
+Portal preserves10MiB private-file capability through bounded transport; fresh MFA/private provenance controls remain intact and two intentional compatibility changes await client/version approval. AI preserves5MiB ingestion and existing real local models; adds explicit invitation gating, one-use recovery/outbox worker, shared DB admission quotas and honest bootstrap errors. AI runtime uses pinned Python3.11.17 Alpine and build-only pinned uv; native Linux PDF restrictions remain enforced. Compatibility18→0 is a proved schema refinement, not baseline reset. Private STAGING_OPERATIONS_DELTA.md and SECURITY_ACCEPTANCE.md specify hosted/manual/policy gaps. Exact refreshed results/source hashes are in RELEASE_CLOSURE.md/EVIDENCE_INDEX.json, not old milestone totals.
+
+Next executable bounded task: qualify native AMD64 PDF denial and prepared candidate staging after owner-approved target/access, then diagnose503 from actual Vercel/Render logs; separately implement the reviewed password-blocklist/session-assurance policy. M5 live travel, training, paid access, hosted inference/capacity and human multilingual quality are still unqualified; no speculative provider integration introduced. Preserve original ordered milestone requirements and all prior dirty work. Robot unchanged.
+
+## GitHub review and deployment follow-up — 2026-10-10
+
+The owner has now authorized reviewing, committing and pushing to `main`, and
+monitoring deployments. Production qualification remains mandatory; this permission
+does not establish staging, operations or content/legal acceptance. Company record
+files awaiting publication approval remain local and are excluded from Git and
+documentation artifacts. The manual `Inspect hosting configuration` workflow uses
+existing provider secrets for read-only service, configuration and deployment
+checks; it emits only required-variable presence and allowlisted status fields.
+Paired releases now wait for the backend (and portal worker) before promoting the
+frontend. Remote CI and provider results will be recorded after the push; they are
+not implied by the earlier local test results.

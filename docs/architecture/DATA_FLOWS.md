@@ -45,3 +45,29 @@ input/output tokens, latency and first-text timing. Request-owned accounting pre
 concurrent requests sharing usage. Missing token counts stay null. Protected generation
 metrics have bounded backend/outcome labels. Next.js compression is disabled so SSE
 deltas reach clients during generation; browser disconnect propagates upstream.
+
+
+Account controls: exact Origin/CSRF → shared authentication throttle for password
+proofs → user/session locks and fresh revocation checks → profile/password/session
+mutation. Password changes revoke every old token and issue a replacement cookie.
+Account export takes a repeatable-read, owner-scoped bounded snapshot and excludes
+credentials/vectors/internal telemetry. Account deletion rejects active runs and
+cascades owned live data, including embeddings, in one transaction. No external
+backup-retention processing is implied. A cancelled agent whose row disappears
+returns a safe not-found result instead of an uninitialized outcome.
+
+
+## Domain configuration — 2026-10-10
+
+Owner selected `platform.onesa.eu` for the AI chat frontend. The production example
+now uses this exact `ONESA_PUBLIC_ORIGIN`; Vercel `ONESA_API_URL` remains the actual
+Render API URL. Company and private administration use `onesa.eu` and
+`portal.onesa.eu` in the independent portal repository. Future robot host is
+`robot.onesa.eu`; the robot application is not implemented. Provider assignments,
+DNS/TLS qualification and production delivery remain pending; populated `.env`,
+models, indexes, cookies and API contracts were not changed. No push/deploy here.
+
+
+### 2026-10-10 release-candidate delta
+
+Backend packaging now pins Python3.11.17 Alpine3.24 by manifest digest and build-only uv0.13.0 by digest. No pip/setuptools/wheel/uv is shipped in the web runtime; real retrieval, inference clients and Linux PDF seccomp remain. Additive SQL stores hold bounded upload chunks, invitation/reset hashes and persistent encrypted mail work plus shared admission leases. Identity worker command is `python -m app.identity_worker`; provisioning/real delivery need scoped approval. Browser5MiB documents use512KiB authenticated chunks through same-origin BFF; no public storage URL. Invitation policy is explicit configuration, not automatically enabled or existing-user eligibility. Core readiness/database and model readiness are separate; production real authenticated HTTPS inference remains unverified. Source/API/docs classification and existing local models/data are preserved. Release remains NO-GO; exact local evidence and unapplied provider delta are restricted under docs/internal/release-audit.

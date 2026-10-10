@@ -13,6 +13,7 @@ from sqlalchemy.dialects import postgresql
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "onesa-ai-platform-backend"))
 from app.config import Settings
+from app.database import REQUIRED_SCHEMA_REVISION
 from app.main import create_app
 from app.models import Base
 
@@ -23,6 +24,9 @@ def write(name, value):
     path = OUTPUT / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
+
+
+from source_policy import sources as documentation_sources
 
 
 def generate():
@@ -198,7 +202,7 @@ def generate():
         },
     )
     search = []
-    for doc in sorted((ROOT / "docs").rglob("*.md")):
+    for doc in documentation_sources(ROOT):
         rel = doc.relative_to(ROOT / "docs").with_suffix("").as_posix()
         raw = doc.read_text()
         title = next(iter(re.findall(r"^# (.+)$", raw, re.MULTILINE)), doc.stem)
@@ -225,7 +229,7 @@ def generate():
     write("search.json", search)
     sources = {
         str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in sorted((ROOT / "docs").rglob("*.md"))
+        for p in documentation_sources(ROOT)
     }
     sources.update(
         {
@@ -237,7 +241,7 @@ def generate():
         "provenance.json",
         {
             "documentation_version": "0.2.0",
-            "schema_head": "608f3f79f76e",
+            "schema_head": REQUIRED_SCHEMA_REVISION,
             "sources": sources,
             "openapi_sha256": hashlib.sha256(
                 json.dumps(schema, sort_keys=True).encode()
@@ -292,7 +296,7 @@ def split(schema, tables):
             if scope == "public"
             else [
                 p
-                for p in (ROOT / "docs").rglob("*.md")
+                for p in documentation_sources(ROOT)
                 if not p.is_relative_to(ROOT / "docs/public")
                 and p.name
                 not in [

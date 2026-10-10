@@ -13,9 +13,13 @@ if context.is_offline_mode():
     with context.begin_transaction():
         context.run_migrations()
 else:
-    engine = create_engine(url, poolclass=pool.NullPool)
-    with engine.connect() as connection:
+    supplied = config.attributes.get("connection")
+    engine = None if supplied is not None else create_engine(url, poolclass=pool.NullPool)
+    from contextlib import nullcontext
+
+    with nullcontext(supplied) if supplied is not None else engine.connect() as connection:
         context.configure(connection=connection, target_metadata=Base.metadata, compare_type=True)
         with context.begin_transaction():
             context.run_migrations()
-    engine.dispose()
+    if engine is not None:
+        engine.dispose()

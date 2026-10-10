@@ -71,6 +71,7 @@ docs-validate:
 	$(PYTHON) scripts/docs/validate.py
 
 docs-check:
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_source_policy.py
 	npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
 	npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
 	$(PYTHON) -m ruff check scripts/docs

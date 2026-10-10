@@ -1,20 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import FeatureShell from "../../components/feature-shell";
-import { call } from "../../lib/api";
-type Run = {
-  id: string;
-  goal: string;
-  status: string;
-  steps: { tool?: string; status: string; result?: unknown; error?: string }[];
-};
+import { api, type AgentRunOut as Run } from "../../lib/api";
 export default function Agents() {
   const [runs, setRuns] = useState<Run[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
-    call("/agents/runs")
-      .then((r) => r.json())
+    api("GET /agents/runs")
       .then((r) => setRuns(r.items))
       .catch((e) => setError(e.message));
   }, []);
@@ -24,12 +17,14 @@ export default function Agents() {
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      await call("/agents/runs", "POST", {
-        goal: form.get("goal"),
-        allowed_tools: form.get("permission") ? ["text_stats"] : [],
+      await api("POST /agents/runs", {
+        body: {
+          goal: String(form.get("goal") || ""),
+          allowed_tools: form.get("permission") ? ["text_stats"] : [],
+        },
       });
-      const r = await call("/agents/runs");
-      setRuns((await r.json()).items);
+      const r = await api("GET /agents/runs");
+      setRuns(r.items);
     } catch (e) {
       setError((e as Error).message);
     } finally {

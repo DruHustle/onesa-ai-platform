@@ -17,3 +17,8 @@ Independent developer and protected engineering experiences, scoped local search
 ### Dependency maintenance
 
 Documentation dependency security and supported runtime compatibility have been remediated and locally verified. The existing applications, authentication and public API contracts are preserved.
+
+
+### Local release-candidate remediation — 2026-10-10
+
+Added explicit scoped invitation/recovery controls, durable identity-mail maintenance, bounded5MiB document transport and shared admission budgets. Chat Stop acknowledges the owned backend run before cancellation; document-linked chat waits for selected-document ownership/bootstrap. Supported runtime/packaging and Firefox layout fixes retain existing local real model and semantic functionality. Public/internal documentation sources now exclude restricted release evidence. These are local development-candidate changes, not hosted delivery, capacity, legal approval or production release. See roadmap for unverified integrations and human acceptance.

@@ -4,6 +4,8 @@ import secrets
 
 from fastapi import APIRouter, Request
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from starlette.responses import Response
 
 from app.errors import fail
@@ -45,6 +47,44 @@ def metrics(request: Request) -> Response:
         request.headers.get("Authorization", ""), "Bearer " + token
     ):
         fail(403, "metrics_denied", "Metrics access denied")
+    try:
+        with Session(request.app.state.engine) as db:
+            for state in ["queued", "leased", "accepted", "failed", "cancelled"]:
+                mail_jobs.labels(state).set(
+                    db.scalar(
+                        text("SELECT count(*) FROM identity_mail WHERE state=:state"),
+                        {"state": state},
+                    )
+                    or 0
+                )
+            mail_age.set(
+                db.scalar(
+                    text(
+                        "SELECT coalesce(extract(epoch FROM now()-min(t.created_at)),0) "
+                        "FROM identity_mail m JOIN identity_tokens t ON t.id=m.token_id "
+                        "WHERE m.state IN ('queued','leased')"
+                    )
+                )
+                or 0
+            )
+            pending_upload_bytes.set(
+                db.scalar(
+                    text(
+                        "SELECT coalesce(sum(received),0) FROM bounded_uploads "
+                        "WHERE result IS NULL AND expires_at>now()"
+                    )
+                )
+                or 0
+            )
+            model_leases.set(
+                db.scalar(text("SELECT count(*) FROM model_leases WHERE expires_at>now()")) or 0
+            )
+            knowledge_bytes.set(
+                db.scalar(text("SELECT coalesce(sum(octet_length(text)),0) FROM documents")) or 0
+            )
+            dependency_available.labels("database").set(1)
+    except Exception:
+        dependency_available.labels("database").set(0)
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
@@ -76,3 +116,12 @@ agent_outcomes = Counter("onesa_agent_runs_total", "Registered local agent outco
 agent_planning_failures = Counter(
     "onesa_agent_planning_failures_total", "Rejected or failed agent planning"
 )
+mail_jobs = Gauge(
+    "onesa_identity_mail_jobs", "Identity mail states; acceptance is not delivery", ["state"]
+)
+mail_age = Gauge("onesa_identity_mail_queue_age_seconds", "Age of oldest pending identity message")
+pending_upload_bytes = Gauge(
+    "onesa_pending_upload_bytes", "Logical received bytes in unexpired staged uploads"
+)
+model_leases = Gauge("onesa_active_model_leases", "Shared admitted model operations")
+knowledge_bytes = Gauge("onesa_knowledge_text_bytes", "Logical stored UTF-8 document bytes")

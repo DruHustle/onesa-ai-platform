@@ -9,15 +9,24 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import APIKeyCookie
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import database
 from app.errors import fail
-from app.models import AuthSession, RateBucket, User, now
-from app.schemas import Credentials, Register, SafeUser
+from app.models import AccessGrant, AuthSession, RateBucket, User, now
+from app.schemas import (
+    Credentials,
+    PasswordChange,
+    PasswordProof,
+    ProfileUpdate,
+    Register,
+    SafeUser,
+    SessionList,
+    SessionOut,
+)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 DB = Annotated[Session, Depends(database)]
@@ -77,6 +86,7 @@ def authenticated(
     user = db.get(User, row.user_id) if row else None
     if row is None or user is None or user.status != "active":
         fail(401, "unauthorized", "Sign in to continue")
+    eligible(request, db, user)
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         origin(request)
         csrf = request.headers.get("X-CSRF-Token", "")
@@ -88,7 +98,19 @@ def authenticated(
 Auth = Annotated[tuple[User, AuthSession], Depends(authenticated)]
 
 
+def eligible(request: Request, db: Session, user: User) -> None:
+    settings = request.app.state.settings
+    if (
+        settings.registration_mode == "invitation"
+        and str(user.id) not in settings.access_operator_user_ids
+    ):
+        grant = db.get(AccessGrant, user.id)
+        if grant is None or grant.expires_at <= now():
+            fail(403, "invitation_required", "An active invitation is required")
+
+
 def issue(request: Request, response: Response, db: Session, user: User) -> None:
+    eligible(request, db, user)
     config = request.app.state.settings
     old_token = request.cookies.get("onesa_session")
     if old_token:
@@ -131,6 +153,11 @@ def issue(request: Request, response: Response, db: Session, user: User) -> None
 def register(body: Register, request: Request, response: Response, db: DB) -> User:
     origin(request)
     throttle(request, db, str(body.email))
+    invitation = None
+    if request.app.state.settings.registration_mode == "invitation":
+        from app.identity import consume_invitation
+
+        invitation = consume_invitation(request, db, body.invitation_token, str(body.email))
     with request.app.state.auth_hash_semaphore:
         password_hash = hasher.hash(body.password)
     user = User(
@@ -144,6 +171,9 @@ def register(body: Register, request: Request, response: Response, db: DB) -> Us
     except IntegrityError:
         db.rollback()
         fail(409, "account_unavailable", "Unable to register this account")
+    if invitation is not None:
+        db.add(AccessGrant(user_id=user.id, expires_at=invitation.grant_expires_at))
+        db.flush()
     issue(request, response, db, user)
     return user
 
@@ -152,7 +182,8 @@ def register(body: Register, request: Request, response: Response, db: DB) -> Us
 def login(body: Credentials, request: Request, response: Response, db: DB) -> User:
     origin(request)
     throttle(request, db, str(body.email))
-    user = db.scalar(select(User).where(User.email == str(body.email).casefold()))
+    # Account mutations and login serialize on the user before issuing sessions.
+    user = db.scalar(select(User).where(User.email == str(body.email).casefold()).with_for_update())
     try:
         with request.app.state.auth_hash_semaphore:
             hasher.verify(user.password_hash if user else DUMMY, body.password)
@@ -171,6 +202,7 @@ def me(auth: Auth) -> User:
 
 @router.post("/refresh", response_model=SafeUser)
 def refresh(request: Request, response: Response, db: DB, auth: Auth) -> User:
+    lock_account(db, auth)
     # Serialize rotation: a consumed token cannot create another session.
     old = db.scalar(
         select(AuthSession)
@@ -191,3 +223,112 @@ def logout(response: Response, db: DB, auth: Auth) -> None:
     db.commit()
     response.delete_cookie("onesa_session", path="/")
     response.delete_cookie("onesa_csrf", path="/")
+
+
+def lock_account(db: Session, auth: tuple[User, AuthSession]) -> User:
+    """Recheck identity after locking; a revoked session cannot mutate an account."""
+    user = db.scalar(
+        select(User)
+        .where(User.id == auth[0].id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    session = db.scalar(
+        select(AuthSession)
+        .where(AuthSession.id == auth[1].id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if (
+        user is None
+        or user.status != "active"
+        or session is None
+        or session.revoked_at is not None
+        or session.expires_at <= now()
+    ):
+        fail(401, "unauthorized", "Sign in to continue")
+    return user
+
+
+def prove_password(
+    request: Request, db: Session, auth: tuple[User, AuthSession], proof: PasswordProof
+) -> User:
+    throttle(request, db, auth[0].email)
+    user = lock_account(db, auth)
+    try:
+        with request.app.state.auth_hash_semaphore:
+            hasher.verify(user.password_hash, proof.current_password)
+    except VerificationError:
+        fail(403, "reauthentication_failed", "Current password is incorrect")
+    return user
+
+
+@router.patch("/profile", response_model=SafeUser)
+def profile(body: ProfileUpdate, db: DB, auth: Auth) -> User:
+    user = lock_account(db, auth)
+    user.display_name = body.display_name.strip()
+    db.commit()
+    return user
+
+
+@router.get("/sessions", response_model=SessionList)
+def sessions(db: DB, auth: Auth) -> SessionList:
+    condition = (
+        AuthSession.user_id == auth[0].id,
+        AuthSession.revoked_at.is_(None),
+        AuthSession.expires_at > now(),
+    )
+    rows = db.scalars(
+        select(AuthSession)
+        .where(*condition)
+        .order_by(AuthSession.created_at.desc(), AuthSession.id)
+        .limit(100)
+    ).all()
+    total = db.scalar(select(func.count()).select_from(AuthSession).where(*condition)) or 0
+    return SessionList(
+        items=[
+            SessionOut(
+                id=row.id,
+                created_at=row.created_at,
+                expires_at=row.expires_at,
+                current=row.id == auth[1].id,
+            )
+            for row in rows
+        ],
+        total=total,
+        limit=100,
+    )
+
+
+@router.post("/sessions/revoke-others", status_code=204)
+def revoke_others(body: PasswordProof, request: Request, db: DB, auth: Auth) -> None:
+    user = prove_password(request, db, auth, body)
+    db.execute(
+        update(AuthSession)
+        .where(
+            AuthSession.user_id == user.id,
+            AuthSession.id != auth[1].id,
+            AuthSession.revoked_at.is_(None),
+        )
+        .values(revoked_at=now())
+    )
+    db.commit()
+
+
+@router.post("/password", response_model=SafeUser)
+def change_password(
+    body: PasswordChange, request: Request, response: Response, db: DB, auth: Auth
+) -> User:
+    user = prove_password(request, db, auth, body)
+    if body.new_password == body.current_password:
+        fail(422, "password_unchanged", "Choose a different password")
+    with request.app.state.auth_hash_semaphore:
+        user.password_hash = hasher.hash(body.new_password)
+    # Revoke every prior token, including this browser, then rotate its cookies.
+    db.execute(
+        update(AuthSession)
+        .where(AuthSession.user_id == user.id, AuthSession.revoked_at.is_(None))
+        .values(revoked_at=now())
+    )
+    issue(request, response, db, user)
+    return user

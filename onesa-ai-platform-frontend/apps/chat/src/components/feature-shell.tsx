@@ -22,6 +22,7 @@ export default function FeatureShell({
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
+          <Link href="/settings">Account settings</Link>
           <DocumentationNav />
         </nav>
         <LanguageSelect />
@@ -29,15 +30,18 @@ export default function FeatureShell({
       <section lang="en">
         <p className="eyebrow">{copy.workspace}</p>
         <h1>{title}</h1>
-        <DocumentationHelp
-          topic={
-            title.toLowerCase().includes("knowledge")
-              ? "knowledge"
-              : (title.toLowerCase().includes("agent") || title.toLowerCase().includes("tool"))
-                ? "agents"
-                : "travel"
-          }
-        />
+        {!title.toLowerCase().includes("settings") && (
+          <DocumentationHelp
+            topic={
+              title.toLowerCase().includes("knowledge")
+                ? "knowledge"
+                : title.toLowerCase().includes("agent") ||
+                    title.toLowerCase().includes("tool")
+                  ? "agents"
+                  : "travel"
+            }
+          />
+        )}
         {children}
       </section>
     </main>

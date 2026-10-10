@@ -83,6 +83,12 @@ test("documents, source-grounded chat, bounded tools and saved travel", async ({
     .getByRole("button", { name: "Upload document", exact: true })
     .click();
   await expect(page.getByText("zimbabwe.txt", { exact: true })).toBeVisible();
+  await page.getByRole("button", {name:"Preview extracted text"}).click();
+  await expect(page.getByRole("heading", {name:"Preview: zimbabwe.txt"})).toBeVisible();
+  await expect(page.getByText("Harare is the capital of Zimbabwe.", {exact:true})).toBeVisible();
+  await page.getByRole("button", {name:"Close preview"}).click();
+  await page.getByRole("button", {name:"Rebuild search index"}).click();
+  await expect(page.getByRole("status")).toContainText("Document search index rebuilt");
   await page.getByRole("link", { name: "Ask about this document →" }).click();
   await page.getByLabel("Message Onesa AI").fill("What is Harare?");
   await page.getByLabel("Send message").click();

@@ -1,5 +1,30 @@
 # Development changelog
 
+## 2026-10-10 — Local semantic retrieval qualification
+
+- Added optional private pinned Qwen3-Embedding-0.6B serving, 256/1024 normalized outputs,
+  bearer/body/token/queue bounds, offline loading, weight verification and safe errors.
+- Added fixed synthetic EN/DE evaluation and raw rankings; 256 passed declared thresholds
+  with 45/48 top-1 versus 47/48 at 1024. Retained failures and dimension tradeoff.
+- Explicit 256 requests and query-only instructions; HTTPS/key validation for production
+  HTTP embedding services. Real pgvector isolation/reindex-failure/native grounded-chat
+  acceptance passed; original live documents/configuration preserved. No deployment.
+
+
+## 2026-10-10 — Account controls and typed feature workflows
+
+- Added profile/password/session settings; password-confirmed bounded owner-scoped JSON
+  export and atomic live account deletion, including document embeddings. External
+  backups remain outside self-service deletion; oversized exports fail rather than truncate.
+- Added extracted-document preview/reindex UI and strict runtime response models for
+  knowledge, agents, trips and model discovery; feature pages use generated types.
+- Serialized login/account locks, rechecked revoked tokens, fixed missing cancelled-run
+  outcomes; verified cross-user isolation, derived-data deletion and malformed output denial.
+- 112 PostgreSQL/backend passes, one Linux skip; frontend lint/types/build, 12 supported
+  browser cases and public/internal docs builds passed. Conservative API review and
+  production release gates remain unresolved. No new publication/deployment occurred.
+
+
 ## 2026-10-09 — Preserved frontend/backend split
 
 - Moved the existing Next.js/docs apps, FastAPI/migrations and training/evaluation into
@@ -171,3 +196,66 @@ commits were verified on GitHub, as requested. The owner chose to leave provider
 Actions secrets empty, so actual Vercel/Render deployment remains pending configuration.
 Portal full GitHub verification passed; its deployment workflow safely failed for
 missing provider configuration. No cloud deployment or production qualification claimed.
+
+
+## Final cross-project audit — 2026-10-09
+
+This section supersedes earlier current-state readiness claims. Existing FastAPI / Next.js AI apps preserved; main baseline 6e98c6d4cb07, local uncommitted candidate only. No new push/deployment/publication. Local 105 backend tests passed, one Linux-only skipped and separately checked in Linux; 12 supported browser passes plus one real native model acceptance; frontend lint/type/production build passed. Firefox startup, conservative contract compatibility review, complete ASVS/a11y and hosted operations/legal acceptance remain incomplete. Production release is **NO-GO**, distinct from local passing checks.
+
+Added exact-origin controls, nonce CSP, independent provider examples, standard generated clients/compatibility gate, strict release fingerprint/approval tooling, synthetic restore and current container scanning. Production mock/local inference endpoints now fail closed; bounded SSE runtime parser and non-forcing streaming scroll; core readiness separates model degradation; Python OS HIGH findings still block release. M3.2 semantic embedding remains incomplete.
+
+Restricted release reports and evidence are ignored under docs/internal/release-audit. Read RELEASE_DECISION, RELEASE_BLOCKERS and VERCEL_RENDER_RUNBOOK before promotion. `python3 scripts/release/qualify.py decision` returns NO-GO. Actual provider credentials/origins/storage/inference/monitoring and human legal/content approvals remain required.
+
+Current REST ownership verification: repository is private under DruHustle (User); onesa-ug remote redirects. Intended organization ownership is unverified and release-blocking. No ownership/remote/visibility changed.
+
+
+## Domain configuration — 2026-10-10
+
+Owner selected `platform.onesa.eu` for the AI chat frontend. The production example
+now uses this exact `ONESA_PUBLIC_ORIGIN`; Vercel `ONESA_API_URL` remains the actual
+Render API URL. Company and private administration use `onesa.eu` and
+`portal.onesa.eu` in the independent portal repository. Future robot host is
+`robot.onesa.eu`; the robot application is not implemented. Provider assignments,
+DNS/TLS qualification and production delivery remain pending; populated `.env`,
+models, indexes, cookies and API contracts were not changed. No push/deploy here.
+
+
+## Private environment files — 2026-10-10
+
+Created root `.env.local` and `.env.prod`, both ignored by Git and mode 0600.
+Local variables preserve the existing `.env` values and add documented defaults.
+Production settings use `platform.onesa.eu`, Secure cookies and a separately
+generated metrics token; provider DB/inference credentials remain placeholders.
+Lexical retrieval remains the production baseline pending hosted embedding
+qualification. Files parse with the supported Node runtime. Select the files
+explicitly; existing startup defaults and running services were not changed.
+No API contracts, models, indexes, architecture or deployment changed.
+
+### 2026-10-10 — deployment review
+
+- Expanded offline secret gates for Resend and Neon; repository/history scans pass.
+- Added explicit missing Vercel secret diagnostics without exposing values.
+- Verified backend/frontend/browser checks and regenerated stale ignored documentation.
+- Hosted API 503s and release/security/compatibility gates remain unresolved.
+
+
+## Remediation and release closure — 2026-10-10 v1.1
+
+This dated continuation supersedes earlier current-result statements, preserving their historical evidence. Targeted upload/security/contract/UI/operational changes are implemented locally; current application builds and synthetic checks are recorded in the restricted release-closure ledger. No remote mutation, commit, push, email, DNS or public-release approval occurred. Company Portal and AI Platform remain independently **NO-GO** for hosted503s, credential containment, operations/legal and remaining security/manual acceptance. Do not represent the older deployed revision as this dirty candidate.
+
+Portal preserves10MiB private-file capability through bounded transport; fresh MFA/private provenance controls remain intact and two intentional compatibility changes await client/version approval. AI preserves5MiB ingestion and existing real local models; adds explicit invitation gating, one-use recovery/outbox worker, shared DB admission quotas and honest bootstrap errors. AI runtime uses pinned Python3.11.17 Alpine and build-only pinned uv; native Linux PDF restrictions remain enforced. Compatibility18→0 is a proved schema refinement, not baseline reset. Private STAGING_OPERATIONS_DELTA.md and SECURITY_ACCEPTANCE.md specify hosted/manual/policy gaps. Exact refreshed results/source hashes are in RELEASE_CLOSURE.md/EVIDENCE_INDEX.json, not old milestone totals.
+
+Next executable bounded task: qualify native AMD64 PDF denial and prepared candidate staging after owner-approved target/access, then diagnose503 from actual Vercel/Render logs; separately implement the reviewed password-blocklist/session-assurance policy. M5 live travel, training, paid access, hosted inference/capacity and human multilingual quality are still unqualified; no speculative provider integration introduced. Preserve original ordered milestone requirements and all prior dirty work. Robot unchanged.
+
+## GitHub review and deployment follow-up — 2026-10-10
+
+The owner has now authorized reviewing, committing and pushing to `main`, and
+monitoring deployments. Production qualification remains mandatory; this permission
+does not establish staging, operations or content/legal acceptance. Company record
+files awaiting publication approval remain local and are excluded from Git and
+documentation artifacts. The manual `Inspect hosting configuration` workflow uses
+existing provider secrets for read-only service, configuration and deployment
+checks; it emits only required-variable presence and allowlisted status fields.
+Paired releases now wait for the backend (and portal worker) before promoting the
+frontend. Remote CI and provider results will be recorded after the push; they are
+not implied by the earlier local test results.

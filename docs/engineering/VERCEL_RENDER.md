@@ -46,7 +46,7 @@ facts and legal/editorial gates remain unapproved until the owner verifies them.
 AI uses PostgreSQL/pgvector and a restricted database URL with `postgresql+psycopg://`.
 Apply Alembic migrations using owner credentials, enable vector, and grant CRUD while
 keeping `alembic_version` read-only. Set actual `ONESA_PUBLIC_ORIGIN`, secure cookies
-and generated metrics token. The blueprint initially labels inference as `mock`;
+and generated metrics token. Production configuration refuses mock inference;
 local Mac Ollama is not reachable from Render. Supply a qualified authenticated
 remote Ollama/vLLM endpoint and model before claiming a live AI service. No model is
 downloaded or trained by deployment.
@@ -101,3 +101,37 @@ that exact SHA and is polled until live, with commit verification. Render deploy
 or timeout fails the workflow. Check service logs and health before retrying; roll back
 using provider controls to a previously qualified release if needed. No provider tokens,
 database URLs or application secrets belong in the repository.
+
+## Final release qualification — 2026-10-09
+
+Prepared configuration is not a hosted deployment. Production promotion additionally
+requires the exact-commit `RELEASE_QUALIFICATION_JSON` Actions secret with all four
+reviewed gates passing and a matching source fingerprint. The local audit decision
+is NO-GO. Do not supply a passing attestation until target, operations and content
+approvals actually exist. See restricted `docs/internal/release-audit/` evidence.
+
+Render AI health checks now use `/core-ready`: DB/core failures are unhealthy, while
+optional inference outage reports degraded without causing restart storms. `/ready`
+still verifies inference. Node runtime images exclude build-only package managers;
+run compiled Node migration/worker entry points, not `npm`, inside runtime containers.
+
+
+## Domain configuration — 2026-10-10
+
+Owner selected `platform.onesa.eu` for the AI chat frontend. The production example
+now uses this exact `ONESA_PUBLIC_ORIGIN`; Vercel `ONESA_API_URL` remains the actual
+Render API URL. Company and private administration use `onesa.eu` and
+`portal.onesa.eu` in the independent portal repository. Future robot host is
+`robot.onesa.eu`; the robot application is not implemented. Provider assignments,
+DNS/TLS qualification and production delivery remain pending; populated `.env`,
+models, indexes, cookies and API contracts were not changed. No push/deploy here.
+
+### Read-only hosting diagnosis
+
+Run `gh workflow run inspect-hosting.yml --ref main` in this repository to check
+the existing Render services and Vercel project using the configured Actions
+secrets. The workflow never changes provider settings, deploys code, creates
+resources or prints environment values. Inspect its log for required configuration
+presence, root/health-path matches and the provider's deployment commit. A successful
+diagnostic job means the inspection ran; it does not establish healthy deployment.
+Production deployment still requires a reviewed exact-commit qualification record.

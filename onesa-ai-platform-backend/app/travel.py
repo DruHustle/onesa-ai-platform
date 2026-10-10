@@ -14,6 +14,7 @@ from app.auth import DB, Auth
 from app.errors import fail
 from app.inference import ModelClient, ModelMessage
 from app.models import Trip
+from app.responses import Activity, Day, Itinerary, TripList, TripOut
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/travel", tags=["travel"])
@@ -33,21 +34,6 @@ class Preferences(Strict):
 
 class Revision(Preferences):
     expected_revision: int = Field(ge=1)
-
-
-class Activity(Strict):
-    title: str = Field(min_length=1, max_length=200)
-    notes: str = Field(min_length=1, max_length=2000)
-
-
-class Day(Strict):
-    day: int = Field(ge=1, le=14)
-    activities: list[Activity] = Field(min_length=1, max_length=8)
-
-
-class Itinerary(Strict):
-    days: list[Day] = Field(min_length=1, max_length=14)
-    assumptions: list[str] = Field(max_length=20)
 
 
 class ItineraryPlanner(Protocol):
@@ -162,7 +148,7 @@ async def planning(body: Preferences, request: Request) -> dict[str, Any]:
         fail(503, "planning_failed", "Unable to produce a valid itinerary; retry")
 
 
-@router.post("/trips", status_code=201)
+@router.post("/trips", status_code=201, response_model=TripOut)
 async def create(body: Preferences, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     plan = await planning(body, request)
     row = Trip(user_id=auth[0].id, **body.model_dump(), itinerary=plan)
@@ -171,7 +157,7 @@ async def create(body: Preferences, request: Request, db: DB, auth: Auth) -> dic
     return output(row)
 
 
-@router.get("/trips")
+@router.get("/trips", response_model=TripList)
 def listing(db: DB, auth: Auth) -> dict[str, Any]:
     rows = db.scalars(
         select(Trip)
@@ -182,12 +168,12 @@ def listing(db: DB, auth: Auth) -> dict[str, Any]:
     return {"items": [output(row) for row in rows]}
 
 
-@router.get("/trips/{identifier}")
+@router.get("/trips/{identifier}", response_model=TripOut)
 def detail(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
     return output(owned(db, identifier, auth[0].id))
 
 
-@router.put("/trips/{identifier}")
+@router.put("/trips/{identifier}", response_model=TripOut)
 async def revise(
     identifier: UUID, body: Revision, request: Request, db: DB, auth: Auth
 ) -> dict[str, Any]:

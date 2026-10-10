@@ -3,13 +3,21 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.config import Settings
+from app.inference import MockModelClient
 from app.main import create_app
+
+PRODUCTION_INFERENCE = {
+    "model_backend": "ollama",
+    "model_base_url": "https://model.example.invalid/v1",
+    "model_api_key": "security-test-fixture-only",
+}
 
 
 def test_production_requires_https_secure_cookies_and_secrets() -> None:
     with pytest.raises(ValidationError):
         Settings(environment="production")
     assert Settings(
+        **PRODUCTION_INFERENCE,
         environment="production",
         secure_cookies=True,
         public_origin="https://example.invalid",
@@ -32,12 +40,13 @@ def test_production_rejects_superuser_database(pg) -> None:
     url = pg.url.render_as_string(hide_password=False)
     config = Settings(
         database_url=url,
+        **PRODUCTION_INFERENCE,
         environment="production",
         secure_cookies=True,
         public_origin="https://example.invalid",
         metrics_token="x" * 32,
     )
-    with TestClient(create_app(config)) as api:
+    with TestClient(create_app(config, MockModelClient())) as api:
         assert api.get("/ready").status_code == 503
 
 
@@ -53,6 +62,7 @@ def test_production_readiness_accepts_restricted_database_role(pg) -> None:
                 "END IF; END $$"
             )
         )
+        connection.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
         connection.execute(text("GRANT USAGE ON SCHEMA public TO onesa_app_test"))
         connection.execute(
             text(
@@ -60,17 +70,24 @@ def test_production_readiness_accepts_restricted_database_role(pg) -> None:
                 "ON ALL TABLES IN SCHEMA public TO onesa_app_test"
             )
         )
+        connection.execute(
+            text(
+                "REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER ON "
+                "alembic_version FROM onesa_app_test"
+            )
+        )
     url = pg.url.set(username="onesa_app_test", password="test-role-only").render_as_string(
         hide_password=False
     )
     config = Settings(
         database_url=url,
+        **PRODUCTION_INFERENCE,
         environment="production",
         secure_cookies=True,
         public_origin="https://example.invalid",
         metrics_token="x" * 32,
     )
-    with TestClient(create_app(config)) as api:
+    with TestClient(create_app(config, MockModelClient())) as api:
         assert api.get("/ready").status_code == 200
 
 
@@ -78,7 +95,7 @@ def test_readiness_metrics_report_failed_model_without_private_details() -> None
     from unittest.mock import AsyncMock
 
     config = Settings(metrics_token="test-metrics-only")
-    with TestClient(create_app(config)) as api:
+    with TestClient(create_app(config, MockModelClient())) as api:
         api.app.state.model_client.healthy = AsyncMock(return_value=False)
         assert api.get("/ready").status_code == 503
         response = api.get("/metrics", headers={"Authorization": "Bearer test-metrics-only"})
@@ -121,3 +138,63 @@ def test_pdf_subprocess_preserves_text_and_rejects_malformed_input() -> None:
 def test_staging_requires_production_session_controls() -> None:
     with pytest.raises(ValidationError):
         Settings(environment="staging", public_origin="http://example.invalid")
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "http://localhost:11434/v1",
+        "https://localhost/v1",
+        "https://host.docker.internal/v1",
+        "https://127.0.0.1/v1",
+        "https://[::1]/v1",
+        "https://169.254.169.254/v1",
+    ],
+)
+def test_production_refuses_development_inference(endpoint):
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="production",
+            secure_cookies=True,
+            public_origin="https://example.invalid",
+            database_url="postgresql+psycopg://localhost/onesa",
+            metrics_token="x" * 32,
+            model_backend="ollama",
+            model_base_url=endpoint,
+            model_api_key="fixture-only",
+        )
+
+
+def test_production_refuses_mock_inference():
+    with pytest.raises(ValidationError, match="real inference"):
+        Settings(
+            environment="production",
+            secure_cookies=True,
+            public_origin="https://example.invalid",
+            database_url="postgresql+psycopg://localhost/onesa",
+            metrics_token="x" * 32,
+        )
+
+
+def test_core_health_survives_inference_outage_without_claiming_model_readiness():
+    from unittest.mock import AsyncMock
+
+    client = MockModelClient()
+    client.healthy = AsyncMock(return_value=False)
+    with TestClient(create_app(Settings(), client)) as api:
+        assert api.get("/health").status_code == 200
+        assert api.get("/core-ready").json()["inference"] == "degraded"
+        assert api.get("/ready").status_code == 503
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://user:password@onesa.example.com",
+        "https://onesa.example.com/path",
+        "https://onesa.example.com?token=example",
+    ],
+)
+def test_exact_public_origin(origin: str):
+    with pytest.raises(ValueError, match="exact origin"):
+        Settings(public_origin=origin)

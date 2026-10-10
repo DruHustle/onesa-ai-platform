@@ -10,6 +10,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.auth import DB, Auth
 from app.conversations import idle, owned
@@ -23,6 +24,7 @@ from app.inference import (
 )
 from app.knowledge import Search, retrieve
 from app.models import Conversation, InferenceRun, Message, now
+from app.responses import ModelList, ModelOut
 from app.schemas import ChatRequest
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
@@ -77,12 +79,12 @@ def release(
         return message_id
 
 
-@router.get("/models")
+@router.get("/models", response_model=ModelList)
 def models(request: Request, auth: Auth) -> dict[str, Any]:
     return {"items": [model_metadata(request.app.state.settings)]}
 
 
-@router.get("/models/{identifier}")
+@router.get("/models/{identifier}", response_model=ModelOut)
 def model(identifier: str, request: Request, auth: Auth) -> dict[str, Any]:
     if identifier != "default":
         fail(404, "not_found", "Model not found")
@@ -158,6 +160,11 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     metadata = model_metadata(request.app.state.settings)
     telemetry: dict[str, Any] = {}
 
+    def still_active() -> bool:
+        with Session(request.app.state.engine) as check:
+            current = check.get(Conversation, row.id)
+            return current is not None and current.active_run_id == run_id
+
     async def generate() -> AsyncIterator[str]:
         status = "cancelled"
         try:
@@ -175,7 +182,9 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             with observe_generation(stats):
                 async with asyncio.timeout(request.app.state.settings.generation_timeout):
                     async for chunk in request.app.state.model_client.stream(messages):
-                        if await request.is_disconnected():
+                        if await request.is_disconnected() or not await run_in_threadpool(
+                            still_active
+                        ):
                             return
                         if chunk and stats.first_token_seconds is None:
                             stats.first_token_seconds = time.monotonic() - started

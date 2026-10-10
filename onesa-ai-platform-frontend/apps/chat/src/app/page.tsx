@@ -13,20 +13,23 @@ type Message = {
   role: string;
   content: { text: string; sources?: { document_id: string; title: string }[] };
 };
-import { call, csrf, api } from "../lib/api";
+import { chatEvents } from "../../../../packages/api-client/sse";
+import { call, csrf, api, ApiError } from "../lib/api";
 import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function Chat() {
-  const { copy } = useLocale();
+  const { copy, locale } = useLocale();
   const [model, setModel] = useState<{
     backend: string;
     model_identifier: string;
     real_inference: boolean;
   } | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const [documents, setDocuments] = useState<{ id: string; title: string }[]>(
     [],
   );
   const [documentIds, setDocumentIds] = useState<string[]>([]);
+  const [knowledgeReady, setKnowledgeReady] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [checking, setChecking] = useState(true),
     [signup, setSignup] = useState(false);
@@ -38,6 +41,7 @@ export default function Chat() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [menu, setMenu] = useState(false);
+  const followLatest = useRef(true);
   const sidebar = useRef<HTMLElement | null>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const abort = useRef<AbortController | null>(null),
@@ -53,7 +57,11 @@ export default function Chat() {
       .then((u) => {
         if (active) setUser(u);
       })
-      .catch(() => {})
+      .catch((failure: unknown) => {
+        if (!active) return;
+        if (failure instanceof ApiError && failure.status === 403 && failure.code === "invitation_required") setError(failure.message);
+        else if (!(failure instanceof ApiError && failure.status === 401)) setUnavailable(true);
+      })
       .finally(() => {
         if (active) setChecking(false);
       });
@@ -76,10 +84,18 @@ export default function Chat() {
           const id = new URLSearchParams(window.location.search).get(
             "document",
           );
-          if (id && data.items.some((d: { id: string }) => d.id === id))
-            setDocumentIds([id]);
+          if (id && !data.items.some((d: { id: string }) => d.id === id)) {
+            setError("The selected document is unavailable. Open Knowledge to select an accessible document.");
+            return;
+          }
+          if (id) setDocumentIds([id]);
+          setKnowledgeReady(true);
         })
-        .catch(() => {});
+        .catch(() => {
+          const id = new URLSearchParams(window.location.search).get("document");
+          if (id) setError("Unable to load the selected document. Reload to retry.");
+          else setKnowledgeReady(true);
+        });
     if (user)
       call("/conversations")
         .then((r) => r.json())
@@ -87,7 +103,7 @@ export default function Chat() {
         .catch((e) => setError(e.message));
   }, [user]);
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth" });
+    if (followLatest.current) bottom.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, partial]);
   const closeMenu = useCallback(() => {
     setMenu(false);
@@ -170,9 +186,22 @@ export default function Chat() {
     await refreshList();
     return row.id;
   }
+  const [canStop, setCanStop] = useState(false);
+  const activeRun = useRef<{ conversation_id: string; run_id: string } | null>(null);
+  async function stop() {
+    const run = activeRun.current;
+    if (!run) return;
+    try {
+      const response = await call(`/conversations/${run.conversation_id}/cancel`, "POST", { run_id: run.run_id });
+      if (!response.ok) throw new Error("Unable to confirm cancellation; retry Stop.");
+      abort.current?.abort();
+    } catch {
+      setError("Unable to confirm cancellation; retry Stop.");
+    }
+  }
   async function send(event: React.FormEvent) {
     event.preventDefault();
-    if (!input.trim() || busy) return;
+    if (!input.trim() || busy || !knowledgeReady) return;
     const content = input;
     setBusy(true);
     setError("");
@@ -202,37 +231,13 @@ export default function Chat() {
         const data = await response.json();
         throw new Error(data.error?.message || "Unable to generate response");
       }
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("Streaming unavailable");
-      const decoder = new TextDecoder();
-      let pending = "",
-        ended = false;
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        pending += decoder.decode(value, { stream: true });
-        let boundary;
-        while ((boundary = pending.indexOf("\n\n")) >= 0) {
-          const frame = pending.slice(0, boundary);
-          pending = pending.slice(boundary + 2);
-          const kind = frame
-            .split("\n")
-            .find((l) => l.startsWith("event:"))
-            ?.slice(6)
-            .trim();
-          const dataLine = frame.split("\n").find((l) => l.startsWith("data:"));
-          if (!dataLine) continue;
-          const data = JSON.parse(dataLine.slice(5));
-          if (kind === "content_delta")
-            setPartial((p) => (p || "") + data.text);
-          if (kind === "error") throw new Error(data.message);
-          if (kind === "message_end") {
-            ended = true;
-            if (data.model) setModel(data.model);
-          }
-        }
+      if (!response.body) throw new Error("Streaming unavailable");
+      for await (const event of chatEvents(response.body)) {
+        if (event.kind === "message_start") { activeRun.current = event; setCanStop(true); }
+        if (event.kind === "content_delta") setPartial(p => (p || "") + event.text);
+        if (event.kind === "error") throw new Error(event.message);
+        if (event.kind === "message_end") setModel(event.model);
       }
-      if (!ended) throw new Error("Response interrupted. You can retry.");
       setPartial(null);
     } catch (e) {
       setError(
@@ -242,6 +247,8 @@ export default function Chat() {
       );
     } finally {
       abort.current = null;
+      activeRun.current = null;
+      setCanStop(false);
       setBusy(false);
       if (id) {
         try {
@@ -288,6 +295,9 @@ export default function Chat() {
     try {
       await call("/auth/logout", "POST");
       setUser(null);
+      setDocuments([]);
+      setDocumentIds([]);
+      setKnowledgeReady(false);
       setMessages([]);
       setSelected(null);
       setList([]);
@@ -310,6 +320,8 @@ export default function Chat() {
           </div>
           <h1>{signup ? copy.createTitle : copy.welcome}</h1>
           <p>{copy.description}</p>
+          <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
+          {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => window.location.reload()}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
           <form onSubmit={authenticate}>
             {signup && (
               <label>
@@ -385,6 +397,7 @@ export default function Chat() {
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
+          <Link href="/settings" lang="en">Account settings</Link>
           <DocumentationNav />
         </div>
         <button
@@ -455,7 +468,7 @@ export default function Chat() {
         {model && (
           <p className="inference-status" role="status">
             {model.real_inference
-              ? "Real local inference"
+              ? "Real inference"
               : "Mock inference — no AI model"}
             {" · "}
             {model.backend}
@@ -463,7 +476,11 @@ export default function Chat() {
             {model.model_identifier}
           </p>
         )}
-        <div className="messages" aria-live="polite">
+        <p className="inference-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
+        <div className="messages" aria-busy={busy} onScroll={event => {
+          const element = event.currentTarget;
+          followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
+        }}>
           {!messages.length && partial === null && (
             <div className="welcome">
               <p className="eyebrow">YOUR AI WORKSPACE</p>
@@ -571,6 +588,7 @@ export default function Chat() {
             <textarea
               ref={entry}
               aria-label="Message Onesa AI"
+              disabled={!knowledgeReady}
               placeholder="Message Onesa AI…"
               value={input}
               maxLength={32000}
@@ -588,13 +606,13 @@ export default function Chat() {
               }}
             />
             {busy ? (
-              <button type="button" onClick={() => abort.current?.abort()}>
+              <button type="button" disabled={!canStop} onClick={() => void stop()}>
                 Stop
               </button>
             ) : (
               <button
                 className="send"
-                disabled={!input.trim()}
+                disabled={!input.trim() || !knowledgeReady}
                 aria-label="Send message"
               >
                 Send ↑

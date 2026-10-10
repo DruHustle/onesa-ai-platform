@@ -30,8 +30,7 @@
     "chat",
     "knowledge",
     "agents",
-    "travel",
-    "settings"
+    "travel"
   ],
   "public_pdfs": [
     "technical-overview",

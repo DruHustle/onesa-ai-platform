@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { cookies } from "next/headers";
 import { LocaleProvider, type Locale } from "../lib/i18n";
+export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Onesa AI",
+  robots: { index: false, follow: false },
   description:
     "A European-based, modular, self-hosted AI platform for European and international applications",
 };

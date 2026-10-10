@@ -10,7 +10,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: sh -c 'exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --no-proxy-headers --no-access-log --limit-concurrency 128 --timeout-keep-alive 5 --timeout-graceful-shutdown 130'
-    healthCheckPath: /ready
+    healthCheckPath: /core-ready
     autoDeployTrigger: 'off'
     envVars:
       - key: ONESA_ENVIRONMENT
@@ -24,9 +24,13 @@ services:
       - key: ONESA_METRICS_TOKEN
         generateValue: true
       - key: ONESA_MODEL_BACKEND
-        value: mock
+        sync: false
       - key: ONESA_MODEL_NAME
-        value: onesa-mock
+        sync: false
+      - key: ONESA_MODEL_BASE_URL
+        sync: false
+      - key: ONESA_MODEL_API_KEY
+        sync: false
       - key: ONESA_EMBEDDING_BACKEND
         value: lexical
       - key: ONESA_AUTH_HASH_CONCURRENCY

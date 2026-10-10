@@ -22,6 +22,7 @@ from app.auth import DB, Auth
 from app.config import Settings
 from app.errors import fail
 from app.models import Document, DocumentChunk
+from app.responses import DocumentDetail, DocumentList, DocumentMetadata, KnowledgeResults
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/knowledge", tags=["knowledge"])
@@ -38,13 +39,21 @@ def version(config: Settings) -> str:
     return f"{config.embedding_backend}:{config.embedding_name}:{config.embedding_revision}:256"
 
 
-def embed(texts: list[str], config: Settings) -> list[list[float]]:
+def embed(texts: list[str], config: Settings, *, query: bool = False) -> list[list[float]]:
     if config.embedding_backend == "http":
         try:
+            inputs = (
+                [
+                    f"Instruct: {config.embedding_query_instruction}\nQuery:{value}"
+                    for value in texts
+                ]
+                if query and config.embedding_query_instruction
+                else texts
+            )
             response = httpx.post(
                 config.embedding_base_url.rstrip("/") + "/embeddings",
                 headers={"Authorization": "Bearer " + config.embedding_api_key},
-                json={"model": config.embedding_name, "input": texts},
+                json={"model": config.embedding_name, "input": inputs, "dimensions": DIMENSIONS},
                 timeout=30,
             )
             response.raise_for_status()
@@ -147,7 +156,7 @@ def extract(data: bytes, filename: str, media: str) -> str:
     return text.strip()
 
 
-@router.post("/documents", status_code=201)
+@router.post("/documents", status_code=201, response_model=DocumentMetadata)
 async def upload(
     request: Request, db: DB, auth: Auth, file: Annotated[UploadFile, File()]
 ) -> dict[str, Any]:
@@ -155,13 +164,52 @@ async def upload(
         return await ingest(request, db, auth, file)
 
 
-async def ingest(request: Request, db: DB, auth: Auth, file: UploadFile) -> dict[str, Any]:
+async def ingest(
+    request: Request, db: DB, auth: Auth, file: UploadFile, *, commit: bool = True
+) -> dict[str, Any]:
     data = await file.read(5 * 1024 * 1024 + 1)
     await file.close()
     if len(data) > 5 * 1024 * 1024:
         fail(413, "document_too_large", "Document upload limit is 5 MiB")
     filename = (file.filename or "document").replace("\\", "/").rsplit("/", 1)[-1][:200]
     text = await run_in_threadpool(extract, data, filename, file.content_type or "")
+    if (
+        db.scalar(
+            select(Document.id).where(
+                Document.user_id == auth[0].id,
+                Document.checksum == hashlib.sha256(text.encode()).hexdigest(),
+            )
+        )
+        is not None
+    ):
+        fail(409, "duplicate_document", "This document is already indexed")
+    from sqlalchemy import func
+    from sqlalchemy import text as sql_text
+
+    config = request.app.state.settings
+    db.execute(sql_text("SELECT pg_advisory_xact_lock(757838)"))
+    count = (
+        db.scalar(select(func.count()).select_from(Document).where(Document.user_id == auth[0].id))
+        or 0
+    )
+    own_bytes = (
+        db.scalar(
+            select(func.coalesce(func.sum(func.octet_length(Document.text)), 0)).where(
+                Document.user_id == auth[0].id
+            )
+        )
+        or 0
+    )
+    total_bytes = (
+        db.scalar(select(func.coalesce(func.sum(func.octet_length(Document.text)), 0))) or 0
+    )
+    incoming = len(text.encode())
+    if (
+        count >= config.knowledge_max_documents
+        or own_bytes + incoming > config.knowledge_user_text_bytes
+        or total_bytes + incoming > config.knowledge_global_text_bytes
+    ):
+        fail(429, "knowledge_quota", "Knowledge storage budget is exhausted")
     row = Document(
         user_id=auth[0].id,
         title=filename,
@@ -177,11 +225,12 @@ async def ingest(request: Request, db: DB, auth: Auth, file: UploadFile) -> dict
         db.rollback()
         fail(409, "duplicate_document", "This document is already indexed")
     await run_in_threadpool(index, db, row, request.app.state.settings)
-    db.commit()
+    if commit:
+        db.commit()
     return metadata(row)
 
 
-@router.get("/documents")
+@router.get("/documents", response_model=DocumentList)
 def documents(
     db: DB,
     auth: Auth,
@@ -198,7 +247,7 @@ def documents(
     return {"items": [metadata(row) for row in rows], "limit": limit, "offset": offset}
 
 
-@router.get("/documents/{identifier}")
+@router.get("/documents/{identifier}", response_model=DocumentDetail)
 def document(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
     row = owned_document(db, identifier, auth[0].id)
     return {**metadata(row), "text": row.text}
@@ -207,11 +256,21 @@ def document(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
 @router.delete("/documents/{identifier}", status_code=204)
 def remove(identifier: UUID, db: DB, auth: Auth) -> None:
     row = owned_document(db, identifier, auth[0].id)
+    from sqlalchemy import delete
+
+    from app.models import BoundedUpload
+
+    db.execute(
+        delete(BoundedUpload).where(
+            BoundedUpload.user_id == auth[0].id,
+            BoundedUpload.result["id"].astext == str(identifier),
+        )
+    )
     db.delete(row)
     db.commit()
 
 
-@router.post("/documents/{identifier}/reindex")
+@router.post("/documents/{identifier}/reindex", response_model=DocumentMetadata)
 def reindex(identifier: UUID, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     row = owned_document(db, identifier, auth[0].id)
     index(db, row, request.app.state.settings)
@@ -222,7 +281,7 @@ def reindex(identifier: UUID, request: Request, db: DB, auth: Auth) -> dict[str,
 def retrieve(body: Search, config: Settings, db: Session, user_id: UUID) -> list[dict[str, Any]]:
     for identifier in body.document_ids:
         owned_document(db, identifier, user_id)
-    vector = embed([body.query], config)[0]
+    vector = embed([body.query], config, query=True)[0]
     distance = DocumentChunk.embedding.cosine_distance(vector)
     query = select(DocumentChunk, Document, distance.label("distance")).join(Document)
     query = query.where(
@@ -245,7 +304,7 @@ def retrieve(body: Search, config: Settings, db: Session, user_id: UUID) -> list
     ]
 
 
-@router.post("/search")
+@router.post("/search", response_model=KnowledgeResults)
 def search(body: Search, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     return {
         "sources": retrieve(body, request.app.state.settings, db, auth[0].id),

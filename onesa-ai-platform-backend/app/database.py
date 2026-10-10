@@ -11,7 +11,9 @@ def make_engine(url: str) -> Engine:
     return create_engine(
         url,
         pool_pre_ping=True,
-        pool_size=10,
+        pool_size=5,
+        max_overflow=0,
+        pool_timeout=2,
         connect_args={"connect_timeout": 3, "options": "-c statement_timeout=5000"},
     )
 
@@ -24,4 +26,4 @@ def database(request: Request) -> Iterator[Session]:
         yield db
 
 
-REQUIRED_SCHEMA_REVISION = "608f3f79f76e"
+REQUIRED_SCHEMA_REVISION = "20261010_capacity"

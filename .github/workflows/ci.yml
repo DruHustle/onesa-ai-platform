@@ -3,6 +3,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   backend:
     runs-on: ubuntu-latest
@@ -23,7 +25,9 @@ jobs:
       - run: make install
       - run: .venv/bin/python scripts/check_secrets.py
       - run: make check
-      - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/contracts.ts
+      - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
+      - run: npm ci --prefix scripts/contract-tools --ignore-scripts
+      - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
       - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
   frontend:
     runs-on: ubuntu-latest
@@ -43,7 +47,7 @@ jobs:
       - run: python3 scripts/bootstrap_env.py
       - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
       - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-      - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium
+      - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
       - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
@@ -73,7 +77,7 @@ jobs:
         with: {node-version: '24', cache: npm, cache-dependency-path: onesa-ai-platform-frontend/apps/docs/package-lock.json}
       - run: make install
       - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
-      - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium
+      - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
       - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
       - run: npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
       - run: python3 scripts/bootstrap_env.py
@@ -116,7 +120,7 @@ jobs:
         run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
       - run: .venv/bin/python scripts/acceptance/tls_security.py
       - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-      - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium
+      - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
       - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/chat.spec.ts
       - run: .venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json
       - run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml exec -T operations python /app/test_worker.py
@@ -135,5 +139,25 @@ jobs:
         run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml down
 # This job verifies isolated local TLS; public-host promotion and GPU/legal approvals are separate.
 
-permissions:
-  contents: read
+  image-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        application: [onesa-ai-platform-backend, onesa-ai-platform-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build application runtime
+        run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+      - name: Verify native release-image PDF restrictions
+        if: matrix.application == 'onesa-ai-platform-backend'
+        run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py
+      - name: Scan full runtime, including unfixed vendor advisories
+        run: |
+          mkdir -p data/security
+          chmod 700 data/security
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/data/security:/reports" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln,secret --format json --output /reports/runtime.json onesa-security-candidate:ci
+          chmod 600 data/security/runtime.json
+          python3 scripts/release/image_gate.py data/security/runtime.json
+      # Restricted raw findings stay on the ephemeral runner; do not upload secrets or internal evidence.

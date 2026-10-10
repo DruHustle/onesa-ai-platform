@@ -2,30 +2,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import FeatureShell from "../../components/feature-shell";
-import { call } from "../../lib/api";
-type Trip = {
-  id: string;
-  destination: string;
-  duration: number;
-  budget: number;
-  currency: string;
-  preferences: string;
-  revision: number;
-  notice: string;
-  itinerary: {
-    days: { day: number; activities: { title: string; notes: string }[] }[];
-    assumptions: string[];
-    backend: string;
-  };
-};
+import { api, type TripOut as Trip } from "../../lib/api";
 export default function Travel() {
   const [trips, setTrips] = useState<Trip[]>([]),
     [selected, setSelected] = useState<Trip | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
-    call("/travel/trips")
-      .then((r) => r.json())
+    api("GET /travel/trips")
       .then((r) => setTrips(r.items))
       .catch((e) => setError(e.message));
   }, []);
@@ -35,22 +19,23 @@ export default function Travel() {
     setError("");
     const form = new FormData(event.currentTarget);
     const body = {
-      destination: form.get("destination"),
+      destination: String(form.get("destination") || ""),
       duration: Number(form.get("duration")),
       budget: Number(form.get("budget")),
-      currency: form.get("currency"),
-      preferences: form.get("preferences"),
+      currency: String(form.get("currency") || ""),
+      preferences: String(form.get("preferences") || ""),
       ...(selected ? { expected_revision: selected.revision } : {}),
     };
     try {
-      const r = await call(
-        selected ? `/travel/trips/${selected.id}` : "/travel/trips",
-        selected ? "PUT" : "POST",
-        body,
-      );
-      setSelected(await r.json());
-      const list = await call("/travel/trips");
-      setTrips((await list.json()).items);
+      const r = selected
+        ? await api("PUT /travel/trips/{identifier}", {
+            params: { identifier: selected.id },
+            body: { ...body, expected_revision: selected.revision },
+          })
+        : await api("POST /travel/trips", { body });
+      setSelected(r);
+      const list = await api("GET /travel/trips");
+      setTrips(list.items);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -60,7 +45,9 @@ export default function Travel() {
   async function remove() {
     if (!selected || !window.confirm("Delete this trip?")) return;
     try {
-      await call(`/travel/trips/${selected.id}`, "DELETE");
+      await api("DELETE /travel/trips/{identifier}", {
+        params: { identifier: selected.id },
+      });
       setTrips((p) => p.filter((t) => t.id !== selected.id));
       setSelected(null);
     } catch (e) {

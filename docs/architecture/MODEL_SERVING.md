@@ -38,3 +38,21 @@ For Ollama, discovery proves a model is installed, not resident, warm, accurate 
 production SLA. Missing model, timeout and connection failures are sanitized; disconnects close
 upstream HTTP and preserve only the user turn. Actual model behavior/results are recorded in
 models/INFERENCE_BENCHMARKS.md and development/SESSION_HANDOFF.md.
+
+
+## Qualified local semantic candidate
+
+A separate optional `onesa-ai-platform-backend/embedding_service` now serves pinned
+Qwen3-Embedding-0.6B locally on loopback. It has its own dependencies/model storage;
+the application image stays independent. The existing versioned pgvector schema remains
+256-dimensional. HTTP requests set dimensions=256, document passages have no instruction,
+and configured search queries use a retrieval-specific instruction. The candidate revision
+includes the query protocol version. Production HTTP embedding configuration requires
+TLS/authentication; the actual EU target is unqualified. Active lexical vectors/configuration
+are preserved until a planned per-owner reindex. See the semantic qualification report
+for the 1024 comparison, failures and exact evidence limits.
+
+
+### 2026-10-10 release-candidate delta
+
+Backend packaging now pins Python3.11.17 Alpine3.24 by manifest digest and build-only uv0.13.0 by digest. No pip/setuptools/wheel/uv is shipped in the web runtime; real retrieval, inference clients and Linux PDF seccomp remain. Additive SQL stores hold bounded upload chunks, invitation/reset hashes and persistent encrypted mail work plus shared admission leases. Identity worker command is `python -m app.identity_worker`; provisioning/real delivery need scoped approval. Browser5MiB documents use512KiB authenticated chunks through same-origin BFF; no public storage URL. Invitation policy is explicit configuration, not automatically enabled or existing-user eligibility. Core readiness/database and model readiness are separate; production real authenticated HTTPS inference remains unverified. Source/API/docs classification and existing local models/data are preserved. Release remains NO-GO; exact local evidence and unapplied provider delta are restricted under docs/internal/release-audit.

@@ -7,8 +7,16 @@ from sqlalchemy.orm import Session
 
 from app.auth import DB, Auth
 from app.errors import fail
-from app.models import Conversation, Message, now
-from app.schemas import ConversationCreate, ConversationOut, MessageOut, Rename
+from app.models import Conversation, InferenceRun, Message, now
+from app.schemas import (
+    CancelGeneration,
+    ConversationCreate,
+    ConversationDetail,
+    ConversationList,
+    ConversationOut,
+    MessageOut,
+    Rename,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["conversations"])
 
@@ -40,7 +48,7 @@ def create(body: ConversationCreate, db: DB, auth: Auth) -> Conversation:
     return row
 
 
-@router.get("/conversations")
+@router.get("/conversations", response_model=ConversationList)
 def listing(
     db: DB,
     auth: Auth,
@@ -62,7 +70,7 @@ def listing(
     }
 
 
-@router.get("/conversations/{identifier}")
+@router.get("/conversations/{identifier}", response_model=ConversationDetail)
 def detail(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
     row = owned(db, identifier, auth[0].id)
     messages = db.scalars(
@@ -89,3 +97,14 @@ def remove(identifier: UUID, db: DB, auth: Auth) -> None:
     idle(row)
     db.execute(delete(Conversation).where(Conversation.id == row.id))
     db.commit()
+
+
+@router.post("/conversations/{identifier}/cancel", status_code=204)
+def cancel(identifier: UUID, body: CancelGeneration, db: DB, auth: Auth) -> None:
+    row = owned(db, identifier, auth[0].id, lock=True)
+    if row.active_run_id == body.run_id:
+        run = db.get(InferenceRun, body.run_id)
+        if run is not None:
+            run.status = "cancelled"
+        row.active_run_id, row.lease_until, row.updated_at = None, None, now()
+        db.commit()

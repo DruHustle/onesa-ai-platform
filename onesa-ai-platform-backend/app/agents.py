@@ -14,6 +14,7 @@ from app.auth import DB, Auth
 from app.errors import fail
 from app.models import AgentRun, now
 from app.observability import agent_outcomes, agent_planning_failures
+from app.responses import AgentRunList, AgentRunOut, ToolList
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
@@ -37,7 +38,7 @@ def output(row: AgentRun) -> dict[str, Any]:
     }
 
 
-@router.get("/tools")
+@router.get("/tools", response_model=ToolList)
 def tools(auth: Auth) -> dict[str, Any]:
     return {
         "items": [
@@ -47,7 +48,7 @@ def tools(auth: Auth) -> dict[str, Any]:
     }
 
 
-@router.post("/runs", status_code=201)
+@router.post("/runs", status_code=201, response_model=AgentRunOut)
 async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     allowed = set(body.allowed_tools) & set(registry.tools)
     try:
@@ -71,6 +72,7 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
     except IntegrityError:
         db.rollback()
         fail(409, "run_exists", "Run identifier already exists")
+    saved: dict[str, Any] | None = None
     steps: list[dict[str, Any]] = []
     status = "cancelled"
     try:
@@ -97,6 +99,8 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
                 save.commit()
                 agent_outcomes.labels(current.status).inc()
                 saved = output(current)
+    if saved is None:
+        fail(404, "not_found", "Agent run no longer exists")
     return saved
 
 
@@ -110,7 +114,7 @@ def owned_run(db: Session, identifier: UUID, user_id: UUID) -> AgentRun:
     return row
 
 
-@router.get("/runs")
+@router.get("/runs", response_model=AgentRunList)
 def listing(db: DB, auth: Auth) -> dict[str, Any]:
     rows = db.scalars(
         select(AgentRun)
@@ -121,12 +125,12 @@ def listing(db: DB, auth: Auth) -> dict[str, Any]:
     return {"items": [output(owned_run(db, row.id, auth[0].id)) for row in rows]}
 
 
-@router.get("/runs/{identifier}")
+@router.get("/runs/{identifier}", response_model=AgentRunOut)
 def detail(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
     return output(owned_run(db, identifier, auth[0].id))
 
 
-@router.post("/runs/{identifier}/cancel")
+@router.post("/runs/{identifier}/cancel", response_model=AgentRunOut)
 def cancel(identifier: UUID, db: DB, auth: Auth) -> dict[str, Any]:
     row = owned_run(db, identifier, auth[0].id)
     if row.status != "running":

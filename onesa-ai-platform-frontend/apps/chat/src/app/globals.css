@@ -255,6 +255,7 @@ p {
   background: linear-gradient(130deg, #e4efe6, #f8faf8 70%);
 }
 .auth-card {
+  min-width: 0;
   background: white;
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -263,14 +264,24 @@ p {
   box-shadow: 0 30px 90px #1929230c;
 }
 .auth-card form {
+  min-width: 0;
   display: grid;
   gap: 16px;
 }
 .auth-card label {
+  min-width: 0;
   display: grid;
   gap: 6px;
   font-size: 13px;
 }
+.auth-card input {
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 390px) {
+  .auth-card { padding: 24px; }
+}
+.auth-card .brand span { color: #426c59; }
 .auth-card .brand {
   margin-bottom: 36px;
 }
@@ -522,3 +533,17 @@ p {
 }
 
 .documentation-help { display: inline-block; font-size: .85rem; color: #225c49; margin: .4rem 0; }
+/* Feature navigation remains available at narrow widths without horizontal overflow. */
+.feature-shell > header nav{flex-wrap:wrap;min-width:0}
+.feature-shell .brand span{color:#3c6954}
+.sidebar .caption{color:#bed1c5}
+.locale-select select{color:var(--ink);border-color:var(--line)}
+select:focus-visible{outline:3px solid #16734e;outline-offset:3px}
+.sidebar .feature-nav{flex-wrap:wrap;min-width:0}
+
+.auth-card > a { display: inline-flex; align-items: center; min-height: 44px; padding-block: 10px; }
+
+/* Firefox's intrinsic input width must not widen narrow account grids. */
+.feature-card { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.feature-card label, .feature-card input, .feature-card form { min-width: 0; max-width: 100%; }
+.feature-card ul { overflow-wrap: anywhere; }
