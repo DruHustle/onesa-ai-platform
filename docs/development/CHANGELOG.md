@@ -320,3 +320,18 @@ settings were explicitly nonempty. Optional defaults do not qualify hosted servi
 The proposal and full names-only matrix now record these actual observations. The
 new diagnostic required Ruff formatting on the clean CI runner; formatting repaired
 and the full repository make check is rerun before push. No runtime gate weakened.
+
+
+## Owner free-only staging direction — 2026-10-10
+
+The owner rejected paid database/GPU budgets and will establish staging. Added
+staging.env.example with real application variable names, blank credential/endpoint
+fields and isolated origins; existing populated env files remain untouched.
+FREE_STAGING_SETUP.md documents ongoing free Neon/Render/Netlify/Resend/conditional
+Zoho options, exact product setup/migration commands, limitations and owner steps.
+Paid proposals/Blueprints are historical and explicitly not to be applied. No paid
+resource, account subscription, DNS cutover, live migration or model switch occurred.
+Vercel Hobby commercial restrictions, expiring Render free database, missing free
+workers, EU model/privacy/capacity and restored backup limits remain material.
+Free inference candidates are unconfigured, not a deployed real-model endpoint.
+Production remains NO-GO; preserve independent products and all original data.

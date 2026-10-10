@@ -1,5 +1,5 @@
 {
-  "status": "PROPOSED_NOT_PROVISIONED",
+  "status": "SUPERSEDED_BY_OWNER_FREE_ONLY",
   "approval_required": true,
   "reuse_verified_existing_resource_first": true,
   "name": "onesa-ai-db-staging",
@@ -25,5 +25,6 @@
   "tls": "require verified encrypted connection; use provider-compatible sslmode, verify pg_stat_ssl before acceptance",
   "monthly_estimate_usd": "20.50",
   "estimate_excludes": "tax, workspace subscription, extra backup exports, egress, HA, application services and worker",
-  "provisioning_order": "staging first; production requires separate approval and staging acceptance"
+  "provisioning_order": "staging first; production requires separate approval and staging acceptance",
+  "owner_budget_approved": false
 }

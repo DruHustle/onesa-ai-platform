@@ -1,3 +1,5 @@
+# HISTORICAL PAID BLUEPRINT: do not apply under the owner free-only policy.
+# Use docs/engineering/FREE_STAGING_SETUP.md; no resource has been changed by this file.
 # Apply only after provider access, scoped database credentials and launch settings are supplied.
 services:
   - type: web

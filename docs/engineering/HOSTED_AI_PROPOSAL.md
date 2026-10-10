@@ -1,6 +1,10 @@
 # Hosted AI infrastructure proposal — 2026-10-10
 
-**Proposed, not provisioned. Production NO-GO.** This prepares the owner's dedicated
+**Superseded by the owner's free-only decision. Not approved or provisioned.**
+See [free staging plan](FREE_STAGING_SETUP.md). The costed paid proposal below is
+retained as historical engineering context, not a purchasing recommendation.
+
+**Production NO-GO.** This prepares the owner's dedicated
 Render database and separately hosted vLLM direction. No paid resource, model download,
 provider terms, live migration or production inference URL is approved by this document.
 Keep the existing local Ollama configuration and user data intact.

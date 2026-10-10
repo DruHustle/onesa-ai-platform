@@ -153,6 +153,9 @@ def render(role, service, required, expected_root, expected_health):
         if details.get("runtime", details.get("env"))
         in {"docker", "node", "python", "image"}
         else "unknown",
+        "free_compute_plan": details.get("plan") == "free"
+        if details.get("plan")
+        else None,
         "main_branch": data.get("branch") == "main",
         "native_auto_deploy_disabled": data.get("autoDeployTrigger") == "off"
         or data.get("autoDeploy") == "no",

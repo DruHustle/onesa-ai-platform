@@ -1,0 +1,16 @@
+# PROPOSED FREE STAGING WEB SERVICE ONLY. Owner creates/identifies staging first.
+# No database, disk, paid worker or GPU is provisioned by this proposal.
+# Import actual isolated variables privately before any reviewed deployment.
+services:
+  - type: web
+    name: onesa-ai-platform-staging-api
+    runtime: docker
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: onesa-ai-platform-backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: sh -c 'exec uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --no-proxy-headers --no-access-log --limit-concurrency 128 --timeout-keep-alive 5 --timeout-graceful-shutdown 130'
+    healthCheckPath: /core-ready
+    autoDeployTrigger: 'off'

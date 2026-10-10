@@ -23,7 +23,7 @@ Portal's connection string or global shared credential environment group.
 | `ONESA_MODEL_REVISION` | Pinned generation revision metadata | Optional bounded default; review before release | Separate staging/production API; worker validation also reads Settings | Approved model/operator configuration → Render | Missing explicit override (authenticated readback); default is not qualification |
 | `ONESA_MODEL_MODALITIES` | Declared model modalities; current input remains text | Optional bounded default; review before release | Separate staging/production API; worker validation also reads Settings | Approved model/operator configuration → Render | Missing explicit override (authenticated readback); default is not qualification |
 | `ONESA_MODEL_TEMPERATURE` | Sampling temperature | Optional bounded default; review before release | Separate staging/production API; worker validation also reads Settings | Approved model/operator configuration → Render | Missing explicit override (authenticated readback); default is not qualification |
-| `ONESA_DATABASE_URL` | Dedicated AI SQLAlchemy/psycopg3 database connection | Required staging/production | Separate staging/production API + worker | Actual AI Render Internal URL and scoped role → Render | Missing (authenticated readback) |
+| `ONESA_DATABASE_URL` | Dedicated AI SQLAlchemy/psycopg3 database connection | Required staging/production | Separate staging/production API + worker | Actual isolated AI database URL and scoped role → Render | Missing (authenticated readback) |
 | `ONESA_PUBLIC_ORIGIN` | Exact frontend HTTPS origin | Required staging/production | Separate staging/production API + worker | Approved model/operator configuration → Render | Missing (authenticated readback) |
 | `ONESA_SECURE_COOKIES` | Secure browser-session cookie policy | Required staging/production | Separate staging/production API + worker | Approved model/operator configuration → Render | Missing explicit override (authenticated readback); default is not qualification |
 | `ONESA_SESSION_HOURS` | Session lifetime | Optional bounded default; review before release | Separate staging/production API; worker validation also reads Settings | Approved model/operator configuration → Render | Missing explicit override (authenticated readback); default is not qualification |
@@ -103,5 +103,6 @@ restart the older revision by saving-and-deploying incomplete settings. Producti
 promotion retains the four qualification gates, actual model/database/embedding
 path tests, and separately verified exposed-credential revocation/replacement.
 
-See [database/GPU provisioning proposal](HOSTED_AI_PROPOSAL.md) for costs, permissions,
+The owner now requires free services only. See [free staging setup](FREE_STAGING_SETUP.md).
+The historical [database/GPU proposal](HOSTED_AI_PROPOSAL.md) preserves permissions,
 TLS, restore procedures and the exact paid-resource approvals still needed.

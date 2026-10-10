@@ -44,3 +44,8 @@ render.yaml names an alternative database; do not create that and the proposed
 staging/production databases together. Reuse a verified isolated AI resource first.
 No paid plan, endpoint, staging service creation or production promotion is approved
 by a checked-in example. Credential values belong only in scoped provider secrets.
+
+
+Owner free-only direction supersedes paid provisioning examples. Follow
+[FREE_STAGING_SETUP](FREE_STAGING_SETUP.md) and staging.env.example; no paid
+Blueprint/application or production release is approved by an example.

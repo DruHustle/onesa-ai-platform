@@ -72,3 +72,9 @@ Alembic requires only its scoped ONESA_DATABASE_URL; runtime Settings validation
 continues to enforce hosted environment, database and authenticated production
 inference. Liveness is separate from mandatory real database/core readiness.
 No new live database migration or model download was performed.
+
+
+Owner free-only constraint: the paid GPU proposal is superseded. Free API/demo/CPU
+options and their incompatible model/runtime/privacy limits are recorded in
+[FREE_STAGING_SETUP](../engineering/FREE_STAGING_SETUP.md). No working Mac model
+or semantic vectors were switched, and no public model host is configured.
