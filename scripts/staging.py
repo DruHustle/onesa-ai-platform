@@ -4,11 +4,11 @@ import argparse
 import json
 import os
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import make_url
-
 from configuration_inventory import REPOSITORY, public_origin, values
 from inspect_hosting import get_json
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import SQLAlchemyError
 
 SERVICE_ID = "srv-db56mju7bikc73950f60"
 DATABASE_HOST = "ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech"
@@ -110,7 +110,7 @@ def database_probe(environment):
             }
         engine.dispose()
         return report
-    except Exception:
+    except (SQLAlchemyError, ValueError, TypeError):
         # DBAPI/SQLAlchemy errors can contain full connection strings and bound credentials.
         return {
             "connection": "FAILED",
