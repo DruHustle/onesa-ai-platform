@@ -1,5 +1,12 @@
 # Development changelog
 
+## 2026-10-10 — Frontend provider credential boundary
+
+- Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;
+  provider authentication cookies and other frontend cookies stay at the frontend.
+- Added a real proxy regression with an isolated synthetic fetch transport; hosted
+  authentication/CSRF acceptance must pass again on the corrected frontend.
+
 ## 2026-10-10 — Transaction-pooled runtime timeout
 
 - Apply the five-second query limit inside each transaction, preserving bounded

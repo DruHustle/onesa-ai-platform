@@ -15,9 +15,16 @@ export async function proxy(request: Request): Promise<Response> {
     }
     const headers = new Headers(request.headers);
     for (const name of ['host', 'connection', 'transfer-encoding', 'content-length',
-                        'forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto']) {
+                        'forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto',
+                        'x-vercel-protection-bypass', 'x-vercel-set-bypass-cookie']) {
       headers.delete(name);
     }
+    // Provider login/bypass cookies belong to Vercel, never the upstream API.
+    const applicationCookies = (headers.get('cookie') || '').split(';')
+      .map(cookie => cookie.trim())
+      .filter(cookie => ['onesa_session', 'onesa_csrf'].includes(cookie.split('=', 1)[0]));
+    if (applicationCookies.length) headers.set('cookie', applicationCookies.join('; '));
+    else headers.delete('cookie');
     // Avoid transparent fetch decompression leaving incorrect response headers.
     headers.set('accept-encoding', 'identity');
     const timeout = Number(process.env.ONESA_PROXY_TIMEOUT_SECONDS || "135");
