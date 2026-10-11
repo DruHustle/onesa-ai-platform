@@ -22,6 +22,7 @@ jobs:
       == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name
       == github.repository && github.event.workflow_run.head_sha == github.sha && github.event.workflow_run.conclusion ==
       'success'))
+    environment: Staging
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -30,6 +31,8 @@ jobs:
         persist-credentials: false
         ref: ${{ github.sha }}
     - name: Require successful exact-source checks before provider credentials
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: python3 scripts/release/evidence.py stage-preflight --output "$RUNNER_TEMP/technical/record.json"
     - name: Verify isolated provider targets
       env:

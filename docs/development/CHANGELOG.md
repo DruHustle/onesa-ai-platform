@@ -1,5 +1,10 @@
 # Development changelog
 
+## 2026-10-11 — Staging environment and branch configuration
+
+Scope staging credentials to the GitHub Staging environment, preserve each product’s Vercel project for staging previews, and standardize remote branches on dev/staging/main with restricted recovery archives. Keep production qualification and explicit owner approval enforced.
+
+
 
 ## 2026-10-11 — Automated review and CI/CD optimization
 
