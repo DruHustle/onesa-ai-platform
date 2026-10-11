@@ -117,3 +117,7 @@ Live deployment and production acceptance must be verified on the actual provide
 Vercel hosts the frontend; Render hosts the backend. See
 [provider setup](docs/engineering/VERCEL_RENDER.md) and root `render.yaml`.
 Configuration is prepared; account provisioning and remote acceptance are not yet verified.
+
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Verified branch protection status](docs/development/BRANCH_PROTECTION_REPORT.md). Main protection is currently **BLOCKED — NOT ENFORCED** by GitHub plan eligibility.
+
+The selected policy is [GitHub Free with private repositories](docs/development/FREE_GITHUB_PLAN.md). PR and check discipline is voluntary until server protection is supported; no upgrade or visibility change is proposed.

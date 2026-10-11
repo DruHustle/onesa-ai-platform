@@ -42,3 +42,15 @@ history remains in Git and `docs/development/CHANGELOG.md`. Agent policies live 
 in root `AGENTS.md`.
 
 Owner reports Neon staging resource `onesa-ai-platform-backend-db-staging` created. Verify project/branch ownership, Free plan, PostgreSQL version/schema and isolated role permissions; rotate the disclosed owner credential before any connection. No duplicate Render database is needed. Runtime URL and actual staging origin remain unconfigured.
+
+
+## Render startup failure follow-up — 2026-10-10
+
+Local implementation and isolated regression verification passed; hosted repair remains
+open. See [the exact evidence, changes and reviewed configuration procedure](../engineering/VERCEL_RENDER.md)
+for current source/deployment revisions and outstanding provider checks. No push or
+deployment, production secret change, DNS/resource/plan change or readiness acceptance.
+
+## Branch protection acceptance — 2026-10-10
+
+Private personal GitHub repositories remain **BLOCKED, NOT ENFORCED** after attempted ruleset/classic protection returned plan-denial HTTP 403. See [verified evidence and prepared policy](../development/BRANCH_PROTECTION_REPORT.md). Production environment approval and native integration gaps remain unresolved; no merge/deployment authorization is implied.

@@ -43,3 +43,9 @@ See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for compl
 Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers`,
 `tls-acceptance`. Add `publication-hygiene` to required checks. CI runs on all pushes and pull requests so required jobs can report consistently. No remote
 CI success is implied by local build/test results.
+
+After building the backend production image, run
+`python3 scripts/startup_smoke.py onesa-api:local`. This exercises Dockerfile CMD,
+installed Uvicorn/factory, provider PORT, liveness, missing dependency 503, SIGTERM,
+and distinct production configuration failure using isolated containers. CI runs it
+against the final backend security candidate image; it does not qualify inference.

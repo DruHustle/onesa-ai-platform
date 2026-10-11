@@ -140,3 +140,56 @@ Production deployment still requires a reviewed exact-commit qualification recor
 and absent nonsecret configuration, then reads it back. Repository and runtime
 identity must match before any update. This does not deploy or migrate the database;
 missing database/model credentials and qualification remain explicit blockers.
+
+
+## Render startup failure follow-up — 2026-10-10
+
+Status: local repair and regression verification complete; hosted repair remains open.
+Baseline source: `0c41985adb0764ed2025996c47596b1cdf957c3e`; local branch
+`fix/render-startup-smoke`, uncommitted changes. No push or deployment performed.
+
+The supplied exit-127 error identifies a shell-command execution failure before Uvicorn
+startup. Existing Render inspection run 38076418043 confirms Docker runtime, correct
+backend root/context/Dockerfile, and latest attempted deployed revision
+`051d6dd80be6b745af6bd3e39451bdc2469f5952`, older than current source. That revision
+already contains `CMD ["sh", "/app/start.sh"]`, with no Dockerfile ENTRYPOINT.
+The full effective Render Docker Command was not exposed by available authorized
+workflows. Therefore malformed provider override is a leading explanation, not a
+verified exact root cause. Do not claim that Uvicorn was missing from the hosted image.
+Fresh read-only staging inspection run 38077728172 returns only ONESA_DATABASE_URL
+among direct service keys; inherited group settings remain unverified.
+
+Changes: removed duplicate Blueprint AI dockerCommand; hosting repair payload clears
+its AI override to an empty string, leaving Dockerfile CMD authoritative. Existing
+start.sh uses `exec python -m uvicorn app.main:create_app --factory`, 0.0.0.0,
+`${PORT:-8000}`, no proxy headers/access logs, concurrency 128, keepalive 5 and
+graceful timeout 130. This script and runtime security settings are unchanged.
+Added scripts/startup_smoke.py to CI image-security backend job. Provider diagnostics
+now classify command overrides without printing arbitrary strings, and classify
+exit-127/DATABASE_ROLE log errors. Staging inspection includes runtime, command mode,
+health path and attempted revision after the updated code is published.
+
+Verified actual production backend build locally on Linux ARM64. Python imports
+Uvicorn and the optional-argument create_app factory in /app; installed Uvicorn help
+supports all configured flags. Default CMD starts on test PORT 18081 and binds
+0.0.0.0; /health=200, missing database /core-ready=503, process remains alive;
+SIGTERM exits 0 with completed shutdown. Missing production settings cause a distinct
+ValidationError and exit 1, rather than shell exit 127. Synthetic development settings
+were used in the image smoke; this does not establish hosted production configuration
+or real inference readiness. Isolated PostgreSQL/pgvector tests: 147 passed, four
+platform-dependent skips. Ruff, mypy, provider/staging unit tests and publication
+hygiene pass. Existing remote CI passed baseline source; new CI changes are unpushed.
+
+Required reviewed Render delta for the identified staging service
+`srv-db56mju7bikc73950f60`: clear Docker Command, retain Docker runtime/root
+onesa-ai-platform-backend, Dockerfile ./Dockerfile/context ., set health check
+/core-ready, use staging branch and autoDeployTrigger off. Do not apply the historical
+paid Blueprint or generic main-branch repair workflow to staging. Inspect effective
+service plus linked-group settings privately, supply validated staging configuration,
+and deploy only the exact newly reviewed revision after CI passes. Preserve Neon AI
+staging; no DB credential, resource, DNS, plan or model changes were performed.
+Inference/embedding endpoints, restricted DB/schema, invitation settings and real
+hosted health/core-ready/ready acceptance remain separate blockers.
+
+Current direct staging HTTP probes on 2026-10-10: /health and /core-ready both
+exceeded 20 seconds without a response (HTTP 000). Neither is a passing health result.
