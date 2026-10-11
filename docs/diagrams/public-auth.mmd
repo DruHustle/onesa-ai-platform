@@ -1,0 +1,10 @@
+flowchart TB
+Browser[Browser] --> Portal[Portal password MFA session]
+Browser --> AI[AI invite login session]
+Browser --> Robot[Robot operator session]
+Portal --> PAuth[CSRF origin roles and fresh step-up]
+AI --> AAuth[CSRF origin and resource ownership]
+Robot --> RAuth[CSRF origin and motion approval]
+AI --> Engineering[Engineering allowlist server gate]
+Engineering --> Internal[Every internal page index asset PDF guarded]
+Public[Public static docs allowlist] --> Approved[Approved public content only]

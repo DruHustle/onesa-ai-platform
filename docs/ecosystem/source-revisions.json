@@ -1,0 +1,30 @@
+{
+  "onesa-company-portal": {
+    "repository": "https://github.com/DruHustle/onesa-company-portal",
+    "commit": "44f1df7e6dec8cc292bb6e221043e3dabd164ece",
+    "sources": {
+      "README.md": "7bb6b780c7c29044b731024ad76c01c79f3865993f6e103bc42f4cf477cd0863",
+      "docs/api/API.md": "0cb3867fd67d896a77fc68da8aeed4fcee416681146978a87c0c9caf963530cc",
+      "onesa-company-portal-backend/src/api/export.ts": "188c9ab87220abc0902cc371302166107fa294a23a89eae5f27d8b8622f7b380",
+      "onesa-company-portal-backend/openapi/openapi.json": "126a27b6870d280f7dc8bf348c7727cf57de0e2f0d452b79ca26d05b8c0f86fa",
+      "onesa-company-portal-backend/migrations/001_initial.sql": "7d9b7ee898859ec4cd858f9cba4e43bc7c62a866323ca6786d2d7571cf4e26e9",
+      "onesa-company-portal-backend/migrations/002_security_workflows.sql": "f4900254857995fd7da68ad51f2f5728ad2376213aad4d943a1ffc5ee8ab8fec",
+      "onesa-company-portal-backend/migrations/003_document_versions.sql": "f6e0bf91cb2f547754d7eaafbe38e28edc563b25101e3d7878beb9f901e42b15",
+      "onesa-company-portal-backend/migrations/004_company_facts.sql": "49d4d0bb74ae099104e45a6007a974d0ad12423aff49af23b4c28fc5d6385aa9",
+      "onesa-company-portal-backend/migrations/005_storage_deletion_outbox.sql": "ea8c603df94c9310177f4af9d15ac41be16b4f1d5ca1e36508509e771f94f563",
+      "onesa-company-portal-backend/migrations/006_bounded_transfers.sql": "da997d58639f6dd6e6eac5cf5a845e59422b1a96e2e0f4ba6b38c4d84ce111be",
+      "onesa-company-portal-backend/migrations/007_operational_state.sql": "f1c27cd7ada57de2b262feb67e6c8290419b27e8094754ed01ca3ebed4ea76ea"
+    }
+  },
+  "onesa-ai-robot": {
+    "repository": "https://github.com/DruHustle/onesa-ai-robot",
+    "commit": "5426245d4f782fa5cc51289f613b8f79c66ae1a5",
+    "sources": {
+      "README.md": "1a03a3f521945f7203d69baae303dcc861fc1790433f7d046aae1a1eabab0dc5",
+      "docs/engineering/SIMULATION_ARCHITECTURE.md": "6749e306087a72a0539285658258c6382b411832c4878ddd1b78345dc3be06c9",
+      "ros2/README.md": "fc87d185a1624d0bd3e81fc7815cbdafdb2334ae1f5f72b53f332b189c7c7d49",
+      "onesa-ai-robot-backend/robot_api/main.py": "8d05e50191a768073a53a85071c2543e266ab2adf64a37a33d295b4645a5e27c",
+      "onesa-ai-robot-frontend/contracts/openapi.json": "e71aa4e4eca7097d05277463ed6a53d70671c3f83d9069c9e143bb2ddbb5ef22"
+    }
+  }
+}

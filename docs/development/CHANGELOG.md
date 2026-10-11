@@ -546,3 +546,14 @@ leases, retries or provider idempotency. Hosted delivery remains unqualified.
 ## 2026-10-11 — Reviewed governance integration
 
 Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.
+
+## Documentation ecosystem reference 0.3.0 — 2026-10-11
+
+Extended the existing Docusaurus portal across Company Portal, AI Platform and
+Robot, with source-pinned Fastify/FastAPI explorers, current generated AI schema,
+16 ecosystem diagram groups, readable private ERDs and ten additional engineering
+manuals. Fixed architecture view selection, dated table-count/schema prose, Swagger
+accessible labels/nested controls and low-contrast badges. Added static interaction,
+link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
+The public static build remains independent of application release approval. Hosted
+internal access and actual model/hardware functionality are not claimed complete.

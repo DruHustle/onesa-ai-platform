@@ -46,7 +46,7 @@ jobs:
     - run: python3 -m unittest discover -s scripts/runner -p 'test_*.py'
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
-    - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
+    - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
@@ -101,6 +101,7 @@ jobs:
         python-version: '3.11'
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets
@@ -141,6 +142,7 @@ jobs:
         cache-dependency-path: onesa-ai-platform-frontend/apps/docs/package-lock.json
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
@@ -148,8 +150,12 @@ jobs:
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
+    - name: Verify static public docs interactions and accessibility
+      run: |
+        ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+        node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
-    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down --volumes --remove-orphans

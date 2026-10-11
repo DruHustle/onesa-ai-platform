@@ -65,9 +65,39 @@ jobs:
     - name: Install locked build dependencies
       run: |
         make install
+        python3 -m unittest discover -s scripts/docs -p 'test_*.py'
         npm --prefix onesa-ai-platform-frontend/apps/docs ci
+        npm --prefix onesa-ai-platform-frontend/apps/chat ci
         cd onesa-ai-platform-frontend/apps/docs
         npx playwright install --with-deps chromium
+    - name: Read reviewed cross-project source revisions
+      id: docs-sources
+      run: |
+        python3 - <<'PY'
+        import json, os
+        from pathlib import Path
+        revisions=json.loads(Path('docs/ecosystem/source-revisions.json').read_text())
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            output.write('portal=' + revisions['onesa-company-portal']['commit'] + '\n')
+            output.write('robot=' + revisions['onesa-ai-robot']['commit'] + '\n')
+        PY
+    - uses: actions/checkout@v4
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-company-portal
+        ref: ${{ steps.docs-sources.outputs.portal }}
+        path: data/docs-sources/portal
+        persist-credentials: false
+    - uses: actions/checkout@v4
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-ai-robot
+        ref: ${{ steps.docs-sources.outputs.robot }}
+        path: data/docs-sources/robot
+        persist-credentials: false
+    - name: Verify pinned Portal and Robot source contracts
+      if: github.event.repository.private == false
+      run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - name: Capture fresh synthetic application screenshots
       run: |
         python3 scripts/bootstrap_env.py
@@ -79,7 +109,9 @@ jobs:
         npm --prefix onesa-ai-platform-frontend/apps/docs audit --audit-level=low
         make docs-assets docs-public
         .venv/bin/python scripts/docs/validate.py --staged
-        git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+        git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
+    - name: Verify public documentation interactions and accessibility
+      run: node scripts/docs/acceptance.mjs
     - name: Verify emitted favicon link and bundled icon
       run: |
         python3 - <<'PYTHON'
@@ -110,6 +142,13 @@ jobs:
         path: onesa-ai-platform-frontend/apps/docs/build-public/
         if-no-files-found: error
         retention-days: 7
+    - name: Inspect existing public docs project and source revisions
+      if: inputs.target != 'build'
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
+      run: .venv/bin/python scripts/docs/vercel_host.py inspect | tee -a "$GITHUB_STEP_SUMMARY"
     - name: Prepare separate Vercel documentation project
       if: inputs.target != 'build'
       env:
@@ -146,9 +185,22 @@ jobs:
         cd "$RUNNER_TEMP/onesa-docs"
         flags=()
         if [ "$DEPLOY_TARGET" = production ]; then flags+=(--prod); fi
-        npm exec --yes --package=vercel@63.1.0 -- vercel deploy --prebuilt --yes "${flags[@]}" --token="$VERCEL_TOKEN" > "$RUNNER_TEMP/onesa-docs-url.txt"
+        npm exec --yes --package=vercel@63.1.0 -- vercel deploy --prebuilt --yes --meta onesaSourceRevision="$GITHUB_SHA" "${flags[@]}" --token="$VERCEL_TOKEN" > "$RUNNER_TEMP/onesa-docs-url.txt"
         cat "$RUNNER_TEMP/onesa-docs-url.txt" >> "$GITHUB_STEP_SUMMARY"
-    - name: Attach owner-selected public domain and report DNS requirements
+    - name: Verify actual deployment identity, readiness and source revision
+      if: inputs.target != 'build'
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
+        APPLICATION_VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      run: |
+        export DOCS_DEPLOYMENT_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")"
+        .venv/bin/python scripts/docs/vercel_host.py verify-deployment | tee -a "$GITHUB_STEP_SUMMARY"
+    - name: Verify hosted public documentation behavior
+      if: inputs.target == 'production'
+      run: ONESA_DOCS_TEST_URL=https://docs.onesa.eu node scripts/docs/acceptance.mjs
+    - name: Read existing public domain assignment and DNS requirements
       if: inputs.target == 'production'
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

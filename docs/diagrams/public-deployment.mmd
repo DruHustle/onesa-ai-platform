@@ -1,0 +1,8 @@
+flowchart TB
+Browser[HTTPS public product origin] --> Vercel[Vercel frontend server]
+Vercel --> Render[Render product API]
+Render --> Neon[Dedicated product Neon PostgreSQL]
+Render --> Storage[Private persistent object storage]
+Render -. separately provisioned authenticated TLS .-> Model[External model host unavailable]
+Docs[Vercel separate public docs project] --> Public[Allowlisted static build only]
+Internal[Authenticated engineering gateway] -. separate hosted qualification required .-> Identity[AI engineering session permission]

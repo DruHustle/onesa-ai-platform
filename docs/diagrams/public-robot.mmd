@@ -1,0 +1,11 @@
+flowchart TB
+Web[Static operator interface] --> Proxy[Node same-origin API proxy]
+Proxy --> API[FastAPI operator sessions and CSRF]
+API --> Proposal[Propose and separately approve]
+Proposal --> Safety[Independent SafetyGate]
+Safety --> Sim[Synthetic joint simulation]
+Sim --> Store[Private SQLite task history]
+Watchdog[Heartbeat and connection-loss watchdog] --> Stop[Stopped and authority revoked]
+Stop --> Sim
+AI[Onesa AI API integration proposed] -. authorized proposal only .-> Proposal
+Hardware[Physical hardware unavailable] -. never activated .-> Safety

@@ -1,0 +1,52 @@
+erDiagram
+  users {
+    uuid id PK
+    text email
+    text password_hash
+    text role
+    text mfa_secret
+    bigint mfa_last_step
+    boolean disabled
+    timestamptz created_at
+    text mfa_pending
+    text enroll_hash
+    timestamptz enroll_expires
+  }
+  content {
+    uuid id PK
+    text kind
+    text slug
+    text locale
+    text title
+    text summary
+    text body
+    jsonb metadata
+    text state
+    timestamptz publish_at
+    uuid author_id FK
+    integer revision
+    timestamptz updated_at
+  }
+  revisions {
+    bigserial id PK
+    uuid content_id FK
+    jsonb snapshot
+    uuid actor_id FK
+    timestamptz created_at
+  }
+  facts {
+    text key PK
+    text value
+    text status
+    text source
+    uuid verified_by FK
+    timestamptz verified_at
+  }
+  settings {
+    text key PK
+    jsonb value
+  }
+  users ||--o{ content : "declared foreign key"
+  content ||--o{ revisions : "declared foreign key"
+  users ||--o{ revisions : "declared foreign key"
+  users ||--o{ facts : "declared foreign key"

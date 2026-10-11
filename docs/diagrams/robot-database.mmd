@@ -1,0 +1,20 @@
+erDiagram
+  sessions {
+    TEXT token PK
+    TEXT csrf
+    REAL expires
+    TEXT name
+  }
+  tasks {
+    TEXT id PK
+    TEXT owner
+    TEXT proposal
+    TEXT state
+    TEXT reason
+    REAL created
+    REAL position
+  }
+  safety {
+    INTEGER id PK
+    INTEGER stopped
+  }

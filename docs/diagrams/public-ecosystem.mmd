@@ -1,0 +1,12 @@
+flowchart TB
+Company[Onesa UG parent company] --> Portal[Company Portal and private administration]
+Company --> AI[AI Platform product]
+Company --> Robot[Robot software simulation]
+Portal --> PAPI[Fastify API]
+AI --> AAPI[FastAPI core]
+Robot --> RAPI[FastAPI simulator]
+PAPI --> PDATA[Separate Portal data]
+AAPI --> ADATA[Separate AI data]
+RAPI --> RDATA[Private persistent SQLite required]
+RAPI -. proposed authorized API only .-> AAPI
+Docs[Public documentation] --> Company
