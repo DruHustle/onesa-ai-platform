@@ -1,5 +1,12 @@
 # Development changelog
 
+## 2026-10-11 — Separate documentation crawler policies
+
+Public documentation now emits robots.txt with the public sitemap. Internal builds
+emit a separate disallow policy and retain authentication on every asset, including
+robots.txt. Browser verification checks both emitted files and their HTTP boundaries.
+Preview noindex headers and the public-production release guard remain in place.
+
 ## 2026-10-11 — Bounded chat context reads
 
 Chat selects the last 30 messages directly in PostgreSQL, retaining chronological
