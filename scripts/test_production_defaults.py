@@ -18,10 +18,15 @@ class RenderFixture:
             "id": defaults.SERVICE_ID,
             "name": "onesa-ai-platform-backend",
             "repo": "https://github.com/" + defaults.REPOSITORY,
-            "branch": "main", "type": "web_service",
-            "rootDir": "onesa-ai-platform-backend", "autoDeployTrigger": "off",
+            "branch": "main",
+            "type": "web_service",
+            "rootDir": "onesa-ai-platform-backend",
+            "autoDeployTrigger": "off",
             "ownerId": "tea-fixture",
-            "serviceDetails": {"env": "docker", "url": "https://onesa-ai-platform-backend.onrender.com"},
+            "serviceDetails": {
+                "env": "docker",
+                "url": "https://onesa-ai-platform-backend.onrender.com",
+            },
         }
         self.environment = {
             "ONESA_ENVIRONMENT": "production",
@@ -49,7 +54,10 @@ class RenderFixture:
         if path == base + "/deploys?limit=1":
             return [{"deploy": copy.deepcopy(self.deployment)}]
         if path == base + "/env-vars?limit=100":
-            return [{"envVar": {"key": key, "value": value}} for key, value in self.environment.items()]
+            return [
+                {"envVar": {"key": key, "value": value}}
+                for key, value in self.environment.items()
+            ]
         raise AssertionError("Unreviewed provider operation")
 
     @staticmethod
@@ -66,24 +74,43 @@ class ProductionDefaultsTests(unittest.TestCase):
         original = dict(provider.environment)
         report = defaults.apply_defaults("placeholder", provider.call)
         self.assertEqual(set(report["added"]), set(defaults.DEFAULTS) - original.keys())
-        self.assertTrue(all(provider.environment[key] == value for key, value in original.items()))
+        self.assertTrue(
+            all(provider.environment[key] == value for key, value in original.items())
+        )
         self.assertFalse(report["deployment_requested"])
         self.assertFalse(report["production_release_qualified"])
-        self.assertIn("ONESA_METRICS_TOKEN", report["required_external_settings_missing"])
+        self.assertIn(
+            "ONESA_METRICS_TOKEN", report["required_external_settings_missing"]
+        )
         self.assertNotIn(original["ONESA_DATABASE_URL"], json.dumps(report))
         self.assertNotIn("ONESA_DATABASE_URL", provider.writes)
         self.assertNotIn("ONESA_MODEL_BASE_URL", provider.writes)
 
     def test_existing_custom_model_profile_and_mail_provider_are_preserved(self):
         provider = RenderFixture()
-        provider.environment.update({"ONESA_MODEL_BACKEND": "vllm", "ONESA_MODEL_NAME": "reviewed-hosted-model", "ONESA_MAIL_PROVIDER": "resend"})
+        provider.environment.update(
+            {
+                "ONESA_MODEL_BACKEND": "vllm",
+                "ONESA_MODEL_NAME": "reviewed-hosted-model",
+                "ONESA_MAIL_PROVIDER": "resend",
+            }
+        )
         defaults.apply_defaults("placeholder", provider.call)
-        self.assertEqual(provider.environment["ONESA_MODEL_NAME"], "reviewed-hosted-model")
+        self.assertEqual(
+            provider.environment["ONESA_MODEL_NAME"], "reviewed-hosted-model"
+        )
         self.assertNotIn("ONESA_MODEL_BACKEND", provider.writes)
         self.assertNotIn("ONESA_MAIL_PROVIDER", provider.writes)
 
     def test_wrong_target_or_enabled_native_deployment_prevents_every_write(self):
-        for key, value in (("id", "srv-staging"), ("name", "onesa-ai-platform-backend_staging"), ("branch", "staging"), ("repo", "https://github.com/other/repo"), ("rootDir", "wrong-root"), ("autoDeployTrigger", "commit")):
+        for key, value in (
+            ("id", "srv-staging"),
+            ("name", "onesa-ai-platform-backend_staging"),
+            ("branch", "staging"),
+            ("repo", "https://github.com/other/repo"),
+            ("rootDir", "wrong-root"),
+            ("autoDeployTrigger", "commit"),
+        ):
             with self.subTest(key=key):
                 provider = RenderFixture()
                 provider.service[key] = value
@@ -91,9 +118,13 @@ class ProductionDefaultsTests(unittest.TestCase):
                     defaults.apply_defaults("placeholder", provider.call)
                 self.assertEqual(provider.writes, [])
 
-    def test_partial_custom_profiles_are_not_completed_with_incompatible_identifiers(self):
+    def test_partial_custom_profiles_are_not_completed_with_incompatible_identifiers(
+        self,
+    ):
         provider = RenderFixture()
-        provider.environment.update({"ONESA_MODEL_BACKEND": "vllm", "ONESA_EMBEDDING_BACKEND": "lexical"})
+        provider.environment.update(
+            {"ONESA_MODEL_BACKEND": "vllm", "ONESA_EMBEDDING_BACKEND": "lexical"}
+        )
         report = defaults.apply_defaults("placeholder", provider.call)
         self.assertNotIn("ONESA_MODEL_NAME", provider.writes)
         self.assertNotIn("ONESA_EMBEDDING_NAME", provider.writes)
@@ -103,7 +134,9 @@ class ProductionDefaultsTests(unittest.TestCase):
         for linked in (True, False):
             provider = RenderFixture()
             if linked:
-                provider.groups = [{"envGroup": {"serviceLinks": [{"id": defaults.SERVICE_ID}]}}]
+                provider.groups = [
+                    {"envGroup": {"serviceLinks": [{"id": defaults.SERVICE_ID}]}}
+                ]
             else:
                 provider.deployment["status"] = "update_in_progress"
             with self.assertRaises(defaults.Refused):
@@ -129,33 +162,49 @@ class ProductionDefaultsTests(unittest.TestCase):
         for mode in ("setting", "deployment"):
             provider = RenderFixture()
 
-            def call(path, token, payload=None):
-                result = provider.call(path, token, payload)
+            def call(path, token, payload=None, *, fixture=provider, scenario=mode):
+                result = fixture.call(path, token, payload)
                 if payload:
-                    if mode == "setting":
-                        provider.environment["UNRELATED_SETTING"] = "concurrent-change"
+                    if scenario == "setting":
+                        fixture.environment["UNRELATED_SETTING"] = "concurrent-change"
                     else:
-                        provider.deployment["id"] = "dep-new"
+                        fixture.deployment["id"] = "dep-new"
                 return result
 
             with self.subTest(mode=mode), self.assertRaises(defaults.Refused):
                 defaults.apply_defaults("placeholder", call)
 
-    def test_http_error_and_redirect_never_expose_response_or_send_credentials_elsewhere(self):
+    def test_http_error_and_redirect_never_expose_response_or_send_credentials_elsewhere(
+        self,
+    ):
         marker = "synthetic-private-fixture-must-not-be-emitted"
-        error = HTTPError("https://api.render.com", 403, marker, {}, io.BytesIO(marker.encode()))
+        error = HTTPError(
+            "https://api.render.com", 403, marker, {}, io.BytesIO(marker.encode())
+        )
         with patch("production_defaults.urllib.request.build_opener") as opener:
             opener.return_value.open.side_effect = error
             with self.assertRaises(defaults.Refused) as failure:
                 defaults.request("services/fixture", "placeholder")
             self.assertNotIn(marker, str(failure.exception))
-        self.assertIsNone(defaults.NoRedirect().redirect_request(None, None, 302, "", {}, "https://other.invalid"))
+        self.assertIsNone(
+            defaults.NoRedirect().redirect_request(
+                None, None, 302, "", {}, "https://other.invalid"
+            )
+        )
 
     def test_incomplete_inventory_is_rejected_and_owner_dispatch_is_required(self):
-        for inventory in ({}, [{"envVar": {"key": "X"}}], [{"envVar": {"key": "X", "value": ""}}] * 100):
+        for inventory in (
+            {},
+            [{"envVar": {"key": "X"}}],
+            [{"envVar": {"key": "X", "value": ""}}] * 100,
+        ):
             with self.assertRaises(defaults.Refused):
                 defaults.inventory(inventory)
-        with patch.dict(os.environ, {"GITHUB_REF": "refs/heads/staging"}), patch.object(defaults, "apply_defaults") as operation, redirect_stdout(io.StringIO()):
+        with (
+            patch.dict(os.environ, {"GITHUB_REF": "refs/heads/staging"}),
+            patch.object(defaults, "apply_defaults") as operation,
+            redirect_stdout(io.StringIO()),
+        ):
             with self.assertRaises(defaults.Refused):
                 defaults.main()
             operation.assert_not_called()

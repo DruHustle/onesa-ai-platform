@@ -35,15 +35,23 @@ DEFAULTS = {
 }
 PROFILES = (
     ("ONESA_MODEL_BACKEND", "ONESA_MODEL_NAME"),
-    ("ONESA_EMBEDDING_BACKEND", "ONESA_EMBEDDING_NAME", "ONESA_EMBEDDING_REVISION",
-     "ONESA_EMBEDDING_QUERY_INSTRUCTION"),
+    (
+        "ONESA_EMBEDDING_BACKEND",
+        "ONESA_EMBEDDING_NAME",
+        "ONESA_EMBEDDING_REVISION",
+        "ONESA_EMBEDDING_QUERY_INSTRUCTION",
+    ),
 )
 
 
 def compatible_profile(key, environment):
     return all(
-        not any(environment.get(name) and environment[name] != DEFAULTS[name] for name in profile)
-        for profile in PROFILES if key in profile
+        not any(
+            environment.get(name) and environment[name] != DEFAULTS[name]
+            for name in profile
+        )
+        for profile in PROFILES
+        if key in profile
     )
 
 
@@ -59,15 +67,22 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def request(path, token, payload=None):
     req = urllib.request.Request(
         "https://api.render.com/v1/" + path,
-        headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"},
+        headers={
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+        },
         data=json.dumps(payload).encode() if payload is not None else None,
         method="PUT" if payload is not None else "GET",
     )
     try:
-        with urllib.request.build_opener(NoRedirect()).open(req, timeout=30) as response:
+        with urllib.request.build_opener(NoRedirect()).open(
+            req, timeout=30
+        ) as response:
             return json.loads(response.read(1024 * 1024))
     except (urllib.error.URLError, TimeoutError, ValueError):
-        raise Refused("Render operation unavailable; inspect saved settings before retrying") from None
+        raise Refused(
+            "Render operation unavailable; inspect saved settings before retrying"
+        ) from None
 
 
 def inventory(entries):
@@ -89,18 +104,28 @@ def apply_defaults(token, call=request):
     details = service.get("serviceDetails", {})
     if not (
         service.get("id") == SERVICE_ID
-        and service.get("repo", "").removesuffix(".git") == "https://github.com/" + REPOSITORY
+        and service.get("repo", "").removesuffix(".git")
+        == "https://github.com/" + REPOSITORY
         and service.get("name") == "onesa-ai-platform-backend"
         and service.get("branch") == "main"
         and service.get("type") == "web_service"
         and service.get("rootDir") == "onesa-ai-platform-backend"
         and details.get("env") == "docker"
         and details.get("url") == "https://onesa-ai-platform-backend.onrender.com"
-        and (service.get("autoDeployTrigger") == "off" or service.get("autoDeploy") == "no")
+        and (
+            service.get("autoDeployTrigger") == "off"
+            or service.get("autoDeploy") == "no"
+        )
     ):
-        raise Refused("Expected production service with native auto-deploy disabled required")
+        raise Refused(
+            "Expected production service with native auto-deploy disabled required"
+        )
     owner = service.get("ownerId", "")
-    if not isinstance(owner, str) or not owner.startswith("tea-") or not owner[4:].isalnum():
+    if (
+        not isinstance(owner, str)
+        or not owner.startswith("tea-")
+        or not owner[4:].isalnum()
+    ):
         raise Refused("Verified production owner required")
     groups = call("env-groups?ownerId=" + owner + "&limit=100", token)
     if not isinstance(groups, list) or len(groups) >= 100:
@@ -108,15 +133,24 @@ def apply_defaults(token, call=request):
     for entry in groups:
         group = entry.get("envGroup", entry)
         if any(link.get("id") == SERVICE_ID for link in group.get("serviceLinks", [])):
-            raise Refused("Linked environment groups require a separate effective-setting review")
+            raise Refused(
+                "Linked environment groups require a separate effective-setting review"
+            )
     deployments = call(base + "/deploys?limit=1", token)
     if not isinstance(deployments, list) or len(deployments) != 1:
         raise Refused("Existing deployment identity required")
     before = deployments[0].get("deploy", {})
     if before.get("status") not in {
-        "live", "update_failed", "build_failed", "pre_deploy_failed", "canceled", "deactivated"
+        "live",
+        "update_failed",
+        "build_failed",
+        "pre_deploy_failed",
+        "canceled",
+        "deactivated",
     } or not before.get("id"):
-        raise Refused("Wait for the existing deployment to finish before saving configuration")
+        raise Refused(
+            "Wait for the existing deployment to finish before saving configuration"
+        )
     current = inventory(call(base + "/env-vars?limit=100", token))
     added = []
     for key, value in DEFAULTS.items():
@@ -129,21 +163,41 @@ def apply_defaults(token, call=request):
             added.append(key)
     after = inventory(call(base + "/env-vars?limit=100", token))
     if any(after.get(key) != DEFAULTS[key] for key in added):
-        raise Refused("Saved defaults did not match readback; deployment remains blocked")
+        raise Refused(
+            "Saved defaults did not match readback; deployment remains blocked"
+        )
     if any(after.get(key) != value for key, value in current.items() if value):
-        raise Refused("An existing setting changed during this operation; review privately")
+        raise Refused(
+            "An existing setting changed during this operation; review privately"
+        )
     latest = call(base + "/deploys?limit=1", token)
-    if not isinstance(latest, list) or not latest or latest[0].get("deploy", {}).get("id") != before["id"]:
-        raise Refused("Deployment changed during save; inspect provider status before continuing")
+    if (
+        not isinstance(latest, list)
+        or not latest
+        or latest[0].get("deploy", {}).get("id") != before["id"]
+    ):
+        raise Refused(
+            "Deployment changed during save; inspect provider status before continuing"
+        )
     return {
         "added": added,
         "preserved_existing": sorted(key for key in DEFAULTS if current.get(key)),
         "configured_default_names": sorted(key for key in DEFAULTS if after.get(key)),
-        "deferred_profile_keys": sorted(key for profile in PROFILES for key in profile if not after.get(key)),
-        "required_external_settings_missing": [key for key in (
-            "ONESA_DATABASE_URL", "ONESA_METRICS_TOKEN", "ONESA_MODEL_BASE_URL",
-            "ONESA_MODEL_API_KEY", "ONESA_EMBEDDING_BASE_URL", "ONESA_EMBEDDING_API_KEY",
-        ) if not after.get(key)],
+        "deferred_profile_keys": sorted(
+            key for profile in PROFILES for key in profile if not after.get(key)
+        ),
+        "required_external_settings_missing": [
+            key
+            for key in (
+                "ONESA_DATABASE_URL",
+                "ONESA_METRICS_TOKEN",
+                "ONESA_MODEL_BASE_URL",
+                "ONESA_MODEL_API_KEY",
+                "ONESA_EMBEDDING_BASE_URL",
+                "ONESA_EMBEDDING_API_KEY",
+            )
+            if not after.get(key)
+        ],
         "deployment_requested": False,
         "deployment_identity_unchanged": True,
         "production_release_qualified": False,
