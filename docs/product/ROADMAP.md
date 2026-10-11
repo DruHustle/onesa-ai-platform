@@ -65,3 +65,7 @@ Local evidence/approval automation and rejection tests are implemented. See
 protection, encryption secret provisioning, complete hosted staging/production
 acceptance and explicit owner operations/legal approval remain blocked.
 The migration switch stays off and the original secret gate is retained.
+
+## Private-Free release controls — 2026-10-11
+
+Credential-free qualification and owner authorization are implemented locally. Remote installation, billing/visibility confirmation, production secret removal/rotation and independent provider auto-deploy verification remain pending owner actions. Direct pushes remain possible. See [the enforcement report](../development/PRIVATE_FREE_SAFEGUARDS.md).

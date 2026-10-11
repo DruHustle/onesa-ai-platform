@@ -1,5 +1,7 @@
 # Onesa AI
 
+> Current private-Free release policy: [safeguards and external owner authorization](docs/development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
+
 Onesa AI is a European-based, general-purpose, modular artificial intelligence platform
 for enterprise, developer, institutional and consumer applications across European and
 international markets. Shared self-hosted infrastructure serves Chat, Knowledge, Agents

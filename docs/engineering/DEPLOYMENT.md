@@ -1,5 +1,7 @@
 # Independent application deployment
 
+> Current private-Free release policy: [safeguards and external owner authorization](../development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
+
 Use separate versioned images from the frontend/backend Dockerfiles. Each build context
 is independent. Keep a common origin through TLS ingress; the Next.js server forwards
 API traffic using private `ONESA_API_URL`. Backend PostgreSQL/pgvector, inference and

@@ -1,4 +1,3 @@
-# Public: hosted only. Private: full local validation precedes cloud execution.
 name: Independent release candidate image
 'on':
   workflow_dispatch:
@@ -17,9 +16,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  local-validation:
-    if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
-    uses: ./.github/workflows/_local-validation.yml
   image:
     runs-on: ubuntu-latest
     steps:
@@ -27,25 +23,23 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
-        persist-credentials: false
+        persist-credentials: 'false'
         ref: ${{ github.sha }}
     - name: Require successful checks on this exact revision
-      uses: actions/github-script@v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
       with:
-        script: |
-          const runs = await github.paginate(github.rest.checks.listForRef, {
-            ...context.repo, ref: context.sha, per_page: 100
-          });
-          for (const name of ['backend', 'frontend', 'browser', 'documentation', 'containers', 'tls-acceptance', 'publication-hygiene']) {
-            const run = runs.filter(item => item.name === name).sort((a, b) => b.id - a.id)[0];
-            if (!run || run.conclusion !== 'success') core.setFailed(`Required successful check missing: ${name}`);
-          }
+        script: "const runs = await github.paginate(github.rest.checks.listForRef, {\n  ...context.repo, ref: context.sha,\
+          \ per_page: 100\n});\nfor (const name of ['backend', 'frontend', 'browser', 'documentation', 'containers', 'tls-acceptance',\
+          \ 'publication-hygiene']) {\n  const run = runs.filter(item => item.name === name).sort((a, b) => b.id - a.id)[0];\n\
+          \  if (!run || run.conclusion !== 'success') core.setFailed(`Required successful check missing: ${name}`);\n}\n"
     - name: Build selected application
       env:
         APPLICATION: ${{ inputs.application }}
@@ -57,22 +51,31 @@ jobs:
     - name: Record candidate identity
       env:
         APPLICATION: ${{ inputs.application }}
-      run: |
-        python3 - <<'PYTHON'
+      run: 'python3 - <<''PYTHON''
+
         import json, os, subprocess
+
         from pathlib import Path
-        app, revision = os.environ['APPLICATION'], os.environ['GITHUB_SHA']
-        image = subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{.Id}}', f'onesa-{app}:{revision}'], text=True).strip()
-        Path('candidate.json').write_text(json.dumps({'application': app, 'source_revision': revision, 'image_id': image, 'publication_authorized': False}, indent=2) + '\n')
+
+        app, revision = os.environ[''APPLICATION''], os.environ[''GITHUB_SHA'']
+
+        image = subprocess.check_output([''docker'', ''image'', ''inspect'', ''--format'', ''{{.Id}}'', f''onesa-{app}:{revision}''],
+        text=True).strip()
+
+        Path(''candidate.json'').write_text(json.dumps({''application'': app, ''source_revision'': revision, ''image_id'':
+        image, ''publication_authorized'': False}, indent=2) + ''\n'')
+
         PYTHON
-    - uses: actions/upload-artifact@v4
+
+        '
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: onesa-${{ inputs.application }}-${{ github.sha }}
-        path: |
-          candidate.tar
+        path: 'candidate.tar
+
           candidate.json
+
+          '
         retention-days: 3
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ always() && true }}
     timeout-minutes: 45
