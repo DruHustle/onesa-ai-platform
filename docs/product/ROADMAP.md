@@ -52,3 +52,8 @@ Manual accessibility review remains required. See
 `docs/engineering/AI_CONFIGURATION_INVENTORY.md` for exact origins/revisions/evidence.
 Hosted inference/embeddings and production acceptance remain blocked; do not recreate
 the staging database, reuse portal credentials or promote staging to production.
+
+
+## Branch protection acceptance
+
+Private GitHub Free repositories remain unprotected. See [the verified governance report](../development/BRANCH_PROTECTION_REPORT.md). Public production qualification remains separate from isolated staging.

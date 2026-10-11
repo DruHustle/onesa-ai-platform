@@ -488,3 +488,25 @@ Hosted results remain unverified until the new revision passes CI and deployment
 Graceful termination stops new claims and disposes connections; bounded one-shot
 execution supports a separately qualified scheduler without changing durable mail
 leases, retries or provider idempotency. Hosted delivery remains unqualified.
+
+
+## 2026-10-10 — GitHub Free governance plan
+
+- Selected private GitHub Free operation with voluntary feature-branch PRs, verified
+  CI, manual authorization and least practical write access. No paid upgrade or
+  visibility workaround is proposed; main enforcement remains blocked.
+
+## 2026-10-10 — Branch protection and governance audit
+
+- Verified private personal ownership, admin access, actual PR CI/security check names
+  and deployment/environment evidence across all three repositories.
+- Attempted repository rulesets and classic fallback; GitHub rejected both with HTTP
+  403 requiring Pro eligibility. Main readback remains unprotected, NOT ENFORCED.
+- Prepared exact payloads, solo-developer PR/recovery policy, templates and API-backed
+  reports. Local `deploy.yml` display names now use `deploy-qualification`, `deploy-frontend` and `deploy-backend`; the manual documentation hosting job now displays `docs-hosting`. Job IDs, dependency expressions and deployment behavior are preserved. This removes collisions with required CI checks. These edits are not yet published; merge them through a reviewed PR and verify the resulting names before activating the payload.
+- Existing local work is preserved. No push, merge, deployment, billing, visibility,
+  credential or external provider change was performed.
+
+## 2026-10-11 — Reviewed governance integration
+
+Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.

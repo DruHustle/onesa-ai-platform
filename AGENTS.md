@@ -19,8 +19,10 @@ backend in their existing subdirectories. Do not initialize a workspace-level Gi
 repository, add sibling projects as submodules, or couple their release cycles.
 
 Create a feature branch from `main`, make focused changes, and open a pull request.
-Preserve work already staged or modified locally. Require one independent review;
-use two reviews for authentication, personal data, infrastructure or robot actuation.
+Preserve work already staged or modified locally. The verified team currently has one
+developer: require PRs and automated checks, with zero independent approvals until
+an authorized reviewer exists. Then require one independent review; seek two for
+authentication, personal data, infrastructure or robot actuation when available.
 Describe the problem, resulting behavior, validation and deployment/rollback impact.
 Update API contracts, migrations and documentation with behavior changes.
 
@@ -34,7 +36,8 @@ Do not introduce a project license until ownership and licensing are approved.
 Application builds and releases are independent. Changes to a shared contract must
 remain compatible during separate rollouts. Production promotion, remote pushes and
 visibility changes require explicit authorization. See `AGENTS.md` and
-`docs/engineering/DEPLOYMENT.md`. Branch protections are recommendations until configured.
+`docs/engineering/DEPLOYMENT.md`. Actual protection status and activation prerequisites are recorded in
+`docs/development/BRANCH_PROTECTION_REPORT.md`; currently BLOCKED, NOT ENFORCED.
 
 ## Security policy
 
@@ -78,20 +81,23 @@ as part of local setup. Private GitHub storage does not authorize uploading reco
 
 ### Protect main
 
-After the first approved push, target `main` with a ruleset: pull requests, one
-independent approval (two for sensitive changes), dismiss stale approvals, resolved
-review conversations and passing checks. Block force pushes and deletion. Restrict
-bypass rights to audited emergency owners. Require reviews of workflow/infra/security
-changes; assign real CODEOWNERS teams once membership is confirmed. Keep signed
-commits as an organization policy decision. Select actual status checks after their
-first execution; do not require nonexistent jobs. Avoid path-filtered required
-checks that may remain pending. Protect release tags and the `production` environment
-with reviewers and prevent self-approval. Availability depends on the GitHub plan.
+The authenticated repositories are private and personally owned by DruHustle. GitHub
+rejected ruleset creation and classic branch protection with its Pro-plan requirement;
+main remains unprotected. Never claim local configuration enforces remote rules.
+See `docs/development/BRANCH_PROTECTION_REPORT.md` for verified evidence, exact CI
+contexts and deployment limitations, and `CONTRIBUTING.md` for the Codex PR workflow.
 
-Required checks: `publication-hygiene`, plus the application checks listed in
-`docs/engineering/BUILD_AND_TEST.md`. Do not promote an artifact built from a different
-revision or use secrets in untrusted fork pull requests. Image release workflows package candidates. Cloud deployments use the independently
-selectable GitHub workflow documented in `docs/engineering/VERCEL_RENDER.md`.
+The prepared main policy blocks force pushes/deletion, requires PRs, resolved
+conversations and all observed CI/security checks from GitHub Actions, with strict
+up-to-date checks and no bypass actors. Zero independent approvals keeps the verified
+solo-developer workflow usable. Raise this to one and last-push approval when a real
+reviewer is authorized; add CODEOWNERS only after ownership/permissions are verified.
+Do not drop failing security checks, invent required jobs or enable a merge queue
+without compatible workflows. Emergency recovery is an audited temporary policy edit
+by an authorized administrator, never routine Codex bypass. Billing, visibility,
+credentials, merging and production promotion need their corresponding authorization.
+Production environments/integrations and preview secrets require separate verified
+controls; current branch protection cannot establish deployment security.
 
 Sources: [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
 [secret scanning availability](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/detect-secret-leaks/enable-secret-scanning),
@@ -142,3 +148,10 @@ and configuration/provisioning work. Preserve local Ollama, private environments
 user data. Free services only; no paid provisioning, training or additional model
 downloads without explicit authorization. Hosted inference remains blocked until real
 authenticated hosting and acceptance exist; never silently substitute mock inference.
+
+## Selected GitHub Free policy
+
+The owner selected GitHub Free. Follow `docs/development/FREE_GITHUB_PLAN.md`; do
+not upgrade billing, change visibility or transfer ownership. Prepared protection
+payloads are reference only while eligibility is blocked. Use voluntary feature-branch
+PRs and verified CI with least practical write access; never claim server enforcement.

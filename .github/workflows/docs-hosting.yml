@@ -26,6 +26,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   documentation:
+    name: docs-hosting
     if: inputs.target != 'production' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
