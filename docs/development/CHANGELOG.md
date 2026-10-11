@@ -1,5 +1,11 @@
 # Development changelog
 
+## 2026-10-12 — Public documentation search description
+
+Add the missing homepage description to public documentation so generated HTML
+provides a useful search snippet and social description. Preserve public-source
+selection, internal access controls and documentation deployment gates.
+
 ## 2026-10-12 — Save reviewed production defaults without deployment
 
 Add an explicit owner-only operation on dev to save missing nonsecret settings to
