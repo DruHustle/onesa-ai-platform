@@ -41,11 +41,11 @@ jobs:
 
         test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
         exit 1; }'
-    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
-        persist-credentials: 'false'
+        persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
       with:
         python-version: '3.11'
     - name: Install staging database diagnostic dependencies
@@ -59,7 +59,7 @@ jobs:
       run: python scripts/staging.py "${{ inputs.staging_action }}"
     - name: Require successful CI on the current staging revision
       if: inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging'
-      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
       with:
         script: "if (context.ref !== 'refs/heads/staging') throw new Error('Preview requires staging');\nconst {owner, repo}\
           \ = context.repo;\nconst ref = await github.rest.git.getRef({owner, repo, ref: 'heads/staging'});\nif (ref.data.object.sha\
@@ -71,7 +71,7 @@ jobs:
     - name: Verify protected project and configure staging-only routing
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       run: python scripts/staging.py configure-preview
-    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       with:
         node-version: '24'

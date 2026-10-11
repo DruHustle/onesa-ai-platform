@@ -39,7 +39,7 @@ jobs:
         exit 1; }'
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
-        persist-credentials: 'false'
+        persist-credentials: false
         ref: ${{ github.sha }}
     - name: Verify immutable qualification and owner approval
       env:
@@ -100,7 +100,7 @@ jobs:
         \ \"$missing_configuration\"\n"
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
-        persist-credentials: 'false'
+        persist-credentials: false
         ref: ${{ github.sha }}
     - name: Revalidate approval before provider changes
       if: inputs.approval_run != ''
@@ -172,7 +172,7 @@ jobs:
         exit 1; }'
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
-        persist-credentials: 'false'
+        persist-credentials: false
         ref: ${{ github.sha }}
     - name: Revalidate approval before provider changes
       if: inputs.approval_run != ''
@@ -229,7 +229,7 @@ jobs:
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
-        persist-credentials: 'false'
+        persist-credentials: false
         ref: ${{ github.sha }}
     - name: Revalidate authorized release before hosted checks
       run: python3 scripts/release/evidence.py promote --output "$RUNNER_TEMP/promotion/record.json"

@@ -1,0 +1,77 @@
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 2
+  groups:
+    compatible-actions:
+      applies-to: version-updates
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
+- package-ecosystem: npm
+  directory: /onesa-ai-platform-frontend/apps/chat
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 2
+  groups:
+    compatible-packages:
+      applies-to: version-updates
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
+- package-ecosystem: npm
+  directory: /onesa-ai-platform-frontend/apps/docs
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 2
+  groups:
+    compatible-packages:
+      applies-to: version-updates
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
+- package-ecosystem: npm
+  directory: /scripts/contract-tools
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 2
+  groups:
+    compatible-packages:
+      applies-to: version-updates
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
+- package-ecosystem: pip
+  directory: /onesa-ai-platform-backend
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 2
+  groups:
+    compatible-python:
+      applies-to: version-updates
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7

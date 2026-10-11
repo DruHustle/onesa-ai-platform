@@ -9,7 +9,7 @@ API := onesa-ai-platform-backend
 .PHONY: install check test run openapi up down frontend-check training-check
 install:
 	python3 -m venv .venv
-	$(PYTHON) -m pip install -r $(API)/requirements-dev.lock
+	$(PYTHON) -m pip install --require-hashes -r $(API)/requirements-dev.lock
 	$(PYTHON) -m pip install --no-deps --no-build-isolation -e $(API)
 
 check:
