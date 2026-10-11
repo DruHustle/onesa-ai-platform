@@ -119,3 +119,5 @@ Live deployment and production acceptance must be verified on the actual provide
 Vercel hosts the frontend; Render hosts the backend. See
 [provider setup](docs/engineering/VERCEL_RENDER.md) and root `render.yaml`.
 Configuration is prepared; account provisioning and remote acceptance are not yet verified.
+
+Actions visibility, local-first private validation and hosted public routing: [runner maintenance](docs/engineering/SELF_HOSTED_RUNNER.md).

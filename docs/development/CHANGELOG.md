@@ -412,3 +412,9 @@ is included. Provider production readiness remains independent of a source push.
 Added AI-only, read-only provider inventory for actual backend origin, provider identity, linked environment groups, overrides, worker inventory, Vercel domain assignment and redacted configuration validity. No provider configuration or resource provisioning is performed by this workflow. Disclosure and scope tests pass locally.
 
 Prepared complete source-backed AI configuration matrix, verified origin/proxy values, temporary free Render PostgreSQL staging proposal and standalone loopback-only vLLM host proposal. Corrected production example to retain semantic embedding candidate; no private environment files or other projects modified. Local isolated PostgreSQL147passed4skipped; hosted API503 remains open.
+
+## 2026-10-11 — Visibility-aware Actions policy
+
+- Public repositories use hosted execution with zero local registration access; the former portal service was removed and its VM/login startup stopped. Repository visibility was not changed.
+- Private workflows use a shared exact-revision local validation phase before cloud checks, preserving existing check names and release approvals. Runtime visibility hooks deny public/missing-token/API-failure execution independently of workflow conditions.
+- Public cloud CI results and private unverified activation limitations are recorded in the runner maintenance guide after verification. Production remains gated.

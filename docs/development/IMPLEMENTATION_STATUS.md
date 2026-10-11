@@ -484,3 +484,7 @@ is included. Provider production readiness remains independent of a source push.
 ## 2026-10-10 — Specific AI configuration/provisioning review
 
 Read-only provider inventory38065741091 confirms actual AI backend origin, Vercel domain verification, missing Python runtime settings, zero Render databases and no linked groups/AI workers. The [complete configuration matrix and exact provisioning delta](../engineering/AI_CONFIGURATION_INVENTORY.md) supersede generic infrastructure blocker descriptions. Production template preserves semantic candidate and confirmed production domain. Eleven diagnostic tests and147 isolated PostgreSQL integration tests pass; hosted frontend200, API503 remains open. Free-only provisioning boundary and release guard retained. No provider settings/deployment/migrations changed.
+
+## 2026-10-11 — Runner visibility policy
+
+Actual public visibility requires hosted-only CI and zero local runner registrations. Private local-first/cloud-second workflows are prepared but not activated. Production/model/GPU qualification remains independent; see `docs/engineering/SELF_HOSTED_RUNNER.md`.
