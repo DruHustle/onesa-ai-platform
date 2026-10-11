@@ -60,7 +60,8 @@ services and tool caches prevent accidental data/port conflicts. Docker membersh
 root-equivalent inside this VM: the three trusted repositories are not security boundaries
 against one another. Never register untrusted writers. Owner guards restrict private PRs.
 
-Before any private job's code runs, a root-owned started hook calls `visibility.py` using
+Private hooks/configuration are stored under root-owned `/usr/local/lib/onesa-ci/USER`,
+outside the runner-owned checkout and installation directory. Before any private job's code runs, a root-owned started hook calls `visibility.py` using
 a short-lived, repository-scoped `ONESA_CI_TOKEN` supplied by the workflow's read-only
 `github.token`; no personal credential is shared. It verifies actual API visibility and
 repository identity both before and after waiting for the lease. Public repositories,
@@ -148,3 +149,8 @@ DruHustle/onesa-ai-platform`; inspect `/actions/runs/RUN_ID/jobs` for runner nam
 candidate SHA. Older local-selected runs are not evidence for the current public policy.
 Rollback via a reviewed PR, preserving required checks/approvals; never restore public
 self-hosted access. Runner policy removal is independent of application rollback/state.
+
+## Hosted CI evidence — 2026-10-11
+
+Policy candidate `b7ec084` passed hosted x86 push validation; [push CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136350828) and [PR CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136455835) retain real PostgreSQL/pgvector integration and browser/documentation checks. PR and implemented-snapshot runs were still in progress when this evidence entry was recorded. Separate implemented snapshot `cd6b6a7` [CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136455982) also retains implemented software checks. Inspect current conclusions rather than treating in-progress or skipped local jobs as passed. Final corrections require fresh checks before merge.
+GitHub currently reports no main branch protection (404) and no applicable branch rules ([]); this migration did not change enforcement settings. PR/check discipline and production approvals remain required.
