@@ -1,5 +1,14 @@
 # Development changelog
 
+## 2026-10-11 — Reconcile owner runner policy with qualified staging
+
+- Preserve current staging operator actions and regression tests while merging the
+  owner-approved public-hosted/private-local-first workflow policy.
+- Keep startup, PDF, image security, contracts, docs and browser checks in both
+  validation phases. Enforce live visibility before cloud checkout.
+- Keep obsolete implementation status and session handoff documents removed;
+  AGENTS.md remains the sole agent policy. No runner activation or public promotion.
+
 ## 2026-10-10 — Frontend provider credential boundary
 
 - Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;

@@ -67,14 +67,14 @@ human data-classification review before publishing or uploading CI artifacts.
 
 ## Repository governance
 
-### Visibility and access
+### Visibility, runner selection and access
 
-Recommend **private** for this repository while ownership, security and data review
-are incomplete. Keep the company portal private even when its approved website is
-public. Keep AI intellectual property, training provenance and robot control software
-private until owners approve any public release. Assign least-privilege team access;
-require organization 2FA and a named security/release owner. Do not change visibility
-as part of local setup. Private GitHub storage does not authorize uploading records.
+On 2026-10-11 the owner made all three repositories public temporarily and selected
+standard GitHub-hosted Actions. Local runners are private-only after independently
+verified isolation, registration and shared capacity; never register one for public
+repositories. Keep all tests, security gates, production approvals and private-data
+exclusions. This supersedes the earlier private-visibility recommendation and hosted
+submission pause. Do not change visibility, billing or ownership independently.
 
 ### Protect main
 
