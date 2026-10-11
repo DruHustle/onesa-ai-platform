@@ -9,6 +9,36 @@ import staging
 
 
 class StagingTests(unittest.TestCase):
+    def test_current_standard_protection_is_accepted_but_missing_or_unknown_modes_are_not(self):
+        project = {
+            "link": {"org": "DruHustle", "repo": "onesa-ai-platform", "productionBranch": "main"},
+            "rootDirectory": "onesa-ai-platform-frontend/apps/chat",
+        }
+        service = {"serviceDetails": {"url": "https://onesa-ai-platform-backend-staging.onrender.com"}}
+        environment = {"envs": [
+            {"key": "ONESA_API_URL", "gitBranch": "staging", "target": ["preview"], "value": service["serviceDetails"]["url"]},
+            {"key": "NEXT_PUBLIC_ONESA_DOCUMENTATION_URL", "gitBranch": "staging", "target": ["preview"], "value": "https://docs.onesa.eu"},
+        ]}
+        with patch.dict(os.environ, {"VERCEL_PROJECT_ID": "prj_synthetic", "VERCEL_TOKEN": "synthetic"}):
+            for mode in ["prod_deployment_urls_and_all_previews", "all", "all_except_custom_domains", "preview"]:
+                with (
+                    self.subTest(mode=mode),
+                    patch.object(staging, "get_json", side_effect=[({**project, "ssoProtection": {"deploymentType": mode}}, 200), (environment, 200), (environment, 200)]),
+                    patch.object(staging, "write_json") as write,
+                ):
+                    self.assertTrue(staging.configure_preview(service)["readback_verified"])
+                    write.assert_not_called()
+            for mode in [None, "unknown"]:
+                with (
+                    self.subTest(mode=mode),
+                    patch.object(staging, "get_json", return_value=({**project, "ssoProtection": {"deploymentType": mode}}, 200)) as read,
+                    patch.object(staging, "write_json") as write,
+                ):
+                    with self.assertRaises(SystemExit):
+                        staging.configure_preview(service)
+                    read.assert_called_once()
+                    write.assert_not_called()
+
     def test_main_cannot_read_or_mutate_provider(self):
         with (
             patch.dict(

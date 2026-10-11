@@ -1,5 +1,13 @@
 # Development changelog
 
+## 2026-10-11 — Vercel Standard Protection compatibility
+
+The staging deployment guard recognizes the documented
+prod_deployment_urls_and_all_previews protection mode alongside existing protected
+modes. Missing/unknown protection still fails before configuration writes. Regression
+checks retain repository/root/main identity, Preview-only scope and conflict refusal.
+Production protection is never disabled.
+
 ## 2026-10-11 — Separate documentation crawler policies
 
 Public documentation now emits robots.txt with the public sitemap. Internal builds

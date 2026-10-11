@@ -1,5 +1,10 @@
 # Vercel frontend and Render backend
 
+Staging accepts the current Vercel Standard Protection API value
+`prod_deployment_urls_and_all_previews`, as well as existing protected modes.
+Missing or unknown protection still blocks Preview configuration/deployment.
+See [Vercel Authentication](https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication).
+
 Production remains unqualified. The existing isolated staging deployment and its
 verified provider evidence are recorded in `AI_CONFIGURATION_INVENTORY.md`.
 Use the private `onesa-ug/onesa-ai-platform` GitHub repository and `main`. The frontend and
