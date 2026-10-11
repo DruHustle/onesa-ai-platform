@@ -160,3 +160,9 @@ missing database/model credentials and qualification remain explicit blockers.
 ## Current AI staging deployment
 
 The exact staging revision a25bfb02a46101aaa3afd74bfc51ce371b3d1673 passed CI and hosted deployment workflow 38105826742. Render uses Dockerfile CMD with its command override cleared; /health and /core-ready return 200. Hosted authentication, account isolation, CSRF and restart persistence passed 39 checks; protected Preview passed 15 desktop/tablet/mobile checks. This resolves the staging exit-127 startup fault. /ready remains an honest 503 because no approved model endpoint exists. Real semantic embeddings, worker delivery and public production acceptance remain unqualified. Subsequent releases must pass current-revision CI and the staging workflow again.
+
+## Automated qualification migration
+
+See [automated release qualification](AUTOMATED_QUALIFICATION.md) for immutable
+Actions evidence, explicit owner reviews, build integrity and the guarded migration.
+The legacy secret remains active until remote migration verification is complete.
