@@ -1,5 +1,16 @@
 # Development changelog
 
+## 2026-10-11 — Final identity-mail lease crash recovery
+
+Expired final-attempt mail leases become failed during maintenance, preserving
+active final leases and recording no fabricated provider acceptance. Regression
+tests use real isolated PostgreSQL and prove that a sixth send is not attempted.
+Reconcile provider receipts before manually retrying an ambiguously completed job.
+
+Public PDF source references now target `https://docs.onesa.eu` rather than a local
+development server. Artifact validation inspects every public manual's actual PDF
+link annotations and requires its declared source references to use the public site.
+
 ## 2026-10-11 — Vercel Standard Protection compatibility
 
 The staging deployment guard recognizes the documented
