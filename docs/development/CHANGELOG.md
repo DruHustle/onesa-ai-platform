@@ -1,5 +1,15 @@
 # Development changelog
 
+## 2026-10-11 — Preserve qualified staging with owner runner policy
+
+- Merge all current staging corrections and owner-approved runner routing by ordinary
+  merges. Preserve bounded chat history, exhausted mail leases, public PDF links,
+  crawler policies, Preview protection and staging operator regression coverage.
+- Keep all software, browser, docs, startup and full image-security checks in the
+  private reusable gate; public jobs use hosted execution and verify live visibility.
+- Keep obsolete implementation and session handoff files removed. No local runner
+  activation, production promotion, billing or physical control.
+
 ## 2026-10-11 — Public repository hosted Actions
 
 - Record the owner-selected temporary public visibility and standard GitHub-hosted
