@@ -1,5 +1,16 @@
 # Development changelog
 
+## 2026-10-12 — Save reviewed production defaults without deployment
+
+Add an explicit owner-only operation on dev to save missing nonsecret settings to
+the identified AI production service, after exact-source CI and hygiene pass. Preserve
+existing values, reject staging/foreign targets, active deployments and linked groups,
+disable redirects, and verify readback and unchanged deployment identity. Do not copy
+database/API credentials, create resources or promote production. Preserve the reviewed
+Ollama and semantic embedding profiles pending actual hosted endpoints. Set the approved
+reply address to info@onesa.eu and keep email disabled until delivery is qualified.
+Add regression coverage to CI for these configuration and credential boundaries.
+
 ## 2026-10-11 — Staging environment and branch configuration
 
 Scope staging credentials to the GitHub Staging environment, preserve each product’s Vercel project for staging previews, and standardize remote branches on dev/staging/main with restricted recovery archives. Keep production qualification and explicit owner approval enforced.

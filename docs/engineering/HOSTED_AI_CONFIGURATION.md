@@ -1,5 +1,21 @@
 # Hosted AI configuration inventory — 2026-10-10
 
+## Save-only production defaults — 2026-10-12
+
+The owner authorized adding known settings, including `info@onesa.eu`, to the existing
+production Render service. `repair-hosting.yml` has an explicit `production_defaults`
+operation on reviewed `dev`, requiring successful exact-source CI/hygiene and first-attempt
+owner dispatch. It saves missing nonsecret values only, preserves existing credentials
+and custom profiles, verifies the production target/native auto-deploy off, and records
+readback and unchanged deployment identity. It does not deploy, change Vercel, create
+resources or supply missing production database/model/embedding credentials.
+
+The retained Ollama tag and pinned semantic embedding metadata are prepared profiles,
+not proof of a hosted model. Keep model/embedding endpoints unconfigured until real
+approved services exist; email stays disabled pending worker/delivery qualification.
+The historical inventory below does not describe the post-operation state. The workflow
+receipt is the current evidence; production release gates remain mandatory.
+
 Names only. Never paste credential values into chat, Git, generated reports or
 frontend/public variables. The source of truth is backend `app/config.py`; all
 **47** declared settings below use its existing `ONESA_` prefix. The read-only

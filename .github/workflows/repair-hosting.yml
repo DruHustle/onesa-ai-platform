@@ -2,6 +2,10 @@ name: Repair existing hosting configuration
 'on':
   workflow_dispatch:
     inputs:
+      production_defaults:
+        description: Save missing reviewed AI production defaults only, without deploying
+        type: boolean
+        default: false
       staging_action:
         description: Isolated AI staging operation
         type: choice
@@ -20,6 +24,35 @@ concurrency:
   group: hosting-configuration-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  production-defaults:
+    if: github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform'
+      && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle'
+      && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev'
+      && github.run_attempt == 1 && inputs.production_defaults == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - name: Verify current source and successful CI before provider access
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        test "$RUNNER_ENVIRONMENT" = github-hosted
+        test "$(gh api repos/DruHustle/onesa-ai-platform --jq '.private')" = false
+        test "$(gh api repos/DruHustle/onesa-ai-platform/branches/dev --jq '.commit.sha')" = "$GITHUB_SHA"
+        for workflow in ci.yml repository-hygiene.yml; do
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs" \
+            -f head_sha="$GITHUB_SHA" -f event=push -f per_page=1 \
+            --jq '.workflow_runs[0] | select(.head_sha == env.GITHUB_SHA and .status == "completed" and .conclusion == "success") | .id' \
+            | python3 -c 'import sys; assert sys.stdin.read().strip().isdigit(), "Exact-source CI must pass"'
+        done
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        persist-credentials: false
+        ref: ${{ github.sha }}
+    - name: Save reviewed missing defaults and verify unchanged deployment
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: python3 scripts/production_defaults.py
   inspect:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -132,4 +165,4 @@ jobs:
     - name: Read back repaired configuration
       if: github.ref != 'refs/heads/staging'
       run: python scripts/inspect_hosting.py
-    if: ${{ github.event.repository.private == false && (always() && true) }}
+    if: ${{ github.event.repository.private == false && (always() && true) && inputs.production_defaults != true }}
