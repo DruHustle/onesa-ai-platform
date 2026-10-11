@@ -463,3 +463,9 @@ private-Free safeguards through their branch ancestry. No branch was pushed or P
 - `scripts/release/hosted.py`
 - `scripts/release/test_free_gate.py`
 - `scripts/release/test_free_workflow_policy.py`
+
+### Authorized push review — 2026-10-11
+
+Generated development-lockfile hashes for all 81 already-pinned packages. A clean dependency calculation validates hashes instead of relying on an existing local environment; no package versions changed.
+
+GitHub pull-request validation found and prompted this correction before any authorized deployment. Production/staging provider prerequisites and owner approvals remain separately required.
