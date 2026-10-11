@@ -50,9 +50,10 @@ class WorkflowBoundaryTests(unittest.TestCase):
         self.assertNotIn("secrets.VERCEL_PROJECT_ID", text)
 
     def test_git_previews_do_not_enable_native_production_deployment(self):
-        config = json.loads(
-            (ROOT / (ROOT.name + "-frontend") / "vercel.json").read_text()
-        )
+        frontend = ROOT / (ROOT.name + "-frontend")
+        if ROOT.name == "onesa-ai-platform":
+            frontend = frontend / "apps/chat"
+        config = json.loads((frontend / "vercel.json").read_text())
         self.assertEqual(
             config["git"]["deploymentEnabled"],
             {
