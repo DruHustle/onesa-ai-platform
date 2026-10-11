@@ -570,3 +570,19 @@ reviewed Vercel prebuilt artifacts, owner approval/revocation records, staged/pr
 receipts and fail-closed promotion/hosted checks. Legacy qualification is retained
 behind an explicit verified migration switch. No production release or legal approval
 was issued; target acceptance adapters/configuration and remote validation remain open.
+
+## Documentation ecosystem reference 0.3.0 — 2026-10-11
+
+Extended the existing Docusaurus portal across Company Portal, AI Platform and
+Robot, with source-pinned Fastify/FastAPI explorers, current generated AI schema,
+16 ecosystem diagram groups, readable private ERDs and ten additional engineering
+manuals. Fixed architecture view selection, dated table-count/schema prose, Swagger
+accessible labels/nested controls and low-contrast badges. Added static interaction,
+link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
+The public static build remains independent of application release approval. Hosted
+internal access and actual model/hardware functionality are not claimed complete.
+
+## 2026-10-11 — Remote CI integration review
+
+Removed pip caching from the publication hygiene job because it installs no packages; GitHub runner cleanup otherwise fails when the cache directory is absent.
+Preserved the newly merged ecosystem documentation, pinned its additional checkout actions, and scoped scanner exceptions to three verified source checksums.

@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "default_classification": "internal",
   "public_sources": [
     "docs/public/introduction.md",
@@ -16,13 +16,35 @@
     "docs/public/privacy.md",
     "docs/public/troubleshooting.md",
     "docs/public/tutorials.md",
-    "docs/public/examples.md"
+    "docs/public/examples.md",
+    "docs/public/ecosystem.md",
+    "docs/public/company-portal.md",
+    "docs/public/ai-platform.md",
+    "docs/public/robot.md",
+    "docs/public/deployment-overview.md",
+    "docs/public/security-overview.md",
+    "docs/public/documentation-access.md"
   ],
   "public_diagrams": [
     "public-system",
     "public-inference",
     "public-rag",
-    "public-agent"
+    "public-agent",
+    "public-ecosystem",
+    "public-portal",
+    "public-ai-platform",
+    "public-routing",
+    "public-agents",
+    "public-travel",
+    "public-robot",
+    "public-ros2",
+    "public-safety",
+    "public-auth",
+    "public-database",
+    "public-deployment",
+    "public-model-host",
+    "public-release",
+    "public-recovery"
   ],
   "public_screenshots": [
     "authentication",
@@ -39,6 +61,22 @@
     "agent-framework",
     "knowledge-rag",
     "security-data-protection",
-    "model-serving"
+    "model-serving",
+    "complete-system-architecture",
+    "company-portal-design",
+    "ai-platform-design",
+    "robot-design"
+  ],
+  "required_ecosystem_manuals": [
+    "complete-system-architecture",
+    "company-portal-design",
+    "ai-platform-design",
+    "robot-design",
+    "ecosystem-api-reference",
+    "ecosystem-database-design",
+    "infrastructure-deployment",
+    "model-serving-training",
+    "security-architecture",
+    "operations-recovery"
   ]
 }

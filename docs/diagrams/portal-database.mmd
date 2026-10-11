@@ -1,0 +1,191 @@
+erDiagram
+  users {
+    uuid id PK
+    text email
+    text password_hash
+    text role
+    text mfa_secret
+    bigint mfa_last_step
+    boolean disabled
+    timestamptz created_at
+    text mfa_pending
+    text enroll_hash
+    timestamptz enroll_expires
+  }
+  sessions {
+    text token_hash PK
+    uuid user_id FK
+    text csrf
+    timestamptz expires_at
+    timestamptz created_at
+  }
+  recovery_tokens {
+    text token_hash PK
+    uuid user_id FK
+    timestamptz expires_at
+  }
+  content {
+    uuid id PK
+    text kind
+    text slug
+    text locale
+    text title
+    text summary
+    text body
+    jsonb metadata
+    text state
+    timestamptz publish_at
+    uuid author_id FK
+    integer revision
+    timestamptz updated_at
+  }
+  revisions {
+    bigserial id PK
+    uuid content_id FK
+    jsonb snapshot
+    uuid actor_id FK
+    timestamptz created_at
+  }
+  enquiries {
+    uuid id PK
+    text category
+    text name
+    text email
+    text organization
+    text message
+    text locale
+    text status
+    uuid owner_id FK
+    text notes
+    timestamptz follow_up_at
+    timestamptz consent_at
+    timestamptz created_at
+  }
+  files {
+    uuid id PK
+    text filename
+    text mime
+    integer size
+    text storage_key
+    text sha256
+    text classification
+    text scan_status
+    text approval
+    integer version
+    text title
+    uuid owner_id FK
+    timestamptz review_at
+    text association
+    timestamptz created_at
+    uuid parent_id
+    boolean archived
+  }
+  applications {
+    uuid id PK
+    uuid job_id FK
+    text name
+    text email
+    text message
+    uuid file_id FK
+    text status
+    text notes
+    timestamptz consent_at
+    timestamptz delete_after
+    timestamptz created_at
+  }
+  audit {
+    bigserial id PK
+    uuid actor_id FK
+    text action
+    text record_id
+    text request_id
+    timestamptz created_at
+  }
+  jobs {
+    uuid id PK
+    text kind
+    text dedupe_key
+    jsonb payload
+    text status
+    integer attempts
+    timestamptz run_at
+    timestamptz locked_at
+    text last_error
+    timestamptz created_at
+  }
+  rate_limits {
+    text key PK
+    integer hits
+    timestamptz expires_at
+  }
+  facts {
+    text key PK
+    text value
+    text status
+    text source
+    uuid verified_by FK
+    timestamptz verified_at
+  }
+  settings {
+    text key PK
+    jsonb value
+  }
+  templates {
+    text key PK
+    text title
+    text locale
+    text body
+    text status
+    integer version
+  }
+  mfa_recovery {
+    uuid user_id FK
+    text code_hash
+  }
+  storage_deletions {
+    text storage_key PK
+    text status
+    integer attempts
+    timestamptz run_at
+    timestamptz locked_at
+    text last_error
+    timestamptz created_at
+  }
+  bounded_transfers {
+    uuid id PK
+    uuid owner_id FK
+    text peer_hash
+    text capability_hash
+    text scope
+    integer expected_bytes
+    text checksum
+    integer cursor
+    timestamptz expires_at
+    jsonb result
+    integer result_status
+  }
+  bounded_transfer_chunks {
+    uuid transfer_id FK
+    integer sequence
+    text encrypted_payload
+    text checksum
+  }
+  operational_state {
+    text key PK
+    timestamptz updated_at
+  }
+  users ||--o{ sessions : "declared foreign key"
+  users ||--o{ recovery_tokens : "declared foreign key"
+  users ||--o{ content : "declared foreign key"
+  content ||--o{ revisions : "declared foreign key"
+  users ||--o{ revisions : "declared foreign key"
+  users ||--o{ enquiries : "declared foreign key"
+  users ||--o{ files : "declared foreign key"
+  content ||--o{ applications : "declared foreign key"
+  files ||--o{ applications : "declared foreign key"
+  users ||--o{ audit : "declared foreign key"
+  users ||--o{ facts : "declared foreign key"
+  users ||--o{ mfa_recovery : "declared foreign key"
+  files ||--o{ files : "declared foreign key"
+  users ||--o{ bounded_transfers : "declared foreign key"
+  bounded_transfers ||--o{ bounded_transfer_chunks : "declared foreign key"

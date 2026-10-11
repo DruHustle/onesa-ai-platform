@@ -3,8 +3,10 @@
 import ast
 import hashlib
 import json
+import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -30,6 +32,9 @@ from source_policy import sources as documentation_sources
 
 
 def generate():
+    from ecosystem import validate as validate_ecosystem
+
+    validate_ecosystem()
     schema = create_app(Settings()).openapi()
     # Public application contracts only; operational/private endpoints are excluded.
     schema["paths"] = {
@@ -98,6 +103,58 @@ def generate():
                 ),
             }
         )
+    schema_reference = [
+        "# Implemented AI PostgreSQL schema",
+        "",
+        "Generated from current SQLAlchemy PostgreSQL types and the Alembic revision "
+        + REQUIRED_SCHEMA_REVISION
+        + ". Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.",
+        "",
+    ]
+    for table in tables:
+        schema_reference += [
+            "## " + table["name"],
+            "",
+            "| Field | PostgreSQL type | Nullable | Constraints / relationship |",
+            "| --- | --- | --- | --- |",
+        ]
+        for column in table["columns"]:
+            notes = (
+                (["primary key"] if column["primary_key"] else [])
+                + (["unique"] if column["unique"] else [])
+                + (["ORM default"] if column["has_orm_default"] else [])
+                + (
+                    ["server default: " + column["server_default"]]
+                    if column["server_default"]
+                    else []
+                )
+                + [
+                    "FK " + f["target"] + " / " + str(f["ondelete"])
+                    for f in column["foreign_keys"]
+                ]
+            )
+            schema_reference.append(
+                "| "
+                + " | ".join(
+                    [
+                        column["name"],
+                        column["type"],
+                        str(column["nullable"]),
+                        "; ".join(notes),
+                    ]
+                )
+                + " |"
+            )
+        schema_reference += [
+            "",
+            "Indexes: " + json.dumps(table["indexes"]),
+            "",
+            "Constraints: " + json.dumps(table["constraints"]),
+            "",
+        ]
+    (ROOT / "docs/database/SCHEMA.md").write_text(
+        "\n".join(schema_reference).rstrip() + "\n"
+    )
     # Relationship lines must live outside entity definitions.
     relationships = [line for line in erd if "||--o{" in line]
     erd = [line for line in erd if "||--o{" not in line] + relationships
@@ -413,12 +470,16 @@ def split(schema, tables):
             d.copy()
             for d in catalog
             if scope == "internal"
-            and not d["id"].startswith("public-")
             or scope == "public"
             and d["id"] in policy["public_diagrams"]
         ]
         for d in diagrams:
             d["classification"] = scope
+            if scope == "internal" and d["id"].startswith("public-"):
+                d["url"] = "https://docs.onesa.eu" + d["url"]
+                d["nodes"] = [
+                    {**n, "url": "https://docs.onesa.eu" + n["url"]} for n in d["nodes"]
+                ]
             source = (ROOT / d["source"]).read_text()
             d["relationships"] = [
                 {"from": a, "to": b}
@@ -435,6 +496,17 @@ def split(schema, tables):
                     "text": source + " " + d["status"],
                 }
             )
+        # Product contracts are source snapshots pinned to independently reviewed revisions.
+        cross = ROOT / "docs/ecosystem/contracts"
+        portal_contract = json.loads((cross / f"portal-{scope}.json").read_text())
+        robot_contract = json.loads((cross / "robot.json").read_text())
+        for product, contract in [
+            ("portal", portal_contract),
+            ("robot", robot_contract),
+        ]:
+            (static / f"openapi-{product}.json").write_text(
+                json.dumps(contract, indent=2) + "\n"
+            )
         generated = {
             "openapi.json": doc_schema,
             "search.json": search,
@@ -446,8 +518,12 @@ def split(schema, tables):
                 "chunks": chunks,
             },
             "provenance.json": {
-                "version": "0.2.0",
+                "version": policy["version"],
                 "classification": scope,
+                "revision": os.environ.get("GITHUB_SHA")
+                or subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+                ).strip(),
                 "code_sha256": hashlib.sha256(
                     b"".join(
                         p.read_bytes()
@@ -466,6 +542,14 @@ def split(schema, tables):
                     for p in sources
                 },
             },
+        }
+        generated["provenance.json"]["snapshot_sources"] = {
+            k: v
+            for k, v in json.loads(
+                (ROOT / "docs/ecosystem/snapshot-hashes.json").read_text()
+            ).items()
+            if scope == "internal"
+            or k in ["contracts/portal-public.json", "contracts/robot.json"]
         }
         for name, data in generated.items():
             (static / name).write_text(

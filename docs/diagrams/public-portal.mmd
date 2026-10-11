@@ -1,0 +1,11 @@
+flowchart TB
+Company[Public company frontend] --> Public[Public proxy paths only]
+Portal[Authenticated Portal frontend] --> Private[Session CSRF and roles]
+Public --> API[Fastify published content API]
+Private --> API
+API --> PG[Portal PostgreSQL]
+API --> Files[Private object storage]
+API --> Queue[Durable bounded outboxes]
+Queue --> Worker[Worker deployment unqualified]
+Worker --> Mail[Provider accepted is not delivered]
+Worker --> Files

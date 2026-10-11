@@ -109,3 +109,7 @@ api-client: openapi
 
 contract-check:
 	$(PYTHON) scripts/generate_api_client.py --check
+
+.PHONY: docs-static-acceptance
+docs-static-acceptance:
+	node scripts/docs/acceptance.mjs
