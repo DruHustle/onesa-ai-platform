@@ -1,5 +1,13 @@
 # Development changelog
 
+## 2026-10-11 — Bounded chat context reads
+
+Chat selects the last 30 messages directly in PostgreSQL, retaining chronological
+model context and message sequences without materializing an unbounded history.
+An isolated integration regression verifies the SQL bound, exact context ordering
+and preservation of all stored conversation messages.
+
+
 ## 2026-10-10 — Frontend provider credential boundary
 
 - Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;
