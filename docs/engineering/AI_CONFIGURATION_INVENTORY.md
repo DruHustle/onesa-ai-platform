@@ -1,6 +1,8 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
 **Production NO-GO. Free-only purchasing policy remains in effect.**
+The final staging verification section below supersedes earlier staging inspection
+snapshots and owner prerequisites; historical production findings remain separate.
 This is an AI-only configuration review, not a new architecture or release approval.
 Portal, Robot, private environment files, local Ollama and user data are unchanged.
 
@@ -425,3 +427,118 @@ Hosted acceptance uses synthetic accounts with two-hour grants; credentials exis
 only in a mode0600 ephemeral runner file removed after browser tests. Reports contain
 check labels and public deployment origins, not passwords, cookies or bypass tokens.
 Model-dependent workflows remain BLOCKED until real authenticated endpoints exist.
+
+## Staging deployment and hosted verification — 2026-10-10
+
+Existing free Render service `srv-db56mju7bikc73950f60` is now on branch `staging`,
+root `onesa-ai-platform-backend`, Dockerfile CMD without a provider override,
+health path `/core-ready`, and native auto-deploy off. Production was not modified.
+
+- Neon PostgreSQL 18.6 remains on the owner-created AI staging project. Fresh direct
+  owner credentials were verified through the GitHub **Staging** environment, then
+  the identified empty database was migrated transactionally to `20261010_capacity`.
+  `vector` is present. There was no data reset or database recreation.
+- Runtime uses the privately generated `onesa_ai_staging_app` role, pooled connection,
+  TLS and channel binding, pool5/overflow0/connect3s/pool2s, with five-second query
+  limits applied inside every transaction. Role flags, inherited membership,
+  schema creation and migration-table mutation were checked. Migration owner remains
+  confined to authorized operator steps and is not the runtime credential.
+- Read-only application-engine probe [38082791317](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38082791317)
+  verified the pooled driver, TLS, restricted role, current schema and actual `5s` timeout.
+- [Hosted run 38084481075](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38084481075)
+  deployed `898c22424c96c39fd7a19cdcdbcd578416d6c2ce` to protected Preview
+  `https://onesa-ai-platform-1vb2nko5u-druhustles-projects.vercel.app`
+  and `https://onesa-ai-platform-backend-staging.onrender.com`. Initial Render deploy
+  `dep-db5a503rjlhs73cv1ia0` and restart `dep-db5a5l0473hc73adu8p0` became live at that SHA.
+- Real Vercel-to-Render acceptance passed login, uninvited/invalid-user denial,
+  Secure/HttpOnly/SameSite cookies, missing-CSRF/foreign-origin rejection, conversation
+  and explicit arithmetic-tool persistence/isolation, input validation, session expiry,
+  logout/revocation and persistence across the authorized restart. No mock inference
+  was substituted. Liveness/core readiness200, protected APIs401, inference readiness503.
+- Desktop login and five page routes rendered, but the final UI check failed. The
+  staging docs URL build variable was absent, leaving the local default. Staging-only
+  configuration now prepares `NEXT_PUBLIC_ONESA_DOCUMENTATION_URL=https://docs.onesa.eu`.
+  Responsive/accessibility completion and scoped connection-recovery verification
+  still require the next hosted run; do not count them as passed from this snapshot.
+
+The current staging workflow binds GitHub environment **Staging** (branch policy
+only `staging`), requires successful CI and publication hygiene for the exact current
+SHA, and scopes Vercel variables to branch `staging` / target `preview`. The bypass
+credential is used only for this verified Preview host, never forwarded to Render.
+Vercel authentication redirects are verified against HTTPS `vercel.com/sso-api`;
+arbitrary redirects or public200 are not accepted as protection evidence.
+
+Generation/streaming/cancellation, semantic ingestion/retrieval, model-driven agents
+and itinerary generation remain **BLOCKED** by missing real inference/embedding
+hosting. AI mail remains disabled and no durable identity worker is provisioned.
+Private extracted text/chunks/vector data reside in persistent PostgreSQL; a retained
+original-upload archive and internal-docs gateway are not configured. Manual
+accessibility review and production recovery qualification remain required.
+
+Rollback uses an exact previously CI-verified, schema-compatible staging SHA with
+auto-deploy off. Preserve schema/data/role/credentials, keep the frontend and exact
+trusted origin paired, and recheck core readiness/authentication. Do not promote
+this Preview or alter `main`, production DNS or `platform.onesa.eu`.
+
+### Final hosted acceptance — PASS at 21:22 UTC
+
+[Workflow 38086997833](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38086997833)
+completed successfully for application revision
+`4217943553a4b6baa62cec7cbdb419239beea447`, after all eight CI jobs in
+[38086376327](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38086376327) passed.
+
+- Protected frontend: `https://onesa-ai-platform-4bbg0i6xb-druhustles-projects.vercel.app`.
+- Backend: `https://onesa-ai-platform-backend-staging.onrender.com`.
+- Render deployment: `dep-db5anbo473hc73afotvg`; verified restart:
+  `dep-db5ao859fdbs73c735a0`. Both became live at the exact revision above.
+- Schema: `20261010_capacity`, PostgreSQL18.6/vector, restricted pooled role/TLS.
+- Real hosted authentication, cookies, invitation policy, CSRF/origin rejection,
+  input validation, conversation/explicit-tool isolation and persistence, session
+  expiration, logout and revocation all passed again. The current Preview origin
+  was accepted by the live runtime, independently of its control-plane setting.
+- Recovery after interrupting only idle connections of the staging runtime role
+  passed; records and sessions survived the authorized application restart.
+- Chromium desktop1440x900, tablet768x1024 and mobile390x844 passed login, five page
+  routes, horizontal-overflow checks, critical/serious WCAG2A/AA automated checks and
+  public documentation links. `https://docs.onesa.eu` also returned HTTPS200.
+- A preceding cached rollout retained the previous origin in its active runtime
+  despite the saved configuration. The cache-cleared rebuild and live-origin
+  acceptance resolved that observed staging mismatch. Exact-origin enforcement
+  stayed enabled. No production configuration or DNS was modified.
+
+This supersedes the pending responsive/recovery findings above. Real generation,
+streaming/cancellation, semantic retrieval, model-driven planning/travel, durable
+identity-worker email delivery, original-upload archive/internal-docs gateway and
+manual accessibility/production recovery qualification remain unverified or blocked.
+Production remains NO-GO. These later evidence-only documentation changes do not
+claim a different application revision was deployed.
+
+### Current qualified application — 43affff, 21:46 UTC
+
+The proxy boundary correction supersedes the earlier qualified application snapshot.
+[CI 38087814693](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38087814693)
+passed all eight jobs, including the real proxy regression, for
+`43affff15f3443d2ca4f4fb7e640a715f5fea5f3`.
+[Hosted workflow 38088509721](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38088509721)
+completed successfully on that exact application revision.
+
+- Current protected Preview: `https://onesa-ai-platform-5ymg8y7lm-druhustles-projects.vercel.app`.
+- API remains `https://onesa-ai-platform-backend-staging.onrender.com`.
+- Initial Render deployment `dep-db5b2b2jnfac739rskeg` and restart
+  `dep-db5b37vlk1mc739ceej0` both became live at the exact revision above.
+- Schema, restricted runtime role and private credentials are preserved. Hosted
+  login/cookies/CSRF/invitation enforcement/isolation/validation/session expiry and
+  revocation passed again. Restart persistence, scoped idle-connection recovery and
+  all fifteen desktop/tablet/mobile page checks passed, including documentation links,
+  overflow and automated critical/serious WCAG2A/AA checks.
+- The BFF now removes every `x-vercel-*` header and forwards only Onesa session/CSRF
+  cookies. A fetch-transport regression verifies the actual proxy implementation
+  strips provider bypass/identity credentials while preserving application auth.
+  Earlier staging test requests had forwarded the bypass header internally to Render.
+  The owner should rotate that Vercel automation bypass credential and replace the
+  matching GitHub **Staging** secret through the providers' private settings.
+
+No failing hosted checks remain for the tested database-backed staging paths. The
+model/embedding, identity-worker/mail, archive/internal-docs and manual-review/production
+qualification limitations above remain. Production remains NO-GO. This final record
+is documentation only; the deployed and tested application SHA is explicitly retained.

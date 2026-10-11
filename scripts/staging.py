@@ -4,6 +4,8 @@ import argparse
 import json
 import os
 import re
+import sys
+from pathlib import Path
 from urllib.parse import urlencode
 
 from configuration_inventory import REPOSITORY, public_origin, values
@@ -44,12 +46,28 @@ def target():
     return service, values(entries, "envVar")
 
 
-def database_probe(environment):
+def database_probe(environment, *, direct=False):
     raw = environment.get("ONESA_DATABASE_URL", "")
+    validation = {"secret_configured": bool(raw), "url_parsed": False}
     try:
         url = make_url(raw)
+        validation.update(
+            {
+                "url_parsed": True,
+                "expected_host_matches": url.host
+                == (DATABASE_HOST.replace("-pooler", "") if direct else DATABASE_HOST),
+                "pooled_host_supplied": url.host == DATABASE_HOST,
+                "database_name_matches": url.database == "neondb",
+                "driver_supported": url.drivername
+                in {"postgresql", "postgres", "postgresql+psycopg"},
+                "tls_required": url.query.get("sslmode") in {"require", "verify-full"},
+                "channel_binding_required": url.query.get("channel_binding")
+                == "require",
+            }
+        )
         if (
-            url.host != DATABASE_HOST
+            url.host
+            != (DATABASE_HOST.replace("-pooler", "") if direct else DATABASE_HOST)
             or url.database != "neondb"
             or url.drivername not in {"postgresql", "postgres", "postgresql+psycopg"}
             or url.query.get("sslmode") not in {"require", "verify-full"}
@@ -59,15 +77,25 @@ def database_probe(environment):
                 "Unexpected staging database identity or TLS configuration"
             )
         url = url.set(drivername="postgresql+psycopg")
-        engine = create_engine(
-            url,
-            connect_args={"connect_timeout": 10, "prepare_threshold": None},
-            pool_size=1,
-            max_overflow=0,
-        )
+        if direct:
+            engine = create_engine(
+                url,
+                connect_args={"connect_timeout": 10, "prepare_threshold": None},
+                pool_size=1,
+                max_overflow=0,
+            )
+        else:
+            sys.path.insert(
+                0,
+                str(Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend"),
+            )
+            from app.database import make_engine
+
+            engine = make_engine(url.render_as_string(hide_password=False))
         with engine.connect() as connection, connection.begin():
             connection.execute(text("SET TRANSACTION READ ONLY"))
-            connection.execute(text("SET LOCAL statement_timeout = '10s'"))
+            if direct:
+                connection.execute(text("SET LOCAL statement_timeout = '10s'"))
             role = connection.execute(
                 text(
                     "SELECT rolsuper, rolcreaterole, rolcreatedb, rolbypassrls, (SELECT count(*) FROM pg_auth_members WHERE member=pg_roles.oid) FROM pg_roles WHERE rolname=current_user"
@@ -98,6 +126,8 @@ def database_probe(environment):
                 "connection": "PASS",
                 "read_only": True,
                 "driver": "psycopg3",
+                "application_pool_configuration_tested": not direct,
+                "statement_timeout": connection.scalar(text("SHOW statement_timeout")),
                 "database_identity_matches": True,
                 "tls_enabled_on_server_connection": bool(tls),
                 "client_tls_enabled": bool(
@@ -121,6 +151,7 @@ def database_probe(environment):
         return {
             "connection": "FAILED",
             "read_only": True,
+            "configuration_checks": validation,
             "details": "Inspect target, URL syntax, rotated credentials, TLS and provider access privately",
         }
 
@@ -147,47 +178,69 @@ def configure_preview(service):
         or link.get("productionBranch") != "main"
         or metadata.get("rootDirectory") != "onesa-ai-platform-frontend/apps/chat"
         or (metadata.get("ssoProtection") or {}).get("deploymentType")
-        not in {"all", "all_except_custom_domains", "preview"}
+        not in {
+            "all",
+            "all_except_custom_domains",
+            "preview",
+            "prod_deployment_urls_and_all_previews",
+        }
     ):
         raise SystemExit("Protected staging Preview project identity is unverified")
     response, status = get_json(base, path + "/env" + query, token)
     if status != 200 or not isinstance(response.get("envs"), list):
         raise SystemExit("Vercel environment inventory unavailable")
-    scoped = [
-        entry
-        for entry in response["envs"]
-        if entry.get("key") == "ONESA_API_URL"
-        and entry.get("gitBranch") == "staging"
-        and "preview" in entry.get("target", [])
-    ]
-    if scoped:
-        if len(scoped) != 1 or scoped[0].get("value") != origin:
+    desired = {
+        "ONESA_API_URL": origin,
+        "NEXT_PUBLIC_ONESA_DOCUMENTATION_URL": "https://docs.onesa.eu",
+    }
+    missing = []
+    for key, value in desired.items():
+        scoped = [
+            entry
+            for entry in response["envs"]
+            if entry.get("key") == key
+            and entry.get("gitBranch") == "staging"
+            and "preview" in entry.get("target", [])
+        ]
+        if scoped:
+            if (
+                len(scoped) != 1
+                or scoped[0].get("value") != value
+                or scoped[0].get("target") != ["preview"]
+            ):
+                raise SystemExit(
+                    "Existing staging variable conflicts; preserved for review"
+                )
+        else:
+            missing.append((key, value))
+    for key, value in missing:
+        status = write_json(
+            "https://api.vercel.com/v10/",
+            path + "/env" + query,
+            token,
+            {
+                "key": key,
+                "value": value,
+                "type": "plain",
+                "target": ["preview"],
+                "gitBranch": "staging",
+            },
+            "POST",
+        )
+        if status not in {200, 201}:
             raise SystemExit(
-                "Existing staging variable conflicts; preserved for review"
+                "Staging Preview variable update failed; HTTP " + str(status)
             )
-        return {"already_configured": True, "deployment_requested": False}
-    status = write_json(
-        "https://api.vercel.com/v10/",
-        path + "/env" + query,
-        token,
-        {
-            "key": "ONESA_API_URL",
-            "value": origin,
-            "type": "plain",
-            "target": ["preview"],
-            "gitBranch": "staging",
-        },
-        "POST",
-    )
-    if status not in {200, 201}:
-        raise SystemExit("Staging Preview variable update failed; HTTP " + str(status))
     response, status = get_json(base, path + "/env" + query, token)
-    verified = status == 200 and any(
-        entry.get("key") == "ONESA_API_URL"
-        and entry.get("gitBranch") == "staging"
-        and entry.get("target") == ["preview"]
-        and entry.get("value") == origin
-        for entry in response.get("envs", [])
+    verified = status == 200 and all(
+        any(
+            entry.get("key") == key
+            and entry.get("gitBranch") == "staging"
+            and entry.get("target") == ["preview"]
+            and entry.get("value") == value
+            for entry in response.get("envs", [])
+        )
+        for key, value in desired.items()
     )
     if not verified:
         raise SystemExit("Staging Preview variable readback failed")
@@ -202,7 +255,8 @@ def configure_preview(service):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "action", choices=["inspect", "database-probe", "configure-preview"]
+        "action",
+        choices=["inspect", "database-probe", "migration-probe", "configure-preview"],
     )
     action = parser.parse_args().action
     service, environment = target()
@@ -213,8 +267,19 @@ def main():
         ),
         "production_modified": False,
     }
-    if action == "database-probe":
-        report["database"] = database_probe(environment)
+    if action in {"database-probe", "migration-probe"}:
+        if action == "migration-probe":
+            environment = {
+                "ONESA_DATABASE_URL": os.environ.get(
+                    "STAGING_MIGRATION_DATABASE_URL", ""
+                )
+            }
+        report["database"] = database_probe(
+            environment, direct=action == "migration-probe"
+        )
+        report["database_role_scope"] = (
+            "migration" if action == "migration-probe" else "runtime"
+        )
     elif action == "configure-preview":
         report["frontend"] = configure_preview(service)
     else:
@@ -235,7 +300,10 @@ def main():
                 deploy.get("commit", {}).get("id")
             )
     print(json.dumps(report, indent=2))
-    if action == "database-probe" and report["database"]["connection"] != "PASS":
+    if (
+        action in {"database-probe", "migration-probe"}
+        and report["database"]["connection"] != "PASS"
+    ):
         raise SystemExit(1)
 
 

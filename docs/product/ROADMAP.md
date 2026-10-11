@@ -41,16 +41,19 @@ Completed instruction logs and duplicate handoffs have been removed; implementat
 history remains in Git and `docs/development/CHANGELOG.md`. Agent policies live only
 in root `AGENTS.md`.
 
-Owner reports Neon staging resource `onesa-ai-platform-backend-db-staging` created. Verify project/branch ownership, Free plan, PostgreSQL version/schema and isolated role permissions; rotate the disclosed owner credential before any connection. No duplicate Render database is needed. Runtime URL and actual staging origin remain unconfigured.
+The existing Neon AI staging database is migrated and connected through a verified
+restricted runtime role. Protected Vercel Preview and the Render staging backend
+deployed `898c224`; real hosted authentication, CSRF, isolation and restart persistence
+passed. Final hosted run `38088509721` qualified application `43affff`: desktop,
+tablet/mobile, automated accessibility, documentation links and scoped connection
+recovery also passed. The proxy now strips provider headers/cookies while preserving
+Onesa session/CSRF credentials; its regression and hosted authentication passed.
+Manual accessibility review remains required. See
+`docs/engineering/AI_CONFIGURATION_INVENTORY.md` for exact origins/revisions/evidence.
+Hosted inference/embeddings and production acceptance remain blocked; do not recreate
+the staging database, reuse portal credentials or promote staging to production.
 
 
-## Render startup failure follow-up — 2026-10-10
+## Branch protection acceptance
 
-Local implementation and isolated regression verification passed; hosted repair remains
-open. See [the exact evidence, changes and reviewed configuration procedure](../engineering/VERCEL_RENDER.md)
-for current source/deployment revisions and outstanding provider checks. No push or
-deployment, production secret change, DNS/resource/plan change or readiness acceptance.
-
-## Branch protection acceptance — 2026-10-10
-
-Private personal GitHub repositories remain **BLOCKED, NOT ENFORCED** after attempted ruleset/classic protection returned plan-denial HTTP 403. See [verified evidence and prepared policy](../development/BRANCH_PROTECTION_REPORT.md). Production environment approval and native integration gaps remain unresolved; no merge/deployment authorization is implied.
+Private GitHub Free repositories remain unprotected. See [the verified governance report](../development/BRANCH_PROTECTION_REPORT.md). Public production qualification remains separate from isolated staging.

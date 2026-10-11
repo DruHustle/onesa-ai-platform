@@ -1,21 +1,49 @@
 # Development changelog
 
-## 2026-10-10 — GitHub Free governance plan
+## 2026-10-11 — Vercel Standard Protection compatibility
 
-- Selected private GitHub Free operation with voluntary feature-branch PRs, verified
-  CI, manual authorization and least practical write access. No paid upgrade or
-  visibility workaround is proposed; main enforcement remains blocked.
+The staging deployment guard recognizes the documented
+prod_deployment_urls_and_all_previews protection mode alongside existing protected
+modes. Missing/unknown protection still fails before configuration writes. Regression
+checks retain repository/root/main identity, Preview-only scope and conflict refusal.
+Production protection is never disabled.
 
-## 2026-10-10 — Branch protection and governance audit
+## 2026-10-11 — Separate documentation crawler policies
 
-- Verified private personal ownership, admin access, actual PR CI/security check names
-  and deployment/environment evidence across all three repositories.
-- Attempted repository rulesets and classic fallback; GitHub rejected both with HTTP
-  403 requiring Pro eligibility. Main readback remains unprotected, NOT ENFORCED.
-- Prepared exact payloads, solo-developer PR/recovery policy, templates and API-backed
-  reports. Local `deploy.yml` display names now use `deploy-qualification`, `deploy-frontend` and `deploy-backend`; the manual documentation hosting job now displays `docs-hosting`. Job IDs, dependency expressions and deployment behavior are preserved. This removes collisions with required CI checks. These edits are not yet published; merge them through a reviewed PR and verify the resulting names before activating the payload.
-- Existing local work is preserved. No push, merge, deployment, billing, visibility,
-  credential or external provider change was performed.
+Public documentation now emits robots.txt with the public sitemap. Internal builds
+emit a separate disallow policy and retain authentication on every asset, including
+robots.txt. Browser verification checks both emitted files and their HTTP boundaries.
+Preview noindex headers and the public-production release guard remain in place.
+
+## 2026-10-11 — Bounded chat context reads
+
+Chat selects the last 30 messages directly in PostgreSQL, retaining chronological
+model context and message sequences without materializing an unbounded history.
+An isolated integration regression verifies the SQL bound, exact context ordering
+and preservation of all stored conversation messages.
+
+
+## 2026-10-10 — Frontend provider credential boundary
+
+- Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;
+  provider authentication cookies and other frontend cookies stay at the frontend.
+- Added a real proxy regression with an isolated synthetic fetch transport. All
+  eight CI checks and hosted authentication/CSRF, recovery and responsive acceptance
+  passed for `43affff` in workflow `38088509721`.
+
+## 2026-10-10 — Transaction-pooled runtime timeout
+
+- Apply the five-second query limit inside each transaction, preserving bounded
+  pooling and TLS without relying on a session startup option rejected by poolers.
+- Read-only staging probes now use the actual application engine and report its
+  timeout; regression coverage checks new transactions after commit and rollback.
+
+## 2026-10-10 — Staging optional provider settings
+
+- Preserve initialized staging data on retries; omit absent optional Render settings,
+  retain unrelated settings and bound transient provider retries.
+- Unconfigured model/embedding URLs default to empty instead of invented service hosts;
+  Compose continues supplying its explicit internal service URLs. Hosted inference stays blocked.
 
 ## 2026-10-10 — Render startup regression
 
@@ -462,3 +490,31 @@ exact-origin configuration and real hosted security/persistence/restart tests.
 Bound the existing GitHub Staging environment and restricted its deployment branch.
 Corrected Vercel tracing separately from Docker standalone packaging.
 Hosted results remain unverified until the new revision passes CI and deployment.
+
+### 2026-10-11 — Identity worker lifecycle
+
+Graceful termination stops new claims and disposes connections; bounded one-shot
+execution supports a separately qualified scheduler without changing durable mail
+leases, retries or provider idempotency. Hosted delivery remains unqualified.
+
+
+## 2026-10-10 — GitHub Free governance plan
+
+- Selected private GitHub Free operation with voluntary feature-branch PRs, verified
+  CI, manual authorization and least practical write access. No paid upgrade or
+  visibility workaround is proposed; main enforcement remains blocked.
+
+## 2026-10-10 — Branch protection and governance audit
+
+- Verified private personal ownership, admin access, actual PR CI/security check names
+  and deployment/environment evidence across all three repositories.
+- Attempted repository rulesets and classic fallback; GitHub rejected both with HTTP
+  403 requiring Pro eligibility. Main readback remains unprotected, NOT ENFORCED.
+- Prepared exact payloads, solo-developer PR/recovery policy, templates and API-backed
+  reports. Local `deploy.yml` display names now use `deploy-qualification`, `deploy-frontend` and `deploy-backend`; the manual documentation hosting job now displays `docs-hosting`. Job IDs, dependency expressions and deployment behavior are preserved. This removes collisions with required CI checks. These edits are not yet published; merge them through a reviewed PR and verify the resulting names before activating the payload.
+- Existing local work is preserved. No push, merge, deployment, billing, visibility,
+  credential or external provider change was performed.
+
+## 2026-10-11 — Reviewed governance integration
+
+Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.

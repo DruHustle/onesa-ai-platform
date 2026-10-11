@@ -6,7 +6,7 @@ on:
         description: Isolated AI staging operation
         type: choice
         default: inspect
-        options: [inspect, database-probe, configure-preview, deploy-preview, deploy-staging]
+        options: [inspect, database-probe, migration-probe, configure-preview, deploy-preview, deploy-staging]
 permissions:
   contents: read
   actions: read
@@ -34,6 +34,8 @@ jobs:
         run: python -m pip install -r onesa-ai-platform-backend/requirements.lock
       - name: Inspect only the authorized AI staging service
         if: github.ref == 'refs/heads/staging' && inputs.staging_action != 'deploy-preview' && inputs.staging_action != 'deploy-staging'
+        env:
+          STAGING_MIGRATION_DATABASE_URL: ${{ inputs.staging_action == 'migration-probe' && secrets.STAGING_MIGRATION_DATABASE_URL || '' }}
         run: python scripts/staging.py "${{ inputs.staging_action }}"
       - name: Require successful CI on the current staging revision
         if: inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging'
@@ -74,6 +76,7 @@ jobs:
         if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'
         env:
           RENDER_SERVICE_ID: srv-db56mju7bikc73950f60
+          RENDER_CLEAR_CACHE: clear
         run: python scripts/deploy_render.py
       - name: Verify real hosted staging security, persistence and restart
         if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'

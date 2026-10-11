@@ -23,7 +23,9 @@ def test_reauthentication_consumes_presented_same_user_session(api: TestClient) 
     assert api.get("/api/v1/auth/me").status_code == 401
 
 
-def test_account_limits_do_not_lock_out_another_user_at_shared_proxy(api: TestClient) -> None:
+def test_account_limits_do_not_lock_out_another_user_at_shared_proxy(
+    api: TestClient, fixed_auth_window
+) -> None:
     api.app.state.settings.auth_rate_limit = 1
     for email in ["one@example.com", "two@example.com"]:
         data = {"email": email, "password": "wrong-password-123"}
@@ -31,7 +33,7 @@ def test_account_limits_do_not_lock_out_another_user_at_shared_proxy(api: TestCl
         assert api.post("/api/v1/auth/login", json=data).status_code == 429
 
 
-def test_spoofed_forwarding_cannot_bypass_peer_limit(api: TestClient) -> None:
+def test_spoofed_forwarding_cannot_bypass_peer_limit(api: TestClient, fixed_auth_window) -> None:
     api.app.state.settings.auth_peer_rate_limit = 1
     assert (
         api.post(

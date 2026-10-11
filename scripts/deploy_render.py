@@ -44,7 +44,12 @@ def main():
     deployment = request(
         f"services/{service}/deploys",
         token,
-        {"commitId": sha, "clearCache": "do_not_clear"},
+        {
+            "commitId": sha,
+            "clearCache": "clear"
+            if os.environ.get("RENDER_CLEAR_CACHE") == "clear"
+            else "do_not_clear",
+        },
     )
     identifier = deployment.get("id", "")
     if not re.fullmatch(r"dep-[a-zA-Z0-9]+", identifier):

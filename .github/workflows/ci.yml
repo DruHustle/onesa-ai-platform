@@ -41,6 +41,7 @@ jobs:
         with: {node-version: '24', cache: npm, cache-dependency-path: onesa-ai-platform-frontend/apps/chat/package-lock.json}
       - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
       - run: make frontend-check
+      - run: node scripts/test_backend_proxy.cjs
       - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
   browser:
     runs-on: ubuntu-latest

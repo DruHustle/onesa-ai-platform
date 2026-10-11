@@ -118,9 +118,13 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     row.lease_until = now() + timedelta(seconds=request.app.state.settings.generation_timeout + 10)
     history = list(
         db.scalars(
-            select(Message).where(Message.conversation_id == row.id).order_by(Message.sequence)
+            select(Message)
+            .where(Message.conversation_id == row.id)
+            .order_by(Message.sequence.desc())
+            .limit(30)
         )
     )
+    history.reverse()
     # Bound context rather than growing requests without limit.
     messages = [ModelMessage(role=m.role, content=m.content["text"]) for m in history[-30:]]
     if sum(len(m.content) for m in messages) + len(body.content) > 96000:

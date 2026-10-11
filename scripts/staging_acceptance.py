@@ -6,15 +6,33 @@ import secrets
 import sys
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 from argon2 import PasswordHasher
 from psycopg import Error as PsycopgError
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, select, text, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from staging import target
-from staging_release import BACKEND, SERVICE_ID, migration_url, verified_preview
+from staging_release import BACKEND, ROLE, SERVICE_ID, migration_url, verified_preview
+
+
+def preview_is_protected(response):
+    if response.status_code in {401, 403}:
+        return True
+    # Vercel Authentication may deny access through its documented login redirect.
+    # Never follow it or accept an arbitrary redirect as protection evidence.
+    location = urlsplit(response.headers.get("location", ""))
+    return (
+        response.status_code in {302, 303, 307}
+        and location.scheme == "https"
+        and location.hostname == "vercel.com"
+        and location.path == "/sso-api"
+        and not location.username
+        and not location.password
+        and location.port in {None, 443}
+    )
 
 
 def main():
@@ -64,7 +82,7 @@ def main():
                 )
         phase = "preview-protection"
         response = httpx.get(origin, timeout=30, follow_redirects=False)
-        if response.status_code not in {401, 403}:
+        if not preview_is_protected(response):
             raise ValueError("Unauthenticated Preview is not access restricted")
         checks.append("unauthorized_preview_denied")
         headers = {"x-vercel-protection-bypass": bypass, "Origin": origin}
@@ -77,6 +95,17 @@ def main():
         html = require(clients[0].get("/"), 200, "authorized_preview_html")
         if "Onesa" not in html.text:
             raise ValueError("Expected application HTML is absent")
+        require(
+            clients[2].post(
+                "/api/v1/auth/login",
+                json={
+                    "email": "origin-probe-" + secrets.token_hex(10) + "@example.com",
+                    "password": "synthetic-invalid-password",
+                },
+            ),
+            401,
+            "live_runtime_accepts_current_preview_origin",
+        )
         phase = "synthetic-identity-fixtures"
         sys.path.insert(0, str(BACKEND))
         from app.models import AccessGrant, AuthSession, User, now
@@ -354,6 +383,25 @@ def main():
             clients[0].get("/api/v1/agents/runs/" + run["id"]),
             200,
             "explicit_tool_run_survives_restart",
+        )
+        phase = "scoped-idle-connection-recovery"
+        # Interrupt only idle connections of this verified staging runtime role.
+        # Active queries, owner/migration sessions and other products are untouched.
+        with engine.begin() as connection:
+            recovered_connections = connection.scalars(
+                text(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid IN (SELECT pid FROM pg_stat_activity WHERE usename=:role AND datname='neondb' AND state='idle' AND pid<>pg_backend_pid() LIMIT 5)"
+                ),
+                {"role": ROLE},
+            ).all()
+        if not any(recovered_connections):
+            raise ValueError(
+                "No idle staging connection was available for recovery verification"
+            )
+        require(
+            clients[0].get("/api/v1/conversations/" + conversation),
+            200,
+            "staging_connection_recovers_after_idle_disconnect",
         )
         # Account grants expire in two hours; keep synthetic records for persistence evidence.
         with Session(engine) as db:

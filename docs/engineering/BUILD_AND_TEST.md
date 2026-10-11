@@ -44,6 +44,18 @@ Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers
 `tls-acceptance`. Add `publication-hygiene` to required checks. CI runs on all pushes and pull requests so required jobs can report consistently. No remote
 CI success is implied by local build/test results.
 
+## Identity worker lifecycle
+
+Run `python -m app.identity_worker` from the backend environment with the same
+scoped database and mail settings as the API. SIGTERM/SIGINT stops new claims,
+lets the current bounded delivery attempt complete, and closes its connection pool.
+`--once` claims at most one eligible job; `--max-jobs 20` bounds one scheduled run
+and exits immediately when no work is currently eligible. Retries remain durable
+and require a subsequent invocation. Provider acceptance does not prove delivery.
+These modes prepare a scheduler integration; no hosted worker or delivery is
+qualified merely by enabling the command. Keep scheduler secrets server-side.
+
+
 After building the backend production image, run
 `python3 scripts/startup_smoke.py onesa-api:local`. This exercises Dockerfile CMD,
 installed Uvicorn/factory, provider PORT, liveness, missing dependency 503, SIGTERM,
