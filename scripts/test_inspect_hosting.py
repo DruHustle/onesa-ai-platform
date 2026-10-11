@@ -20,6 +20,25 @@ class HostingInspectionTests(unittest.TestCase):
         self.assertNotIn("ONESA_MODEL_CONFIG", keys)
         self.assertTrue(all(key.startswith("ONESA_") for key in keys))
 
+    def test_startup_overrides_and_role_errors_are_classified_without_disclosure(self):
+        marker = "synthetic-private-token"
+        self.assertEqual(inspect_hosting.startup_override(""), "dockerfile_cmd")
+        result = inspect_hosting.startup_override("exec uvicorn --token=" + marker)
+        self.assertNotIn(marker, result)
+        categories = inspect_hosting.log_categories(
+            {
+                "logs": [
+                    {
+                        "message": "sh: exec uvicorn app.main:create_app --factory: not found"
+                    },
+                    {"message": "DATABASE_ROLE " + marker},
+                ]
+            }
+        )
+        self.assertIn("shell_startup_command_not_found", categories)
+        self.assertIn("database_role_unsafe", categories)
+        self.assertNotIn(marker, str(categories))
+
     def test_only_required_environment_presence_is_returned(self):
         marker = "synthetic-private-value-must-not-be-logged"
         entries = [
@@ -76,7 +95,7 @@ class HostingInspectionTests(unittest.TestCase):
         command = repair_hosting.configuration(False, False)["serviceDetails"][
             "envSpecificDetails"
         ]["dockerCommand"]
-        self.assertEqual(command, "sh /app/start.sh")
+        self.assertEqual(command, "")
         script = (
             Path(__file__).resolve().parents[1] / "onesa-ai-platform-backend/start.sh"
         )

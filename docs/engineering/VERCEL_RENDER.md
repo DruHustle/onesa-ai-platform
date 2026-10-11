@@ -1,9 +1,24 @@
 # Vercel frontend and Render backend
 
-The repository contains provider configuration, not a completed remote deployment.
+Staging accepts the current Vercel Standard Protection API value
+`prod_deployment_urls_and_all_previews`, as well as existing protected modes.
+Missing or unknown protection still blocks Preview configuration/deployment.
+See [Vercel Authentication](https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication).
+
+Production remains unqualified. The existing isolated staging deployment and its
+verified provider evidence are recorded in `AI_CONFIGURATION_INVENTORY.md`.
 Use the private `onesa-ug/onesa-ai-platform` GitHub repository and `main`. The frontend and
 backend remain separate release units. Grant the providers access only to the required
 organization repositories. Deploy through `.github/workflows/deploy.yml`, dispatched from GitHub Actions.
+
+For isolated AI staging, dispatch `repair-hosting.yml` on branch `staging` with
+`staging_action=deploy-staging`. It requires successful exact-revision CI/hygiene,
+uses the protected GitHub **Staging** environment, builds Vercel Preview with
+staging-only `ONESA_API_URL` and `NEXT_PUBLIC_ONESA_DOCUMENTATION_URL`, verifies the
+existing Neon schema/restricted role and deploys only the identified free Render
+staging service. Migration and automation-bypass credentials remain private in that
+environment. The workflow verifies real hosted security, restart persistence,
+bounded idle staging-connection recovery and responsive/accessibility checks.
 
 ## Vercel
 
@@ -140,3 +155,8 @@ Production deployment still requires a reviewed exact-commit qualification recor
 and absent nonsecret configuration, then reads it back. Repository and runtime
 identity must match before any update. This does not deploy or migrate the database;
 missing database/model credentials and qualification remain explicit blockers.
+
+
+## Current AI staging deployment
+
+The exact staging revision a25bfb02a46101aaa3afd74bfc51ce371b3d1673 passed CI and hosted deployment workflow 38105826742. Render uses Dockerfile CMD with its command override cleared; /health and /core-ready return 200. Hosted authentication, account isolation, CSRF and restart persistence passed 39 checks; protected Preview passed 15 desktop/tablet/mobile checks. This resolves the staging exit-127 startup fault. /ready remains an honest 503 because no approved model endpoint exists. Real semantic embeddings, worker delivery and public production acceptance remain unqualified. Subsequent releases must pass current-revision CI and the staging workflow again.

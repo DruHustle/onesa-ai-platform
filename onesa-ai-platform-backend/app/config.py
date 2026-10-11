@@ -51,11 +51,11 @@ class Settings(BaseSettings):
     knowledge_user_text_bytes: int = Field(default=16 * 1024 * 1024, ge=256000)
     knowledge_global_text_bytes: int = Field(default=256 * 1024 * 1024, ge=256000)
     generation_timeout: float = Field(default=60, ge=1, le=120)
-    model_base_url: str = "http://inference:8000/v1"
+    model_base_url: str = ""
     model_api_key: str = ""
     embedding_backend: Literal["lexical", "http"] = "lexical"
     embedding_name: str = "onesa-lexical-256-v1"
-    embedding_base_url: str = "http://embeddings:8000/v1"
+    embedding_base_url: str = ""
     embedding_api_key: str = ""
     metrics_token: str = ""
     embedding_revision: str = "1"

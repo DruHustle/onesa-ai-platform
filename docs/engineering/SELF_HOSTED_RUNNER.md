@@ -152,5 +152,13 @@ self-hosted access. Runner policy removal is independent of application rollback
 
 ## Hosted CI evidence — 2026-10-11
 
-Policy candidate `b7ec084` passed hosted x86 push validation; [push CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136350828) and [PR CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136455835) retain real PostgreSQL/pgvector integration and browser/documentation checks. PR and implemented-snapshot runs were still in progress when this evidence entry was recorded. Separate implemented snapshot `cd6b6a7` [CI](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38136455982) also retains implemented software checks. Inspect current conclusions rather than treating in-progress or skipped local jobs as passed. Final corrections require fresh checks before merge.
+Owner merged the main runner-policy PR. This audit reconciliation preserves the
+newer staging operator commands and all eight existing software validation jobs;
+the private reusable gate includes startup, PDF restrictions, full image scanning,
+staging regression tests and Linux lease/visibility tests. No runner is registered
+or activated. Current AI core staging passed hosted security/persistence/restart
+and protected browser acceptance in run38136903572 at c13c283; actual model generation
+and semantic embedding readiness remain blocked. CI policy changes do not promote
+production or imply a production inference service.
+
 GitHub currently reports no main branch protection (404) and no applicable branch rules ([]); this migration did not change enforcement settings. PR/check discipline and production approvals remain required.

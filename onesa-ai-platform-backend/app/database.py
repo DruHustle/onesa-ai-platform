@@ -1,21 +1,29 @@
 from collections.abc import Iterator
 
 from fastapi import Request
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Connection, Engine, create_engine, event
 from sqlalchemy.orm import Session
 
 from app.errors import fail
 
 
 def make_engine(url: str) -> Engine:
-    return create_engine(
+    engine = create_engine(
         url,
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=0,
         pool_timeout=2,
-        connect_args={"connect_timeout": 3, "options": "-c statement_timeout=5000"},
+        connect_args={"connect_timeout": 3},
     )
+
+    @event.listens_for(engine, "begin")
+    def bound_transaction(connection: Connection) -> None:
+        # Transaction-local settings survive PgBouncer backend switching without
+        # unsupported startup options or leaking session state to another client.
+        connection.exec_driver_sql("SET LOCAL statement_timeout = '5s'")
+
+    return engine
 
 
 def database(request: Request) -> Iterator[Session]:

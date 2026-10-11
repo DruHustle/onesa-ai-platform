@@ -13,6 +13,15 @@ from app.config import Settings
 from app.main import create_app
 
 
+@pytest.fixture
+def fixed_auth_window(monkeypatch):
+    """Rate-limit assertions share one window even at a real clock boundary."""
+    from app import auth
+
+    instant = auth.now()
+    monkeypatch.setattr(auth, "now", lambda: instant)
+
+
 @pytest.fixture(scope="session")
 def pg() -> Iterator[Engine]:
     url = os.environ.get("ONESA_TEST_DATABASE_URL")

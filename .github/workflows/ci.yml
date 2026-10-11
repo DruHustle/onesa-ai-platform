@@ -48,7 +48,10 @@ jobs:
     - run: make check
     - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
     - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
-    - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
+    - run: python3 -m unittest discover -s scripts/runner -p 'test_*.py'
+    - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
+    - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
+    - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
@@ -78,6 +81,7 @@ jobs:
         cache-dependency-path: onesa-ai-platform-frontend/apps/chat/package-lock.json
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make frontend-check
+    - run: node scripts/test_backend_proxy.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
     needs:
     - local-validation
@@ -111,6 +115,7 @@ jobs:
         python-version: '3.11'
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets
@@ -153,7 +158,36 @@ jobs:
         cache: npm
         cache-dependency-path: onesa-ai-platform-frontend/apps/docs/package-lock.json
     - run: make install
+    - name: Read reviewed cross-project source revisions
+      id: docs-sources
+      run: |
+        python3 - <<'PY'
+        import json, os
+        from pathlib import Path
+        revisions=json.loads(Path('docs/ecosystem/source-revisions.json').read_text())
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            output.write('portal=' + revisions['onesa-company-portal']['commit'] + '\n')
+            output.write('robot=' + revisions['onesa-ai-robot']['commit'] + '\n')
+        PY
+    - uses: actions/checkout@v4
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-company-portal
+        ref: ${{ steps.docs-sources.outputs.portal }}
+        path: data/docs-sources/portal
+        persist-credentials: false
+    - uses: actions/checkout@v4
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-ai-robot
+        ref: ${{ steps.docs-sources.outputs.robot }}
+        path: data/docs-sources/robot
+        persist-credentials: false
+    - name: Verify pinned Portal and Robot source contracts
+      if: github.event.repository.private == false
+      run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
@@ -161,8 +195,12 @@ jobs:
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
+    - name: Verify static public docs interactions and accessibility
+      run: |
+        ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+        node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
-    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down
@@ -273,6 +311,9 @@ jobs:
         ref: ${{ github.sha }}
     - name: Build application runtime
       run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+    - name: Verify default production image startup and shutdown
+      if: matrix.application == 'onesa-ai-platform-backend'
+      run: python3 scripts/startup_smoke.py onesa-security-candidate:ci
     - name: Verify native release-image PDF restrictions
       if: matrix.application == 'onesa-ai-platform-backend'
       run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py

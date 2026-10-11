@@ -37,7 +37,7 @@ Health checks process liveness; readiness checks configured model availability a
 For Ollama, discovery proves a model is installed, not resident, warm, accurate or within a
 production SLA. Missing model, timeout and connection failures are sanitized; disconnects close
 upstream HTTP and preserve only the user turn. Actual model behavior/results are recorded in
-models/INFERENCE_BENCHMARKS.md and development/SESSION_HANDOFF.md.
+models/INFERENCE_BENCHMARKS.md and product/ROADMAP.md.
 
 
 ## Qualified local semantic candidate

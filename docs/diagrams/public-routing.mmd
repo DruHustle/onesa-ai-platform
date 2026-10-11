@@ -1,0 +1,8 @@
+flowchart TB
+Request[Owned authenticated request] --> Client[Shared model adapter]
+Client --> Ollama[Ollama local development only]
+Client --> Mock[Labelled deterministic test mock]
+Client -. approved checkpoint and host required .-> VLLM[vLLM proposed production runtime]
+Client --> Stream[Streaming timeout and cancellation]
+Stream --> Persist[Persist owned message state]
+VLLM -. missing endpoint means unavailable .-> Error[Honest model error no silent mock fallback]

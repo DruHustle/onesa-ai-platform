@@ -11,7 +11,7 @@ services:
     rootDir: onesa-ai-platform-backend
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    dockerCommand: sh /app/start.sh
+    # Dockerfile CMD is the authoritative API startup command.
     healthCheckPath: /core-ready
     autoDeployTrigger: 'off'
     envVars:

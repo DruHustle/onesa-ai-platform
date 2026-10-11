@@ -1,9 +1,11 @@
 """Durable identity-mail outbox. Provider acceptance is distinct from delivery."""
 
+import argparse
 import hashlib
 import secrets
-import time
+import signal
 from datetime import timedelta
+from threading import Event
 from uuid import uuid4
 
 import httpx
@@ -97,16 +99,62 @@ def process_one(engine: Engine, settings: Settings, client: httpx.Client) -> boo
     return True
 
 
+def run_worker(
+    engine: Engine,
+    settings: Settings,
+    client: httpx.Client,
+    stop: Event,
+    max_jobs: int | None = None,
+) -> int:
+    """Stop claiming after termination; finish the current bounded provider request.
+
+    A bounded invocation exits on an empty queue. Durable retries remain queued for
+    the next invocation; it never sleeps until a future retry becomes eligible.
+    """
+    if max_jobs is not None and max_jobs < 1:
+        raise ValueError("max_jobs must be positive")
+    processed = 0
+    while not stop.is_set() and (max_jobs is None or processed < max_jobs):
+        maintenance(engine)
+        if stop.is_set():
+            break
+        if process_one(engine, settings, client):
+            processed += 1
+        elif max_jobs is not None:
+            break
+        else:
+            stop.wait(2)
+    return processed
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--once", action="store_true", help="Process at most one eligible job")
+    parser.add_argument(
+        "--max-jobs", type=int, help="Bound claims and exit when the queue is empty"
+    )
+    args = parser.parse_args()
+    if args.max_jobs is not None and args.max_jobs < 1:
+        parser.error("--max-jobs must be positive")
+    if args.once and args.max_jobs is not None:
+        parser.error("Choose --once or --max-jobs")
     settings = Settings()
     if not settings.database_url:
         raise RuntimeError("Identity worker requires a configured database")
-    engine = make_engine(settings.database_url)
-    with httpx.Client(follow_redirects=False) as client:
-        while True:
-            maintenance(engine)
-            if not process_one(engine, settings, client):
-                time.sleep(2)
+    stop = Event()
+    previous = {}
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        previous[sig] = signal.signal(sig, lambda _sig, _frame: stop.set())
+    engine = None
+    try:
+        engine = make_engine(settings.database_url)
+        with httpx.Client(follow_redirects=False) as client:
+            run_worker(engine, settings, client, stop, 1 if args.once else args.max_jobs)
+    finally:
+        if engine is not None:
+            engine.dispose()
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 def maintenance(engine: Engine) -> None:
@@ -117,6 +165,17 @@ def maintenance(engine: Engine) -> None:
             update(IdentityMail)
             .where(IdentityMail.token_id.in_(expired), IdentityMail.state.in_(["queued", "leased"]))
             .values(state="cancelled", lease_until=None, lease_id=None)
+        )
+        # A crash on the final claim must not leave work permanently leased.
+        # Preserve an active final lease so its owner can still record acceptance.
+        db.execute(
+            update(IdentityMail)
+            .where(
+                IdentityMail.state.in_(["queued", "leased"]),
+                IdentityMail.attempts >= 5,
+                or_(IdentityMail.lease_until.is_(None), IdentityMail.lease_until < now()),
+            )
+            .values(state="failed", lease_until=None, lease_id=None)
         )
         db.commit()
 

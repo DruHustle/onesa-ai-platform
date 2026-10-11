@@ -1,8 +1,8 @@
 {
-  "status": "PROPOSED_NOT_PROVISIONED",
+  "status": "OWNER_REPORTED_CREATED_NOT_VERIFIED",
   "provider": "Neon",
-  "plan": "Free",
-  "name": "onesa-ai-db-staging",
+  "plan": "UNVERIFIED_IN_NEON_CONSOLE",
+  "name": "onesa-ai-platform-backend-db-staging",
   "region": "aws-eu-central-1",
   "postgres_major_version": "16",
   "monthly_subscription_usd": 0,
@@ -20,5 +20,10 @@
   "reuse_portal_credentials": false,
   "reuse_verified_existing_ai_project_first": true,
   "no_paid_upgrade_or_trial": true,
-  "no_live_migration_without_identified_staging_target": true
+  "no_live_migration_without_identified_staging_target": true,
+  "actual_database_name": "neondb",
+  "pooled_host": "ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech",
+  "credentials_exposed_require_rotation": true,
+  "ownership_schema_version_roles_unverified": true,
+  "limits_are_proposal_not_verified_account_values": true
 }

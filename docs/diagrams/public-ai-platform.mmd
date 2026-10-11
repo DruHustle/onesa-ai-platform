@@ -1,0 +1,13 @@
+flowchart TB
+Web[Next.js Chat Knowledge Agents Travel] --> Proxy[Same-origin server API boundary]
+Proxy --> API[FastAPI identity and ownership]
+API --> Chat[Persisted conversations]
+API --> RAG[Knowledge parsing and retrieval]
+API --> Agents[Registered permitted tools]
+API --> Travel[Owned saved itineraries]
+Chat --> DB[Separate AI PostgreSQL]
+RAG --> DB
+Agents --> DB
+Travel --> DB
+API --> Model[Generation unavailable without real endpoint]
+RAG --> Embed[Separate embedding dependency unavailable]

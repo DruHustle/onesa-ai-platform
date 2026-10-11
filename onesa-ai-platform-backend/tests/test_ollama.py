@@ -18,6 +18,11 @@ from app.inference import (
 )
 
 
+@pytest.fixture(autouse=True)
+def explicit_transport_endpoint(monkeypatch):
+    monkeypatch.setenv("ONESA_MODEL_BASE_URL", "https://model.example.invalid/v1")
+
+
 @pytest.mark.parametrize("backend", ["ollama", "vllm"])
 def test_shared_mapping_context_and_request_owned_usage(backend: str) -> None:
     def handler(request: httpx.Request) -> httpx.Response:

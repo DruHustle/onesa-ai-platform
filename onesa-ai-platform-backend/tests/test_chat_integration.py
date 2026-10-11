@@ -53,7 +53,7 @@ def test_login_and_expiry(api: TestClient, pg: Engine) -> None:
     assert api.get("/api/v1/auth/me").status_code == 401
 
 
-def test_origin_and_rate_limit(api: TestClient) -> None:
+def test_origin_and_rate_limit(api: TestClient, fixed_auth_window) -> None:
     data = {"email": "nobody@example.com", "password": "wrong-password-123"}
     api.headers["Origin"] = "https://attacker.invalid"
     assert api.post("/api/v1/auth/login", json=data).status_code == 403
@@ -115,6 +115,54 @@ def test_model_failure_keeps_user_but_not_partial_assistant(api: TestClient, pg:
         assert run is not None and run.status == "failed"
         row = db.get(Conversation, UUID(identifier))
         assert row is not None and row.active_run_id is None
+
+
+def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
+    from sqlalchemy import event
+
+    signup(api)
+    identifier = new(api)
+    with Session(pg) as db:
+        db.add_all(
+            Message(
+                conversation_id=UUID(identifier),
+                role="user" if sequence % 2 else "assistant",
+                content={"text": f"turn-{sequence}"},
+                sequence=sequence,
+            )
+            for sequence in range(1, 76)
+        )
+        db.commit()
+    context = []
+    bounded_queries = []
+
+    class Capture(MockModelClient):
+        async def stream(self, messages):
+            context.extend(messages)
+            yield "Synthetic response"
+
+    def observe(_conn, _cursor, statement, parameters, _context, _executemany):
+        if "FROM messages" in statement and "ORDER BY messages.sequence DESC" in statement:
+            bounded_queries.append((statement, parameters))
+
+    api.app.state.model_client = Capture()
+    event.listen(api.app.state.engine, "before_cursor_execute", observe)
+    try:
+        response = api.post(
+            "/api/v1/chat/completions",
+            json={"conversation_id": identifier, "content": "Next", "stream": False},
+        )
+        assert response.status_code == 200
+    finally:
+        event.remove(api.app.state.engine, "before_cursor_execute", observe)
+    assert [message.content for message in context] == [
+        *[f"turn-{sequence}" for sequence in range(46, 76)],
+        "Next",
+    ]
+    assert len(bounded_queries) == 1 and "LIMIT" in bounded_queries[0][0]
+    assert 30 in bounded_queries[0][1].values()
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert [item["sequence"] for item in history] == list(range(1, 78))
 
 
 def test_busy_and_expired_lease_recovery(api: TestClient, pg: Engine) -> None:
@@ -271,6 +319,7 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
 
     signup(api)
     api.app.state.settings.model_backend = "ollama"
+    api.app.state.settings.model_base_url = "https://model.example.invalid/v1"
     api.app.state.settings.model_name = "test-model"
     api.app.state.model_client = OllamaModelClient(
         api.app.state.settings, httpx.MockTransport(handler)

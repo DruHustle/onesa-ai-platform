@@ -1,5 +1,86 @@
 # Development changelog
 
+## 2026-10-11 — Preserve qualified staging with owner runner policy
+
+- Merge all current staging corrections and owner-approved runner routing by ordinary
+  merges. Preserve bounded chat history, exhausted mail leases, public PDF links,
+  crawler policies, Preview protection and staging operator regression coverage.
+- Keep all software, browser, docs, startup and full image-security checks in the
+  private reusable gate; public jobs use hosted execution and verify live visibility.
+- Keep obsolete implementation and session handoff files removed. No local runner
+  activation, production promotion, billing or physical control.
+
+## 2026-10-11 — Public repository hosted Actions
+
+- Record the owner-selected temporary public visibility and standard GitHub-hosted
+  runner policy. Local runners remain private-only; retain security and release gates.
+- Clarify that earlier private-plan protection failures are historical and do not
+  establish current public-repository enforcement. No billing or protection settings changed.
+
+## 2026-10-11 — Final identity-mail lease crash recovery
+
+Expired final-attempt mail leases become failed during maintenance, preserving
+active final leases and recording no fabricated provider acceptance. Regression
+tests use real isolated PostgreSQL and prove that a sixth send is not attempted.
+Reconcile provider receipts before manually retrying an ambiguously completed job.
+
+Public PDF source references now target `https://docs.onesa.eu` rather than a local
+development server. Artifact validation inspects every public manual's actual PDF
+link annotations and requires its declared source references to use the public site.
+
+## 2026-10-11 — Vercel Standard Protection compatibility
+
+The staging deployment guard recognizes the documented
+prod_deployment_urls_and_all_previews protection mode alongside existing protected
+modes. Missing/unknown protection still fails before configuration writes. Regression
+checks retain repository/root/main identity, Preview-only scope and conflict refusal.
+Production protection is never disabled.
+
+## 2026-10-11 — Separate documentation crawler policies
+
+Public documentation now emits robots.txt with the public sitemap. Internal builds
+emit a separate disallow policy and retain authentication on every asset, including
+robots.txt. Browser verification checks both emitted files and their HTTP boundaries.
+Preview noindex headers and the public-production release guard remain in place.
+
+## 2026-10-11 — Bounded chat context reads
+
+Chat selects the last 30 messages directly in PostgreSQL, retaining chronological
+model context and message sequences without materializing an unbounded history.
+An isolated integration regression verifies the SQL bound, exact context ordering
+and preservation of all stored conversation messages.
+
+
+## 2026-10-10 — Frontend provider credential boundary
+
+- Strip Vercel bypass headers and forward only Onesa session/CSRF cookies to the API;
+  provider authentication cookies and other frontend cookies stay at the frontend.
+- Added a real proxy regression with an isolated synthetic fetch transport. All
+  eight CI checks and hosted authentication/CSRF, recovery and responsive acceptance
+  passed for `43affff` in workflow `38088509721`.
+
+## 2026-10-10 — Transaction-pooled runtime timeout
+
+- Apply the five-second query limit inside each transaction, preserving bounded
+  pooling and TLS without relying on a session startup option rejected by poolers.
+- Read-only staging probes now use the actual application engine and report its
+  timeout; regression coverage checks new transactions after commit and rollback.
+
+## 2026-10-10 — Staging optional provider settings
+
+- Preserve initialized staging data on retries; omit absent optional Render settings,
+  retain unrelated settings and bound transient provider retries.
+- Unconfigured model/embedding URLs default to empty instead of invented service hosts;
+  Compose continues supplying its explicit internal service URLs. Hosted inference stays blocked.
+
+## 2026-10-10 — Render startup regression
+
+- Made Dockerfile CMD authoritative in AI configuration and added final-image startup,
+  PORT, liveness, dependency failure and SIGTERM verification to CI.
+- Added safe provider command classifications and staging revision readback.
+- Local backend integration: 147 passed, four platform-dependent skips; hosted repair
+  remains unverified. No push/deployment or inference-readiness claim.
+
 ## 2026-10-10 — Local semantic retrieval qualification
 
 - Added optional private pinned Qwen3-Embedding-0.6B serving, 256/1024 normalized outputs,
@@ -413,8 +494,66 @@ Added AI-only, read-only provider inventory for actual backend origin, provider 
 
 Prepared complete source-backed AI configuration matrix, verified origin/proxy values, temporary free Render PostgreSQL staging proposal and standalone loopback-only vLLM host proposal. Corrected production example to retain semantic embedding candidate; no private environment files or other projects modified. Local isolated PostgreSQL147passed4skipped; hosted API503 remains open.
 
-## 2026-10-11 — Visibility-aware Actions policy
+## 2026-10-10 — Instruction documentation cleanup
 
-- Public repositories use hosted execution with zero local registration access; the former portal service was removed and its VM/login startup stopped. Repository visibility was not changed.
-- Private workflows use a shared exact-revision local validation phase before cloud checks, preserving existing check names and release approvals. Runtime visibility hooks deny public/missing-token/API-failure execution independently of workflow conditions.
-- Public cloud CI results and private unverified activation limitations are recorded in the runner maintenance guide after verification. Production remains gated.
+Removed completed GitHub setup instructions and duplicate status/session-handoff
+logs. Consolidated contribution, security, repository governance and agent policies
+in one root AGENTS.md per independent repository. Preserved unfinished work in
+existing roadmap/release documentation, updated links and documentation tooling.
+
+## 2026-10-10 — Owner-created AI staging database
+
+Recorded the owner-reported isolated Neon resource `onesa-ai-platform-backend-db-staging`, superseding the Render staging database creation request. Updated staging template and private ignored staging profile without copying the disclosed owner password. Preserved local/production/Portal configuration. Hosted ownership/schema/TLS/roles and migrations remain unverified until fresh private credentials are available.
+
+### Isolated AI staging configuration
+
+Added a scope-checked staging diagnostic and Preview-only configuration/deployment path.
+CI and publication hygiene must pass on the current staging SHA before deployment.
+Recorded actual PostgreSQL 18.6, empty staging schema and privileged-role blocker;
+client TLS is checked separately from the Neon pooler internal connection.
+Production branch and provider settings remain unchanged.
+
+Prepared staging-only controlled migrations, restricted runtime-role provisioning,
+exact-origin configuration and real hosted security/persistence/restart tests.
+Bound the existing GitHub Staging environment and restricted its deployment branch.
+Corrected Vercel tracing separately from Docker standalone packaging.
+Hosted results remain unverified until the new revision passes CI and deployment.
+
+### 2026-10-11 — Identity worker lifecycle
+
+Graceful termination stops new claims and disposes connections; bounded one-shot
+execution supports a separately qualified scheduler without changing durable mail
+leases, retries or provider idempotency. Hosted delivery remains unqualified.
+
+
+## 2026-10-10 — GitHub Free governance plan
+
+- Selected private GitHub Free operation with voluntary feature-branch PRs, verified
+  CI, manual authorization and least practical write access. No paid upgrade or
+  visibility workaround is proposed; main enforcement remains blocked.
+
+## 2026-10-10 — Branch protection and governance audit
+
+- Verified private personal ownership, admin access, actual PR CI/security check names
+  and deployment/environment evidence across all three repositories.
+- Attempted repository rulesets and classic fallback; GitHub rejected both with HTTP
+  403 requiring Pro eligibility. Main readback remains unprotected, NOT ENFORCED.
+- Prepared exact payloads, solo-developer PR/recovery policy, templates and API-backed
+  reports. Local `deploy.yml` display names now use `deploy-qualification`, `deploy-frontend` and `deploy-backend`; the manual documentation hosting job now displays `docs-hosting`. Job IDs, dependency expressions and deployment behavior are preserved. This removes collisions with required CI checks. These edits are not yet published; merge them through a reviewed PR and verify the resulting names before activating the payload.
+- Existing local work is preserved. No push, merge, deployment, billing, visibility,
+  credential or external provider change was performed.
+
+## 2026-10-11 — Reviewed governance integration
+
+Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.
+
+## Documentation ecosystem reference 0.3.0 — 2026-10-11
+
+Extended the existing Docusaurus portal across Company Portal, AI Platform and
+Robot, with source-pinned Fastify/FastAPI explorers, current generated AI schema,
+16 ecosystem diagram groups, readable private ERDs and ten additional engineering
+manuals. Fixed architecture view selection, dated table-count/schema prose, Swagger
+accessible labels/nested controls and low-contrast badges. Added static interaction,
+link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
+The public static build remains independent of application release approval. Hosted
+internal access and actual model/hardware functionality are not claimed complete.

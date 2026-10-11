@@ -33,7 +33,7 @@ def configuration(portal, worker):
     root = "onesa-company-portal-backend" if portal else "onesa-ai-platform-backend"
     command = "node dist/src/jobs/worker.js" if worker else "node dist/src/server.js"
     if not portal:
-        command = "sh /app/start.sh"
+        command = ""  # Clear provider override; use the tested Dockerfile CMD.
     details = {
         "envSpecificDetails": {
             "dockerfilePath": "./Dockerfile",

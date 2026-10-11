@@ -43,7 +43,10 @@ jobs:
     - run: make check
     - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
     - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
-    - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
+    - run: python3 -m unittest discover -s scripts/runner -p 'test_*.py'
+    - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
+    - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
+    - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
@@ -67,6 +70,7 @@ jobs:
         cache-dependency-path: onesa-ai-platform-frontend/apps/chat/package-lock.json
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make frontend-check
+    - run: node scripts/test_backend_proxy.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
     timeout-minutes: 120
     if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
@@ -97,6 +101,7 @@ jobs:
         python-version: '3.11'
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets
@@ -137,6 +142,7 @@ jobs:
         cache-dependency-path: onesa-ai-platform-frontend/apps/docs/package-lock.json
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
@@ -144,8 +150,12 @@ jobs:
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
+    - name: Verify static public docs interactions and accessibility
+      run: |
+        ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+        node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
-    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down --volumes --remove-orphans
@@ -246,15 +256,18 @@ jobs:
         persist-credentials: false
         ref: ${{ github.sha }}
     - name: Build application runtime
-      run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+      run: docker build -t onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} ./${{ matrix.application }}
+    - name: Verify default production image startup and shutdown
+      if: matrix.application == 'onesa-ai-platform-backend'
+      run: python3 scripts/startup_smoke.py onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }}
     - name: Verify native release-image PDF restrictions
       if: matrix.application == 'onesa-ai-platform-backend'
-      run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py
+      run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} python - < scripts/release/pdf_image_probe.py
     - name: Scan full runtime, including unfixed vendor advisories
       run: |
         mkdir -p data/security
         chmod 700 data/security
-        docker save onesa-security-candidate:ci -o data/security/runtime.tar
+        docker save onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} -o data/security/runtime.tar
         docker run --rm --user "$(id -u):$(id -g)" -e TRIVY_CACHE_DIR=/tmp/trivy-cache -v "$PWD/data/security:/reports" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln,secret --format json --output /reports/runtime.json --input /reports/runtime.tar
         chmod 600 data/security/runtime.json
         python3 scripts/release/image_gate.py data/security/runtime.json

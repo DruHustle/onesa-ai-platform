@@ -1,0 +1,12 @@
+flowchart TB
+Services[Product services] --> Live[Process liveness]
+Services --> Core[Database and core readiness]
+Services --> Model[Separate inference readiness]
+Live --> Alert[Configured owner alerts required]
+Core --> Alert
+Model --> Alert
+DB[Separate PostgreSQL databases] --> Backups[Private encrypted backups]
+Files[Private object storage] --> Backups
+Robot[SQLite online WAL-aware snapshot] --> Backups
+Backups --> Restore[Isolated integrity authorization and schema restore test]
+Restore --> Rollback[Reviewed recovery and rollback acceptance]

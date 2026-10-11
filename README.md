@@ -63,12 +63,11 @@ Real PostgreSQL tests need the isolated database documented in
 [local development](docs/deployment/LOCAL_DEVELOPMENT.md); use `make integration`.
 Original browser checks expect a mock stack; real-model checks require
 `ONESA_REAL_INFERENCE=1 ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/real.spec.ts`.
-See the handoff for isolated mock regression commands.
+See [local development](docs/deployment/LOCAL_DEVELOPMENT.md) for isolated mock regression commands.
 GPU and production overrides are documented separately; neither is started by default.
 
-[Implementation status](docs/development/IMPLEMENTATION_STATUS.md),
-[session handoff](docs/development/SESSION_HANDOFF.md), and
-[AGENTS.md](AGENTS.md) install the continuation workflow. Read them before editing.
+[Engineering policies](AGENTS.md) contain the continuation workflow.
+Use the [roadmap](docs/product/ROADMAP.md) for unfinished milestones.
 The [documentation index](docs/README.md) maps implementation and operations.
 
 Phase A uses an open-weight foundation model. Phase B substitutes evaluated Onesa
@@ -103,8 +102,7 @@ This project has its own Git root; the surrounding `onesa-ug` workspace is not i
 repository root. Frontend/backend retain this history and deploy independently.
 
 [Separate build/test guide](docs/engineering/BUILD_AND_TEST.md),
-[deployment guide](docs/engineering/DEPLOYMENT.md), [GitHub setup](GITHUB_SETUP.md),
-[contribution guidelines](CONTRIBUTING.md) and [security policy](SECURITY.md).
+[deployment guide](docs/engineering/DEPLOYMENT.md), [Engineering policies](AGENTS.md) and [Engineering policies](AGENTS.md).
 Runtime environment examples are available in both application directories and
 `infra/deployment/`; existing root examples remain the Compose development reference.
 
@@ -120,4 +118,8 @@ Vercel hosts the frontend; Render hosts the backend. See
 [provider setup](docs/engineering/VERCEL_RENDER.md) and root `render.yaml`.
 Configuration is prepared; account provisioning and remote acceptance are not yet verified.
 
-Actions visibility, local-first private validation and hosted public routing: [runner maintenance](docs/engineering/SELF_HOSTED_RUNNER.md).
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Verified branch protection status](docs/development/BRANCH_PROTECTION_REPORT.md). Main protection is currently **BLOCKED — NOT ENFORCED** by GitHub plan eligibility.
+
+The selected policy is [GitHub Free with private repositories](docs/development/FREE_GITHUB_PLAN.md). PR and check discipline is voluntary until server protection is supported; no upgrade or visibility change is proposed.
+
+[Hosted public Actions and private runner operations](docs/engineering/SELF_HOSTED_RUNNER.md).

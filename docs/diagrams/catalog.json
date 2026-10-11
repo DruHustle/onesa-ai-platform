@@ -1,5 +1,81 @@
 [
   {
+    "id": "public-ecosystem",
+    "title": "Complete Onesa ecosystem",
+    "view": "logical",
+    "status": "Company and product boundaries; application production acceptance remains separate",
+    "source": "docs/diagrams/public-ecosystem.mmd",
+    "url": "/docs/public/ecosystem",
+    "nodes": [
+      {
+        "id": "Company",
+        "label": "Onesa UG parent company",
+        "responsibility": "Onesa UG parent company. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Portal",
+        "label": "Company Portal and private administration",
+        "responsibility": "Company Portal and private administration. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "AI",
+        "label": "AI Platform product",
+        "responsibility": "AI Platform product. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot software simulation",
+        "responsibility": "Robot software simulation. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "PAPI",
+        "label": "Fastify API",
+        "responsibility": "Fastify API. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "AAPI",
+        "label": "FastAPI core",
+        "responsibility": "FastAPI core. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "RAPI",
+        "label": "FastAPI simulator",
+        "responsibility": "FastAPI simulator. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "PDATA",
+        "label": "Separate Portal data",
+        "responsibility": "Separate Portal data. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "ADATA",
+        "label": "Separate AI data",
+        "responsibility": "Separate AI data. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "RDATA",
+        "label": "Private persistent SQLite required",
+        "responsibility": "Private persistent SQLite required. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Docs",
+        "label": "Public documentation",
+        "responsibility": "Public documentation. Company and product boundaries; application production acceptance remains separate",
+        "url": "/docs/public/ecosystem"
+      }
+    ]
+  },
+  {
     "id": "system",
     "title": "System architecture",
     "view": "logical",
@@ -1211,64 +1287,6 @@
     ]
   },
   {
-    "id": "public-rag",
-    "title": "Knowledge usage pipeline",
-    "view": "logical",
-    "status": "Public high-level view; mock and proposed work labelled",
-    "source": "docs/diagrams/public-rag.mmd",
-    "url": "/docs/public/architecture",
-    "nodes": [
-      {
-        "id": "Document",
-        "label": "Owned document upload",
-        "responsibility": "Owned document upload",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Extract",
-        "label": "Validate / extract / chunk",
-        "responsibility": "Validate / extract / chunk",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Index",
-        "label": "Versioned lexical baseline",
-        "responsibility": "Versioned lexical baseline",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Question",
-        "label": "User question",
-        "responsibility": "User question",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Retrieval",
-        "label": "Owned source retrieval",
-        "responsibility": "Owned source retrieval",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Context",
-        "label": "Attributed untrusted context",
-        "responsibility": "Attributed untrusted context",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Model",
-        "label": "Configured model",
-        "responsibility": "Configured model",
-        "url": "/docs/public/architecture"
-      },
-      {
-        "id": "Answer",
-        "label": "Answer with saved sources",
-        "responsibility": "Answer with saved sources",
-        "url": "/docs/public/architecture"
-      }
-    ]
-  },
-  {
     "id": "public-agent",
     "title": "Granted local tools",
     "view": "logical",
@@ -1433,6 +1451,1390 @@
         "label": "users",
         "responsibility": "Implemented table; inspect columns, constraints and migration references in the database explorer.",
         "url": "/database"
+      }
+    ]
+  },
+  {
+    "id": "public-portal",
+    "title": "Company Portal architecture",
+    "view": "logical",
+    "status": "Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+    "source": "docs/diagrams/public-portal.mmd",
+    "url": "/docs/public/company-portal",
+    "nodes": [
+      {
+        "id": "Company",
+        "label": "Public company frontend",
+        "responsibility": "Public company frontend. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Public",
+        "label": "Public proxy paths only",
+        "responsibility": "Public proxy paths only. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Portal",
+        "label": "Authenticated Portal frontend",
+        "responsibility": "Authenticated Portal frontend. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Private",
+        "label": "Session CSRF and roles",
+        "responsibility": "Session CSRF and roles. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "API",
+        "label": "Fastify published content API",
+        "responsibility": "Fastify published content API. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "PG",
+        "label": "Portal PostgreSQL",
+        "responsibility": "Portal PostgreSQL. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Files",
+        "label": "Private object storage",
+        "responsibility": "Private object storage. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Queue",
+        "label": "Durable bounded outboxes",
+        "responsibility": "Durable bounded outboxes. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Worker",
+        "label": "Worker deployment unqualified",
+        "responsibility": "Worker deployment unqualified. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      },
+      {
+        "id": "Mail",
+        "label": "Provider accepted is not delivered",
+        "responsibility": "Provider accepted is not delivered. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "url": "/docs/public/company-portal"
+      }
+    ]
+  },
+  {
+    "id": "public-ai-platform",
+    "title": "AI Platform architecture",
+    "view": "logical",
+    "status": "Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+    "source": "docs/diagrams/public-ai-platform.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "Web",
+        "label": "Next.js Chat Knowledge Agents Travel",
+        "responsibility": "Next.js Chat Knowledge Agents Travel. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Proxy",
+        "label": "Same-origin server API boundary",
+        "responsibility": "Same-origin server API boundary. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "API",
+        "label": "FastAPI identity and ownership",
+        "responsibility": "FastAPI identity and ownership. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Chat",
+        "label": "Persisted conversations",
+        "responsibility": "Persisted conversations. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "RAG",
+        "label": "Knowledge parsing and retrieval",
+        "responsibility": "Knowledge parsing and retrieval. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Agents",
+        "label": "Registered permitted tools",
+        "responsibility": "Registered permitted tools. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Travel",
+        "label": "Owned saved itineraries",
+        "responsibility": "Owned saved itineraries. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "DB",
+        "label": "Separate AI PostgreSQL",
+        "responsibility": "Separate AI PostgreSQL. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Model",
+        "label": "Generation unavailable without real endpoint",
+        "responsibility": "Generation unavailable without real endpoint. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Embed",
+        "label": "Separate embedding dependency unavailable",
+        "responsibility": "Separate embedding dependency unavailable. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-routing",
+    "title": "AI inference and model routing",
+    "view": "logical",
+    "status": "Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+    "source": "docs/diagrams/public-routing.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "Request",
+        "label": "Owned authenticated request",
+        "responsibility": "Owned authenticated request. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Client",
+        "label": "Shared model adapter",
+        "responsibility": "Shared model adapter. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Ollama",
+        "label": "Ollama local development only",
+        "responsibility": "Ollama local development only. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Mock",
+        "label": "Labelled deterministic test mock",
+        "responsibility": "Labelled deterministic test mock. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "VLLM",
+        "label": "vLLM proposed production runtime",
+        "responsibility": "vLLM proposed production runtime. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Stream",
+        "label": "Streaming timeout and cancellation",
+        "responsibility": "Streaming timeout and cancellation. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Persist",
+        "label": "Persist owned message state",
+        "responsibility": "Persist owned message state. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Error",
+        "label": "Honest model error no silent mock fallback",
+        "responsibility": "Honest model error no silent mock fallback. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-rag",
+    "title": "Knowledge and RAG pipeline",
+    "view": "logical",
+    "status": "Implemented pipeline; lexical baseline available; hosted semantic embeddings unqualified",
+    "source": "docs/diagrams/public-rag.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "Upload",
+        "label": "Authorized bounded upload",
+        "responsibility": "Authorized bounded upload. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Validate",
+        "label": "Type size and parse validation",
+        "responsibility": "Type size and parse validation. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Parse",
+        "label": "Text parsing",
+        "responsibility": "Text parsing. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Chunk",
+        "label": "Document chunking",
+        "responsibility": "Document chunking. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Embed",
+        "label": "Versioned lexical or approved semantic embeddings",
+        "responsibility": "Default 256-dimensional lexical hashing or an explicitly configured semantic HTTP adapter; hosted semantic capacity is not qualified.",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Vector",
+        "label": "pgvector matching dimensions",
+        "responsibility": "pgvector matching dimensions. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Query",
+        "label": "Owned document query",
+        "responsibility": "Owned document query. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Retrieve",
+        "label": "Authorization constrained retrieval",
+        "responsibility": "Authorization constrained retrieval. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Sources",
+        "label": "Supporting sources and citations",
+        "responsibility": "Supporting sources and citations. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Delete",
+        "label": "Owned update or delete",
+        "responsibility": "Owned update or delete. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Index",
+        "label": "Index consistency and retrieval removal",
+        "responsibility": "Index consistency and retrieval removal. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-agents",
+    "title": "Agent execution and permissions",
+    "view": "logical",
+    "status": "Registered deterministic tools verified in staging; model planning depends on real inference",
+    "source": "docs/diagrams/public-agents.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "User",
+        "label": "Authenticated user goal",
+        "responsibility": "Authenticated user goal. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Ownership",
+        "label": "Run ownership check",
+        "responsibility": "Run ownership check. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Plan",
+        "label": "Model planning when available",
+        "responsibility": "Model planning when available. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Registry",
+        "label": "Registered tool schemas",
+        "responsibility": "Registered tool schemas. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Gate",
+        "label": "Explicit allowed tools and permission gate",
+        "responsibility": "Explicit allowed tools and permission gate. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Execute",
+        "label": "Bounded tool execution",
+        "responsibility": "Bounded tool execution. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Audit",
+        "label": "Persisted owned audit history",
+        "responsibility": "Persisted owned audit history. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Cancel",
+        "label": "Cancellation timeout and retry limits",
+        "responsibility": "Cancellation timeout and retry limits. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Consequential",
+        "label": "Consequential external action",
+        "responsibility": "Consequential external action. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Injection",
+        "label": "Untrusted model or document text",
+        "responsibility": "Untrusted model or document text. Registered deterministic tools verified in staging; model planning depends on real inference",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-travel",
+    "title": "Travel application workflows",
+    "view": "logical",
+    "status": "Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+    "source": "docs/diagrams/public-travel.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "Input",
+        "label": "Destination dates duration budget",
+        "responsibility": "Destination dates duration budget. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Validate",
+        "label": "Validate supported planning inputs",
+        "responsibility": "Validate supported planning inputs. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Owner",
+        "label": "Authenticated trip ownership",
+        "responsibility": "Authenticated trip ownership. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Save",
+        "label": "Persist trip and edits",
+        "responsibility": "Persist trip and edits. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Model",
+        "label": "Real generation dependency",
+        "responsibility": "Real generation dependency. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Suggestions",
+        "label": "Suggestions not bookings or live prices",
+        "responsibility": "Suggestions not bookings or live prices. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Provider",
+        "label": "External travel adapters unqualified",
+        "responsibility": "External travel adapters unqualified. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Cancel",
+        "label": "Cancellation and unavailable states",
+        "responsibility": "Cancellation and unavailable states. Owned itinerary source implemented; live booking inventory prices and providers not qualified",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-robot",
+    "title": "AI Robot architecture",
+    "view": "logical",
+    "status": "Software simulator only; all physical actuation disabled",
+    "source": "docs/diagrams/public-robot.mmd",
+    "url": "/docs/public/robot",
+    "nodes": [
+      {
+        "id": "Web",
+        "label": "Static operator interface",
+        "responsibility": "Static operator interface. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Proxy",
+        "label": "Node same-origin API proxy",
+        "responsibility": "Node same-origin API proxy. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "API",
+        "label": "FastAPI operator sessions and CSRF",
+        "responsibility": "FastAPI operator sessions and CSRF. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Proposal",
+        "label": "Propose and separately approve",
+        "responsibility": "Propose and separately approve. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Safety",
+        "label": "Independent SafetyGate",
+        "responsibility": "Independent SafetyGate. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Sim",
+        "label": "Synthetic joint simulation",
+        "responsibility": "Synthetic joint simulation. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Store",
+        "label": "Private SQLite task history",
+        "responsibility": "Private SQLite task history. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Watchdog",
+        "label": "Heartbeat and connection-loss watchdog",
+        "responsibility": "Heartbeat and connection-loss watchdog. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Stop",
+        "label": "Stopped and authority revoked",
+        "responsibility": "Stopped and authority revoked. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "AI",
+        "label": "Onesa AI API integration proposed",
+        "responsibility": "Onesa AI API integration proposed. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Hardware",
+        "label": "Physical hardware unavailable",
+        "responsibility": "Physical hardware unavailable. Software simulator only; all physical actuation disabled",
+        "url": "/docs/public/robot"
+      }
+    ]
+  },
+  {
+    "id": "public-ros2",
+    "title": "ROS 2 communications boundary",
+    "view": "logical",
+    "status": "Message definitions are preparatory; no running ROS node or physical bridge",
+    "source": "docs/diagrams/public-ros2.mmd",
+    "url": "/docs/public/robot",
+    "nodes": [
+      {
+        "id": "Definitions",
+        "label": "Implemented simulation message definitions",
+        "responsibility": "Implemented simulation message definitions. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Telemetry",
+        "label": "SimulationTelemetry message",
+        "responsibility": "SimulationTelemetry message. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Proposal",
+        "label": "SimulationProposal message",
+        "responsibility": "SimulationProposal message. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Sim",
+        "label": "Current FastAPI software simulation",
+        "responsibility": "Current FastAPI software simulation. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Bridge",
+        "label": "ROS bridge proposed",
+        "responsibility": "ROS bridge proposed. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "ROS",
+        "label": "ROS 2 nodes topics actions proposed",
+        "responsibility": "ROS 2 nodes topics actions proposed. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Hardware",
+        "label": "Hardware unavailable",
+        "responsibility": "Hardware unavailable. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Audio",
+        "label": "STT TTS unavailable",
+        "responsibility": "STT TTS unavailable. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Vision",
+        "label": "VLM VLA unavailable",
+        "responsibility": "VLM VLA unavailable. Message definitions are preparatory; no running ROS node or physical bridge",
+        "url": "/docs/public/robot"
+      }
+    ]
+  },
+  {
+    "id": "public-safety",
+    "title": "Robotics safety architecture",
+    "view": "logical",
+    "status": "Verified software safety constraints do not certify physical robots",
+    "source": "docs/diagrams/public-safety.mmd",
+    "url": "/docs/public/robot",
+    "nodes": [
+      {
+        "id": "Identity",
+        "label": "Authorized operator and fresh proof",
+        "responsibility": "Authorized operator and fresh proof. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Proposal",
+        "label": "Expiring proposal",
+        "responsibility": "Expiring proposal. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Approval",
+        "label": "Separate approval within deadline",
+        "responsibility": "Separate approval within deadline. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Gate",
+        "label": "Independent position velocity acceleration freshness checks",
+        "responsibility": "Independent position velocity acceleration freshness checks. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Step",
+        "label": "Validated synthetic simulation step",
+        "responsibility": "Validated synthetic simulation step. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Heartbeat",
+        "label": "Heartbeat watchdog",
+        "responsibility": "Heartbeat watchdog. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Stop",
+        "label": "Stop and cancel authority",
+        "responsibility": "Stop and cancel authority. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Disconnect",
+        "label": "Disconnect revocation or process restart",
+        "responsibility": "Disconnect revocation or process restart. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Model",
+        "label": "Model output proposed",
+        "responsibility": "Model output proposed. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      },
+      {
+        "id": "Physical",
+        "label": "Independent physical safety controls unavailable",
+        "responsibility": "Independent physical safety controls unavailable. Verified software safety constraints do not certify physical robots",
+        "url": "/docs/public/robot"
+      }
+    ]
+  },
+  {
+    "id": "public-auth",
+    "title": "Authentication and authorization boundaries",
+    "view": "logical",
+    "status": "Separate product identities; server authorization and ownership remain mandatory",
+    "source": "docs/diagrams/public-auth.mmd",
+    "url": "/docs/public/security-overview",
+    "nodes": [
+      {
+        "id": "Browser",
+        "label": "Browser",
+        "responsibility": "Browser. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Portal",
+        "label": "Portal password MFA session",
+        "responsibility": "Portal password MFA session. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "AI",
+        "label": "AI invite login session",
+        "responsibility": "AI invite login session. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot operator session",
+        "responsibility": "Robot operator session. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "PAuth",
+        "label": "CSRF origin roles and fresh step-up",
+        "responsibility": "CSRF origin roles and fresh step-up. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "AAuth",
+        "label": "CSRF origin and resource ownership",
+        "responsibility": "CSRF origin and resource ownership. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "RAuth",
+        "label": "CSRF origin and motion approval",
+        "responsibility": "CSRF origin and motion approval. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Engineering",
+        "label": "Engineering allowlist server gate",
+        "responsibility": "Engineering allowlist server gate. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Internal",
+        "label": "Every internal page index asset PDF guarded",
+        "responsibility": "Every internal page index asset PDF guarded. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Public",
+        "label": "Public static docs allowlist",
+        "responsibility": "Public static docs allowlist. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      },
+      {
+        "id": "Approved",
+        "label": "Approved public content only",
+        "responsibility": "Approved public content only. Separate product identities; server authorization and ownership remain mandatory",
+        "url": "/docs/public/security-overview"
+      }
+    ]
+  },
+  {
+    "id": "public-database",
+    "title": "Database architecture and isolation",
+    "view": "logical",
+    "status": "Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+    "source": "docs/diagrams/public-database.mmd",
+    "url": "/docs/public/ecosystem",
+    "nodes": [
+      {
+        "id": "Portal",
+        "label": "Company Portal API",
+        "responsibility": "Company Portal API. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "PDB",
+        "label": "Dedicated PostgreSQL Portal schema",
+        "responsibility": "Dedicated PostgreSQL Portal schema. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "AI",
+        "label": "AI Platform API",
+        "responsibility": "AI Platform API. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "ADB",
+        "label": "Separate PostgreSQL and pgvector",
+        "responsibility": "Separate PostgreSQL and pgvector. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot simulator API",
+        "responsibility": "Robot simulator API. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "SQLite",
+        "label": "Private single-process SQLite",
+        "responsibility": "Private single-process SQLite. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "PFiles",
+        "label": "Private object files",
+        "responsibility": "Private object files. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "AFiles",
+        "label": "Private document persistence required",
+        "responsibility": "Private document persistence required. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Migration",
+        "label": "Separate scoped migration identities",
+        "responsibility": "Separate scoped migration identities. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      },
+      {
+        "id": "Backup",
+        "label": "Isolated restore acceptance required",
+        "responsibility": "Isolated restore acceptance required. Public high-level storage boundaries; detailed implemented ERDs restricted to engineering",
+        "url": "/docs/public/ecosystem"
+      }
+    ]
+  },
+  {
+    "id": "public-deployment",
+    "title": "Vercel Render Neon deployment",
+    "view": "deployment",
+    "status": "Actual provider roles; configuration does not establish a working production release",
+    "source": "docs/diagrams/public-deployment.mmd",
+    "url": "/docs/public/deployment-overview",
+    "nodes": [
+      {
+        "id": "Browser",
+        "label": "HTTPS public product origin",
+        "responsibility": "HTTPS public product origin. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Vercel",
+        "label": "Vercel frontend server",
+        "responsibility": "Vercel frontend server. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Render",
+        "label": "Render product API",
+        "responsibility": "Render product API. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Neon",
+        "label": "Dedicated product Neon PostgreSQL",
+        "responsibility": "Dedicated product Neon PostgreSQL. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Storage",
+        "label": "Private persistent object storage",
+        "responsibility": "Private persistent object storage. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Model",
+        "label": "External model host unavailable",
+        "responsibility": "External model host unavailable. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Docs",
+        "label": "Vercel separate public docs project",
+        "responsibility": "Vercel separate public docs project. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Public",
+        "label": "Allowlisted static build only",
+        "responsibility": "Allowlisted static build only. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Internal",
+        "label": "Authenticated engineering gateway",
+        "responsibility": "Authenticated engineering gateway. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Identity",
+        "label": "AI engineering session permission",
+        "responsibility": "AI engineering session permission. Actual provider roles; configuration does not establish a working production release",
+        "url": "/docs/public/deployment-overview"
+      }
+    ]
+  },
+  {
+    "id": "public-model-host",
+    "title": "Model-serving infrastructure",
+    "view": "deployment",
+    "status": "Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+    "source": "docs/diagrams/public-model-host.mmd",
+    "url": "/docs/public/ai-platform",
+    "nodes": [
+      {
+        "id": "API",
+        "label": "Render AI backend",
+        "responsibility": "Render AI backend. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Gateway",
+        "label": "Secured hosted gateway proposed",
+        "responsibility": "Secured hosted gateway proposed. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "VLLM",
+        "label": "vLLM GPU runtime proposed",
+        "responsibility": "vLLM GPU runtime proposed. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Admin",
+        "label": "Administrative and operational routes",
+        "responsibility": "Administrative and operational routes. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Checkpoint",
+        "label": "Approved model checkpoint and configuration",
+        "responsibility": "Approved model checkpoint and configuration. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Embed",
+        "label": "Semantic embedding service unavailable",
+        "responsibility": "Semantic embedding service unavailable. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Local",
+        "label": "Developer machine",
+        "responsibility": "Developer machine. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Ollama",
+        "label": "Native loopback Ollama development only",
+        "responsibility": "Native loopback Ollama development only. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "Health",
+        "label": "Readiness cancellation recovery acceptance",
+        "responsibility": "Readiness cancellation recovery acceptance. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "url": "/docs/public/ai-platform"
+      }
+    ]
+  },
+  {
+    "id": "public-release",
+    "title": "CI/CD and release pipelines",
+    "view": "deployment",
+    "status": "Current public repositories use hosted Actions; application production remains independently gated",
+    "source": "docs/diagrams/public-release.mmd",
+    "url": "/docs/public/deployment-overview",
+    "nodes": [
+      {
+        "id": "Review",
+        "label": "Reviewed change and classified sources",
+        "responsibility": "Reviewed change and classified sources. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "CI",
+        "label": "GitHub-hosted public CI",
+        "responsibility": "GitHub-hosted public CI. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Tests",
+        "label": "Contracts security tests browser builds",
+        "responsibility": "Contracts security tests browser builds. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Stage",
+        "label": "Authorized isolated staging",
+        "responsibility": "Authorized isolated staging. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Hosted",
+        "label": "Revision logs readiness and workflows",
+        "responsibility": "Revision logs readiness and workflows. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Gate",
+        "label": "Release gate and owner authorization",
+        "responsibility": "Release gate and owner authorization. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Production",
+        "label": "Production promotion only after approval",
+        "responsibility": "Production promotion only after approval. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Docs",
+        "label": "Classified public docs artifact",
+        "responsibility": "Classified public docs artifact. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "DGate",
+        "label": "Independent docs release verification",
+        "responsibility": "Independent docs release verification. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Vercel",
+        "label": "Separate public docs Vercel project",
+        "responsibility": "Separate public docs Vercel project. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Rollback",
+        "label": "Retained source artifact migration compatibility",
+        "responsibility": "Retained source artifact migration compatibility. Current public repositories use hosted Actions; application production remains independently gated",
+        "url": "/docs/public/deployment-overview"
+      }
+    ]
+  },
+  {
+    "id": "public-recovery",
+    "title": "Backup monitoring and recovery",
+    "view": "deployment",
+    "status": "Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+    "source": "docs/diagrams/public-recovery.mmd",
+    "url": "/docs/public/deployment-overview",
+    "nodes": [
+      {
+        "id": "Services",
+        "label": "Product services",
+        "responsibility": "Product services. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Live",
+        "label": "Process liveness",
+        "responsibility": "Process liveness. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Core",
+        "label": "Database and core readiness",
+        "responsibility": "Database and core readiness. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Model",
+        "label": "Separate inference readiness",
+        "responsibility": "Separate inference readiness. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Alert",
+        "label": "Configured owner alerts required",
+        "responsibility": "Configured owner alerts required. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "DB",
+        "label": "Separate PostgreSQL databases",
+        "responsibility": "Separate PostgreSQL databases. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Backups",
+        "label": "Private encrypted backups",
+        "responsibility": "Private encrypted backups. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Files",
+        "label": "Private object storage",
+        "responsibility": "Private object storage. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Robot",
+        "label": "SQLite online WAL-aware snapshot",
+        "responsibility": "SQLite online WAL-aware snapshot. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Restore",
+        "label": "Isolated integrity authorization and schema restore test",
+        "responsibility": "Isolated integrity authorization and schema restore test. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Rollback",
+        "label": "Reviewed recovery and rollback acceptance",
+        "responsibility": "Reviewed recovery and rollback acceptance. Procedures implemented; actual alert delivery and isolated restore acceptance still required",
+        "url": "/docs/public/deployment-overview"
+      }
+    ]
+  },
+  {
+    "id": "portal-database",
+    "title": "Portal implemented schema relationships",
+    "view": "implemented schema",
+    "status": "Derived from pinned actual SQL sources; full columns constraints and migrations in linked reference; no live data",
+    "source": "docs/diagrams/portal-database.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "sessions",
+        "label": "sessions",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "recovery_tokens",
+        "label": "recovery_tokens",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "content",
+        "label": "content",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "revisions",
+        "label": "revisions",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "enquiries",
+        "label": "enquiries",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "files",
+        "label": "files",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "applications",
+        "label": "applications",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "audit",
+        "label": "audit",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "jobs",
+        "label": "jobs",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "rate_limits",
+        "label": "rate_limits",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "facts",
+        "label": "facts",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "settings",
+        "label": "settings",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "templates",
+        "label": "templates",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "mfa_recovery",
+        "label": "mfa_recovery",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "storage_deletions",
+        "label": "storage_deletions",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "bounded_transfers",
+        "label": "bounded_transfers",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "bounded_transfer_chunks",
+        "label": "bounded_transfer_chunks",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "operational_state",
+        "label": "operational_state",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "robot-database",
+    "title": "Robot implemented schema relationships",
+    "view": "implemented schema",
+    "status": "Derived from pinned actual SQL sources; full columns constraints and migrations in linked reference; no live data",
+    "source": "docs/diagrams/robot-database.mmd",
+    "url": "/docs/ecosystem/ROBOT_DATABASE",
+    "nodes": [
+      {
+        "id": "sessions",
+        "label": "sessions",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/ROBOT_DATABASE"
+      },
+      {
+        "id": "tasks",
+        "label": "tasks",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/ROBOT_DATABASE"
+      },
+      {
+        "id": "safety",
+        "label": "safety",
+        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
+        "url": "/docs/ecosystem/ROBOT_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "portal-database-identity",
+    "title": "Portal identity schema relationships",
+    "view": "implemented schema",
+    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
+    "source": "docs/diagrams/portal-database-identity.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "mfa_recovery",
+        "label": "mfa_recovery",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "recovery_tokens",
+        "label": "recovery_tokens",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "sessions",
+        "label": "sessions",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "portal-database-content",
+    "title": "Portal content schema relationships",
+    "view": "implemented schema",
+    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
+    "source": "docs/diagrams/portal-database-content.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "content",
+        "label": "content",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "facts",
+        "label": "facts",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "revisions",
+        "label": "revisions",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "settings",
+        "label": "settings",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "portal-database-business",
+    "title": "Portal business schema relationships",
+    "view": "implemented schema",
+    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
+    "source": "docs/diagrams/portal-database-business.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "applications",
+        "label": "applications",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "enquiries",
+        "label": "enquiries",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "files",
+        "label": "files",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "portal-database-documents",
+    "title": "Portal documents schema relationships",
+    "view": "implemented schema",
+    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
+    "source": "docs/diagrams/portal-database-documents.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "files",
+        "label": "files",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "templates",
+        "label": "templates",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      }
+    ]
+  },
+  {
+    "id": "portal-database-operations",
+    "title": "Portal operations schema relationships",
+    "view": "implemented schema",
+    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
+    "source": "docs/diagrams/portal-database-operations.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": [
+      {
+        "id": "bounded_transfer_chunks",
+        "label": "bounded_transfer_chunks",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "bounded_transfers",
+        "label": "bounded_transfers",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "jobs",
+        "label": "jobs",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "operational_state",
+        "label": "operational_state",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "rate_limits",
+        "label": "rate_limits",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "storage_deletions",
+        "label": "storage_deletions",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "users",
+        "label": "users",
+        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
       }
     ]
   }

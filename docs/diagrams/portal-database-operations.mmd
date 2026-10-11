@@ -1,0 +1,65 @@
+erDiagram
+  users {
+    uuid id PK
+    text email
+    text password_hash
+    text role
+    text mfa_secret
+    bigint mfa_last_step
+    boolean disabled
+    timestamptz created_at
+    text mfa_pending
+    text enroll_hash
+    timestamptz enroll_expires
+  }
+  jobs {
+    uuid id PK
+    text kind
+    text dedupe_key
+    jsonb payload
+    text status
+    integer attempts
+    timestamptz run_at
+    timestamptz locked_at
+    text last_error
+    timestamptz created_at
+  }
+  rate_limits {
+    text key PK
+    integer hits
+    timestamptz expires_at
+  }
+  storage_deletions {
+    text storage_key PK
+    text status
+    integer attempts
+    timestamptz run_at
+    timestamptz locked_at
+    text last_error
+    timestamptz created_at
+  }
+  bounded_transfers {
+    uuid id PK
+    uuid owner_id FK
+    text peer_hash
+    text capability_hash
+    text scope
+    integer expected_bytes
+    text checksum
+    integer cursor
+    timestamptz expires_at
+    jsonb result
+    integer result_status
+  }
+  bounded_transfer_chunks {
+    uuid transfer_id FK
+    integer sequence
+    text encrypted_payload
+    text checksum
+  }
+  operational_state {
+    text key PK
+    timestamptz updated_at
+  }
+  users ||--o{ bounded_transfers : "declared foreign key"
+  bounded_transfers ||--o{ bounded_transfer_chunks : "declared foreign key"
