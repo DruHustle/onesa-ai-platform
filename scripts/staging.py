@@ -178,7 +178,12 @@ def configure_preview(service):
         or link.get("productionBranch") != "main"
         or metadata.get("rootDirectory") != "onesa-ai-platform-frontend/apps/chat"
         or (metadata.get("ssoProtection") or {}).get("deploymentType")
-        not in {"all", "all_except_custom_domains", "preview", "prod_deployment_urls_and_all_previews"}
+        not in {
+            "all",
+            "all_except_custom_domains",
+            "preview",
+            "prod_deployment_urls_and_all_previews",
+        }
     ):
         raise SystemExit("Protected staging Preview project identity is unverified")
     response, status = get_json(base, path + "/env" + query, token)
