@@ -557,3 +557,11 @@ accessible labels/nested controls and low-contrast badges. Added static interact
 link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
 The public static build remains independent of application release approval. Hosted
 internal access and actual model/hardware functionality are not claimed complete.
+
+## Production documentation link defaults — 2026-10-11
+
+An unset AI frontend documentation value no longer emits localhost in production:
+public docs default to the approved https://docs.onesa.eu origin. Engineering links
+are absent until an actual internal origin is explicitly configured and permission
+is verified. Explicit local Compose origins remain compatible. Hosted and future
+private frontend CI check these defaults; this does not qualify application production.

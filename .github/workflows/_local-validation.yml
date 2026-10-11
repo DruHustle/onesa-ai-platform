@@ -71,6 +71,7 @@ jobs:
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make frontend-check
     - run: node scripts/test_backend_proxy.cjs
+    - run: node scripts/test_documentation_urls.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
     timeout-minutes: 120
     if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}

@@ -6,6 +6,7 @@ export default function DocumentationNav() {
   const { copy } = useLocale();
   const [engineering, setEngineering] = useState(false);
   useEffect(() => {
+    if (!documentationUrls.internal) return;
     fetch("/api/v1/documentation/access")
       .then((r) => (r.ok ? r.json() : null))
       .then((v) => setEngineering(Boolean(v?.engineering)))
@@ -14,7 +15,7 @@ export default function DocumentationNav() {
   return (
     <>
       <a href={documentationUrls.public}>{copy.documentation}</a>
-      {engineering && (
+      {engineering && documentationUrls.internal && (
         <a href={documentationUrls.internal}>{copy.engineeringDocumentation}</a>
       )}
     </>
