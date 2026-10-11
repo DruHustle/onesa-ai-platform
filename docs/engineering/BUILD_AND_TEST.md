@@ -54,3 +54,10 @@ and exits immediately when no work is currently eligible. Retries remain durable
 and require a subsequent invocation. Provider acceptance does not prove delivery.
 These modes prepare a scheduler integration; no hosted worker or delivery is
 qualified merely by enabling the command. Keep scheduler secrets server-side.
+
+
+After building the backend production image, run
+`python3 scripts/startup_smoke.py onesa-api:local`. This exercises Dockerfile CMD,
+installed Uvicorn/factory, provider PORT, liveness, missing dependency 503, SIGTERM,
+and distinct production configuration failure using isolated containers. CI runs it
+against the final backend security candidate image; it does not qualify inference.

@@ -134,6 +134,18 @@ def validate(staged=False, assets_only=False):
             assert "0.2.0" in text and scope in text.lower()
             assert document.outline, f"Missing PDF bookmarks: {path}"
             if scope == "public":
+                links = {
+                    str(action["/URI"])
+                    for page in document.pages
+                    for ref in page.get("/Annots", [])
+                    if (action := ref.get_object().get("/A")) and action.get("/URI")
+                }
+                for source in manual.get("source_hashes", {}):
+                    assert (
+                        "https://docs.onesa.eu/" + source.removesuffix(".md") in links
+                    ), (
+                        f"Public PDF source link does not target the public documentation: {source}"
+                    )
                 assert not any(
                     word in text
                     for word in [

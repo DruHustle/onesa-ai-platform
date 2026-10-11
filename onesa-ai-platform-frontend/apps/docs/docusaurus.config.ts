@@ -11,7 +11,7 @@ if (apiUrl && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(apiUrl)) {
 }
 const config: Config = {
   title: 'Onesa AI', tagline: 'Engineering the shared intelligence platform',
-  url:process.env.ONESA_DOCS_URL || `http://localhost:${internal ? 3201 : 3200}`, staticDirectories:['static', `.generated/${scope}/static`], favicon:'favicon.ico', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
+  url:process.env.ONESA_DOCS_URL || `http://localhost:${internal ? 3201 : 3200}`, staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], favicon:'favicon.ico', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
   onBrokenLinks:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
   customFields:{documentationVersion:'0.2 · Amendment 002.2', apiUrl, scope, appUrl, staticHosting},

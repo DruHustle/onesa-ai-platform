@@ -1,5 +1,11 @@
 # Public: hosted only. Private: full local validation precedes cloud execution.
 name: Deploy from GitHub
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
 'on':
   workflow_dispatch:
     inputs:
@@ -12,17 +18,12 @@ name: Deploy from GitHub
         - frontend
         - backend
         - both
-permissions:
-  contents: read
-  actions: read
-concurrency:
-  group: production-deployment
-  cancel-in-progress: false
 jobs:
   local-validation:
     if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
     uses: ./.github/workflows/_local-validation.yml
   verify:
+    name: deploy-qualification
     runs-on: ubuntu-latest
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
@@ -74,6 +75,7 @@ jobs:
     if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
     timeout-minutes: 45
   frontend:
+    name: deploy-frontend
     needs:
     - local-validation
     - verify
@@ -118,6 +120,7 @@ jobs:
     - name: Record deployed frontend
       run: cat /tmp/vercel-url.txt >> "$GITHUB_STEP_SUMMARY"
   backend:
+    name: deploy-backend
     needs:
     - local-validation
     - verify

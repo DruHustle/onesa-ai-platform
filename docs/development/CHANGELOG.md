@@ -1,13 +1,55 @@
 # Development changelog
 
-## 2026-10-11 — Reconcile owner runner policy with qualified staging
+## 2026-10-11 — Preserve qualified staging with owner runner policy
 
-- Preserve current staging operator actions and regression tests while merging the
-  owner-approved public-hosted/private-local-first workflow policy.
-- Keep startup, PDF, image security, contracts, docs and browser checks in both
-  validation phases. Enforce live visibility before cloud checkout.
-- Keep obsolete implementation status and session handoff documents removed;
-  AGENTS.md remains the sole agent policy. No runner activation or public promotion.
+- Merge all current staging corrections and owner-approved runner routing by ordinary
+  merges. Preserve bounded chat history, exhausted mail leases, public PDF links,
+  crawler policies, Preview protection and staging operator regression coverage.
+- Keep all software, browser, docs, startup and full image-security checks in the
+  private reusable gate; public jobs use hosted execution and verify live visibility.
+- Keep obsolete implementation and session handoff files removed. No local runner
+  activation, production promotion, billing or physical control.
+
+## 2026-10-11 — Public repository hosted Actions
+
+- Record the owner-selected temporary public visibility and standard GitHub-hosted
+  runner policy. Local runners remain private-only; retain security and release gates.
+- Clarify that earlier private-plan protection failures are historical and do not
+  establish current public-repository enforcement. No billing or protection settings changed.
+
+## 2026-10-11 — Final identity-mail lease crash recovery
+
+Expired final-attempt mail leases become failed during maintenance, preserving
+active final leases and recording no fabricated provider acceptance. Regression
+tests use real isolated PostgreSQL and prove that a sixth send is not attempted.
+Reconcile provider receipts before manually retrying an ambiguously completed job.
+
+Public PDF source references now target `https://docs.onesa.eu` rather than a local
+development server. Artifact validation inspects every public manual's actual PDF
+link annotations and requires its declared source references to use the public site.
+
+## 2026-10-11 — Vercel Standard Protection compatibility
+
+The staging deployment guard recognizes the documented
+prod_deployment_urls_and_all_previews protection mode alongside existing protected
+modes. Missing/unknown protection still fails before configuration writes. Regression
+checks retain repository/root/main identity, Preview-only scope and conflict refusal.
+Production protection is never disabled.
+
+## 2026-10-11 — Separate documentation crawler policies
+
+Public documentation now emits robots.txt with the public sitemap. Internal builds
+emit a separate disallow policy and retain authentication on every asset, including
+robots.txt. Browser verification checks both emitted files and their HTTP boundaries.
+Preview noindex headers and the public-production release guard remain in place.
+
+## 2026-10-11 — Bounded chat context reads
+
+Chat selects the last 30 messages directly in PostgreSQL, retaining chronological
+model context and message sequences without materializing an unbounded history.
+An isolated integration regression verifies the SQL bound, exact context ordering
+and preservation of all stored conversation messages.
+
 
 ## 2026-10-10 — Frontend provider credential boundary
 
@@ -482,3 +524,25 @@ Hosted results remain unverified until the new revision passes CI and deployment
 Graceful termination stops new claims and disposes connections; bounded one-shot
 execution supports a separately qualified scheduler without changing durable mail
 leases, retries or provider idempotency. Hosted delivery remains unqualified.
+
+
+## 2026-10-10 — GitHub Free governance plan
+
+- Selected private GitHub Free operation with voluntary feature-branch PRs, verified
+  CI, manual authorization and least practical write access. No paid upgrade or
+  visibility workaround is proposed; main enforcement remains blocked.
+
+## 2026-10-10 — Branch protection and governance audit
+
+- Verified private personal ownership, admin access, actual PR CI/security check names
+  and deployment/environment evidence across all three repositories.
+- Attempted repository rulesets and classic fallback; GitHub rejected both with HTTP
+  403 requiring Pro eligibility. Main readback remains unprotected, NOT ENFORCED.
+- Prepared exact payloads, solo-developer PR/recovery policy, templates and API-backed
+  reports. Local `deploy.yml` display names now use `deploy-qualification`, `deploy-frontend` and `deploy-backend`; the manual documentation hosting job now displays `docs-hosting`. Job IDs, dependency expressions and deployment behavior are preserved. This removes collisions with required CI checks. These edits are not yet published; merge them through a reviewed PR and verify the resulting names before activating the payload.
+- Existing local work is preserved. No push, merge, deployment, billing, visibility,
+  credential or external provider change was performed.
+
+## 2026-10-11 — Reviewed governance integration
+
+Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.

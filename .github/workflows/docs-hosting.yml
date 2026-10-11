@@ -1,5 +1,10 @@
 # Public: hosted only. Private: full local validation precedes cloud execution.
 name: Public documentation hosting
+permissions:
+  contents: read
+concurrency:
+  group: public-documentation-hosting
+  cancel-in-progress: false
 'on':
   workflow_dispatch:
     inputs:
@@ -23,16 +28,12 @@ name: Public documentation hosting
         description: Application origin linked from the documentation
         default: https://platform.onesa.eu
         required: true
-permissions:
-  contents: read
-concurrency:
-  group: public-documentation-hosting
-  cancel-in-progress: false
 jobs:
   local-validation:
     if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
     uses: ./.github/workflows/_local-validation.yml
   documentation:
+    name: docs-hosting
     if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') && (inputs.target != 'production' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -108,7 +109,7 @@ jobs:
         name: onesa-public-docs-staging
         path: onesa-ai-platform-frontend/apps/docs/build-public/
         if-no-files-found: error
-        retention-days: 3
+        retention-days: 7
     - name: Prepare separate Vercel documentation project
       if: inputs.target != 'build'
       env:
