@@ -298,3 +298,25 @@ def test_worker_terminal_failure_and_expired_work_cleanup(api, pg):
     maintenance(pg)
     with Session(pg) as db:
         assert db.get(IdentityMail, identifier).state == "cancelled"
+
+
+@pytest.mark.parametrize("expired_lease", [False, True])
+def test_crashed_final_mail_attempt_is_terminal_only_after_lease_expiry(api, pg, expired_lease):
+    from app.identity_worker import maintenance
+
+    configured(api)
+    identifier, _ = invite(api, pg)
+    lease = UUID("a15df25a-1785-47aa-9b99-05a37bb7fcdb")
+    with Session(pg) as db:
+        job = db.get(IdentityMail, identifier)
+        job.state, job.attempts, job.lease_id = "leased", 5, lease
+        job.lease_until = now() + timedelta(seconds=-1 if expired_lease else 60)
+        db.commit()
+    maintenance(pg)
+    with Session(pg) as db:
+        job = db.get(IdentityMail, identifier)
+        assert job.state == ("failed" if expired_lease else "leased")
+        assert job.lease_id == (None if expired_lease else lease)
+        assert job.attempts == 5 and job.provider_id is None
+    with httpx.Client(transport=httpx.MockTransport(lambda _: pytest.fail("Sixth send"))) as client:
+        assert not process_one(pg, api.app.state.settings, client)

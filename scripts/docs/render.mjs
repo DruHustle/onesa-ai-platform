@@ -47,7 +47,7 @@ for(const scope of ['public','internal']){
   const defaultFence=md.renderer.rules.fence;
   md.renderer.rules.fence=(tokens,i,opts,env,self)=>tokens[i].info.trim()==='mermaid'?'<p class="caption">Editable source diagram; see the rendered architecture figures and portal.</p>':defaultFence(tokens,i,opts,env,self);
   let body='';
-  for(const doc of documents){const raw=await fs.readFile(path.join(root,'docs',doc),'utf8');body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="http://localhost:${scope==='public'?3200:3201}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
+  for(const doc of documents){const raw=await fs.readFile(path.join(root,'docs',doc),'utf8');body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="${scope==='public'?'https://docs.onesa.eu':'http://localhost:3201'}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
   if(name==='api-reference'){
    const schema=JSON.parse(await fs.readFile(path.join(staticDir,'openapi.json'),'utf8'));
    body+='<section class="section"><h1>Generated endpoint contracts</h1><p>Exact request/response schemas follow. Common runtime errors and SSE behavior are described in the sourced reference.</p>';

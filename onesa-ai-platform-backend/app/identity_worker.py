@@ -166,6 +166,17 @@ def maintenance(engine: Engine) -> None:
             .where(IdentityMail.token_id.in_(expired), IdentityMail.state.in_(["queued", "leased"]))
             .values(state="cancelled", lease_until=None, lease_id=None)
         )
+        # A crash on the final claim must not leave work permanently leased.
+        # Preserve an active final lease so its owner can still record acceptance.
+        db.execute(
+            update(IdentityMail)
+            .where(
+                IdentityMail.state.in_(["queued", "leased"]),
+                IdentityMail.attempts >= 5,
+                or_(IdentityMail.lease_until.is_(None), IdentityMail.lease_until < now()),
+            )
+            .values(state="failed", lease_until=None, lease_id=None)
+        )
         db.commit()
 
 
