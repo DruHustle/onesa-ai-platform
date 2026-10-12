@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-12 — Approved company contact and legal links
+
+Display the owner-approved legal name, email and telephone across the independent chat application, with locale-aware links to the central company legal and privacy pages. Use a committed snapshot derived from the maintained Portal record; no sibling runtime or private record is required by this build. Preserve automatic styling, authentication and unverified privacy-processing gates.
+
 ## 2026-10-12 — Registered private-Free staging entry point
 
 Allow the existing manual, owner-only staging bridge on private repositories so the repository-secret fallback is usable before new workflows reach main. Keep production guards, exact-source qualification, named staging secrets and protected Preview checks; test rejection of untrusted actors/events, main refs and production targets.
