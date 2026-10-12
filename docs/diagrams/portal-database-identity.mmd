@@ -1,0 +1,33 @@
+erDiagram
+  users {
+    uuid id PK
+    text email
+    text password_hash
+    text role
+    text mfa_secret
+    bigint mfa_last_step
+    boolean disabled
+    timestamptz created_at
+    text mfa_pending
+    text enroll_hash
+    timestamptz enroll_expires
+  }
+  sessions {
+    text token_hash PK
+    uuid user_id FK
+    text csrf
+    timestamptz expires_at
+    timestamptz created_at
+  }
+  recovery_tokens {
+    text token_hash PK
+    uuid user_id FK
+    timestamptz expires_at
+  }
+  mfa_recovery {
+    uuid user_id FK
+    text code_hash
+  }
+  users ||--o{ sessions : "declared foreign key"
+  users ||--o{ recovery_tokens : "declared foreign key"
+  users ||--o{ mfa_recovery : "declared foreign key"

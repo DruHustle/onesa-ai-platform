@@ -1,8 +1,11 @@
 flowchart TB
-Document[Owned document upload] --> Extract[Validate / extract / chunk]
-Extract --> Index[Versioned lexical baseline]
-Question[User question] --> Retrieval[Owned source retrieval]
-Index --> Retrieval
-Retrieval --> Context[Attributed untrusted context]
-Context --> Model[Configured model]
-Model --> Answer[Answer with saved sources]
+Upload[Authorized bounded upload] --> Validate[Type size and parse validation]
+Validate --> Parse[Text parsing]
+Parse --> Chunk[Document chunking]
+Chunk --> Embed[Versioned lexical or approved semantic embeddings]
+Embed --> Vector[pgvector matching dimensions]
+Query[Owned document query] --> Retrieve[Authorization constrained retrieval]
+Vector --> Retrieve
+Retrieve --> Sources[Supporting sources and citations]
+Delete[Owned update or delete] --> Index[Index consistency and retrieval removal]
+Index --> Vector

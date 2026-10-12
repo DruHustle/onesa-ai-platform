@@ -9,7 +9,7 @@ API := onesa-ai-platform-backend
 .PHONY: install check test run openapi up down frontend-check training-check
 install:
 	python3 -m venv .venv
-	$(PYTHON) -m pip install -r $(API)/requirements-dev.lock
+	$(PYTHON) -m pip install --require-hashes -r $(API)/requirements-dev.lock
 	$(PYTHON) -m pip install --no-deps --no-build-isolation -e $(API)
 
 check:
@@ -109,3 +109,7 @@ api-client: openapi
 
 contract-check:
 	$(PYTHON) scripts/generate_api_client.py --check
+
+.PHONY: docs-static-acceptance
+docs-static-acceptance:
+	node scripts/docs/acceptance.mjs

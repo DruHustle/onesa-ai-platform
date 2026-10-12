@@ -1,0 +1,65 @@
+erDiagram
+  users {
+    uuid id PK
+    text email
+    text password_hash
+    text role
+    text mfa_secret
+    bigint mfa_last_step
+    boolean disabled
+    timestamptz created_at
+    text mfa_pending
+    text enroll_hash
+    timestamptz enroll_expires
+  }
+  enquiries {
+    uuid id PK
+    text category
+    text name
+    text email
+    text organization
+    text message
+    text locale
+    text status
+    uuid owner_id FK
+    text notes
+    timestamptz follow_up_at
+    timestamptz consent_at
+    timestamptz created_at
+  }
+  files {
+    uuid id PK
+    text filename
+    text mime
+    integer size
+    text storage_key
+    text sha256
+    text classification
+    text scan_status
+    text approval
+    integer version
+    text title
+    uuid owner_id FK
+    timestamptz review_at
+    text association
+    timestamptz created_at
+    uuid parent_id
+    boolean archived
+  }
+  applications {
+    uuid id PK
+    uuid job_id FK
+    text name
+    text email
+    text message
+    uuid file_id FK
+    text status
+    text notes
+    timestamptz consent_at
+    timestamptz delete_after
+    timestamptz created_at
+  }
+  users ||--o{ enquiries : "declared foreign key"
+  users ||--o{ files : "declared foreign key"
+  files ||--o{ applications : "declared foreign key"
+  files ||--o{ files : "declared foreign key"

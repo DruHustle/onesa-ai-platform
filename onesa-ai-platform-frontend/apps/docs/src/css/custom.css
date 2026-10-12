@@ -24,3 +24,31 @@
 /* Keep the hidden skip link from widening mobile pages. */
 html [class*="skipToContent_"] { left: 0 !important; transform: translateY(-200%); }
 [class*="skipToContent_"]:focus { transform: translateY(0); }
+
+/* Override upstream Swagger badges with readable method colours. */
+.api-page .swagger-ui .info .title small,
+.api-page .swagger-ui .info .title small.version-stamp { background: #4b5563; }
+.api-page .swagger-ui .info .title small pre { color: #fff; background: transparent; }
+.api-page .swagger-ui .btn.authorize { color: #16653f; border-color: #16653f; }
+.api-page .swagger-ui .btn.authorize svg { fill: #16653f; }
+.api-page .swagger-ui .opblock-summary.opblock-summary-get .opblock-summary-method { color: #fff; background: #16528c; }
+.api-page .swagger-ui .opblock-summary.opblock-summary-post .opblock-summary-method { color: #fff; background: #16653f; }
+.api-page .swagger-ui .opblock-summary.opblock-summary-put .opblock-summary-method,
+.api-page .swagger-ui .opblock-summary.opblock-summary-patch .opblock-summary-method { color: #fff; background: #7a4a08; }
+.api-page .swagger-ui .opblock-summary.opblock-summary-delete .opblock-summary-method { color: #fff; background: #a51818; }
+.diagram-canvas:focus-visible { outline: 3px solid #2366d1; outline-offset: 3px; }
+.api-page .swagger-ui .json-schema-2020-12-expand-deep-button { color: #16528c; background: #fff; }
+
+/* Inline documentation links remain identifiable without relying on colour. */
+.theme-doc-markdown a {text-decoration:underline;text-underline-offset:.15em;}
+
+/* Swagger renders on its own light surface in either documentation theme. */
+.api-page .swagger-ui {color-scheme:light;}
+.api-page .swagger-ui button, .api-page .swagger-ui input, .api-page .swagger-ui select {background-color:#fff;color:#10263e;}
+
+@media(max-width:600px){
+ .portal-page label {display:block;max-width:100%;}
+ .portal-page label select {display:block;width:100%;max-width:100%;margin:.4rem 0 0;}
+ .diagram-panel {min-width:0;}
+ .diagram-toolbar strong {width:100%;overflow-wrap:anywhere;}
+}

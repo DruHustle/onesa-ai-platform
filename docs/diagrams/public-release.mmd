@@ -1,0 +1,11 @@
+flowchart TB
+Review[Reviewed change and classified sources] --> CI[GitHub-hosted public CI]
+CI --> Tests[Contracts security tests browser builds]
+Tests --> Stage[Authorized isolated staging]
+Stage --> Hosted[Revision logs readiness and workflows]
+Hosted --> Gate[Release gate and owner authorization]
+Gate --> Production[Production promotion only after approval]
+Tests --> Docs[Classified public docs artifact]
+Docs --> DGate[Independent docs release verification]
+DGate --> Vercel[Separate public docs Vercel project]
+Rollback[Retained source artifact migration compatibility] --> Production

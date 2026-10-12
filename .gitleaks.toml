@@ -1,0 +1,20 @@
+title = "Onesa local source scan"
+[extend]
+useDefault = true
+
+# Three verified nonsecret local rollback image tags. Restrict both path and exact
+# captured value; other tokens in these files still fail. See CI_CD_PIPELINE_REPORT.md.
+[[allowlists]]
+description = "Dated local split-baseline image tag, not an API credential"
+condition = "AND"
+paths = ['''^(?:.*/)?(?:infra/deployment/rollback\.yaml|docs/deployment/PRODUCTION_DEPLOYMENT\.md)$''']
+regexTarget = "secret"
+regexes = ['''^pre-split-20261009$''']
+
+# Exact SHA256 hashes verified against the pinned source commits, not credentials.
+[[allowlists]]
+description = "Three reviewed ecosystem API source checksums"
+condition = "AND"
+paths = ['''^(?:.*/)?docs/ecosystem/source-revisions\.json$''']
+regexTarget = "secret"
+regexes = ['''^(?:0cb3867fd67d896a77fc68da8aeed4fcee416681146978a87c0c9caf963530cc|126a27b6870d280f7dc8bf348c7727cf57de0e2f0d452b79ca26d05b8c0f86fa|e71aa4e4eca7097d05277463ed6a53d70671c3f83d9069c9e143bb2ddbb5ef22)$''']

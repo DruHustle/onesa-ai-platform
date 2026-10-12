@@ -1,5 +1,58 @@
 # Development changelog
 
+## 2026-10-12 — Initial qualified staging entry point
+
+Allow an explicitly selected staging dispatch through registered deploy.yml, reusing
+release-staging.yml and its Staging environment without inherited production secrets.
+Retain exact-source owner/branch/event, provider/database isolation and hosted model
+acceptance gates. Production requires its explicit target and existing authorization.
+This permits initial staging qualification before new workflow files reach main.
+
+## 2026-10-12 — Production provider credential boundary
+
+Correct legacy public production workflow bindings to use production provider secret
+names, preserving staging-only credentials in staging workflows and all existing
+qualification/approval gates. Private production jobs remain disabled; no provider
+values or deployments changed. Add a regression forbidding staging tokens in production.
+
+## 2026-10-12 — Public documentation search description
+
+Add the missing homepage description to public documentation so generated HTML
+provides a useful search snippet and social description. Preserve public-source
+selection, internal access controls and documentation deployment gates.
+
+## 2026-10-12 — Save reviewed production defaults without deployment
+
+Add an explicit owner-only operation on dev to save missing nonsecret settings to
+the identified AI production service, after exact-source CI and hygiene pass. Preserve
+existing values, reject staging/foreign targets, active deployments and linked groups,
+disable redirects, and verify readback and unchanged deployment identity. Do not copy
+database/API credentials, create resources or promote production. Preserve the reviewed
+Ollama and semantic embedding profiles pending actual hosted endpoints. Set the approved
+reply address to info@onesa.eu and keep email disabled until delivery is qualified.
+Add regression coverage to CI for these configuration and credential boundaries.
+
+## 2026-10-11 — Staging environment and branch configuration
+
+Scope staging credentials to the GitHub Staging environment, preserve each product’s Vercel project for staging previews, and standardize remote branches on dev/staging/main with restricted recovery archives. Keep production qualification and explicit owner approval enforced.
+
+
+
+## 2026-10-11 — Automated review and CI/CD optimization
+
+Add read-only Reviewdog, checksum-locked workflow/secret analyzers, negative pipeline
+tests, conservative PR paths, dependency caches, PR cancellation and required CI summary.
+Preserve full release-source checks and independently tested runtime evidence; remove
+Portal duplicate image builds. Add opt-in isolated staging and automatic technical
+qualification, retaining manual exact-digest owner authorization and external production
+credential custody. Legal/operational evidence never receives fabricated PASS.
+Dependabot version schedules are prepared; automatic security-update PRs were enabled
+and verified as requested. No other remote settings, pushes or live deployments. See the CI/CD pipeline report.
+
+## 2026-10-11 — Private-Free release safeguards
+
+Credential-free hosted PR CI; immutable Actions pins; exact-commit qualification and owner authorization with external production handoff; separate staging credentials; legacy JSON fallback removed; private credential-bearing production workflows excluded. Remote settings and deployments unchanged. See the private-Free safeguard report for owner migration and enforcement limits.
+
 ## 2026-10-11 — Preserve qualified staging with owner runner policy
 
 - Merge all current staging corrections and owner-approved runner routing by ordinary
@@ -546,3 +599,29 @@ leases, retries or provider idempotency. Hosted delivery remains unqualified.
 ## 2026-10-11 — Reviewed governance integration
 
 Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.
+
+## 2026-10-11 — Automated qualification (local implementation)
+
+Added versioned exact-candidate Actions evidence, tested runtime digests, encrypted
+reviewed Vercel prebuilt artifacts, owner approval/revocation records, staged/provider
+receipts and fail-closed promotion/hosted checks. Legacy qualification is retained
+behind an explicit verified migration switch. No production release or legal approval
+was issued; target acceptance adapters/configuration and remote validation remain open.
+
+## Documentation ecosystem reference 0.3.0 — 2026-10-11
+
+Extended the existing Docusaurus portal across Company Portal, AI Platform and
+Robot, with source-pinned Fastify/FastAPI explorers, current generated AI schema,
+16 ecosystem diagram groups, readable private ERDs and ten additional engineering
+manuals. Fixed architecture view selection, dated table-count/schema prose, Swagger
+accessible labels/nested controls and low-contrast badges. Added static interaction,
+link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
+The public static build remains independent of application release approval. Hosted
+internal access and actual model/hardware functionality are not claimed complete.
+
+## 2026-10-11 — Remote CI integration review
+
+Removed pip caching from the publication hygiene job because it installs no packages; GitHub runner cleanup otherwise fails when the cache directory is absent.
+Preserved the newly merged ecosystem documentation, pinned its additional checkout actions, and scoped scanner exceptions to three verified source checksums.
+
+Generated development-lockfile hashes for all 81 already-pinned packages. A clean dependency calculation validates hashes instead of relying on an existing local environment; no package versions changed.

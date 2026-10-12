@@ -1,18 +1,22 @@
-# Public: hosted only. Private: full local validation precedes cloud execution.
 name: Platform checks
 'on':
-  push: null
-  pull_request: null
+  push:
+    branches:
+    - main
+    - staging
+    - dev
+  pull_request:
+    branches:
+    - main
+    - staging
+    - dev
   workflow_dispatch: null
 permissions:
   contents: read
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  local-validation:
-    if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
-    uses: ./.github/workflows/_local-validation.yml
   backend:
     runs-on: ubuntu-latest
     services:
@@ -24,41 +28,77 @@ jobs:
           POSTGRES_DB: onesa_test
         ports:
         - 5432:5432
-        options: --health-cmd "pg_isready -U onesa -d onesa_test" --health-interval 5s --health-timeout 3s --health-retries 20
+        options: --health-cmd "pg_isready -U onesa -d onesa_test" --health-interval 5s --health-timeout 3s --health-retries
+          20
     env:
       ONESA_TEST_DATABASE_URL: postgresql+psycopg://onesa:onesa-test-only@127.0.0.1:5432/onesa_test
+      REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-python@v5
+    - name: Install checksum-locked annotation tool
+      run: python3 scripts/ci/install_tools.py --only reviewdog
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
       with:
         python-version: '3.11'
+        cache: pip
+        cache-dependency-path: 'infra/operations/requirements.lock
+
+          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
+
+          onesa-ai-platform-backend/requirements-build.lock
+
+          onesa-ai-platform-backend/requirements-dev.lock
+
+          onesa-ai-platform-backend/requirements.lock'
+    - name: 'Release requirement: qualification failure-path tests'
+      run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
     - run: make install
     - run: .venv/bin/python scripts/check_secrets.py
-    - run: make check
+    - run: 'python3 scripts/ci/analyze.py ruff -- .venv/bin/python -m ruff check scripts infra/operations --output-format
+        json
+
+        .venv/bin/python -m ruff format --check scripts infra/operations
+
+        cd onesa-ai-platform-backend
+
+        python3 ../scripts/ci/analyze.py ruff -- ../.venv/bin/python -m ruff check . --output-format json
+
+        ../.venv/bin/python -m ruff format --check .
+
+        python3 ../scripts/ci/analyze.py mypy -- ../.venv/bin/python -m mypy app
+
+        ../.venv/bin/python -m pytest -q'
     - run: python3 -m unittest discover -s scripts -p test_inspect_hosting.py
+    - run: python3 -m unittest discover -s scripts -p test_production_defaults.py
     - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
     - run: python3 -m unittest discover -s scripts/runner -p 'test_*.py'
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
-    - run: python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py
+    - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.backend == 'true' }}
     timeout-minutes: 45
+    permissions:
+      contents: read
+      pull-requests: read
+    needs:
+    - changes
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -66,27 +106,47 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-node@v4
+    - name: Install checksum-locked annotation tool
+      run: python3 scripts/ci/install_tools.py --only reviewdog
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: '24'
         cache: npm
-        cache-dependency-path: onesa-ai-platform-frontend/apps/chat/package-lock.json
+        cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
+
+          onesa-ai-platform-frontend/apps/docs/package-lock.json
+
+          scripts/contract-tools/package-lock.json'
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: make frontend-check
+    - run: 'cd onesa-ai-platform-frontend/apps/chat
+
+        python3 ../../../scripts/ci/analyze.py eslint -- node_modules/.bin/eslint --format json .
+
+        python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc --noEmit --pretty false
+
+        npm run build'
     - run: node scripts/test_backend_proxy.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true' }}
     timeout-minutes: 45
+    env:
+      REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
+    permissions:
+      contents: read
+      pull-requests: read
+    needs:
+    - changes
   browser:
     runs-on: ubuntu-latest
     steps:
@@ -94,45 +154,67 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: '24'
+        cache: npm
+        cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
+
+          onesa-ai-platform-frontend/apps/docs/package-lock.json
+
+          scripts/contract-tools/package-lock.json'
     - run: python3 scripts/bootstrap_env.py
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
       with:
         python-version: '3.11'
+        cache: pip
+        cache-dependency-path: 'infra/operations/requirements.lock
+
+          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
+
+          onesa-ai-platform-backend/requirements-build.lock
+
+          onesa-ai-platform-backend/requirements-dev.lock
+
+          onesa-ai-platform-backend/requirements.lock'
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets
     - run: .venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo
-    - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml up -d --wait
+    - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml
+        up -d --wait
     - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
     - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-serve
     - run: ONESA_DOCS_EXPECT_BACKEND=mock make docs-browser
     - if: failure()
-      run: |
-        docker compose logs
+      run: 'docker compose logs
+
         cat data/runtime/docs/public.log data/runtime/docs/internal.log 2>/dev/null || true
+
+        '
     - if: always()
       run: docker compose down
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.browser == 'true' }}
     timeout-minutes: 45
+    needs:
+    - changes
   documentation:
     runs-on: ubuntu-latest
     steps:
@@ -140,40 +222,98 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-python@v5
+    - name: Install checksum-locked annotation tool
+      run: python3 scripts/ci/install_tools.py --only reviewdog
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
       with:
         python-version: '3.11'
-    - uses: actions/setup-node@v4
+        cache: pip
+        cache-dependency-path: 'infra/operations/requirements.lock
+
+          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
+
+          onesa-ai-platform-backend/requirements-build.lock
+
+          onesa-ai-platform-backend/requirements-dev.lock
+
+          onesa-ai-platform-backend/requirements.lock'
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: '24'
         cache: npm
-        cache-dependency-path: onesa-ai-platform-frontend/apps/docs/package-lock.json
+        cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
+
+          onesa-ai-platform-frontend/apps/docs/package-lock.json
+
+          scripts/contract-tools/package-lock.json'
     - run: make install
+    - name: Read reviewed cross-project source revisions
+      id: docs-sources
+      run: |
+        python3 - <<'PY'
+        import json, os
+        from pathlib import Path
+        revisions=json.loads(Path('docs/ecosystem/source-revisions.json').read_text())
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            output.write('portal=' + revisions['onesa-company-portal']['commit'] + '\n')
+            output.write('robot=' + revisions['onesa-ai-robot']['commit'] + '\n')
+        PY
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-company-portal
+        ref: ${{ steps.docs-sources.outputs.portal }}
+        path: data/docs-sources/portal
+        persist-credentials: false
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      if: github.event.repository.private == false
+      with:
+        repository: DruHustle/onesa-ai-robot
+        ref: ${{ steps.docs-sources.outputs.robot }}
+        path: data/docs-sources/robot
+        persist-credentials: false
+    - name: Verify pinned Portal and Robot source contracts
+      if: github.event.repository.private == false
+      run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
-    - run: npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
+    - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
+        --noEmit --pretty false
     - run: python3 scripts/bootstrap_env.py
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
+    - name: Verify static public docs interactions and accessibility
+      run: |
+        ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+        node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
-    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md
+    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.documentation == 'true' }}
     timeout-minutes: 45
+    env:
+      REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
+    permissions:
+      contents: read
+      pull-requests: read
+    needs:
+    - changes
   containers:
     runs-on: ubuntu-latest
     steps:
@@ -181,27 +321,32 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
     - run: python3 scripts/bootstrap_env.py
     - run: docker compose config --quiet
-    - run: ONESA_DOMAIN=example.invalid ONESA_APP_DATABASE_URL=postgresql+psycopg://onesa_app:validation-only@db:5432/onesa docker compose -f compose.yaml -f compose.production.yaml config --quiet
+    - run: ONESA_DOMAIN=example.invalid ONESA_APP_DATABASE_URL=postgresql+psycopg://onesa_app:validation-only@db:5432/onesa
+        docker compose -f compose.yaml -f compose.production.yaml config --quiet
     - run: ONESA_MODEL_API_KEY=validation-only docker compose -f compose.yaml -f compose.gpu.yaml --profile gpu config --quiet
-    - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config --quiet
+    - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config
+        --quiet
     - run: docker compose build api chat
-    - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml up --wait --wait-timeout 180
+    - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f
+        compose.staging.yaml up --wait --wait-timeout 180
     - run: curl --fail http://localhost:3120/ready
     - run: docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.containers == 'true' }}
     timeout-minutes: 45
+    needs:
+    - changes
   tls-acceptance:
     runs-on: ubuntu-latest
     steps:
@@ -209,50 +354,77 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
       with:
         python-version: '3.11'
-    - uses: actions/setup-node@v4
+        cache: pip
+        cache-dependency-path: 'infra/operations/requirements.lock
+
+          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
+
+          onesa-ai-platform-backend/requirements-build.lock
+
+          onesa-ai-platform-backend/requirements-dev.lock
+
+          onesa-ai-platform-backend/requirements.lock'
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: '24'
+        cache: npm
+        cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
+
+          onesa-ai-platform-frontend/apps/docs/package-lock.json
+
+          scripts/contract-tools/package-lock.json'
     - run: make install
     - run: .venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps
     - run: python3 scripts/acceptance/bootstrap.py
     - name: Build and start isolated TLS staging
-      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml up --build --wait --wait-timeout 240
+      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
+        -f compose.acceptance.yaml up --build --wait --wait-timeout 240
     - name: Export only the public test CA
-      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
+      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
+        -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
     - run: .venv/bin/python scripts/acceptance/tls_security.py
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
-    - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/chat.spec.ts
+    - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat
+        run test:e2e -- tests/chat.spec.ts
     - run: .venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json
-    - run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml exec -T operations python /app/test_worker.py
+    - run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
+        -f compose.acceptance.yaml exec -T operations python /app/test_worker.py
     - run: PYTHONPATH=. .venv/bin/python scripts/acceptance/operations.py
-    - run: .venv/bin/python scripts/acceptance/scan_artifacts.py --image onesa-acceptance-005-api --image onesa-acceptance-005-chat --image onesa-acceptance-005-operations
-    - uses: actions/upload-artifact@v4
+    - run: .venv/bin/python scripts/acceptance/scan_artifacts.py --image onesa-acceptance-005-api --image onesa-acceptance-005-chat
+        --image onesa-acceptance-005-operations
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       if: success()
       with:
         name: local-tls-acceptance-${{ github.sha }}
-        path: |
-          data/acceptance-005/tls-security.json
+        path: 'data/acceptance-005/tls-security.json
+
           data/acceptance-005/ci-load.json
+
           data/acceptance-005/operations-recovery.json
+
+          '
         retention-days: 3
     - if: always() && hashFiles('data/acceptance-005/staging.env') != ''
-      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml down
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+      run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
+        -f compose.acceptance.yaml down
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.tls == 'true' }}
     timeout-minutes: 45
+    needs:
+    - changes
   image-security:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -267,11 +439,13 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
@@ -282,15 +456,80 @@ jobs:
       run: python3 scripts/startup_smoke.py onesa-security-candidate:ci
     - name: Verify native release-image PDF restrictions
       if: matrix.application == 'onesa-ai-platform-backend'
-      run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py
+      run: docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python
+        - < scripts/release/pdf_image_probe.py
     - name: Scan full runtime, including unfixed vendor advisories
-      run: |
-        mkdir -p data/security
+      run: 'mkdir -p data/security
+
         chmod 700 data/security
+
         docker save onesa-security-candidate:ci -o data/security/runtime.tar
-        docker run --rm --user "$(id -u):$(id -g)" -e TRIVY_CACHE_DIR=/tmp/trivy-cache -v "$PWD/data/security:/reports" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln,secret --format json --output /reports/runtime.json --input /reports/runtime.tar
+
+        docker run --rm --user "$(id -u):$(id -g)" -e TRIVY_CACHE_DIR=/tmp/trivy-cache -v "$PWD/data/security:/reports" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+        image --scanners vuln,secret --format json --output /reports/runtime.json --input /reports/runtime.tar
+
         chmod 600 data/security/runtime.json
+
         python3 scripts/release/image_gate.py data/security/runtime.json
+
+        '
+    - name: 'Release requirement: record tested runtime digest'
+      run: python3 scripts/release/evidence.py manifest --image "onesa-security-candidate:ci" --output "$RUNNER_TEMP/runtime/record.json"
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: runtime-${{ matrix.application }}
+        path: ${{ runner.temp }}/runtime/record.json
+        retention-days: 7
+        if-no-files-found: error
+    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.containers == 'true' }}
     needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    - changes
+  pipeline-security:
+    uses: ./.github/workflows/_pipeline-review.yml
+    permissions:
+      contents: read
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.paths.outputs.backend }}
+      frontend: ${{ steps.paths.outputs.frontend }}
+      browser: ${{ steps.paths.outputs.browser }}
+      documentation: ${{ steps.paths.outputs.documentation }}
+      containers: ${{ steps.paths.outputs.containers }}
+      tls: ${{ steps.paths.outputs.tls }}
+      edge: ${{ steps.paths.outputs.edge }}
+      applications: ${{ steps.paths.outputs.applications }}
+      verify: ${{ steps.paths.outputs.verify }}
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - id: paths
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+      run: python3 scripts/ci/paths.py
+  ci-summary:
+    needs:
+    - changes
+    - pipeline-security
+    - backend
+    - frontend
+    - browser
+    - documentation
+    - containers
+    - tls-acceptance
+    - image-security
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        persist-credentials: false
+    - name: 'Release requirement: required checks summary'
+      env:
+        CI_SELECTION: ${{ toJSON(needs.changes.outputs) }}
+        CI_RESULTS: ${{ toJSON(needs) }}
+      run: python3 scripts/ci/summary.py

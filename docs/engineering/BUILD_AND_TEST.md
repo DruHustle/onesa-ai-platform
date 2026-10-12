@@ -1,5 +1,7 @@
 # Separate application builds and tests
 
+> Current pipeline: [automated review, staging qualification and owner activation](../development/CI_CD_PIPELINE_REPORT.md). Prepared local changes are not live deployments; branch/PR optimization and automatic technical evidence supersede older manual-only details.
+
 Use Node 24 and Python 3.11. The existing Makefiles describe supported dependency installs.
 
 ## Frontend (repository root)
@@ -41,7 +43,7 @@ checks use an isolated mock stack, not the active application or a real inferenc
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
 
 Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers`,
-`tls-acceptance`. Add `publication-hygiene` to required checks. CI runs on all pushes and pull requests so required jobs can report consistently. No remote
+`tls-acceptance`. Add `publication-hygiene` to required checks. CI runs relevant main/staging PR checks and full release-source push checks, with fail-closed summaries. No remote
 CI success is implied by local build/test results.
 
 ## Identity worker lifecycle

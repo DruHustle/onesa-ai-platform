@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def validate(staged=False, assets_only=False):
+    from ecosystem import validate as validate_ecosystem
+
+    validate_ecosystem()
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
     approved = set(policy["public_sources"])
     for scope in ["public", "internal"]:
@@ -63,6 +66,11 @@ def validate(staged=False, assets_only=False):
             word in str(schema)
             for word in ["host.docker.internal", "11434", "ONESA_METRICS_TOKEN"]
         )
+        for product in ["portal", "robot"]:
+            contract = json.loads((generated / f"openapi-{product}.json").read_text())
+            assert contract["paths"] and not contract.get("servers")
+            if scope == "public" and product == "portal":
+                assert all(p.startswith("/api/v1/public/") for p in contract["paths"])
         diagrams = json.loads((generated / "diagrams.json").read_text())
         if scope == "public":
             assert {d["id"] for d in diagrams} == set(policy["public_diagrams"])
@@ -81,6 +89,8 @@ def validate(staged=False, assets_only=False):
         if scope == "public":
             allowed = {
                 "openapi.json",
+                "openapi-portal.json",
+                "openapi-robot.json",
                 "search.json",
                 "diagrams.json",
                 "retrieval.json",
@@ -120,6 +130,10 @@ def validate(staged=False, assets_only=False):
         manuals = json.loads((generated / "manuals.json").read_text())
         if scope == "public":
             assert {m["category"] for m in manuals} == set(policy["public_pdfs"])
+        if scope == "internal":
+            assert set(policy["required_ecosystem_manuals"]).issubset(
+                {m["category"] for m in manuals}
+            ), "Missing mandatory ecosystem manuals"
         for manual in manuals:
             path = generated / "manuals" / manual["file"]
             assert path.read_bytes().startswith(b"%PDF-")
@@ -128,10 +142,11 @@ def validate(staged=False, assets_only=False):
                 assert (
                     hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest
                 ), f"PDF source drift: {source}"
+            assert manual["version"] == policy["version"], "PDF version drift"
             document = PdfReader(path)
             assert len(document.pages) >= 3
             text = "\n".join(page.extract_text() for page in document.pages)
-            assert "0.2.0" in text and scope in text.lower()
+            assert policy["version"] in text and scope in text.lower()
             assert document.outline, f"Missing PDF bookmarks: {path}"
             if scope == "public":
                 links = {
