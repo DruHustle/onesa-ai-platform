@@ -14,7 +14,7 @@ export default function DocumentationNav() {
   return (
     <>
       <a href={documentationUrls.public}>{copy.documentation}</a>
-      {engineering && (
+      {engineering && documentationUrls.internal && (
         <a href={documentationUrls.internal}>{copy.engineeringDocumentation}</a>
       )}
     </>
