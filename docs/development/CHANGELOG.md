@@ -1,5 +1,26 @@
 # Development changelog
 
+## 2026-10-12 — Cloudflare release profile compatibility
+
+Accept the implemented Cloudflare inference/semantic embedding selectors in staging preflight. Preserve rejection of mock, lexical, missing and non-staging profiles; actual hosted generation and retrieval remain required. Document the supported account endpoints and versioned 256-dimensional adapter.
+
+## 2026-10-12 — verified staging secret scope
+
+- Select the verified public `Staging` environment through the non-secret `STAGING_SECRET_SCOPE` variable while keeping repository-level `STAGING_*` secrets as the private-Free fallback.
+- Share one deployment sequence between mutually exclusive owner-only jobs; preserve source qualification, target checks and production separation.
+- Test both scope selections, private fallback and untrusted actor rejection; diagnostics disclose only availability booleans.
+
+## 2026-10-12 — Verify configured staging secret injection
+
+Add trusted owner-only environment and repository availability modes to the existing
+hosting inspector. Test required names as booleans, without checking out code, calling
+providers or displaying values. Preserve the Staging entries and independently verify
+usable injection and actual repository entitlement. Private-Free repository fallback
+remains documented; secret names alone never prove authentication or data isolation.
+Exercise real diagnostic code with synthetic sentinel values and assert they are never
+logged. Oracle configuration remains independent of GitHub secret entry.
+
+
 ## 2026-10-12 — Qualify free-cloud adapters and automatic day/night styling
 
 Add explicit authenticated Cloudflare generation and semantic embedding adapters,

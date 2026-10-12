@@ -1,5 +1,31 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Current supported Cloudflare release profile — 2026-10-12
+
+The implemented model selectors include `ONESA_MODEL_BACKEND=cloudflare` and
+`ONESA_EMBEDDING_BACKEND=cloudflare`. The release preflight now accepts these real
+provider profiles as well as Ollama/vLLM generation and HTTP semantic embeddings.
+Mock generation and lexical embeddings remain invalid for full hosted qualification.
+Selector checks do not prove connectivity: authenticated generation, semantic retrieval,
+embedding dimensions and readiness must pass against the actual staging deployment.
+
+For the existing verified account `ffe41f6678793e8dcc7f4a1c2f5e60d8`, the implemented
+generation base is `https://api.cloudflare.com/client/v4/accounts/ffe41f6678793e8dcc7f4a1c2f5e60d8/ai/v1`
+and model `@cf/qwen/qwen3-30b-a3b-fp8`. Embeddings use the native base
+`https://api.cloudflare.com/client/v4/accounts/ffe41f6678793e8dcc7f4a1c2f5e60d8/ai`,
+model `@cf/qwen/qwen3-embedding-0.6b` and revision `cf-qwen3-mrl256-v1`. The adapter
+validates the native 1024-dimensional response, takes the reviewed 256-dimensional
+Matryoshka prefix and normalizes it for the existing vector index. Configure
+`ONESA_MODEL_BASE_URL`, `ONESA_MODEL_NAME`, `ONESA_EMBEDDING_BASE_URL`,
+`ONESA_EMBEDDING_NAME`, `ONESA_EMBEDDING_REVISION` and the selectors above in the
+existing staging Render service. Enter `ONESA_MODEL_API_KEY` and
+`ONESA_EMBEDDING_API_KEY` privately; the code requires tokens of at least 32 characters.
+Do not reuse staging credentials in production or silently replace index revisions.
+
+Latest hosted inspection still reports degraded Ollama serving and absent endpoint/key
+bindings; model transport mocks are local adapter evidence only. The historical matrix
+below predates this adapter and does not supersede the current supported selectors.
+
 **Production NO-GO. Free-only purchasing policy remains in effect.**
 The final staging verification section below supersedes earlier staging inspection
 snapshots and owner prerequisites; historical production findings remain separate.
