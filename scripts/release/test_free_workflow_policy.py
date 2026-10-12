@@ -22,14 +22,26 @@ class WorkflowBoundaryTests(unittest.TestCase):
         ]:
             self.assertIn(guard, job)
         self.assertIn("uses: ./.github/workflows/release-staging.yml", job)
-        self.assertNotIn("secrets:", job)
+        self.assertNotIn("secrets: inherit", job)
+        callee = (ROOT / ".github/workflows/release-staging.yml").read_text()
+        used = set(re.findall(r"secrets\.(STAGING_[A-Z0-9_]+)", callee))
+        passed = set(re.findall(r"^      (STAGING_[A-Z0-9_]+):", job, re.MULTILINE))
+        declared = set(
+            re.findall(
+                r"^      (STAGING_[A-Z0-9_]+):\n        required: true",
+                callee,
+                re.MULTILINE,
+            )
+        )
+        self.assertEqual(passed, used)
+        self.assertEqual(declared, used)
+        self.assertNotRegex(job, r"secrets\.(?!STAGING_)[A-Z0-9_]+")
+        for key in used:
+            self.assertIn(key + ": ${{ secrets." + key + " }}", job)
         for condition in re.findall(r"^    if: (.+)", text, re.MULTILINE):
             if "refs/heads/main" in condition:
                 self.assertIn("inputs.target == 'production'", condition)
-        self.assertIn(
-            "workflow_call: {}",
-            (ROOT / ".github/workflows/release-staging.yml").read_text(),
-        )
+        self.assertIn("workflow_call:", callee)
 
     def test_free_workflows_are_credential_free_and_authorization_is_manual(self):
         for name in ("free-qualification.yml", "free-authorization.yml"):
@@ -61,8 +73,9 @@ class WorkflowBoundaryTests(unittest.TestCase):
 
     def test_production_never_uses_staging_provider_credentials(self):
         text = (ROOT / ".github/workflows/deploy.yml").read_text()
+        production = text[text.index("  verify:\n") :]
         self.assertNotRegex(
-            text,
+            production,
             r"secrets\.STAGING_(RENDER_API_KEY|VERCEL_TOKEN|VERCEL_AUTOMATION_BYPASS_SECRET)\b",
         )
         self.assertIn("secrets.VERCEL_TOKEN", text)
