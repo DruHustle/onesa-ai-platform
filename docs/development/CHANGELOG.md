@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-12 — Registered private-Free staging entry point
+
+Allow the existing manual, owner-only staging bridge on private repositories so the repository-secret fallback is usable before new workflows reach main. Keep production guards, exact-source qualification, named staging secrets and protected Preview checks; test rejection of untrusted actors/events, main refs and production targets.
+
 ## 2026-10-12 — Cloudflare release profile compatibility
 
 Accept the implemented Cloudflare inference/semantic embedding selectors in staging preflight. Preserve rejection of mock, lexical, missing and non-staging profiles; actual hosted generation and retrieval remain required. Document the supported account endpoints and versioned 256-dimensional adapter.
