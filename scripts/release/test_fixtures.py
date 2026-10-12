@@ -43,10 +43,36 @@ class FixtureTests(unittest.TestCase):
         }
         query = database_tls_query(saved)
         self.assertEqual(query["sslmode"], "verify-full")
-        self.assertEqual(query["sslrootcert"], "system")
+        self.assertNotEqual(query["sslrootcert"], "/tmp/untrusted.crt")
+        from pathlib import Path
+
+        self.assertTrue(Path(query["sslrootcert"]).is_file())
         self.assertEqual(query["channel_binding"], "require")
         self.assertEqual(query["connect_timeout"], "10")
         self.assertEqual(saved["sslmode"], "disable")
+
+    def test_database_failure_categories_never_expose_private_connection_details(self):
+        from fixture_lifecycle import database_failure_phase
+
+        error = RuntimeError(
+            "private-database-url password=private-value root certificate file does not exist"
+        )
+        self.assertEqual(
+            database_failure_phase(error, "DATABASE_CONNECTION"), "DATABASE_TLS"
+        )
+        self.assertEqual(
+            database_failure_phase(
+                RuntimeError("private-database-url"), "DATABASE_CONNECTION"
+            ),
+            "DATABASE_CONNECTION",
+        )
+        from types import SimpleNamespace
+
+        error.orig = SimpleNamespace(sqlstate="28P01")
+        self.assertEqual(
+            database_failure_phase(error, "DATABASE_CONNECTION"),
+            "DATABASE_AUTHENTICATION",
+        )
 
     def test_valid_credentials_and_unpadded_totp(self):
         self.assertEqual(

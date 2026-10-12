@@ -99,6 +99,7 @@ jobs:
         STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Deploy exact staging backend source without database migration
+      id: backend
       run: python3 scripts/deploy_render.py
       env:
         RENDER_RECEIPT_PATH: ${{ runner.temp }}/render/record.json
@@ -151,6 +152,7 @@ jobs:
         STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Capture provider identity and real hosted probes
+      if: always() && steps.backend.outcome == 'success'
       run: python3 scripts/release/hosted.py stage --evidence "$RUNNER_TEMP/technical/record.json" --render-receipt "$RUNNER_TEMP/render/record.json"
         --output "$RUNNER_TEMP/staging/record.json"
       env:
@@ -163,6 +165,7 @@ jobs:
         STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      if: always() && steps.backend.outcome == 'success'
       with:
         name: staging-verification
         path: ${{ runner.temp }}/staging/record.json

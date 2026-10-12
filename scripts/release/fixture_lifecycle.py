@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import re
+import ssl
 import subprocess
 import sys
 from datetime import timedelta
@@ -25,12 +26,49 @@ class FixtureOperationError(Exception):
 def database_tls_query(query):
     # libpq otherwise looks for ~/.postgresql/root.crt, absent on fresh CI runners.
     # The locked psycopg binary uses libpq >= 16, which supports the OS trust store.
+    roots = next(
+        (
+            str(path)
+            for path in [
+                Path("/etc/ssl/certs/ca-certificates.crt"),
+                Path("/etc/ssl/cert.pem"),
+                Path(ssl.get_default_verify_paths().openssl_cafile),
+            ]
+            if path.is_file()
+        ),
+        None,
+    )
+    if roots is None:
+        raise FixtureOperationError("TLS_TRUST_STORE")
     return {
         **query,
         "sslmode": "verify-full",
-        "sslrootcert": "system",
+        "sslrootcert": roots,
         "channel_binding": "require",
     }
+
+
+def database_failure_phase(error, phase):
+    original = getattr(error, "orig", error)
+    state = getattr(original, "sqlstate", None)
+    if state in {"28P01", "28000"}:
+        return "DATABASE_AUTHENTICATION"
+    if state == "42501":
+        return "DATABASE_PRIVILEGES"
+    message = str(original).lower()
+    if any(
+        marker in message
+        for marker in (
+            "root certificate",
+            "certificate verify failed",
+            "certificate verification failed",
+            "ssl error",
+        )
+    ):
+        return "DATABASE_TLS"
+    if "channel binding" in message:
+        return "DATABASE_CHANNEL_BINDING"
+    return phase
 
 
 def context():
@@ -197,8 +235,8 @@ def platform(action, config, settings):
                 )
             db.commit()
             return {}
-    except Exception:  # noqa: BLE001 -- Return only the fixed operation phase.
-        raise FixtureOperationError(phase) from None
+    except Exception as error:  # noqa: BLE001 -- Return only the fixed operation phase.
+        raise FixtureOperationError(database_failure_phase(error, phase)) from None
     finally:
         engine.dispose()
 
