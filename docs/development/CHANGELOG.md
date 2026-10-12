@@ -1,5 +1,10 @@
 # Development changelog
 
+## 2026-10-12 — Explicit hosted trust roots and failed deployment receipts
+
+Use the existing operating-system CA bundle explicitly so certificate/hostname verification does not depend on bundled libpq’s build-time certificate path. Keep channel binding required and reject absent trust stores. Database authentication, TLS, channel-binding and privilege failures return fixed codes only. After a verified backend deployment, retain actual hosted FAIL/BLOCKED receipts even if temporary fixture creation fails.
+
+
 ## 2026-10-12 — Hosted fixture TLS and safe operation phases
 
 Use libpq system trust roots with verify-full and required channel binding on fresh hosted runners; saved query options cannot downgrade those controls. Return fixed database/identity phases on failure, retaining role/schema guards and private credentials.
