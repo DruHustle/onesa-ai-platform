@@ -6,6 +6,10 @@ name: Repair existing hosting configuration
         description: Save missing reviewed AI production defaults only, without deploying
         type: boolean
         default: false
+      production_startup:
+        description: Verify or repair only the reviewed production startup override, without deploying
+        type: boolean
+        default: false
       staging_action:
         description: Isolated AI staging operation
         type: choice
@@ -28,15 +32,18 @@ jobs:
     if: github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform'
       && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle'
       && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev'
-      && github.run_attempt == 1 && inputs.production_defaults == true
+      && github.run_attempt == 1 && (inputs.production_defaults == true || inputs.production_startup == true)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
     - name: Verify current source and successful CI before provider access
       env:
         GH_TOKEN: ${{ github.token }}
+        DEFAULTS_REQUESTED: ${{ inputs.production_defaults }}
+        STARTUP_REQUESTED: ${{ inputs.production_startup }}
       run: |
         test "$RUNNER_ENVIRONMENT" = github-hosted
+        test "$DEFAULTS_REQUESTED:$STARTUP_REQUESTED" != true:true
         test "$(gh api repos/DruHustle/onesa-ai-platform --jq '.private')" = false
         test "$(gh api repos/DruHustle/onesa-ai-platform/branches/dev --jq '.commit.sha')" = "$GITHUB_SHA"
         for workflow in ci.yml repository-hygiene.yml; do
@@ -50,9 +57,28 @@ jobs:
         persist-credentials: false
         ref: ${{ github.sha }}
     - name: Save reviewed missing defaults and verify unchanged deployment
+      if: inputs.production_defaults == true
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       run: python3 scripts/production_defaults.py
+    - name: Require current staging CI before startup settings change
+      if: inputs.production_startup == true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        candidate=$(gh api repos/DruHustle/onesa-ai-platform/branches/staging --jq '.commit.sha')
+        test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$candidate" --jq '.tree.sha')" = "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.tree.sha')"
+        for workflow in ci.yml repository-hygiene.yml; do
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs" \
+            -f head_sha="$candidate" -f event=push -f per_page=1 \
+            --jq '.workflow_runs[0] | select(.status == "completed" and .conclusion == "success") | .head_sha' \
+            | python3 -c 'import sys; assert sys.stdin.read().strip() == sys.argv[1], "Current staging CI must pass"' "$candidate"
+        done
+    - name: Verify or repair only the production startup override
+      if: inputs.production_startup == true
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: python3 scripts/production_startup.py
   inspect:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -165,4 +191,4 @@ jobs:
     - name: Read back repaired configuration
       if: github.ref != 'refs/heads/staging'
       run: python scripts/inspect_hosting.py
-    if: ${{ github.event.repository.private == false && (always() && true) && inputs.production_defaults != true }}
+    if: ${{ github.event.repository.private == false && (always() && true) && inputs.production_defaults != true && inputs.production_startup != true }}

@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-12 — Separate save-only production startup operator
+
+The legacy main repair cannot run in the staging-only environment. Add an explicit owner-dispatched production startup operation on current dev after full exact-source CI/hygiene. It verifies the existing free Frankfurt production service and disabled auto-deploy, preserves reviewed Dockerfile/script startup, and clears an unrecognized override only. Readback requires unchanged functional configuration, environment and deployment identity. No deployment, database change, model target, credential transfer or production approval is implied.
+
 ## 2026-10-12 — Approved AI browser favicon
 
 Add the existing owner-supplied Onesa64×64 ICO through the Next.js file-based metadata convention, so the AI app emits an actual branded icon link and serves its own asset. Copy the approved Portal icon byte-for-byte (SHA256 `7d236707ace84a0117de7dd6fcb97e4664b96f859b9e1bdc3325e7fe3b097e89`); no unrelated logo or image transformation is introduced.

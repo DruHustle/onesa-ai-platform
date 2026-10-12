@@ -1,5 +1,9 @@
 # Hosted AI configuration inventory — 2026-10-10
 
+## Save-only production startup verification — 2026-10-12
+
+Use `gh workflow run repair-hosting.yml --ref dev -f production_startup=true` after current dev CI and hygiene pass. This separate job uses the repository's production provider binding and no Staging environment. Only the fixed existing Free Frankfurt AI API target is accepted, with native auto-deploy already off. A reviewed blank override or `sh /app/start.sh` is preserved; an unrecognized override is cleared for Dockerfile CMD. The operator verifies functional settings, all environment values and the latest deployment ID unchanged except the intended command. It never deploys or repairs database credentials. Full real-model staging, operations/legal approval and exact-main release qualification still apply. Do not select both production operations in one dispatch.
+
 ## Save-only production defaults — 2026-10-12
 
 The owner authorized adding known settings, including `info@onesa.eu`, to the existing
