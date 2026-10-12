@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-12 — Approved AI browser favicon
+
+Add the existing owner-supplied Onesa64×64 ICO through the Next.js file-based metadata convention, so the AI app emits an actual branded icon link and serves its own asset. Copy the approved Portal icon byte-for-byte (SHA256 `7d236707ace84a0117de7dd6fcb97e4664b96f859b9e1bdc3325e7fe3b097e89`); no unrelated logo or image transformation is introduced.
+
 ## 2026-10-12 — Remove appearance switching
 
 Remove Auto/Light/Dark controls, preference logic, timers and custom palette switching at the owner’s request. Retain the fixed light surfaces and navy/cyan brand elements, with responsive and authenticated acceptance checks. Public and protected documentation use the fixed light default with the framework switch disabled. Remove only assets and tests belonging to the retired feature.
