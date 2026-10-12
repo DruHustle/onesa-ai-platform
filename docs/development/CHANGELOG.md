@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-13 — Verify the ecosystem onboarding homepage
+
+Update the authenticated documentation browser assertion to the new three-product homepage heading. Keep login, private asset denial, revocation, database/API and assistant checks enforced.
+
 ## 2026-10-13 — Align visual generators with required formatter checks
 
 Format the changed documentation generator and validator using the repository's pinned Ruff rules. Preserve generated content, classification and access checks; run the complete required Python checks before pushing the correction.
