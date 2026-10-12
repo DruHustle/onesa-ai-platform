@@ -528,6 +528,22 @@ def generate(github, sha, run, staging_run=None, require_frontend_build=True):
     return record
 
 
+def staging_check_names():
+    required = {
+        "deployed_commit",
+        "backend_readiness",
+        "frontend_availability",
+        "authentication",
+        "database_connectivity",
+        "critical_workflows",
+        "user_data_isolation",
+        "storage_integrations",
+    }
+    if PRODUCT == "onesa-ai-platform":
+        required |= {"streaming", "inference", "embeddings"}
+    return required
+
+
 def verify_stage(stage, sha, fingerprint, builds, now=None):
     require(
         stage["repository"] == REPOSITORY
@@ -543,18 +559,7 @@ def verify_stage(stage, sha, fingerprint, builds, now=None):
         fresh(stage["verified_at"], now or datetime.now(timezone.utc)),
         "Staging evidence stale",
     )
-    required = {
-        "deployed_commit",
-        "backend_readiness",
-        "frontend_availability",
-        "authentication",
-        "database_connectivity",
-        "critical_workflows",
-        "user_data_isolation",
-        "storage_integrations",
-    }
-    if PRODUCT == "onesa-ai-platform":
-        required |= {"streaming", "inference", "embeddings"}
+    required = staging_check_names()
     require(required <= stage["checks"].keys(), "Mandatory staging checks absent")
     require(
         stage.get("render_deployment_id") and stage.get("vercel_deployment_id"),
