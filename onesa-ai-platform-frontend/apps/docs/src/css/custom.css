@@ -1,12 +1,10 @@
 :root{--ifm-color-primary:#2366d1;--ifm-color-primary-dark:#205cbd;--ifm-color-primary-darker:#1e57b2;--ifm-color-primary-darkest:#184893;--ifm-color-primary-light:#3777de;--ifm-color-primary-lighter:#4b86e2;--ifm-color-primary-lightest:#6b9ce8;--ifm-background-color:#f5f7fa;--ifm-font-family-base:Inter,ui-sans-serif,system-ui,sans-serif;--ifm-heading-font-weight:650;--ifm-code-font-size:88%;--ifm-navbar-height:4rem}
-[data-theme=dark]{--ifm-color-primary:#53dbe8;--ifm-background-color:#081b32;--ifm-background-surface-color:#10263e;--ifm-font-color-base:#f5f7fa}
 .navbar{border-bottom:1px solid #52789b33;box-shadow:none}.navbar__title{letter-spacing:-.03em}.portal-home,.portal-page{max-width:1240px;margin:auto;padding:4rem 2rem}.portal-home h1{font-size:clamp(3rem,6vw,5.5rem);line-height:1.05;letter-spacing:-.06em;margin:1.5rem 0}.portal-home h1 span{color:var(--ifm-color-primary)}.portal-page h1{font-size:clamp(2rem,4vw,3.4rem);letter-spacing:-.045em}.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.14em;color:var(--ifm-color-primary)}.lead{font-size:1.25rem;max-width:650px;line-height:1.75}.hero-actions{display:flex;gap:1rem;margin:2rem 0}.evidence-strip{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;border-top:1px solid #52789b55;border-bottom:1px solid #52789b55;padding:1.2rem 0;margin:3rem 0}.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.topic-card{display:block;padding:1.7rem;border:1px solid #52789b55;border-radius:12px;color:var(--ifm-font-color-base);background:var(--ifm-background-surface-color);transition:transform .15s}.topic-card:hover{text-decoration:none;transform:translateY(-3px);border-color:var(--ifm-color-primary)}.topic-card>span,.topic-card small{display:block;color:var(--ifm-color-primary);font-size:.8rem}.topic-card h2{font-size:1.3rem;margin-top:.9rem}.topic-card p{font-size:.95rem;min-height:3rem}.source-note{font-size:.9rem;max-width:900px;margin-top:2rem;opacity:.85}.view-tabs,.table-tabs,.asset-links,.diagram-toolbar{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center;margin:1.2rem 0}button,select{font:inherit;border:1px solid #52789b66;background:var(--ifm-background-surface-color);color:var(--ifm-font-color-base);padding:.5rem .8rem;border-radius:6px;cursor:pointer}button[aria-pressed=true]{background:var(--ifm-color-primary);color:var(--ifm-background-color)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #2366d1;outline-offset:3px}label select{margin-left:.65rem}.diagram-panel{border:1px solid #52789b66;border-radius:10px;padding:1rem;margin-top:1.5rem;background:var(--ifm-background-surface-color)}.diagram-panel.expanded{position:fixed;inset:1rem;z-index:1100;overflow:auto;box-shadow:0 0 0 100vw #0009}.diagram-toolbar strong{margin-right:auto}.evidence{font-size:.85rem;color:var(--ifm-color-primary);margin-bottom:.5rem}.diagram-canvas{height:520px;overflow:hidden;background:#fff;border-radius:6px;touch-action:none;cursor:grab}.diagram-canvas>div{height:100%;display:flex;align-items:center;justify-content:center}.diagram-canvas svg{max-height:100%;width:100%;max-width:100%!important}.component-detail{background:#52789b18;border-left:3px solid var(--ifm-color-primary);padding:1rem;margin-top:1rem}.component-detail h3{font-size:1.15rem}.table-scroll{overflow:auto}.table-detail table{display:table;width:100%;font-size:.9rem}.global-search{position:relative}.global-search input{border:1px solid #52789b55;background:var(--ifm-background-color);color:var(--ifm-font-color-base);border-radius:8px;padding:.55rem .8rem;width:220px}.search-results{position:absolute;right:0;top:2.9rem;width:min(480px,90vw);max-height:65vh;overflow:auto;background:var(--ifm-background-surface-color);box-shadow:0 12px 40px #0003;border:1px solid #52789b55;border-radius:8px;padding:1.3rem .6rem;z-index:1200}.search-results a{display:block;padding:.7rem;border-radius:6px}.search-results a:hover{background:#52789b22;text-decoration:none}.search-results small{display:block;color:var(--ifm-font-color-base);font-size:.8rem}.search-close{position:absolute;right:4px;top:2px;padding:0 .4rem}.reading-progress{position:fixed;top:0;left:0;height:3px;background:#2366d1;z-index:1300;pointer-events:none}.api-page .swagger-ui{background:#fff;padding:1rem;border-radius:10px}.tutorial-image{width:100%;border:1px solid #52789b44;border-radius:10px;margin:1rem 0}.step{padding:1rem 0;border-bottom:1px solid #52789b44}.step h2{font-size:1.5rem}.tabs__item{cursor:pointer}
 @media(max-width:996px){.topic-grid{grid-template-columns:repeat(2,1fr)}.portal-home,.portal-page{padding:2rem 1.2rem}.diagram-canvas{height:420px}.navbar__items--right .global-search{display:block}}
 @media(max-width:600px){.topic-grid{grid-template-columns:1fr}.hero-actions{flex-direction:column}.diagram-canvas{height:320px}.global-search input{width:160px}.diagram-toolbar{font-size:.85rem}.diagram-panel.expanded{inset:.3rem}.table-detail table{font-size:.8rem}}
 
-/* Shared Onesa company identity, with readable light and dark documentation. */
+/* Shared Onesa company identity, with a fixed documentation appearance. */
 :root { --onesa-navy: #081b32; --onesa-cyan: #53dbe8; --ifm-font-color-base: #10263e; --ifm-font-family-base: Arial, Helvetica, sans-serif; --ifm-heading-font-weight: 500; }
-[data-theme=dark] { --ifm-font-color-base: #f5f7fa; --ifm-color-primary-dark: #3bd5e3; --ifm-color-primary-darker: #25cedf; --ifm-color-primary-darkest: #19a7b5; --ifm-color-primary-light: #78e3ed; --ifm-color-primary-lighter: #9aeaf1; --ifm-color-primary-lightest: #bcf1f6; }
 .navbar, .footer { background: var(--onesa-navy); color: #fff; }
 .navbar { --ifm-navbar-link-color: #fff; --ifm-navbar-link-hover-color: var(--onesa-cyan); }
 .navbar__title { letter-spacing: -.07em; }
@@ -42,7 +40,7 @@ html [class*="skipToContent_"] { left: 0 !important; transform: translateY(-200%
 /* Inline documentation links remain identifiable without relying on colour. */
 .theme-doc-markdown a {text-decoration:underline;text-underline-offset:.15em;}
 
-/* Swagger renders on its own light surface in either documentation theme. */
+/* Swagger renders on its own light surface on the documentation site. */
 .api-page .swagger-ui {color-scheme:light;}
 .api-page .swagger-ui button, .api-page .swagger-ui input, .api-page .swagger-ui select {background-color:#fff;color:#10263e;}
 
@@ -53,23 +51,16 @@ html [class*="skipToContent_"] { left: 0 !important; transform: translateY(-200%
  .diagram-toolbar strong {width:100%;overflow-wrap:anywhere;}
 }
 
-.appearance-control{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;white-space:nowrap}
-.appearance-control select{min-height:36px;min-width:88px;padding:6px;border:1px solid var(--ifm-color-emphasis-500);border-radius:6px;background:var(--ifm-background-color);color:var(--ifm-font-color-base);font:inherit}
-.appearance-control select:focus-visible{outline:3px solid var(--ifm-color-primary);outline-offset:3px}
 
-.appearance-control select{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%2352789b' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
 
-.appearance-control.navbar__item{display:inline-flex}
 
 @media(max-width:996px){.navbar{height:auto;min-height:var(--ifm-navbar-height)}.navbar__inner{flex-wrap:wrap;gap:8px}.navbar__items--right{width:100%;flex-wrap:wrap;gap:8px;justify-content:flex-end}}
 
-html[data-theme=light] .asset-links a{color:#205cbd}
-html[data-theme=dark] .asset-links a{color:#53dbe8}
+.asset-links a{color:#205cbd}
 
 
-html[data-appearance] a{transition-property:transform,box-shadow}
-@media(max-width:996px){.theme-layout-navbar-right > div:has(>.global-search){position:static;transform:none;flex:0 0 auto}.theme-layout-navbar-right .appearance-control{padding-inline:0;font-size:12px;gap:6px}}
-@media(max-width:380px){.theme-layout-navbar-right .appearance-control select{width:80px;min-width:80px}.global-search input{width:128px}}
+@media(max-width:996px){.theme-layout-navbar-right > div:has(>.global-search){position:static;transform:none;flex:0 0 auto}}
+@media(max-width:380px){.global-search input{width:128px}}
 
 .theme-doc-markdown a:not(.hash-link),.portal-page p a,.portal-page li a{text-decoration:underline;text-underline-offset:2px}
 

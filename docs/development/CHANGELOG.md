@@ -1,5 +1,10 @@
 # Development changelog
 
+## 2026-10-12 — Remove appearance switching
+
+Remove Auto/Light/Dark controls, preference logic, timers and custom palette switching at the owner’s request. Retain the fixed light surfaces and navy/cyan brand elements, with responsive and authenticated acceptance checks. Public and protected documentation use the fixed light default with the framework switch disabled. Remove only assets and tests belonging to the retired feature.
+
+
 ## 2026-10-12 — Explicit hosted trust roots and failed deployment receipts
 
 Use the existing operating-system CA bundle explicitly so certificate/hostname verification does not depend on bundled libpq’s build-time certificate path. Keep channel binding required and reject absent trust stores. Database authentication, TLS, channel-binding and privilege failures return fixed codes only. After a verified backend deployment, retain actual hosted FAIL/BLOCKED receipts even if temporary fixture creation fails.
