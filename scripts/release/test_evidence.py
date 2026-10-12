@@ -173,12 +173,18 @@ class GateTests(unittest.TestCase):
             self.approval, self.evidence, self.origin, self.run, SHA, now=NOW
         )
 
-    def test_registered_staging_entrypoint_keeps_commit_branch_event_and_owner_guards(self):
+    def test_registered_staging_entrypoint_keeps_commit_branch_event_and_owner_guards(
+        self,
+    ):
         stage = run(11, "deploy.yml", branch="staging")
         e.trusted_staging_run(None, stage, SHA)
-        for key, value in [("head_branch", "main"), ("head_branch", "dev"),
-                           ("head_sha", "f" * 40), ("event", "workflow_run"),
-                           ("path", ".github/workflows/repair-hosting.yml")]:
+        for key, value in [
+            ("head_branch", "main"),
+            ("head_branch", "dev"),
+            ("head_sha", "f" * 40),
+            ("event", "workflow_run"),
+            ("path", ".github/workflows/repair-hosting.yml"),
+        ]:
             rejected = dict(stage, **{key: value})
             with self.subTest(key=key, value=value), self.assertRaises(e.Rejected):
                 e.trusted_staging_run(None, rejected, SHA)
