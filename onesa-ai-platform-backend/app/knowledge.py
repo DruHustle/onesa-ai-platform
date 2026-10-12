@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.auth import DB, Auth
+from app.cloudflare import embeddings as cloudflare_embeddings
 from app.config import Settings
 from app.errors import fail
 from app.models import Document, DocumentChunk
@@ -40,6 +41,11 @@ def version(config: Settings) -> str:
 
 
 def embed(texts: list[str], config: Settings, *, query: bool = False) -> list[list[float]]:
+    if config.embedding_backend == "cloudflare":
+        try:
+            return cloudflare_embeddings(texts, config, query=query)
+        except Exception:
+            fail(503, "embedding_unavailable", "Embedding service unavailable or incompatible")
     if config.embedding_backend == "http":
         try:
             inputs = (

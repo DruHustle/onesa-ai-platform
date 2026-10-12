@@ -126,3 +126,25 @@ path tests, and separately verified exposed-credential revocation/replacement.
 The owner now requires free services only. See [free staging setup](FREE_STAGING_SETUP.md).
 The historical [database/GPU proposal](HOSTED_AI_PROPOSAL.md) preserves permissions,
 TLS, restore procedures and the exact paid-resource approvals still needed.
+
+## Owner-created Workers AI endpoint — verified 2026-10-12
+
+Authenticated readback confirms `onesa-ai-platform-worker-ai` exists in the selected
+owner account and has an `AI` binding. Its URL is
+`https://onesa-ai-platform-worker-ai.andrewgotora.workers.dev`. The deployed module
+is the Cloudflare example: every request runs two hardcoded prompts against
+`@cf/meta/llama-3-8b-instruct` and returns their responses. It does not check a bearer
+credential, accept the Onesa chat request, expose an OpenAI-compatible API, or run an
+embedding model. Anonymous root, health, readiness and model-list checks returned
+HTTP 500. Correct resource identity and an AI binding do not establish real serving
+readiness. No Worker code, binding, model or backend provider setting was changed.
+
+The prepared Cloudflare backend transport expects authenticated account API bases:
+`https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1` for inference and
+`https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai` for embeddings.
+It validates the reviewed Qwen3 generation model and Qwen3 embedding/MRL256 profile;
+the demo's Llama model and URL do not satisfy that configuration. Keep provider tokens
+server-side. Actual authenticated streaming, embedding shape, ingestion/retrieval and
+user isolation acceptance remain required before hosted AI is qualified. See
+[Workers AI REST API](https://developers.cloudflare.com/workers-ai/get-started/rest-api/)
+and [OpenAI compatibility](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/).

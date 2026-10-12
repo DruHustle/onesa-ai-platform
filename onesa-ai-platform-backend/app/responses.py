@@ -38,7 +38,7 @@ class KnowledgeSource(Strict):
 
 class KnowledgeResults(Strict):
     sources: list[KnowledgeSource]
-    backend: Literal["lexical", "http"]
+    backend: Literal["lexical", "http", "cloudflare"]
 
 
 class CompletedToolStep(Strict):
@@ -97,7 +97,7 @@ class UnavailableTravelProvider(Strict):
 
 class PlannedItinerary(Itinerary):
     providers: list[UnavailableTravelProvider]
-    backend: Literal["mock", "ollama", "vllm"]
+    backend: Literal["mock", "ollama", "vllm", "cloudflare"]
 
 
 class TripOut(Strict):
@@ -122,7 +122,7 @@ class TripList(Strict):
 class ModelOut(Strict):
     id: Literal["default"]
     name: str
-    backend: Literal["mock", "ollama", "vllm"]
+    backend: Literal["mock", "ollama", "vllm", "cloudflare"]
     model_identifier: str
     context_tokens: int
     modalities: list[Literal["text", "vision", "speech"]]

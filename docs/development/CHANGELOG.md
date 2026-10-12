@@ -1,5 +1,61 @@
 # Development changelog
 
+## 2026-10-12 — Qualify free-cloud adapters and automatic day/night styling
+
+Add explicit authenticated Cloudflare generation and semantic embedding adapters,
+with bounded responses, reviewed model profiles and versioned normalized 256-dimensional
+Matryoshka vectors. Keep mock, Ollama and vLLM providers interchangeable; local adapter
+tests do not prove hosted inference. Add server-side Access verification to every
+internal documentation route and asset, with fail-closed packaging and origin checks.
+Chat and documentation follow visitor-local 07:00/19:00 transitions without a theme
+selector or stored manual override. Preserve CSP, strict accessibility assertions and
+public/internal output separation. Repository-level staging secrets support private
+GitHub Free; existing environment secrets must be reconciled privately before deployment.
+Ignore regenerable Wrangler cache; preserve private provider and approval evidence.
+
+## 2026-10-12 — Rename Zero Trust organization to Onesa
+
+Apply the owner's requested organization display name and verify the existing login
+domain, MFA configuration, identity provider, applications and policies on readback.
+Cloudflare's partial update cleared an omitted MFA field; restore the approved
+TOTP/security-key enrollment configuration and verify that every unrelated
+organization field matches the snapshot. Eight-hour MFA sessions and global
+enforcement off are retained. Record owner-confirmed authenticator verification
+separately from API-observed sign-in and pending protected-docs MFA/bypass acceptance.
+The Pages Git installation error still blocks the documentation project.
+
+## 2026-10-12 — Enable owner MFA enrollment portal
+
+Diagnose the missing App Launcher configuration and enable the required enrollment
+portal with a policy limited to the two confirmed owner email addresses. Reuse the
+existing email-PIN provider and eight-hour session, preserving organization settings
+and unrelated applications. Owner MFA enrollment/authentication still requires actual
+browser verification; engineering app enforcement and hosted bypass tests remain
+pending the Pages Git connection and successful owner verification.
+
+## 2026-10-12 — Verify approved Cloudflare MFA enrollment capability
+
+Apply the owner's explicit approval for TOTP/security-key enrollment with eight-hour
+sessions and global enforcement off. Provider readback preserves all unrelated
+organization settings, identity providers and existing application policies. Record
+the successful configuration separately from personal enrollment/authentication and
+hosted docs acceptance, which remain unverified. The Pages Git installation still
+rejects project creation with8000011; no internal upload or application enforcement
+was performed. Existing recovery/admin methods are preserved; docs enforcement waits
+for the owner's successful enrollment and authentication.
+
+## 2026-10-12 — Prepare separate Cloudflare engineering documentation
+
+Add a dependency-free harmless bootstrap target for `onesa-engineering-docs` and
+retain the Access-wrapped internal packaging path with all requests protected. Reject
+stale revisions, overlapping output paths and symlink artifacts; run packaging tests
+in documentation checks. The Cloudflare build mode marks hosted assistance unavailable
+because this gateway serves only authorized documents. Record exact Pages build
+settings, separate main/preview/custom-host policies, independent MFA and Free Functions
+fail-closed requirements. The owner's two allowed identities stay in ignored local
+setup, and repository visibility stays public until the announced launch. Local
+preparation does not activate Zero Trust, create/deploy a project or qualify hosted access.
+
 ## 2026-10-12 — Separate save-only production startup operator
 
 The legacy main repair cannot run in the staging-only environment. Add an explicit owner-dispatched production startup operation on current dev after full exact-source CI/hygiene. It verifies the existing free Frankfurt production service and disabled auto-deploy, preserves reviewed Dockerfile/script startup, and clears an unrecognized override only. Readback requires unchanged functional configuration, environment and deployment identity. No deployment, database change, model target, credential transfer or production approval is implied.

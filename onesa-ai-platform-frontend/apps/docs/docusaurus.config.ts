@@ -6,6 +6,8 @@ const lightCodeTheme={...prismThemes.github,styles:prismThemes.github.styles.map
 const scope = process.env.ONESA_DOCS_SCOPE === 'internal' ? 'internal' : 'public';
 const internal = scope === 'internal';
 const staticHosting = process.env.ONESA_DOCS_STATIC_HOSTING === 'true';
+const accessHosting = process.env.ONESA_DOCS_HOSTING === 'cloudflare-access';
+if (accessHosting && !internal) throw new Error('Cloudflare Access hosting requires the internal documentation scope.');
 if (staticHosting && internal) throw new Error('Internal documentation requires the authenticated gateway, not static hosting.');
 const appUrl = process.env.ONESA_APPLICATION_URL || (staticHosting ? 'https://platform.onesa.eu' : 'http://localhost:3100');
 const apiUrl = process.env.ONESA_DOCS_API_URL || '';
@@ -15,13 +17,14 @@ if (apiUrl && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(apiUrl)) {
 const config: Config = {
   title: 'Onesa', tagline: 'Engineering Intelligent Possibilities',
   url:process.env.ONESA_DOCS_URL || (staticHosting ? 'https://docs.onesa.eu' : `http://localhost:${internal ? 3201 : 3200}`), staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], favicon:'favicon.ico', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
+  scripts:[{src:'/automatic-day-night.js',async:false,defer:false}],
   onBrokenLinks:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
-  customFields:{documentationVersion:'0.3.0', apiUrl, scope, appUrl, staticHosting},
+  customFields:{documentationVersion:'0.3.0', apiUrl, scope, appUrl, staticHosting:staticHosting || accessHosting},
   presets:[['classic', {docs:{numberPrefixParser:false,path:`.generated/${scope}/docs`, sidebarPath:'./sidebars.ts', showLastUpdateTime:false}, pages:{path:`.generated/${scope}/pages`}, blog:false, theme:{customCss:'./src/css/custom.css'}} satisfies Options]],
   themeConfig:{
     colorMode:{defaultMode:'light', respectPrefersColorScheme:false,disableSwitch:true},
-    navbar:{title:'Onesa / Docs', items:[{to:internal?'/docs':'/docs/public/introduction',label:'Reference',position:'left'},{to:'/architecture',label:'Architecture',position:'left'},{to:'/api-explorer',label:'API',position:'left'},...(internal ? [{to:'/database',label:'Database',position:'left' as const}] : []),{to:'/tutorials',label:'Guides',position:'left'},{to:'/downloads',label:'Downloads',position:'left'},{to:'/assistant',label:'Ask Onesa',position:'left'},{label:'Onesa applications',position:'right',items:[{href:'https://onesa.eu',label:'Onesa company'},{href:'https://portal.onesa.eu',label:'Company Portal'},{href:'https://robot.onesa.eu',label:'Robot interface'},{href:appUrl,label:'Onesa AI home'},{href:appUrl,label:'Onesa Chat'},{href:appUrl+'/knowledge',label:'Onesa Knowledge'},{href:appUrl+'/agents',label:'Onesa Agents'},{href:appUrl+'/travel',label:'Onesa Travel'}]},...(internal?[{href:process.env.ONESA_PUBLIC_DOCUMENTATION_URL||'http://localhost:3200',label:'Developer docs ↗',position:'right' as const}]:[]),{type:'search',position:'right'}]},
+    navbar:{title:'Onesa / Docs', items:[{type:'custom-automatic-day-night',position:'right'},{to:internal?'/docs':'/docs/public/introduction',label:'Reference',position:'left'},{to:'/architecture',label:'Architecture',position:'left'},{to:'/api-explorer',label:'API',position:'left'},...(internal ? [{to:'/database',label:'Database',position:'left' as const}] : []),{to:'/tutorials',label:'Guides',position:'left'},{to:'/downloads',label:'Downloads',position:'left'},{to:'/assistant',label:'Ask Onesa',position:'left'},{label:'Onesa applications',position:'right',items:[{href:'https://onesa.eu',label:'Onesa company'},{href:'https://portal.onesa.eu',label:'Company Portal'},{href:'https://robot.onesa.eu',label:'Robot interface'},{href:appUrl,label:'Onesa AI home'},{href:appUrl,label:'Onesa Chat'},{href:appUrl+'/knowledge',label:'Onesa Knowledge'},{href:appUrl+'/agents',label:'Onesa Agents'},{href:appUrl+'/travel',label:'Onesa Travel'}]},...(internal?[{href:process.env.ONESA_PUBLIC_DOCUMENTATION_URL||'http://localhost:3200',label:'Developer docs ↗',position:'right' as const}]:[]),{type:'search',position:'right'}]},
     footer:{style:'dark', copyright:'Onesa UG · Engineering Intelligent Possibilities · Documentation v0.3.0'},
     prism:{theme:lightCodeTheme,additionalLanguages:['python','bash','json','sql','yaml','typescript']},
   } satisfies ThemeConfig,
