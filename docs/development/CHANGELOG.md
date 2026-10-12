@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-12 — Cloudflare release profile compatibility
+
+Accept the implemented Cloudflare inference/semantic embedding selectors in staging preflight. Preserve rejection of mock, lexical, missing and non-staging profiles; actual hosted generation and retrieval remain required. Document the supported account endpoints and versioned 256-dimensional adapter.
+
 ## 2026-10-12 — verified staging secret scope
 
 - Select the verified public `Staging` environment through the non-secret `STAGING_SECRET_SCOPE` variable while keeping repository-level `STAGING_*` secrets as the private-Free fallback.

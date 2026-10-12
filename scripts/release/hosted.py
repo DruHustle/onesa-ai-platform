@@ -200,6 +200,15 @@ def require_stage_acceptance(record):
     )
 
 
+def require_full_serving_profile(settings):
+    require(
+        settings.get("ONESA_ENVIRONMENT") == "staging"
+        and settings.get("ONESA_MODEL_BACKEND") in {"ollama", "vllm", "cloudflare"}
+        and settings.get("ONESA_EMBEDDING_BACKEND") in {"http", "cloudflare"},
+        "Full release probes require actual configured inference and semantic embeddings",
+    )
+
+
 def preflight():
     require(
         os.environ["GITHUB_REF"] == "refs/heads/" + POLICY["staging_branch"]
@@ -268,12 +277,7 @@ def preflight():
             "Portal cloud staging must retain production protections",
         )
     if PRODUCT.endswith("platform") and os.environ.get("STAGING_FIXTURES_JSON"):
-        require(
-            settings.get("ONESA_ENVIRONMENT") == "staging"
-            and settings.get("ONESA_MODEL_BACKEND") in {"ollama", "vllm"}
-            and settings.get("ONESA_EMBEDDING_BACKEND") == "http",
-            "Full release probes require actual configured inference and semantic embeddings",
-        )
+        require_full_serving_profile(settings)
     fixture_input = os.environ.get("STAGING_FIXTURES_JSON")
     if fixture_input:
         parse_fixtures(
