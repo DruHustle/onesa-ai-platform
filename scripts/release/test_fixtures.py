@@ -32,6 +32,22 @@ def fixture():
 
 
 class FixtureTests(unittest.TestCase):
+    def test_runner_tls_uses_system_roots_and_cannot_be_downgraded_by_saved_query(self):
+        from fixture_lifecycle import database_tls_query
+
+        saved = {
+            "sslmode": "disable",
+            "sslrootcert": "/tmp/untrusted.crt",
+            "channel_binding": "disable",
+            "connect_timeout": "10",
+        }
+        query = database_tls_query(saved)
+        self.assertEqual(query["sslmode"], "verify-full")
+        self.assertEqual(query["sslrootcert"], "system")
+        self.assertEqual(query["channel_binding"], "require")
+        self.assertEqual(query["connect_timeout"], "10")
+        self.assertEqual(saved["sslmode"], "disable")
+
     def test_valid_credentials_and_unpadded_totp(self):
         self.assertEqual(
             parse_fixtures(json.dumps(fixture()), PROJECT, PORTAL), fixture()

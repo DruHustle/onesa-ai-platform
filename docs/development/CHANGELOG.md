@@ -1,5 +1,10 @@
 # Development changelog
 
+## 2026-10-12 — Hosted fixture TLS and safe operation phases
+
+Use libpq system trust roots with verify-full and required channel binding on fresh hosted runners; saved query options cannot downgrade those controls. Return fixed database/identity phases on failure, retaining role/schema guards and private credentials.
+
+
 ## 2026-10-12 — Consistent appearance and authenticated staging qualification
 
 - Chat and public/protected documentation implement persisted Auto/Light/Dark with visitor-local 07:00/19:00 transitions. Bootstrap runs before rendering; Chat retains CSP nonces and documentation synchronizes Docusaurus color context.

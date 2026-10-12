@@ -18,6 +18,21 @@ from fixtures import parse_fixtures
 from hosted import preflight
 
 
+class FixtureOperationError(Exception):
+    """Fixed phase codes only; never retain a database/provider exception."""
+
+
+def database_tls_query(query):
+    # libpq otherwise looks for ~/.postgresql/root.crt, absent on fresh CI runners.
+    # The locked psycopg binary uses libpq >= 16, which supports the OS trust store.
+    return {
+        **query,
+        "sslmode": "verify-full",
+        "sslrootcert": "system",
+        "channel_binding": "require",
+    }
+
+
 def context():
     require(
         os.environ.get("GITHUB_REPOSITORY") == REPOSITORY
@@ -95,13 +110,14 @@ def platform(action, config, settings):
 
     url = make_url(settings["ONESA_DATABASE_URL"]).set(drivername="postgresql+psycopg")
     query = dict(url.query)
-    query.update(sslmode="verify-full", channel_binding="require")
+    query = database_tls_query(query)
     engine = create_engine(
         url.set(query=query),
         pool_size=1,
         max_overflow=0,
         connect_args={"connect_timeout": 10, "prepare_threshold": None},
     )
+    phase = "DATABASE_CONNECTION"
     try:
         with engine.connect() as connection, connection.begin():
             connection.execute(text("SET TRANSACTION READ ONLY"))
@@ -113,12 +129,14 @@ def platform(action, config, settings):
                 tuple(identity) == ("neondb", "onesa_ai_staging_app"),
                 "Temporary fixture database login mismatch",
             )
+            phase = "DATABASE_PRIVILEGES"
             unsafe = connection.scalar(
                 text(
                     "SELECT rolsuper OR rolcreaterole OR rolcreatedb OR rolreplication OR rolbypassrls OR has_schema_privilege(current_user,'public','CREATE') OR has_table_privilege(current_user,'public.alembic_version','INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER') OR EXISTS(SELECT 1 FROM pg_auth_members WHERE member=pg_roles.oid) FROM pg_roles WHERE rolname=current_user"
                 )
             )
             require(unsafe is False, "Temporary fixture database role unsafe")
+            phase = "SCHEMA_REVISION"
             from alembic.config import Config
             from alembic.script import ScriptDirectory
 
@@ -132,6 +150,7 @@ def platform(action, config, settings):
                 == head,
                 "Temporary fixture schema revision mismatch",
             )
+        phase = "IDENTITY_CREATE" if action == "create" else "IDENTITY_REVOKE"
         with Session(engine) as db:
             if action == "create":
                 accounts = []
@@ -178,6 +197,8 @@ def platform(action, config, settings):
                 )
             db.commit()
             return {}
+    except Exception:  # noqa: BLE001 -- Return only the fixed operation phase.
+        raise FixtureOperationError(phase) from None
     finally:
         engine.dispose()
 
@@ -229,6 +250,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except FixtureOperationError as error:
+        raise SystemExit("Temporary fixture failure phase: " + str(error)) from None
     except Exception:  # noqa: BLE001 -- Last CLI boundary must redact arbitrary private DB/provider errors.
         # SQL, subprocess and provider exceptions can include credential-bearing values.
         raise SystemExit(
