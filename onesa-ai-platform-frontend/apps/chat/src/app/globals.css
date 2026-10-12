@@ -560,3 +560,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .auth-shell { background: radial-gradient(ellipse at top left, #16445b, var(--navy) 70%); }
 .auth-card { border-radius: 4px; }
 .send { background: var(--cyan); color: var(--navy); font-weight: 700; }
+
+/* Automatic visitor-local night palette; no appearance selector. */
+html[data-theme=dark],html[data-theme=dark] body{color-scheme:dark;--bg:#0b1523;--ink:#e5edf6;--muted:#b4c4d6;--line:#557a9e;--accent:#83baff}
+html[data-theme=dark] :is(button,input,textarea,select,.feature-card,.message.assistant,.chat-header,.composer,.auth-panel){background:#14243a;color:var(--ink)}
+html[data-theme=dark] :is(input,textarea)::placeholder{color:var(--muted);opacity:1}
+html[data-theme=dark] .auth-card{background:#14243a;color:#e5edf6}
+html[data-theme=dark] :is(.message.user,.input-wrap,.notice){background:#14243a;color:#e5edf6}
+html[data-theme=dark] .auth-card .brand span{color:#83baff}

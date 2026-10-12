@@ -1020,7 +1020,7 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "lexical" | "http";
+            backend: "lexical" | "http" | "cloudflare";
         };
         /** KnowledgeSource */
         KnowledgeSource: {
@@ -1076,7 +1076,7 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "mock" | "ollama" | "vllm";
+            backend: "mock" | "ollama" | "vllm" | "cloudflare";
             /** Model Identifier */
             model_identifier: string;
             /** Context Tokens */
@@ -1114,7 +1114,7 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "mock" | "ollama" | "vllm";
+            backend: "mock" | "ollama" | "vllm" | "cloudflare";
         };
         /** Preferences */
         Preferences: {

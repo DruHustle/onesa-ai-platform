@@ -65,3 +65,15 @@ html [class*="skipToContent_"] { left: 0 !important; transform: translateY(-200%
 .theme-doc-markdown a:not(.hash-link),.portal-page p a,.portal-page li a{text-decoration:underline;text-underline-offset:2px}
 
 .portal-home p a:not(.button){text-decoration:underline;text-underline-offset:2px}
+
+/* Automatic visitor-local night palette; no appearance selector. */
+[data-theme=dark]{--ifm-color-primary:#53dbe8;--ifm-background-color:#081b32;--ifm-background-surface-color:#10263e;--ifm-font-color-base:#f5f7fa}
+[data-theme=dark] { --ifm-font-color-base: #f5f7fa; --ifm-color-primary-dark: #3bd5e3; --ifm-color-primary-darker: #25cedf; --ifm-color-primary-darkest: #19a7b5; --ifm-color-primary-light: #78e3ed; --ifm-color-primary-lighter: #9aeaf1; --ifm-color-primary-lightest: #bcf1f6; }
+html[data-theme=dark] .asset-links a{color:#53dbe8}
+
+html[data-theme=dark]{--ifm-color-primary:#8dc9d0;--ifm-color-primary-dark:#77bac4;--ifm-breadcrumb-color-active:#d5e0e8;}
+html[data-theme=dark] .breadcrumbs__link{color:#d5e0e8;}
+
+html[data-theme=dark]{--ifm-link-color:#8dc9d0;--ifm-link-hover-color:#b5e2e6;}
+
+html[data-theme=dark]{--ifm-background-color:#081b32;--ifm-background-surface-color:#10263e;--ifm-font-color-base:#f5f7fa;}

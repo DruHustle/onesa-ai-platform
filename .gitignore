@@ -123,6 +123,7 @@ credentials*.json
 *.db-shm
 
 .vercel/
+.wrangler/
 
 # Restricted audit reports and sanitized local evidence
 /docs/internal/release-audit/

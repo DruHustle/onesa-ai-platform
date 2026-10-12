@@ -263,7 +263,7 @@ def run_suite(origin):
                 {"query": "isolated release qualification"},
             )
             require(
-                retrieved["backend"] == "http"
+                retrieved["backend"] in {"http", "cloudflare"}
                 and any(
                     source.get("document_id") == document
                     for source in retrieved["sources"]
@@ -394,7 +394,7 @@ def production_probes(origin):
                 {"query": "isolated release qualification"},
             )
             require(
-                found["backend"] == "http"
+                found["backend"] in {"http", "cloudflare"}
                 and any(
                     source["document_id"] == identifier for source in found["sources"]
                 ),
