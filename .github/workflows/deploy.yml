@@ -105,13 +105,13 @@ jobs:
     - name: Revalidate approval before provider changes
       if: inputs.approval_run != ''
       env:
-        VERCEL_TOKEN: ${{ secrets.STAGING_VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.STAGING_VERCEL_ORG_ID }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         GH_TOKEN: ${{ github.token }}
         APPROVAL_RUN: ${{ inputs.approval_run }}
         STAGING_VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
-        RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       run: 'python3 scripts/release/evidence.py promote --output "$RUNNER_TEMP/promotion/record.json"
 
         python3 scripts/release/hosted.py recheck --evidence "$RUNNER_TEMP/promotion/record.json"'
@@ -177,13 +177,13 @@ jobs:
     - name: Revalidate approval before provider changes
       if: inputs.approval_run != ''
       env:
-        VERCEL_TOKEN: ${{ secrets.STAGING_VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.STAGING_VERCEL_ORG_ID }}
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         GH_TOKEN: ${{ github.token }}
         APPROVAL_RUN: ${{ inputs.approval_run }}
         STAGING_VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
-        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
-        VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       run: 'python3 scripts/release/evidence.py promote --output "$RUNNER_TEMP/promotion/record.json"
 
         python3 scripts/release/hosted.py recheck --evidence "$RUNNER_TEMP/promotion/record.json"'
@@ -217,15 +217,15 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       APPROVAL_RUN: ${{ inputs.approval_run }}
       APPLICATION: ${{ inputs.application }}
-      RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       RENDER_BACKEND_SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
       RENDER_WORKER_SERVICE_ID: ${{ secrets.RENDER_WORKER_SERVICE_ID }}
-      VERCEL_TOKEN: ${{ secrets.STAGING_VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.STAGING_VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       STAGING_VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
       PRODUCTION_FIXTURES_JSON: ${{ secrets.PRODUCTION_FIXTURES_JSON }}
-      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:

@@ -1,5 +1,12 @@
 # Development changelog
 
+## 2026-10-12 — Production provider credential boundary
+
+Correct legacy public production workflow bindings to use production provider secret
+names, preserving staging-only credentials in staging workflows and all existing
+qualification/approval gates. Private production jobs remain disabled; no provider
+values or deployments changed. Add a regression forbidding staging tokens in production.
+
 ## 2026-10-12 — Public documentation search description
 
 Add the missing homepage description to public documentation so generated HTML

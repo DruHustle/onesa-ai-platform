@@ -37,6 +37,12 @@ class WorkflowBoundaryTests(unittest.TestCase):
             )
         )
 
+    def test_production_never_uses_staging_provider_credentials(self):
+        text = (ROOT / ".github/workflows/deploy.yml").read_text()
+        self.assertNotRegex(text, r"secrets\.STAGING_(RENDER_API_KEY|VERCEL_TOKEN|VERCEL_AUTOMATION_BYPASS_SECRET)\b")
+        self.assertIn("secrets.VERCEL_TOKEN", text)
+        self.assertIn("secrets.RENDER_API_KEY", text)
+
     def test_staging_uses_separate_credentials(self):
         text = (ROOT / ".github/workflows/release-staging.yml").read_text()
         self.assertIn("secrets.STAGING_RENDER_API_KEY", text)
