@@ -33,7 +33,16 @@ jobs:
   staging:
     if: ${{ github.event.repository.private == false && github.event_name == 'workflow_dispatch' && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && github.ref == 'refs/heads/staging' && inputs.target == 'staging' }}
     uses: ./.github/workflows/release-staging.yml
-    # Credentials come only from the called job's Staging environment.
+    # Forward only named staging secrets; the called Staging environment supplies their values.
+    secrets:
+      STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
+      STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
+      STAGING_RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
+      STAGING_RENDER_SERVICE_ID: ${{ secrets.STAGING_RENDER_SERVICE_ID }}
+      STAGING_VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
+      STAGING_VERCEL_ORG_ID: ${{ secrets.STAGING_VERCEL_ORG_ID }}
+      STAGING_VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
+      STAGING_VERCEL_TOKEN: ${{ secrets.STAGING_VERCEL_TOKEN }}
   verify:
     name: deploy-qualification
     runs-on: ubuntu-latest
