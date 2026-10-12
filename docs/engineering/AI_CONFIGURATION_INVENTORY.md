@@ -22,9 +22,26 @@ existing staging Render service. Enter `ONESA_MODEL_API_KEY` and
 `ONESA_EMBEDDING_API_KEY` privately; the code requires tokens of at least 32 characters.
 Do not reuse staging credentials in production or silently replace index revisions.
 
-Latest hosted inspection still reports degraded Ollama serving and absent endpoint/key
-bindings; model transport mocks are local adapter evidence only. The historical matrix
-below predates this adapter and does not supersede the current supported selectors.
+Authenticated configuration on 2026-10-12 installed and privately read back all nine
+supported profile overrides on staging Render service `srv-db56mju7bikc73950f60`.
+Real generation and native `[1, 1024]` embeddings succeeded with synthetic inputs.
+Full hosted staging run
+[38308265976](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38308265976)
+passed at exact staging source `fe29aea06eb07e4a6d1f19ea476b49e29e77fd13`, including
+authentication, streaming, inference, embeddings, storage and user isolation.
+
+The short-lived credential **Onesa AI staging Render - 2026-10-12** is restricted to
+Workers AI Read/Write on the verified account and is stored only in the staging
+Render API-key settings. It expires **2026-11-11T22:59:00Z**; renew through the private
+Cloudflare API-token dashboard before expiry and verify hosted connectivity afterward.
+Account scope does not provide model-level or staging/production environment isolation.
+Keep production credentials separate. The existing demo Worker's `AI` binding is not
+an exportable REST token and was not replaced. No paid subscription, DNS change,
+production credential reuse or real personal-data test was performed. The temporary
+private token handoff was removed after successful Render readback.
+
+Model transport mocks remain local adapter evidence only. The historical matrix
+below predates this verified staging profile and does not supersede these results.
 
 **Production NO-GO. Free-only purchasing policy remains in effect.**
 The final staging verification section below supersedes earlier staging inspection
