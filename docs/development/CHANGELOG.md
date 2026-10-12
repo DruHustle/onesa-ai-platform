@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-13 — Align visual generators with required formatter checks
+
+Format the changed documentation generator and validator using the repository's pinned Ruff rules. Preserve generated content, classification and access checks; run the complete required Python checks before pushing the correction.
+
 ## 2026-10-13 — Visual architecture and engineering onboarding
 
 Make Architecture & Workflows and Engineering Onboarding adjacent persistent sections. Add source-controlled ecosystem, provider, delivery, quarantine/retry, AI, identity, data, operations/recovery, maturity and four-day learning diagrams. Reuse the existing accessible viewer and add individual PDF exports, source/build metadata and a browser-local learning checklist. Keep detailed navigation and workflows in the internal output, validate references and schema/source drift in CI, and refresh obsolete staging labels without asserting production or Access acceptance.

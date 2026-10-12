@@ -17,7 +17,9 @@ def validate(staged=False, assets_only=False):
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
     from visual_policy import validate_navigation
 
-    validate_navigation(ROOT, json.loads((ROOT / "docs/diagrams/catalog.json").read_text()))
+    validate_navigation(
+        ROOT, json.loads((ROOT / "docs/diagrams/catalog.json").read_text())
+    )
     approved = set(policy["public_sources"])
     for scope in ["public", "internal"]:
         generated = (
@@ -26,10 +28,18 @@ def validate(staged=False, assets_only=False):
         )
         provenance = json.loads((generated / "provenance.json").read_text())
         if scope == "internal":
-            assert provenance["navigation_sha256"] == hashlib.sha256(
-                (ROOT / "docs/ecosystem/visual-navigation.json").read_bytes()
-            ).hexdigest(), "Engineering navigation drift"
-            assert json.loads((generated / "engineering-navigation.json").read_text())["classification"] == "internal"
+            assert (
+                provenance["navigation_sha256"]
+                == hashlib.sha256(
+                    (ROOT / "docs/ecosystem/visual-navigation.json").read_bytes()
+                ).hexdigest()
+            ), "Engineering navigation drift"
+            assert (
+                json.loads((generated / "engineering-navigation.json").read_text())[
+                    "classification"
+                ]
+                == "internal"
+            )
         else:
             assert not (generated / "engineering-navigation.json").exists()
         for source, digest in provenance["sources"].items():
@@ -137,8 +147,13 @@ def validate(staged=False, assets_only=False):
             assert (ROOT / d["source"]).read_bytes() == (
                 generated / "diagrams" / f"{d['id']}.mmd"
             ).read_bytes(), f"Diagram drift: {d['id']}"
-            assert d["source_sha256"] == hashlib.sha256((ROOT / d["source"]).read_bytes()).hexdigest()
-            assert PdfReader(generated / "diagrams" / f"{d['id']}.pdf").pages, "Empty diagram PDF"
+            assert (
+                d["source_sha256"]
+                == hashlib.sha256((ROOT / d["source"]).read_bytes()).hexdigest()
+            )
+            assert PdfReader(generated / "diagrams" / f"{d['id']}.pdf").pages, (
+                "Empty diagram PDF"
+            )
         manuals = json.loads((generated / "manuals.json").read_text())
         if scope == "public":
             assert {m["category"] for m in manuals} == set(policy["public_pdfs"])
