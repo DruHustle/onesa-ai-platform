@@ -1,0 +1,20 @@
+flowchart TB
+Operator[Operator] --> Web[Vercel static interface]
+Web --> Proxy[Node same-origin proxy]
+Proxy --> API[Render FastAPI operator session and CSRF]
+API --> Propose[Bounded motion proposal]
+Propose --> Approve[Separate approval within deadline]
+Approve --> Safety[Independent SafetyGate freshness limits and stopped state]
+Safety --> Sim[Synthetic joint simulation]
+Sim --> Journal[Turso staging journal and exclusive owner lease]
+Sim --> Telemetry[Software telemetry to interface]
+Watchdog[Heartbeat loss revocation or emergency stop] --> Stop[Revoke authority and stop]
+Stop --> Sim
+Restart[Restart] --> Stopped[Clear sessions cancel unfinished tasks start stopped]
+subgraph Edge[LOCAL EDGE - preparatory only]
+ROS[ROS 2 SimulationTelemetry and SimulationProposal messages]
+Sensors[Vision audio VLA sensor controller interfaces - planned]
+Actuator[Physical drivers and actuation - unavailable and forbidden]
+end
+API -. no implemented physical bridge .-> ROS
+Sensors -. hardware qualification required .-> Actuator

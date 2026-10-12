@@ -15,6 +15,9 @@ def validate(staged=False, assets_only=False):
 
     validate_ecosystem()
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
+    from visual_policy import validate_navigation
+
+    validate_navigation(ROOT, json.loads((ROOT / "docs/diagrams/catalog.json").read_text()))
     approved = set(policy["public_sources"])
     for scope in ["public", "internal"]:
         generated = (
@@ -22,6 +25,13 @@ def validate(staged=False, assets_only=False):
             / f"onesa-ai-platform-frontend/apps/docs/.generated/{scope}/static/generated"
         )
         provenance = json.loads((generated / "provenance.json").read_text())
+        if scope == "internal":
+            assert provenance["navigation_sha256"] == hashlib.sha256(
+                (ROOT / "docs/ecosystem/visual-navigation.json").read_bytes()
+            ).hexdigest(), "Engineering navigation drift"
+            assert json.loads((generated / "engineering-navigation.json").read_text())["classification"] == "internal"
+        else:
+            assert not (generated / "engineering-navigation.json").exists()
         for source, digest in provenance["sources"].items():
             assert hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest, (
                 f"Source drift: {source}"
@@ -101,7 +111,7 @@ def validate(staged=False, assets_only=False):
             allowed.update(
                 f"diagrams/{name}.{ext}"
                 for name in policy["public_diagrams"]
-                for ext in ["svg", "png", "mmd"]
+                for ext in ["svg", "png", "mmd", "pdf"]
             )
             if (generated / "manuals.json").exists():
                 allowed.update(
@@ -121,12 +131,14 @@ def validate(staged=False, assets_only=False):
         if staged:
             continue
         for d in diagrams:
-            for extension in ["svg", "png", "mmd"]:
+            for extension in ["svg", "png", "mmd", "pdf"]:
                 asset = generated / "diagrams" / f"{d['id']}.{extension}"
                 assert asset.is_file(), f"Missing diagram: {asset}"
             assert (ROOT / d["source"]).read_bytes() == (
                 generated / "diagrams" / f"{d['id']}.mmd"
             ).read_bytes(), f"Diagram drift: {d['id']}"
+            assert d["source_sha256"] == hashlib.sha256((ROOT / d["source"]).read_bytes()).hexdigest()
+            assert PdfReader(generated / "diagrams" / f"{d['id']}.pdf").pages, "Empty diagram PDF"
         manuals = json.loads((generated / "manuals.json").read_text())
         if scope == "public":
             assert {m["category"] for m in manuals} == set(policy["public_pdfs"])
@@ -204,6 +216,7 @@ def validate(staged=False, assets_only=False):
             "docs/security",
             "docs/development",
             "docs/operations",
+            "docs/onboarding",
         ]:
             assert not (public / directory).exists(), (
                 f"Internal pages exposed: {directory}"

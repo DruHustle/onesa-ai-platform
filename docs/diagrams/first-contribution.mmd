@@ -1,0 +1,12 @@
+flowchart TB
+Read[Read AGENTS runbooks and actual current evidence] --> Scope[Pick one small reversible issue]
+Scope --> Dev[Work on existing dev preserving other changes]
+Dev --> Test[Run focused tests contracts builds and security]
+Test --> Docs[Update affected diagram API or schema reference]
+Docs --> Review[Inspect staged diff and automated review]
+Review --> Push[Push dev and PR to staging]
+Push --> CI[Exact source full CI and hosted synthetic staging acceptance]
+CI --> Gate[Release qualification and authorized owner decision]
+Gate --> Main[PR staging to main]
+Main --> Verify[Deploy and verify actual source and recovery]
+Failure[Failed check] --> Dev

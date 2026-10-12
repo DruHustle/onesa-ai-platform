@@ -1,0 +1,7 @@
+flowchart TB
+Reader[Reader] --> Public[Public docs allowlisted pages diagrams search and downloads]
+Engineer[Approved engineer] -. separate access qualification required .-> Access[Identity and MFA policy]
+Access --> Verify[Server-side signed identity verification]
+Verify --> Engineering[Separate engineering build]
+Anonymous[Unauthorized or invalid identity] --> Denied[Private assets denied]
+Private[Detailed schemas operational guides and onboarding] --> Engineering

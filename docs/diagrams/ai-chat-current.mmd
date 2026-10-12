@@ -1,0 +1,21 @@
+sequenceDiagram
+actor User
+participant Web as Next.js frontend
+participant API as FastAPI
+participant DB as Owned conversation storage
+participant Model as Configured ModelClient
+participant CF as Workers AI
+User->>Web: Submit owned conversation prompt
+Web->>API: Same-origin session and CSRF request
+API->>DB: Check identity ownership and save user message
+API->>Model: Bounded configured provider request
+Model->>CF: Authenticated HTTPS generation
+alt Provider returns output
+CF-->>Model: Generated tokens
+Model-->>API: Stream with cancellation and timeout handling
+API-->>Web: SSE response
+API->>DB: Persist completed assistant and sources
+else Provider unavailable or cancelled
+Model-->>API: Explicit failure or cancellation
+API-->>Web: Honest error, no silent mock substitution
+end

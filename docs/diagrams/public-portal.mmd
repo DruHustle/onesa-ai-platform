@@ -6,6 +6,6 @@ Private --> API
 API --> PG[Portal PostgreSQL]
 API --> Files[Private object storage]
 API --> Queue[Durable bounded outboxes]
-Queue --> Worker[Worker deployment unqualified]
+Queue --> Worker[Oracle worker - staging verified]
 Worker --> Mail[Provider accepted is not delivered]
 Worker --> Files

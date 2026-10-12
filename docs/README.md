@@ -4,6 +4,14 @@ Read [engineering policies](../AGENTS.md) and [the roadmap](product/ROADMAP.md) 
 Amendment 001 governs product positioning; distinguish implemented software from proposed
 models/features and unverified GPU/production acceptance.
 
+## Architecture & Workflows
+
+[Interactive architecture hub](/architecture) · [Visual diagram/source index](ecosystem/VISUAL_WORKFLOWS.md) · [Actual infrastructure](ecosystem/INFRASTRUCTURE.md).
+
+## Engineering Onboarding
+
+[Start Here — Onesa Engineering](onboarding/START_HERE.md) · [Four-day interactive path](/onboarding) · [First Engineering Contribution](onboarding/FIRST_CONTRIBUTION.md).
+
 ## adr
 
 - [0001-platform-baseline](adr/0001-platform-baseline.md)

@@ -69,9 +69,11 @@ docs-internal: docs-api
 
 docs-validate:
 	$(PYTHON) scripts/docs/validate.py
+	node scripts/docs/visual-acceptance.mjs
 
 docs-check:
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_source_policy.py
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_visual_policy.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_prepare_cloudflare.py
 	npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
 	node --test scripts/docs/cloudflare-access.test.mjs

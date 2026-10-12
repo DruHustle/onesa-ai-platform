@@ -9,6 +9,14 @@ import staging
 
 
 class StagingTests(unittest.TestCase):
+    def test_production_database_cannot_be_used_for_staging_probes(self):
+        uri = "postgresql+psycopg://onesa_ai_staging_app:synthetic-password@ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require"
+        with patch.object(staging, "create_engine") as connect:
+            report = staging.database_probe({"ONESA_DATABASE_URL": uri}, direct=True)
+        self.assertFalse(report["configuration_checks"]["expected_host_matches"])
+        connect.assert_not_called()
+        self.assertNotIn("synthetic-password", json.dumps(report))
+
     def test_current_standard_protection_is_accepted_but_missing_or_unknown_modes_are_not(
         self,
     ):

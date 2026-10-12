@@ -1,8 +1,8 @@
 {
   "contracts/portal-internal.json": "3ec96f5a953d8a785b3ffae390d7da1b509cd4e1be899ba9b84469283cf8cf53",
   "contracts/portal-public.json": "c357ae174b98cdeccfb46d1520f3c6ca47a33744329b628c0670d7cb174579c4",
-  "contracts/robot.json": "e71aa4e4eca7097d05277463ed6a53d70671c3f83d9069c9e143bb2ddbb5ef22",
+  "contracts/robot.json": "dd5f7e8d8d0626c5abbd723b6aa3987bad622c00c4b574bd7fb27e50f421fb26",
   "portal-schema.sql": "f98f7124181f5dc3856140fd7526354680a2af7a737784e302861ba3e35b7da4",
-  "robot-schema.sql": "5f0e1b8f298e15f47ea6cbdc1a1fd50d3dcbc06b854ec1d44e55e4352c708e8a",
-  "source-revisions.json": "51c3b20c42d1d556959507a8760d3c692c5ca7d4db2c692a7f62c768950aea85"
+  "robot-schema.sql": "401081c523e587304ee94b0cddc918a4bddfccc4967d6bead694b98ebcc1f035",
+  "source-revisions.json": "200cf9ede36624e6b7e2a8a919d749f4180086c99c248cbc50ead15f077c57ce"
 }

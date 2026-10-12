@@ -1,0 +1,20 @@
+flowchart TB
+subgraph Stage[STAGING - approved synthetic fixtures only]
+P[Portal API] --> PDB[Portal staging PostgreSQL metadata and queue]
+P --> PB[Private staging bucket quarantine and clean files]
+W[Oracle staging worker] --> PDB
+W --> PB
+A[AI API] --> ADB[Separate AI staging PostgreSQL documents chunks vectors]
+R[Robot simulation API] --> RDB[Separate Turso staging tasks sessions stop journal]
+end
+subgraph Prod[PRODUCTION - existing independent bindings]
+PP[Portal production API] --> PPDB[Production Neon and private bucket]
+AP[AI production API] --> APDB[Production Neon]
+RP[Robot production durability unresolved] --> Block[No ephemeral persistence acceptance]
+end
+P -. redacted events only .-> Logs[Provider logs and restricted source-bound receipts]
+A -. no prompt or credential bodies .-> Logs
+R -. safety and job event metadata .-> Logs
+PDB --> Retention[Approved deletion and retention jobs]
+ADB --> Retention
+NoCopy[No staging-to-production records or credentials copied]

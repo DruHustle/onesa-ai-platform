@@ -1,5 +1,6 @@
 flowchart TB
 Request[Owned authenticated request] --> Client[Shared model adapter]
+Client --> CF[Workers AI - staging verified]
 Client --> Ollama[Ollama local development only]
 Client --> Mock[Labelled deterministic test mock]
 Client -. approved checkpoint and host required .-> VLLM[vLLM proposed production runtime]

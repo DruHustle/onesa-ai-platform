@@ -1,0 +1,13 @@
+flowchart TB
+Foundation[Completed foundations - three apps APIs tests and diagrams] --> Active[Active phase - correct isolation and hosted release qualification]
+Active --> Portal[Portal Oracle staging scan queue and recovery verified]
+Active --> AI[AI Workers AI generation and embeddings verified on prior binding]
+Active --> Robot[Robot software simulation and auth implemented]
+Portal --> PGate[New hosted target acceptance mail backups and production worker replacement]
+AI --> AGate[Corrected separate staging DB acceptance and production model operations]
+Robot --> RGate[Rolling journal handoff hosted test and durable production host]
+PGate --> Release[Only genuinely qualified production capabilities released]
+AGate --> Release
+RGate --> Release
+Release -. separate future research qualification .-> Research[Approved training multilingual and multimodal research]
+Robot -. separate hardware safety and owner authorization .-> Hardware[Physical ROS 2 sensors and robot actuation - not authorized]

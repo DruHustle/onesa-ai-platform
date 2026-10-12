@@ -1,6 +1,10 @@
 // Advanced-mode Pages Worker: authorize every document, asset and search-index request.
 const keys = new Map();
 const denied = () => new Response('Authorized engineering access required.', {status:401});
+const denialReason = error => {
+  const known = new Set(['Access configuration missing','Access audience missing','Engineering identities missing','Approved hosts missing','Access keys unavailable','Access key response exceeds bound','Access keys invalid']);
+  return known.has(error?.message) ? error.message : error?.name === 'TimeoutError' ? 'Access certificate request timed out' : 'Access verification failed';
+};
 
 function decode(value) {
   if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error('Invalid token encoding');
@@ -56,9 +60,16 @@ export default {
     let response;
     try {
       if (!['GET','HEAD'].includes(request.method)) response=new Response('Method unavailable.',{status:405});
-      else if (!await authorize(request,env)) response=denied();
+      else if (!await authorize(request,env)) {
+        console.warn(JSON.stringify({event:'engineering_access_denied',reason:'Identity, claims or signature rejected'}));
+        response=denied();
+      }
       else response=await env.ASSETS.fetch(request);
-    } catch { response=denied(); }
+    } catch(error) {
+      // Publish only fixed diagnostic categories; never token, cookie, URL or identity data.
+      console.warn(JSON.stringify({event:'engineering_access_denied',reason:denialReason(error)}));
+      response=denied();
+    }
     const headers=new Headers(response.headers);
     headers.set('cache-control','private, no-store');
     headers.set('x-robots-tag','noindex, nofollow, noarchive');

@@ -10,7 +10,9 @@ Browsers use their own product's same-origin proxy and scoped sessions. Company 
 
 ## Qualification
 
-Hosted AI staging core has been checked, while generation and semantic embeddings are still unavailable. Portal's database-role/worker/runtime acceptance remains blocked. Robot persistent hosted acceptance and all physical hardware functions remain unqualified. Local tests, mock screenshots and documentation generation do not change those verdicts. Full private release evidence remains excluded from site generation.
+As reviewed on 2026-10-13, Oracle Portal staging jobs, ClamAV scanning and bounded queue/recovery tests have passed. Workers AI generation and semantic embedding probes and an earlier hosted AI acceptance passed. Portal and AI staging SQL bindings were corrected to distinct *-staging projects; new source deployments and hosted acceptance must requalify those bindings. Robot simulation uses a separate Turso staging journal; rolling-deployment lease handoff and production durability still require hosted acceptance. Physical actuation remains disabled. Engineering Pages has only a harmless staging placeholder. The origin and wildcard-preview Access applications, approved-identity MFA policies and both environment bindings are now verified. Fifteen anonymous page/asset/index/download probes redirect to Access login. Authorized-user/MFA completion and internal-content hosted acceptance remain pending. Local tests and documentation builds do not establish production qualification. Full private release evidence is excluded from both sites.
+
+Use [Architecture & Workflows](/architecture), [Engineering Onboarding](/onboarding) and the [visual source index](VISUAL_WORKFLOWS.md).
 
 ## Architecture changes
 

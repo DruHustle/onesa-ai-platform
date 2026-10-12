@@ -1,5 +1,9 @@
 # Onesa UG documentation hosting
 
+> Current readback — 2026-10-13: the existing `onesa-engineering-docs` Direct Upload project is provisioned. Origin and wildcard-preview Access applications require the two approved identities and TOTP/security-key MFA. Both Pages environments have verified audiences, approved identities and allowed-host bindings. The harmless staging placeholder deployment `698c5aa3` passed fifteen anonymous origin/preview/page/asset/index/download probes, all redirecting to Access login. Authorized identity/MFA completion and internal-content hosted acceptance remain pending. No confidential build or DNS cutover has occurred. Earlier Git installation failure below is historical and does not mean the Direct Upload project is missing.
+
+[Visual diagrams and onboarding](../ecosystem/VISUAL_WORKFLOWS.md) are prepared in the classified builds. Public production still follows the existing `docs-hosting.yml` main-source qualification; private publication requires Access and source qualification first. [Cloudflare MFA policy reference](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/mfa-requirements/).
+
 The owner selected **docs.onesa.eu** for public documentation and confirmed Vercel
 public-use eligibility. The existing Docusaurus application remains within
 `onesa-ai-platform-frontend/apps/docs`; the three repositories stay independent.

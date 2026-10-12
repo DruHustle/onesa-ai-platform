@@ -1,5 +1,7 @@
 # Data flows
 
+> Current hosted status, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
+
 Onesa AI is European-based, general-purpose and applicable to European and international
 markets. Shared services have no geographic routing or country/language whitelist.
 African/regional use cases are optional specializations. See ADR 0003 and AI_SOVEREIGNTY.md.

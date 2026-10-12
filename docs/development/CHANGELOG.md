@@ -1,5 +1,13 @@
 # Development changelog
 
+## 2026-10-13 — Visual architecture and engineering onboarding
+
+Make Architecture & Workflows and Engineering Onboarding adjacent persistent sections. Add source-controlled ecosystem, provider, delivery, quarantine/retry, AI, identity, data, operations/recovery, maturity and four-day learning diagrams. Reuse the existing accessible viewer and add individual PDF exports, source/build metadata and a browser-local learning checklist. Keep detailed navigation and workflows in the internal output, validate references and schema/source drift in CI, and refresh obsolete staging labels without asserting production or Access acceptance.
+
+## 2026-10-13 — Reconcile database isolation and remove obsolete deployment entries
+
+Pin staging probes to the verified *-staging Neon project and reject the production endpoint. Privately initialize/rebind only the empty synthetic target with the existing staging role contract, preserving production and model credentials. Replace the historical paid Render database declaration with an existing Free API reference and preserve keys instead of generating replacements. Correct approved reply-to examples; all supported provider adapters remain available.
+
 ## 2026-10-12 — Approved company contact and legal links
 
 Display the owner-approved legal name, email and telephone across the independent chat application, with locale-aware links to the central company legal and privacy pages. Use a committed snapshot derived from the maintained Portal record; no sibling runtime or private record is required by this build. Preserve automatic styling, authentication and unverified privacy-processing gates.
