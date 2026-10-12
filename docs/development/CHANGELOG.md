@@ -1,5 +1,14 @@
 # Development changelog
 
+## 2026-10-12 — Consistent appearance and authenticated staging qualification
+
+- Chat and public/protected documentation implement persisted Auto/Light/Dark with visitor-local 07:00/19:00 transitions. Bootstrap runs before rendering; Chat retains CSP nonces and documentation synchronizes Docusaurus color context.
+- Fixed dark-theme form/card/message contrast and expanded every Chat page plus every public documentation sitemap route in both modes at desktop/mobile widths. All 124 documentation route/mode/width checks pass with zero axe findings, alongside 19 diagrams, 11 public PDFs, 3,056 internal-link checks, search and protected-path exclusions. The mobile search wrapper no longer covers appearance; inline links are distinguishable and theme color changes apply immediately.
+- Stage fixture schema is validated before deployment. Owner-dispatched temporary synthetic users receive two-hour access grants; private credentials stay in a 0600 runner file and are revoked/removed after verification. No production identities or migrations are changed.
+- Production documentation links default to the actual public docs domain; engineering links stay hidden until their protected target is configured.
+- Reuse the exact protected native Git staging Preview; do not create a second frontend deployment. Authentication diagnostics expose fixed phase/reason codes only. Real inference/embeddings/streaming remain mandatory and cannot be replaced by mock QA.
+- Local backend: 156 pass, four external serving tests skip. Chat: 24 Chromium/WebKit browser cases pass (four external serving cases skip); 61 release guard tests pass. Native documentation security regressions and both classified builds pass after manifest regeneration. Updated official immutable Node 24-compatible Actions; corrected docs deployment shell assignment to preserve failed-read errors. Actual hosted model readiness and production owner review remain release gates.
+
 ## 2026-10-12 — Fail incomplete hosted staging acceptance
 
 Retain uploaded staging receipts but fail the workflow when hosted acceptance is FAIL,

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import {appearanceBoot} from "../lib/appearance-boot";
+import Appearance from "../components/appearance";
 import { LocaleProvider, type Locale } from "../lib/i18n";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
 export default async function Layout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") || undefined;
   const configured = process.env.ONESA_UI_LOCALE || "en";
   if (configured !== "en" && configured !== "de") {
     throw new Error(
@@ -22,9 +25,10 @@ export default async function Layout({
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
+      <head><script nonce={nonce} dangerouslySetInnerHTML={{__html:appearanceBoot}}/></head>
       <body>
-        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        <LocaleProvider initialLocale={locale}><div className="app-appearance"><Appearance locale={locale}/></div>{children}</LocaleProvider>
       </body>
     </html>
   );
