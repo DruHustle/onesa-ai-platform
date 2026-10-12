@@ -8,22 +8,21 @@ test('release audit: responsive authenticated views, reduced motion and axe',asy
  await page.emulateMedia({reducedMotion:'reduce'});
  for(const width of widths){
   await page.setViewportSize({width,height:900});
-  for(const mode of ['light','dark']){
-  await page.goto('/');await page.locator('.appearance-control select').selectOption(mode);
+  const mode='light';
   for(const route of ['/','/knowledge','/agents','/travel','/settings','/recovery','/invitation']){
    const response=await page.goto(route);
    const policy=response?.headers()['content-security-policy']||'';
    expect(policy).toContain("'nonce-");expect(policy).toContain("frame-ancestors 'none'");
    expect(policy).not.toContain("'unsafe-eval'");
 
-   await expect(page.locator('html')).toHaveAttribute('data-theme',mode);
+   expect(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme)).toBe('light');
+   await expect(page.locator('.appearance-control')).toHaveCount(0);
    await expect(page.locator('main')).toBeVisible();
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    const violations=(await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze()).violations;
    expect(violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);
    await page.screenshot({path:info.outputPath(`view-${mode}-${width}-${route.replaceAll('/','')||'chat'}.png`),fullPage:true});
   }
- }
  }
  await page.goto('/');await expect(page.getByLabel('Message Onesa AI')).toBeVisible();await page.keyboard.press('Tab');
  expect(await page.evaluate(()=>document.activeElement!==document.body)).toBe(true);

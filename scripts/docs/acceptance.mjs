@@ -28,9 +28,10 @@ const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address
 const browser=await chromium.launch();
 const context=await browser.newContext();
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const mode='light';
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,accessibility:[],widths:[]};
 try{
- await page.goto(origin+'/');await expect(page.locator('html')).toHaveAttribute('data-appearance','auto');await page.reload();await expect(page.locator('html')).toHaveAttribute('data-appearance','auto');
+ await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();
  expect(catalog.map(d=>d.id).sort()).toEqual([...policy.public_diagrams].sort());
  for(const diagram of catalog)for(const ext of ['svg','png','mmd']){
@@ -45,10 +46,9 @@ try{
  const sitemap=await (await context.request.get(origin+'/sitemap.xml')).text();expect(sitemap).toContain('https://docs.onesa.eu/');expect(sitemap).not.toContain('localhost');expect(sitemap).not.toContain('/docs/ecosystem/');
  const publicRoutes=[...new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>new URL(match[1]).pathname))];
  expect(publicRoutes.length).toBeGreaterThan(10);
- for(const mode of ['light','dark']) for(const width of [320,1440]) for(const route of publicRoutes){
+ for(const width of [320,1440]) for(const route of publicRoutes){
   await page.setViewportSize({width,height:900});
-  await page.goto(origin+route);await page.waitForLoadState('networkidle');
-  await page.locator('.appearance-control select:visible').selectOption(mode);
+  await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-theme',mode);
   const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
   evidence.accessibility.push({route,mode,width,violations:results.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))});
@@ -71,9 +71,10 @@ try{
  await page.getByRole('button',{name:'Reset',exact:true}).click();await page.getByRole('button',{name:'Enlarge diagram',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.getByLabel('Zoom in',{exact:true})).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(page.getByRole('link',{name:'Editable Mermaid'})).toBeFocused();await page.keyboard.press('Tab');await expect(page.getByLabel('Zoom in',{exact:true})).toBeFocused();await page.keyboard.press('Escape');await expect(page.locator('.diagram-panel.expanded')).toHaveCount(0);await expect(page.getByRole('button',{name:'Enlarge diagram',exact:true})).toBeFocused();
  await page.goto(origin+'/api-explorer');for(const product of ['ai','portal','robot']){await page.getByLabel('API product').selectOption(product);await expect(page.locator('.swagger-ui .opblock').first()).toBeVisible();await expect(page.getByRole('button',{name:'Try it out',exact:true})).toHaveCount(0);}
  await page.goto(origin+'/');await page.keyboard.press('Control+k');await page.getByLabel('Search documentation').fill('Robot');await expect(page.locator('.search-results a').first()).toBeVisible();await page.keyboard.press('Escape');
- for(const mode of ['light','dark'])for(const width of [320,390,768,1024,1440])for(const route of ['/','/architecture','/downloads','/api-explorer']){
-  await page.setViewportSize({width,height:900});await page.goto(origin+route);await page.waitForLoadState('networkidle');
-  await page.locator('.appearance-control select:visible').selectOption(mode);
+ for(const width of [320,390,768,1024,1440])for(const route of ['/','/architecture','/downloads','/api-explorer']){
+  await page.setViewportSize({width,height:900});await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();
+  if(route==='/api-explorer')await expect(page.locator('.swagger-ui .opblock').first()).toBeVisible();
+  if(route==='/architecture')await expect(page.locator('.diagram-canvas svg')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({mode,width,route,overflow:false});
  }
  expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...evidence},null,2));
