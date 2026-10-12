@@ -9,6 +9,19 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class WorkflowBoundaryTests(unittest.TestCase):
+    def test_registered_staging_entrypoint_is_guarded_and_does_not_inherit_production_secrets(self):
+        text = (ROOT / ".github/workflows/deploy.yml").read_text()
+        job = text.split("  staging:\n", 1)[1].split("  verify:\n", 1)[0]
+        for guard in ["github.event_name == 'workflow_dispatch'", "github.ref == 'refs/heads/staging'",
+                      "inputs.target == 'staging'", "github.triggering_actor == 'DruHustle'"]:
+            self.assertIn(guard, job)
+        self.assertIn("uses: ./.github/workflows/release-staging.yml", job)
+        self.assertNotIn("secrets:", job)
+        for condition in re.findall(r"^    if: (.+)", text, re.MULTILINE):
+            if "refs/heads/main" in condition:
+                self.assertIn("inputs.target == 'production'", condition)
+        self.assertIn("workflow_call: {}", (ROOT / ".github/workflows/release-staging.yml").read_text())
+
     def test_free_workflows_are_credential_free_and_authorization_is_manual(self):
         for name in ("free-qualification.yml", "free-authorization.yml"):
             text = (ROOT / ".github/workflows" / name).read_text()

@@ -1,5 +1,13 @@
 # Development changelog
 
+## 2026-10-12 — Initial qualified staging entry point
+
+Allow an explicitly selected staging dispatch through registered deploy.yml, reusing
+release-staging.yml and its Staging environment without inherited production secrets.
+Retain exact-source owner/branch/event, provider/database isolation and hosted model
+acceptance gates. Production requires its explicit target and existing authorization.
+This permits initial staging qualification before new workflow files reach main.
+
 ## 2026-10-12 — Production provider credential boundary
 
 Correct legacy public production workflow bindings to use production provider secret
