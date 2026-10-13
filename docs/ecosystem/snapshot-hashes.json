@@ -1,8 +1,10 @@
 {
-  "contracts/portal-internal.json": "3ec96f5a953d8a785b3ffae390d7da1b509cd4e1be899ba9b84469283cf8cf53",
+  "contracts/portal-internal.json": "a9504c995371f9a75cd2af74d38e6fc97abbf0ad7c159aaa4aa7eb52e2b164e5",
   "contracts/portal-public.json": "c357ae174b98cdeccfb46d1520f3c6ca47a33744329b628c0670d7cb174579c4",
   "contracts/robot.json": "dd5f7e8d8d0626c5abbd723b6aa3987bad622c00c4b574bd7fb27e50f421fb26",
-  "portal-schema.sql": "f98f7124181f5dc3856140fd7526354680a2af7a737784e302861ba3e35b7da4",
-  "robot-schema.sql": "401081c523e587304ee94b0cddc918a4bddfccc4967d6bead694b98ebcc1f035",
-  "source-revisions.json": "200cf9ede36624e6b7e2a8a919d749f4180086c99c248cbc50ead15f077c57ce"
+  "portal-schema.sql": "62eae5456f86f666d2a870efd46966e2ac3f5eb17a5260c12eb9334a91bb0494",
+  "robot-schema.sql": "0559d085346f3a4353d1adcf705654a8cd214a3971075c99e4a5a8fe88e95551",
+  "source-revisions.json": "03cb71c26f2b4c58a9c87a1754c9e01b63407df82c0b8696f87094ed9226c9f0",
+  "PORTAL_PRIVACY_GOVERNANCE.md": "b0da3d69f3760a6e28c6deb5715bed5509ed24b9e05ea1c2a15611acfe3dd725",
+  "PORTAL_DATABASE.md": "ffcadfdacd591d9d1e85381e474ee368fc9f9ba9d19f7956568fe15ed3e78176"
 }

@@ -534,7 +534,7 @@ The profiles below cover discovered business and operational paths, including fa
 
 **Security and privacy:** Synthetic staging only until verified processing approval; scope identities and private records; never replay physical commands.
 
-**Implementation and hosted status:** Real Workers AI staging verified; production keys/acceptance missing.
+**Implementation and hosted status:** Real Workers AI staging verified; production serving credentials/provider tests verified separately, with exact application rollout and operating acceptance pending.
 
 **Automated test source:** `onesa-ai-platform/onesa-ai-platform-backend/tests/test_cloudflare.py`
 
@@ -1044,7 +1044,7 @@ The profiles below cover discovered business and operational paths, including fa
 
 **Security and privacy:** Synthetic staging only until verified processing approval; scope identities and private records; never replay physical commands.
 
-**Implementation and hosted status:** Staging schema verified; production Portal schema remains absent.
+**Implementation and hosted status:** Staging and production Portal schemas verified; additive governance migration/import and exact production application acceptance remain separately qualified.
 
 **Automated test source:** `onesa-ai-platform/scripts/release/test_evidence.py`
 

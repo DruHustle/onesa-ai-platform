@@ -1,0 +1,10 @@
+flowchart TD
+ A[Receive data subject request] --> B[Verify identity and request scope]
+ B --> C[Locate database, objects, AI chunks and jobs]
+ C --> D[Review legal holds and exemptions]
+ D --> E[Preview deletion cascade and recovery]
+ E --> F[Authorized database and object deletion]
+ F --> G[Remove eligible AI chunks, caches and pending jobs]
+ G --> H[Record processor deletion actions]
+ H --> I[Retain deletion replay instructions for restored backups]
+ I --> J[Verify completion and respond]

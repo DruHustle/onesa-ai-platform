@@ -2,7 +2,7 @@
 
 ## Implemented processes
 
-The actual frontend is onesa-ai-robot-frontend, not an assumed interface directory. Static HTML/JavaScript and Node same-origin routing communicate with robot_api/main.py. FastAPI validates operator sessions and independent safety constraints. The local SQLite profile owns sessions, tasks and stop state; event-loop thread ownership prevents concurrent implicit transactions. The implemented staging-only Turso profile keeps local sessions and safety in process memory and persists bounded task history plus an exclusive owner lease remotely. There is one configured operator, not an implemented multi-role hierarchy.
+The actual frontend is onesa-ai-robot-frontend, not an assumed interface directory. Static HTML/JavaScript and Node same-origin routing communicate with robot_api/main.py. FastAPI validates operator sessions and independent safety constraints. The local SQLite profile owns sessions, tasks and stop state; event-loop thread ownership prevents concurrent implicit transactions. The implemented environment-scoped Turso profile keeps local sessions and safety in process memory and persists bounded task history plus an exclusive owner lease remotely. Production binding requires its own approved target and credentials, with restart stopped and separate operating qualification. There is one configured operator, not an implemented multi-role hierarchy.
 
 ## Command lifecycle
 
