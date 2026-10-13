@@ -137,7 +137,15 @@ is the Cloudflare example: every request runs two hardcoded prompts against
 credential, accept the Onesa chat request, expose an OpenAI-compatible API, or run an
 embedding model. Anonymous root, health, readiness and model-list checks returned
 HTTP 500. Correct resource identity and an AI binding do not establish real serving
-readiness. No Worker code, binding, model or backend provider setting was changed.
+readiness. No Worker code, binding or model was changed during that inspection.
+
+Readback on 2026-10-13 found no custom domains, zone routes or application dependency
+on this demo. Its public `workers.dev` route was disabled reversibly, with the existing
+Worker and AI binding retained; anonymous requests now return HTTP 404. This removes
+the unauthenticated example execution path. Both application environments instead use
+the account API below with separate server-side credentials. See the maintained
+[configuration inventory](AI_CONFIGURATION_INVENTORY.md) for actual verification and
+expiry dates; configured production credentials alone do not qualify a live release.
 
 The prepared Cloudflare backend transport expects authenticated account API bases:
 `https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1` for inference and

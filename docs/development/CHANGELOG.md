@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-13 — Record isolated production Cloudflare serving configuration
+
+The existing production Render service now has its own account-scoped Workers AI token and verified synthetic generation/embedding connectivity. Record renewal dates and the distinction between saved configuration and an accepted live release. The unused unauthenticated demo's public route is disabled reversibly; no application deployment or DNS cutover is implied.
+
 ## 2026-10-13 — Preserve redirect denial in the Cloudflare verifier runtime
 
 The deployed verifier denied the approved owner because workerd rejected the signing-key fetch's `redirect: error` option. Use manual redirect handling and refuse every non-success response, retaining bounded fetches, trusted issuer, signature/audience/identity/host checks and MFA policies. Verify malicious signing-key redirects cannot expose assets; local workerd evidence remains separate from hosted acceptance.

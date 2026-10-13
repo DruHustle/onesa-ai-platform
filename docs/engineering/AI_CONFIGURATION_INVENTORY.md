@@ -40,6 +40,23 @@ an exportable REST token and was not replaced. No paid subscription, DNS change,
 production credential reuse or real personal-data test was performed. The temporary
 private token handoff was removed after successful Render readback.
 
+## Production serving configuration — verified 2026-10-13
+
+The existing production Render service `srv-db4j0aom7kps73c0uu3g` now has all nine
+Cloudflare profile overrides above. Its separate **Onesa AI production Render -
+2026-10-13** token has Workers AI Write permission on the selected account and expires
+**2026-11-12T22:59:59Z**. Authenticated synthetic generation and native `[1, 1024]`
+embeddings passed, private provider readback matched, and both production token fields
+were verified different from staging. Token values remain server-side and the
+temporary private handoff was removed. Renew before expiry and reverify connectivity.
+
+This is verified production **configuration and provider connectivity**. Saving Render
+environment values does not restart the current application or qualify its database,
+index compatibility, privacy, operations or complete hosted production release. Native
+auto-deploy remains off; promotion and deployment still use the normal release gates.
+The unused example Worker's public `workers.dev` route was disabled after dependency
+inspection; the application uses the authenticated account endpoints above.
+
 Model transport mocks remain local adapter evidence only. The historical matrix
 below predates this verified staging profile and does not supersede these results.
 
