@@ -3,6 +3,7 @@
 import ast
 import hashlib
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -24,6 +25,23 @@ for name in manifest:
     ).strip()
     r = manifest[name]
     r["commit"] = sha
+    if name == "onesa-company-portal":
+        paths = subprocess.check_output(
+            [
+                "git",
+                "ls-tree",
+                "-r",
+                "--name-only",
+                sha,
+                "onesa-company-portal-backend/migrations",
+            ],
+            cwd=repo,
+            text=True,
+        ).splitlines()
+        for path in paths:
+            if path.endswith(".sql"):
+                r["sources"][path] = ""
+        r["sources"]["docs/engineering/PRIVACY_GOVERNANCE.md"] = ""
     if name == "onesa-ai-robot":
         for p in [
             "onesa-ai-robot-backend/robot_api/turso.py",
@@ -36,6 +54,53 @@ for name in manifest:
         raw = subprocess.check_output(["git", "show", sha + ":" + p], cwd=repo)
         r["sources"][p] = hashlib.sha256(raw).hexdigest()
     if name == "onesa-company-portal":
+        migrations = sorted(
+            path
+            for path in r["sources"]
+            if path.startswith("onesa-company-portal-backend/migrations/")
+            and path.endswith(".sql")
+        )
+        sql = (
+            "\n\n".join(
+                "-- "
+                + Path(path).name
+                + "\n"
+                + subprocess.check_output(
+                    ["git", "show", sha + ":" + path], cwd=repo, text=True
+                ).strip()
+                for path in migrations
+            )
+            + "\n"
+        )
+        (folder / "portal-schema.sql").write_text(sql)
+        (folder / "PORTAL_DATABASE.md").write_text(
+            "# Portal database schema\n\nGenerated from "
+            + str(len(migrations))
+            + " pinned PostgreSQL migrations, including internal governance. Schema definitions only; no live records or credentials. Preserve constraints, immutable approval triggers and migration checksums.\n\n```sql\n"
+            + sql
+            + "```\n"
+        )
+        governance = subprocess.check_output(
+            ["git", "show", sha + ":docs/engineering/PRIVACY_GOVERNANCE.md"],
+            cwd=repo,
+            text=True,
+        )
+        (folder / "PORTAL_PRIVACY_GOVERNANCE.md").write_text(governance)
+        diagram_names = [
+            "privacy-document-review",
+            "privacy-retention-lifecycle",
+            "privacy-subject-deletion",
+            "privacy-processor-assessment",
+            "privacy-transfer-review",
+            "privacy-notice-publication",
+            "privacy-vercel-transition",
+        ]
+        graphs = re.findall(r"```mermaid\n(.*?)```", governance, re.DOTALL)
+        assert len(graphs) == len(diagram_names)
+        for identifier, graph in zip(diagram_names, graphs):
+            (root / "docs/diagrams" / (identifier + ".mmd")).write_text(
+                graph.strip() + "\n"
+            )
         contract = json.loads(
             subprocess.check_output(
                 [
@@ -144,13 +209,13 @@ for name in manifest:
         assert len(remote) == 2
         sql = (
             local.strip()
-            + "\n\n-- Separate remote staging journal; local sessions/safety are not uploaded.\n"
+            + "\n\n-- Environment-scoped remote journal; local sessions/safety are not uploaded.\n"
             + "\n".join(remote)
             + "\n"
         )
         (folder / "robot-schema.sql").write_text(sql)
         (folder / "ROBOT_DATABASE.md").write_text(
-            "# Robot database schema\n\nGenerated from pinned `robot_api/main.py` local DDL and `robot_api/turso.py` remote staging journal DDL. No live records or credential export. Local sessions and safety state remain process-local with Turso; only bounded task history and the exclusive owner lease persist remotely. Restart starts stopped and cancels unfinished execution. Remote Turso remains staging-only; this does not qualify production durability.\n\n```sql\n"
+            "# Robot database schema\n\nGenerated from pinned `robot_api/main.py` local DDL and `robot_api/turso.py` remote staging journal DDL. No live records or credential export. Local sessions and safety state remain process-local with Turso; only bounded task history and the exclusive owner lease persist remotely. Restart starts stopped and cancels unfinished execution. The adapter supports separately verified staging and production bindings; source support does not qualify hosted production durability.\n\n```sql\n"
             + sql
             + "```\n"
         )
@@ -173,11 +238,34 @@ for name in manifest:
         )
 (folder / "source-revisions.json").write_text(json.dumps(manifest, indent=2) + "\n")
 hashes = json.loads((folder / "snapshot-hashes.json").read_text())
+hashes["PORTAL_PRIVACY_GOVERNANCE.md"] = ""
+hashes["PORTAL_DATABASE.md"] = ""
 for p in hashes:
     hashes[p] = hashlib.sha256((folder / p).read_bytes()).hexdigest()
 (folder / "snapshot-hashes.json").write_text(json.dumps(hashes, indent=2) + "\n")
 catpath = root / "docs/diagrams/catalog.json"
 cat = json.loads(catpath.read_text())
+privacy_titles = [
+    "Privacy document draft, review and approval",
+    "Retention lifecycle and activation safeguards",
+    "Controlled data subject deletion request",
+    "Processor assessment",
+    "International transfer review",
+    "Approved bilingual privacy notice publication",
+    "Vercel commercial-plan transition",
+]
+cat = [item for item in cat if item["id"] not in diagram_names] + [
+    {
+        "id": identifier,
+        "title": title,
+        "view": "documented governance workflow",
+        "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+        "source": "docs/diagrams/" + identifier + ".mmd",
+        "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+        "nodes": [],
+    }
+    for identifier, title in zip(diagram_names, privacy_titles)
+]
 cat = [d for d in cat if d["id"] != "robot-journal-database"] + [
     {
         "id": "robot-journal-database",

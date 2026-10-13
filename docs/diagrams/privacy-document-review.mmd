@@ -1,0 +1,8 @@
+flowchart TD
+ A[Import or create INTERNAL draft] --> B[Read text and evidence]
+ B --> C{Owner decision on this revision?}
+ C -->|Changes required| D[Create a new draft revision]
+ D --> B
+ C -->|Approve| E[Reauthenticate owner with fresh MFA]
+ E --> F[Record scope and immutable approval]
+ F --> G[Separate publication or processing qualification]

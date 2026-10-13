@@ -4729,6 +4729,69 @@
     "reviewed_at": "2026-10-13"
   },
   {
+    "id": "privacy-document-review",
+    "title": "Privacy document draft, review and approval",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-document-review.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-retention-lifecycle",
+    "title": "Retention lifecycle and activation safeguards",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-retention-lifecycle.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-subject-deletion",
+    "title": "Controlled data subject deletion request",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-subject-deletion.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-processor-assessment",
+    "title": "Processor assessment",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-processor-assessment.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-transfer-review",
+    "title": "International transfer review",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-transfer-review.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-notice-publication",
+    "title": "Approved bilingual privacy notice publication",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-notice-publication.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-vercel-transition",
+    "title": "Vercel commercial-plan transition",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-vercel-transition.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
     "id": "robot-journal-database",
     "title": "Robot remote staging journal schema",
     "view": "implemented schema",

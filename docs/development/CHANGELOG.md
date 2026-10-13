@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-13 — Protected Portal privacy-governance engineering reference
+
+Refresh committed Portal API/schema snapshots from the reviewed governance source and Robot snapshots from qualified main. Add seven internal workflows covering review, retention, deletion requests, processors, transfers, privacy publication and the planned Vercel commercial transition. Include the protected governance reference in architecture navigation while preserving every required topic and the public/internal boundary. Public builds exclude governance documents and mutation contracts; private policy content is never part of documentation source.
+
 ## 2026-10-13 — Record isolated production Cloudflare serving configuration
 
 The existing production Render service now has its own account-scoped Workers AI token and verified synthetic generation/embedding connectivity. Record renewal dates and the distinction between saved configuration and an accepted live release. The unused unauthenticated demo's public route is disabled reversibly; no application deployment or DNS cutover is implied.
