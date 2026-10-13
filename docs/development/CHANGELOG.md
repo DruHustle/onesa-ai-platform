@@ -782,3 +782,7 @@ Removed pip caching from the publication hygiene job because it installs no pack
 Preserved the newly merged ecosystem documentation, pinned its additional checkout actions, and scoped scanner exceptions to three verified source checksums.
 
 Generated development-lockfile hashes for all 81 already-pinned packages. A clean dependency calculation validates hashes instead of relying on an existing local environment; no package versions changed.
+
+## 2026-10-13 — Hosted protected visual documentation acceptance
+
+Verified the qualified staging revision through actual owner Cloudflare Access MFA, then published the classified internal output to the existing protected Pages staging project. Confirmed 16 architecture sections, 17 onboarding chapters, four learning days, 73 diagrams with 292 rendered/editable exports, responsive automatic day/night views, search and accessible interactions. All 15 anonymous origin and Preview resource probes redirected to Access; authenticated responses remain private/no-store/noindex. Public Preview qualification passed independently at the same source. Production publication and custom internal DNS are not inferred from staging acceptance.
