@@ -1,0 +1,12 @@
+flowchart TB
+Reader[Documentation reader] --> Public[Vercel docs.onesa.eu]
+Public --> Allow[Allowlisted public build diagrams search and downloads]
+Engineer[Approved engineer] --> Policy[Access approved identity and MFA configured - owner acceptance pending]
+Policy --> Token[Signed Access assertion]
+Token --> Worker[Pages fail-closed JWT verifier implemented]
+Worker --> Private[Separate internal pages diagrams assets indexes and PDFs]
+Anonymous[Anonymous wrong audience forged token or disallowed host] --> Denied[Deny before accessing assets]
+Anonymous --> Worker
+Origin[pages.dev direct domains preview aliases and custom host] --> Worker
+Missing[Missing server bindings or unavailable identity] --> Denied
+Source[Public Git repositories] --> Boundary[Hosted access protection does not make committed source confidential]

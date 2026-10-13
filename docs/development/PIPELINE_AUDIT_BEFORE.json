@@ -1,0 +1,2384 @@
+{
+  "repository": "onesa-ai-platform",
+  "observed_at": "2026-10-11",
+  "remote": {
+    "repository": {
+      "private": false,
+      "visibility": "public",
+      "default_branch": "main",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      },
+      "security_and_analysis": {
+        "secret_scanning": {
+          "status": "disabled"
+        },
+        "secret_scanning_push_protection": {
+          "status": "disabled"
+        },
+        "dependabot_security_updates": {
+          "status": "disabled"
+        },
+        "secret_scanning_non_provider_patterns": {
+          "status": "disabled"
+        },
+        "secret_scanning_validity_checks": {
+          "status": "disabled"
+        }
+      }
+    },
+    "/actions/runners": {
+      "total_count": 0,
+      "runners": []
+    },
+    "/actions/permissions/workflow": {
+      "default_workflow_permissions": "write",
+      "can_approve_pull_request_reviews": true
+    },
+    "/actions/secrets": {
+      "names": [
+        "RENDER_API_KEY",
+        "RENDER_BACKEND_SERVICE_ID",
+        "VERCEL_ORG_ID",
+        "VERCEL_PROJECT_ID",
+        "VERCEL_TOKEN"
+      ]
+    },
+    "/vulnerability-alerts": {
+      "enabled": true,
+      "response": "HTTP 204"
+    },
+    "/automated-security-fixes": {
+      "enabled": false,
+      "paused": false
+    },
+    "/dependabot/alerts?state=open&per_page=100": []
+  },
+  "workflows": [
+    {
+      "file": "_local-validation.yml",
+      "name": "Private local validation",
+      "trigger": {
+        "workflow_call": {}
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "backend": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "echo \"ONESA_TEST_DATABASE_URL=postgresql+psycopg://onesa:onesa-test-only@127.0.0.1:${POSTGRES_PORT}/onesa_test\" >> \"$GITHUB_ENV\"",
+            "make install",
+            ".venv/bin/python scripts/check_secrets.py",
+            "make check",
+            "python3 -m unittest discover -s scripts -p test_inspect_hosting.py",
+            "python3 -m unittest discover -s scripts -p test_configuration_inventory.py",
+            "python3 -m unittest discover -s scripts/runner -p 'test_*.py'",
+            ".venv/bin/python -m unittest discover -s scripts -p test_staging.py",
+            ".venv/bin/python -m unittest discover -s scripts -p test_staging_release.py",
+            "python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py",
+            "npm ci --prefix scripts/contract-tools --ignore-scripts",
+            "make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/",
+            ".venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps"
+          ],
+          "environment": null
+        },
+        "frontend": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "make frontend-check",
+            "node scripts/test_backend_proxy.cjs",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high"
+          ],
+          "environment": null
+        },
+        "browser": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/bootstrap_env.py",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "cd onesa-ai-platform-frontend/apps/chat && npx playwright install chromium firefox webkit",
+            "ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e",
+            "make install",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs ci",
+            "make docs-api",
+            "node scripts/docs/capture.mjs",
+            "make docs-assets",
+            ".venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml up -d --wait",
+            "ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal",
+            "ONESA_DOCS_API_URL=http://localhost:3100 make docs-serve",
+            "ONESA_DOCS_EXPECT_BACKEND=mock make docs-browser",
+            "docker compose logs\ncat data/runtime/docs/public.log data/runtime/docs/internal.log 2>/dev/null || true\n",
+            "docker compose down --volumes --remove-orphans"
+          ],
+          "environment": null
+        },
+        "documentation": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "make install",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs ci",
+            "cd onesa-ai-platform-frontend/apps/docs && npx playwright install chromium firefox webkit",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs run test:security",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck",
+            "python3 scripts/bootstrap_env.py",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait",
+            "node scripts/docs/capture.mjs",
+            "make docs-assets docs-public docs-internal docs-validate",
+            ".venv/bin/python scripts/docs/validate.py --negative-test",
+            "git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md",
+            "make docs-release-check",
+            "docker compose down --volumes --remove-orphans"
+          ],
+          "environment": null
+        },
+        "containers": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/bootstrap_env.py",
+            "docker compose config --quiet",
+            "ONESA_DOMAIN=example.invalid ONESA_APP_DATABASE_URL=postgresql+psycopg://onesa_app:validation-only@db:5432/onesa docker compose -f compose.yaml -f compose.production.yaml config --quiet",
+            "ONESA_MODEL_API_KEY=validation-only docker compose -f compose.yaml -f compose.gpu.yaml --profile gpu config --quiet",
+            "ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config --quiet",
+            "docker compose build api chat",
+            "ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml up --wait --wait-timeout 180",
+            "curl --fail http://localhost:3120/ready",
+            "docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down --volumes --remove-orphans"
+          ],
+          "environment": null
+        },
+        "tls-acceptance": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "make install",
+            ".venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps",
+            "python3 scripts/acceptance/bootstrap.py",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml up --build --wait --wait-timeout 240",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt",
+            ".venv/bin/python scripts/acceptance/tls_security.py",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "cd onesa-ai-platform-frontend/apps/chat && npx playwright install chromium firefox webkit",
+            "ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/chat.spec.ts",
+            ".venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml exec -T operations python /app/test_worker.py",
+            "PYTHONPATH=. .venv/bin/python scripts/acceptance/operations.py",
+            ".venv/bin/python scripts/acceptance/scan_artifacts.py --image onesa-acceptance-005-api --image onesa-acceptance-005-chat --image onesa-acceptance-005-operations",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml down --volumes --remove-orphans"
+          ],
+          "environment": null
+        },
+        "image-security": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "docker build -t onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} ./${{ matrix.application }}",
+            "python3 scripts/startup_smoke.py onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }}",
+            "docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} python - < scripts/release/pdf_image_probe.py",
+            "mkdir -p data/security\nchmod 700 data/security\ndocker save onesa-security-candidate:${{ matrix.application }}-${{ github.run_id }} -o data/security/runtime.tar\ndocker run --rm --user \"$(id -u):$(id -g)\" -e TRIVY_CACHE_DIR=/tmp/trivy-cache -v \"$PWD/data/security:/reports\" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln,secret --format json --output /reports/runtime.json --input /reports/runtime.tar\nchmod 600 data/security/runtime.json\npython3 scripts/release/image_gate.py data/security/runtime.json\n",
+            "rm -rf -- \"$GITHUB_WORKSPACE/data/security\""
+          ],
+          "environment": null
+        },
+        "publication-hygiene": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": null,
+          "if": "${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "python scripts/repository_hygiene.py --history"
+          ],
+          "environment": null
+        },
+        "complete": {
+          "runner": [
+            "self-hosted",
+            "Linux",
+            "ARM64",
+            "onesa-platform-local"
+          ],
+          "needs": [
+            "backend",
+            "frontend",
+            "browser",
+            "documentation",
+            "containers",
+            "tls-acceptance",
+            "image-security",
+            "publication-hygiene"
+          ],
+          "if": "${{ always() && github.event.repository.private == true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'skipped') }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 120,
+          "secrets": [],
+          "commands": [
+            "echo \"All local validation passed for $GITHUB_SHA on $RUNNER_NAME\" >> \"$GITHUB_STEP_SUMMARY\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "ci.yml",
+      "name": "Platform checks",
+      "trigger": {
+        "push": null,
+        "pull_request": {
+          "branches": [
+            "main"
+          ]
+        },
+        "workflow_dispatch": null
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 37,
+      "sample_failures": 5,
+      "average_elapsed_seconds": 412.6,
+      "jobs": {
+        "backend": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python3 -m unittest discover -s scripts/release -p 'test_*.py'",
+            "make install",
+            ".venv/bin/python scripts/check_secrets.py",
+            "make check",
+            "python3 -m unittest discover -s scripts -p test_inspect_hosting.py",
+            "python3 -m unittest discover -s scripts -p test_configuration_inventory.py",
+            "python3 -m unittest discover -s scripts/runner -p 'test_*.py'",
+            ".venv/bin/python -m unittest discover -s scripts -p test_staging.py",
+            ".venv/bin/python -m unittest discover -s scripts -p test_staging_release.py",
+            "python3 -m unittest discover -s scripts/docs -p test_configure_test_demo.py",
+            "npm ci --prefix scripts/contract-tools --ignore-scripts",
+            "make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/",
+            ".venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps"
+          ],
+          "environment": null
+        },
+        "frontend": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "make frontend-check",
+            "node scripts/test_backend_proxy.cjs",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high"
+          ],
+          "environment": null
+        },
+        "browser": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python3 scripts/bootstrap_env.py",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit",
+            "ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e",
+            "make install",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs ci",
+            "make docs-api",
+            "node scripts/docs/capture.mjs",
+            "make docs-assets",
+            ".venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml up -d --wait",
+            "ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal",
+            "ONESA_DOCS_API_URL=http://localhost:3100 make docs-serve",
+            "ONESA_DOCS_EXPECT_BACKEND=mock make docs-browser",
+            "docker compose logs\ncat data/runtime/docs/public.log data/runtime/docs/internal.log 2>/dev/null || true\n",
+            "docker compose down"
+          ],
+          "environment": null
+        },
+        "documentation": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "make install",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs ci",
+            "cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs run test:security",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck",
+            "python3 scripts/bootstrap_env.py",
+            "ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait",
+            "node scripts/docs/capture.mjs",
+            "make docs-assets docs-public docs-internal docs-validate",
+            ".venv/bin/python scripts/docs/validate.py --negative-test",
+            "git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md",
+            "make docs-release-check",
+            "docker compose down"
+          ],
+          "environment": null
+        },
+        "containers": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python3 scripts/bootstrap_env.py",
+            "docker compose config --quiet",
+            "ONESA_DOMAIN=example.invalid ONESA_APP_DATABASE_URL=postgresql+psycopg://onesa_app:validation-only@db:5432/onesa docker compose -f compose.yaml -f compose.production.yaml config --quiet",
+            "ONESA_MODEL_API_KEY=validation-only docker compose -f compose.yaml -f compose.gpu.yaml --profile gpu config --quiet",
+            "ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config --quiet",
+            "docker compose build api chat",
+            "ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml up --wait --wait-timeout 180",
+            "curl --fail http://localhost:3120/ready",
+            "docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down"
+          ],
+          "environment": null
+        },
+        "tls-acceptance": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "make install",
+            ".venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps",
+            "python3 scripts/acceptance/bootstrap.py",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml up --build --wait --wait-timeout 240",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt",
+            ".venv/bin/python scripts/acceptance/tls_security.py",
+            "npm --prefix onesa-ai-platform-frontend/apps/chat ci",
+            "cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit",
+            "ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/chat.spec.ts",
+            ".venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml exec -T operations python /app/test_worker.py",
+            "PYTHONPATH=. .venv/bin/python scripts/acceptance/operations.py",
+            ".venv/bin/python scripts/acceptance/scan_artifacts.py --image onesa-acceptance-005-api --image onesa-acceptance-005-chat --image onesa-acceptance-005-operations",
+            "docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml -f compose.acceptance.yaml down"
+          ],
+          "environment": null
+        },
+        "image-security": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 25,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "docker build -t onesa-security-candidate:ci ./${{ matrix.application }}",
+            "python3 scripts/startup_smoke.py onesa-security-candidate:ci",
+            "docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges -i onesa-security-candidate:ci python - < scripts/release/pdf_image_probe.py",
+            "mkdir -p data/security\nchmod 700 data/security\ndocker save onesa-security-candidate:ci -o data/security/runtime.tar\ndocker run --rm --user \"$(id -u):$(id -g)\" -e TRIVY_CACHE_DIR=/tmp/trivy-cache -v \"$PWD/data/security:/reports\" aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln,secret --format json --output /reports/runtime.json --input /reports/runtime.tar\nchmod 600 data/security/runtime.json\npython3 scripts/release/image_gate.py data/security/runtime.json\n",
+            "python3 scripts/release/evidence.py manifest --image \"onesa-security-candidate:ci\" --output \"$RUNNER_TEMP/runtime/record.json\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "deploy.yml",
+      "name": "Deploy from GitHub",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "application": {
+              "description": "Application to deploy after CI passes",
+              "required": true,
+              "default": "both",
+              "type": "choice",
+              "options": [
+                "frontend",
+                "backend",
+                "both"
+              ]
+            },
+            "approval_run": {
+              "description": "Latest exact-commit owner release-review approval run; no JSON fallback",
+              "type": "string",
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read",
+        "issues": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "verify": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ github.event.repository.private == false && ((always() && true) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "test \"$MIGRATION_VERIFIED\" = true || { echo \"Automated migration has not been verified\"; exit 1; }\npython3 scripts/release/evidence.py promote --output \"$RUNNER_TEMP/promotion/record.json\""
+          ],
+          "environment": null
+        },
+        "frontend": {
+          "runner": "ubuntu-latest",
+          "needs": [
+            "verify",
+            "backend"
+          ],
+          "if": "${{ github.event.repository.private == false && ((always() && true && (always() && needs.verify.result == 'success' && (inputs.application == 'frontend' || (inputs.application == 'both' && needs.backend.result == 'success')))) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read"
+          },
+          "timeout_minutes": 40,
+          "secrets": [
+            "RELEASE_BUILD_KEY",
+            "STAGING_RENDER_API_KEY",
+            "STAGING_VERCEL_AUTOMATION_BYPASS_SECRET",
+            "STAGING_VERCEL_ORG_ID",
+            "STAGING_VERCEL_PROJECT_ID",
+            "STAGING_VERCEL_TOKEN",
+            "VERCEL_ORG_ID",
+            "VERCEL_PROJECT_ID",
+            "VERCEL_TOKEN"
+          ],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "missing_configuration=0\nfor name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do\n  if [ -z \"${!name}\" ]; then\n    echo \"::error::Missing GitHub Actions secret: $name\"\n    missing_configuration=1\n  fi\ndone\nexit \"$missing_configuration\"\n",
+            "python3 scripts/release/evidence.py promote --output \"$RUNNER_TEMP/promotion/record.json\"\npython3 scripts/release/hosted.py recheck --evidence \"$RUNNER_TEMP/promotion/record.json\"",
+            "npm install --global vercel@63.1.0",
+            "vercel pull --yes --environment=production --token=\"$VERCEL_TOKEN\"",
+            "python3 scripts/release/evidence.py fetch-build --output \"$RUNNER_TEMP/reviewed-build/record.json\"\nnode scripts/release/bundle.mjs unpack \"$RUNNER_TEMP/reviewed-build\"",
+            "vercel deploy --prebuilt --prod --token=\"$VERCEL_TOKEN\" --meta githubCommitRef=main --meta githubCommitSha=\"$GITHUB_SHA\" > /tmp/vercel-url.txt",
+            "cat /tmp/vercel-url.txt >> \"$GITHUB_STEP_SUMMARY\"",
+            "python3 scripts/release/hosted.py frontend-receipt --environment Production --output \"$RUNNER_TEMP/frontend/record.json\"",
+            "rm -rf -- \"$GITHUB_WORKSPACE/.vercel\" \"$RUNNER_TEMP/reviewed-build\""
+          ],
+          "environment": "Production"
+        },
+        "backend": {
+          "runner": "ubuntu-latest",
+          "needs": [
+            "verify"
+          ],
+          "if": "${{ github.event.repository.private == false && ((always() && true && (inputs.application == 'backend' || inputs.application == 'both') && needs.verify.result == 'success') && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read"
+          },
+          "timeout_minutes": 35,
+          "secrets": [
+            "RENDER_API_KEY",
+            "RENDER_BACKEND_SERVICE_ID",
+            "STAGING_VERCEL_AUTOMATION_BYPASS_SECRET",
+            "STAGING_VERCEL_ORG_ID",
+            "STAGING_VERCEL_PROJECT_ID",
+            "STAGING_VERCEL_TOKEN"
+          ],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python3 scripts/release/evidence.py promote --output \"$RUNNER_TEMP/promotion/record.json\"\npython3 scripts/release/hosted.py recheck --evidence \"$RUNNER_TEMP/promotion/record.json\"",
+            "python scripts/deploy_render.py"
+          ],
+          "environment": "Production"
+        },
+        "post-deployment": {
+          "runner": "ubuntu-latest",
+          "needs": [
+            "verify",
+            "frontend",
+            "backend"
+          ],
+          "if": "${{ github.event.repository.private == false && ((always() && (inputs.approval_run != '' && needs.verify.result == 'success' && (inputs.application == 'frontend' && needs.frontend.result == 'success' || inputs.application == 'backend' && needs.backend.result == 'success' || inputs.application == 'both' && needs.frontend.result == 'success' && needs.backend.result == 'success'))) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read"
+          },
+          "timeout_minutes": 15,
+          "secrets": [
+            "PRODUCTION_FIXTURES_JSON",
+            "RENDER_BACKEND_SERVICE_ID",
+            "RENDER_WORKER_SERVICE_ID",
+            "STAGING_RENDER_API_KEY",
+            "STAGING_VERCEL_AUTOMATION_BYPASS_SECRET",
+            "STAGING_VERCEL_ORG_ID",
+            "STAGING_VERCEL_PROJECT_ID",
+            "STAGING_VERCEL_TOKEN"
+          ],
+          "commands": [
+            "python3 scripts/release/evidence.py promote --output \"$RUNNER_TEMP/promotion/record.json\"",
+            "python3 scripts/release/hosted.py production --output \"$RUNNER_TEMP/post/record.json\"",
+            "python3 -c 'import json,os; from pathlib import Path; r=json.loads((Path(os.environ[\"RUNNER_TEMP\"])/\"post/record.json\").read_text()); raise SystemExit(0 if r[\"status\"] == \"PASS\" else \"Hosted acceptance incomplete; follow approved rollback runbook\")'"
+          ],
+          "environment": "Production"
+        }
+      }
+    },
+    {
+      "file": "docs-hosting.yml",
+      "name": "Public documentation hosting",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "target": {
+              "description": "Build artifact, Vercel preview, or public docs production",
+              "type": "choice",
+              "options": [
+                "build",
+                "preview",
+                "production"
+              ],
+              "default": "build"
+            },
+            "create_project": {
+              "description": "Create the separate onesa-docs project if it does not exist",
+              "type": "boolean",
+              "default": false
+            },
+            "docs_url": {
+              "description": "Owner-selected public documentation origin",
+              "default": "https://docs.onesa.eu",
+              "required": true
+            },
+            "application_url": {
+              "description": "Application origin linked from the documentation",
+              "default": "https://platform.onesa.eu",
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 2,
+      "sample_failures": 0,
+      "average_elapsed_seconds": 352.0,
+      "jobs": {
+        "documentation": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ github.event.repository.private == false && (always() && true && (inputs.target != 'production' || github.ref == 'refs/heads/main')) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 30,
+          "secrets": [
+            "VERCEL_DOCS_PROJECT_ID",
+            "VERCEL_ORG_ID",
+            "VERCEL_PROJECT_ID",
+            "VERCEL_TOKEN"
+          ],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "make install\nnpm --prefix onesa-ai-platform-frontend/apps/docs ci\ncd onesa-ai-platform-frontend/apps/docs\nnpx playwright install --with-deps chromium\n",
+            "python3 scripts/bootstrap_env.py\nONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait\nnode scripts/docs/capture.mjs\n",
+            "npm --prefix onesa-ai-platform-frontend/apps/docs run test:security\nnpm --prefix onesa-ai-platform-frontend/apps/docs audit --audit-level=low\nmake docs-assets docs-public\n.venv/bin/python scripts/docs/validate.py --staged\ngit diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md\n",
+            "python3 - <<'PYTHON'\nfrom html.parser import HTMLParser\nfrom pathlib import Path\nclass Icons(HTMLParser):\n    found = False\n    def handle_starttag(self, tag, attrs):\n        attrs = dict(attrs)\n        if tag == 'link' and attrs.get('rel') == 'icon' and attrs.get('href') == '/favicon.ico':\n            self.found = True\napp = Path('onesa-ai-platform-frontend/apps/docs')\nparser = Icons()\nparser.feed((app / 'build-public/index.html').read_text())\nassert parser.found, 'Public index is missing the favicon link'\nicon = (app / 'build-public/favicon.ico').read_bytes()\nassert icon == (app / 'static/favicon.ico').read_bytes()\nassert icon[:4] == b'\\x00\\x00\\x01\\x00', 'Invalid ICO header'\nprint('Public index favicon link and bundled image verified.')\nPYTHON\n",
+            "docker compose down",
+            "flags=()\nif [ \"$CREATE_PROJECT\" = true ]; then flags+=(--create); fi\n.venv/bin/python scripts/docs/vercel_host.py prepare \"${flags[@]}\"\n",
+            "set -eu\nmkdir -p \"$RUNNER_TEMP/onesa-docs/.vercel/output/static\"\ncp onesa-ai-platform-frontend/apps/docs/vercel.json \"$RUNNER_TEMP/onesa-docs/vercel.json\"\ncp -a onesa-ai-platform-frontend/apps/docs/build-public/. \"$RUNNER_TEMP/onesa-docs/.vercel/output/static/\"\npython3 - <<'PYTHON'\nimport json, os\nfrom pathlib import Path\nroutes = []\nif os.environ['DEPLOY_TARGET'] == 'preview':\n    routes.append({'src': '/(.*)', 'headers': {'X-Robots-Tag': 'noindex, nofollow'}, 'continue': True})\nroutes.extend([{'handle': 'filesystem'}, {'src': '/((?:[^/]+/)*[^/.]+)', 'dest': '/$1.html'}, {'src': '/.*', 'dest': '/404.html', 'status': 404}])\npath = Path(os.environ['RUNNER_TEMP']) / 'onesa-docs/.vercel/output/config.json'\npath.write_text(json.dumps({'version': 3, 'routes': routes}) + '\\n')\nPYTHON\ncd \"$RUNNER_TEMP/onesa-docs\"\nflags=()\nif [ \"$DEPLOY_TARGET\" = production ]; then flags+=(--prod); fi\nnpm exec --yes --package=vercel@63.1.0 -- vercel deploy --prebuilt --yes \"${flags[@]}\" --token=\"$VERCEL_TOKEN\" > \"$RUNNER_TEMP/onesa-docs-url.txt\"\ncat \"$RUNNER_TEMP/onesa-docs-url.txt\" >> \"$GITHUB_STEP_SUMMARY\"\n",
+            ".venv/bin/python scripts/docs/vercel_host.py domain | tee -a \"$GITHUB_STEP_SUMMARY\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "free-authorization.yml",
+      "name": "Free release authorization",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "qualification_run": {
+              "description": "Exact free-qualification run ID",
+              "type": "string",
+              "required": true
+            },
+            "evidence_digest": {
+              "description": "SHA256 printed by the reviewed qualification run",
+              "type": "string",
+              "required": true
+            },
+            "review_issue": {
+              "description": "Open owner-authored issue binding candidate, digest and reviews",
+              "type": "string",
+              "required": true
+            },
+            "decision": {
+              "description": "Authorize external owner handoff or revoke older approval",
+              "type": "choice",
+              "options": [
+                "revoke",
+                "approve"
+              ],
+              "default": "revoke",
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read",
+        "issues": "read",
+        "pull-requests": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "authorization": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && github.ref == 'refs/heads/main'",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read",
+            "pull-requests": "read"
+          },
+          "timeout_minutes": 15,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/release/free_gate.py authorize --output \"$RUNNER_TEMP/free-release/record.json\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "free-qualification.yml",
+      "name": "Free release qualification",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "staging_run": {
+              "description": "Successful exact-commit isolated staging run",
+              "type": "string",
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read",
+        "issues": "read",
+        "pull-requests": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "qualification": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && github.ref == 'refs/heads/main'",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read",
+            "pull-requests": "read"
+          },
+          "timeout_minutes": 15,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/release/free_gate.py qualify --output \"$RUNNER_TEMP/free-release/record.json\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "inspect-hosting.yml",
+      "name": "Inspect hosting configuration",
+      "trigger": {
+        "workflow_dispatch": null
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 7,
+      "sample_failures": 0,
+      "average_elapsed_seconds": 23.1,
+      "jobs": {
+        "inspect": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ github.event.repository.private == false && (always() && true) }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 10,
+          "secrets": [
+            "RENDER_API_KEY",
+            "RENDER_BACKEND_SERVICE_ID",
+            "RENDER_WORKER_SERVICE_ID",
+            "VERCEL_ORG_ID",
+            "VERCEL_PROJECT_ID",
+            "VERCEL_TOKEN"
+          ],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python scripts/inspect_hosting.py",
+            "python scripts/configuration_inventory.py"
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "release-build.yml",
+      "name": "Reviewed production frontend build",
+      "trigger": {
+        "workflow_dispatch": {}
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "build": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ github.event.repository.private == false && (always() && true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read"
+          },
+          "timeout_minutes": 40,
+          "secrets": [
+            "RELEASE_BUILD_KEY",
+            "VERCEL_ORG_ID",
+            "VERCEL_PROJECT_ID",
+            "VERCEL_TOKEN"
+          ],
+          "commands": [
+            "python3 scripts/release/evidence.py build-preflight --output \"$RUNNER_TEMP/build-preflight/record.json\"",
+            "npm install --global vercel@63.1.0\nvercel pull --yes --environment=production --token=\"$VERCEL_TOKEN\"\nvercel build --prod --token=\"$VERCEL_TOKEN\"",
+            "git diff --quiet HEAD --\nSOURCE_SHA256=$(python3 scripts/release/evidence.py source-hash) node scripts/release/bundle.mjs pack \"$RUNNER_TEMP/reviewed-build\"",
+            "rm -rf -- \"$GITHUB_WORKSPACE/.vercel\" \"$RUNNER_TEMP/reviewed-build\""
+          ],
+          "environment": "Production"
+        }
+      }
+    },
+    {
+      "file": "release-images.yml",
+      "name": "Independent release candidate image",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "application": {
+              "description": "Application to package for reviewed deployment",
+              "type": "choice",
+              "options": [
+                "frontend",
+                "backend"
+              ],
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "checks": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "image": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read",
+            "checks": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "docker build -t \"onesa-${APPLICATION}:${GITHUB_SHA}\" \"onesa-ai-platform-${APPLICATION}\"",
+            "docker save \"onesa-${APPLICATION}:${GITHUB_SHA}\" -o candidate.tar",
+            "python3 - <<'PYTHON'\nimport json, os, subprocess\nfrom pathlib import Path\napp, revision = os.environ['APPLICATION'], os.environ['GITHUB_SHA']\nimage = subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{.Id}}', f'onesa-{app}:{revision}'], text=True).strip()\nPath('candidate.json').write_text(json.dumps({'application': app, 'source_revision': revision, 'image_id': image, 'publication_authorized': False}, indent=2) + '\\n')\nPYTHON\n"
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "release-qualification.yml",
+      "name": "Release qualification evidence",
+      "trigger": {
+        "workflow_run": {
+          "workflows": [
+            "Platform checks",
+            "Repository hygiene",
+            "Reviewed production frontend build",
+            "Approved staging qualification"
+          ],
+          "types": [
+            "completed"
+          ],
+          "branches": [
+            "main",
+            "staging"
+          ]
+        },
+        "workflow_dispatch": {
+          "inputs": {
+            "staging_run": {
+              "description": "Optional exact-candidate successful release-staging run ID",
+              "type": "string",
+              "required": false
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "qualify": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "always() && true && (github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name == 'workflow_dispatch' || ((github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_sha == github.sha)))",
+          "permissions": {
+            "contents": "read",
+            "actions": "read"
+          },
+          "timeout_minutes": 10,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/release/evidence.py generate --output \"$RUNNER_TEMP/qualification/record.json\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "release-review.yml",
+      "name": "Owner release review",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "qualification_run": {
+              "description": "Exact qualification run reviewed",
+              "type": "string",
+              "required": true
+            },
+            "evidence_digest": {
+              "description": "Canonical JSON SHA256 from qualification summary",
+              "type": "string",
+              "required": true
+            },
+            "decision": {
+              "description": "Approve production or revoke a prior approval",
+              "type": "choice",
+              "options": [
+                "revoke",
+                "approve"
+              ],
+              "default": "revoke",
+              "required": true
+            },
+            "operations_review": {
+              "description": "Owner reviewed monitoring, alerts, recovery, limits, worker, rollback evidence",
+              "type": "choice",
+              "options": [
+                "blocked",
+                "approved"
+              ],
+              "default": "blocked",
+              "required": true
+            },
+            "legal_review": {
+              "description": "Owner explicitly approves candidate content/legal/business version",
+              "type": "choice",
+              "options": [
+                "blocked",
+                "approved"
+              ],
+              "default": "blocked",
+              "required": true
+            },
+            "review_url": {
+              "description": "Open owner-authored repository issue/PR documenting reviewed evidence",
+              "type": "string",
+              "required": true
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read",
+        "issues": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "review": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "always() && true && (github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main')",
+          "permissions": {
+            "contents": "read",
+            "actions": "read",
+            "issues": "read"
+          },
+          "timeout_minutes": 10,
+          "secrets": [],
+          "commands": [
+            "python3 scripts/release/evidence.py review --output \"$RUNNER_TEMP/approval/record.json\""
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "release-staging.yml",
+      "name": "Approved staging qualification",
+      "trigger": {
+        "workflow_dispatch": {}
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read"
+      },
+      "installed_remotely": false,
+      "remote_state": null,
+      "sample_completed_runs": 0,
+      "sample_failures": 0,
+      "average_elapsed_seconds": null,
+      "jobs": {
+        "staging": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "always() && true && (github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/staging')",
+          "permissions": {
+            "contents": "read",
+            "actions": "read"
+          },
+          "timeout_minutes": 55,
+          "secrets": [
+            "STAGING_FIXTURES_JSON",
+            "STAGING_MIGRATION_DATABASE_URL",
+            "STAGING_RENDER_API_KEY",
+            "STAGING_RENDER_SERVICE_ID",
+            "STAGING_VERCEL_AUTOMATION_BYPASS_SECRET",
+            "STAGING_VERCEL_ORG_ID",
+            "STAGING_VERCEL_PROJECT_ID",
+            "STAGING_VERCEL_TOKEN"
+          ],
+          "commands": [
+            "python3 scripts/release/evidence.py stage-preflight --output \"$RUNNER_TEMP/technical/record.json\"\npython3 scripts/release/hosted.py preflight",
+            "npm install --global vercel@63.1.0\nvercel pull --yes --environment=preview --git-branch=\"$STAGING_BRANCH\" --token=\"$VERCEL_TOKEN\"\nVERCEL=1 vercel build --token=\"$VERCEL_TOKEN\"\nvercel deploy --prebuilt --token=\"$VERCEL_TOKEN\" --meta githubCommitRef=\"$STAGING_BRANCH\" --meta githubCommitSha=\"$GITHUB_SHA\" > /tmp/vercel-url.txt",
+            "python3 scripts/release/hosted.py bind-staging-origin",
+            "python3 scripts/deploy_render.py",
+            "make install\ncp /tmp/vercel-url.txt /tmp/vercel-staging-url.txt\n.venv/bin/python scripts/staging_acceptance.py\nnode scripts/staging_ui.cjs",
+            "python3 scripts/release/hosted_suite.py",
+            "python3 scripts/release/hosted.py stage --evidence \"$RUNNER_TEMP/technical/record.json\" --render-receipt \"$RUNNER_TEMP/render/record.json\" --output \"$RUNNER_TEMP/staging/record.json\"",
+            "python3 -c 'import json,os; from pathlib import Path; r=json.loads((Path(os.environ[\"RUNNER_TEMP\"])/\"staging/record.json\").read_text()); print(\"Hosted qualification:\",r[\"status\"]); print(json.dumps(r[\"checks\"],indent=2))'",
+            "rm -f -- /tmp/onesa-staging-acceptance-users.json"
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "repair-hosting.yml",
+      "name": "Repair existing hosting configuration",
+      "trigger": {
+        "workflow_dispatch": {
+          "inputs": {
+            "staging_action": {
+              "description": "Isolated AI staging operation",
+              "type": "choice",
+              "default": "inspect",
+              "options": [
+                "inspect",
+                "database-probe",
+                "migration-probe",
+                "configure-preview",
+                "deploy-preview",
+                "deploy-staging"
+              ]
+            }
+          }
+        }
+      },
+      "permissions": {
+        "contents": "read",
+        "actions": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 18,
+      "sample_failures": 4,
+      "average_elapsed_seconds": 191.7,
+      "jobs": {
+        "inspect": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ github.event.repository.private == false && (always() && true) }}",
+          "permissions": {
+            "contents": "read",
+            "actions": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [
+            "RENDER_API_KEY",
+            "RENDER_BACKEND_SERVICE_ID",
+            "RENDER_WORKER_SERVICE_ID",
+            "STAGING_MIGRATION_DATABASE_URL",
+            "VERCEL_AUTOMATION_BYPASS_SECRET",
+            "VERCEL_ORG_ID",
+            "VERCEL_PROJECT_ID",
+            "VERCEL_TOKEN"
+          ],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python -m pip install -r onesa-ai-platform-backend/requirements.lock",
+            "python scripts/staging.py \"${{ inputs.staging_action }}\"",
+            "python scripts/staging.py configure-preview",
+            "npm install --global vercel@63.1.0\nvercel pull --yes --environment=preview --git-branch=staging --token=\"$VERCEL_TOKEN\"\nVERCEL=1 vercel build --token=\"$VERCEL_TOKEN\"\nvercel deploy --prebuilt --token=\"$VERCEL_TOKEN\" --meta githubCommitRef=staging --meta githubCommitSha=\"$GITHUB_SHA\" > /tmp/vercel-staging-url.txt\ncat /tmp/vercel-staging-url.txt >> \"$GITHUB_STEP_SUMMARY\"\n",
+            "python scripts/staging_release.py",
+            "python scripts/deploy_render.py",
+            "python scripts/staging_acceptance.py",
+            "cd onesa-ai-platform-frontend/apps/chat\nnpx playwright install --with-deps chromium\ncd ../../..\nnode scripts/staging_ui.cjs\n",
+            "cat /tmp/onesa-staging-acceptance.json >> \"$GITHUB_STEP_SUMMARY\"\ncat /tmp/onesa-staging-ui.json >> \"$GITHUB_STEP_SUMMARY\"\n",
+            "python scripts/repair_hosting.py",
+            "python scripts/inspect_hosting.py"
+          ],
+          "environment": null
+        }
+      }
+    },
+    {
+      "file": "repository-hygiene.yml",
+      "name": "Repository hygiene",
+      "trigger": {
+        "push": null,
+        "pull_request": {
+          "branches": [
+            "main"
+          ]
+        },
+        "workflow_dispatch": null
+      },
+      "permissions": {
+        "contents": "read"
+      },
+      "installed_remotely": true,
+      "remote_state": "active",
+      "sample_completed_runs": 36,
+      "sample_failures": 4,
+      "average_elapsed_seconds": 13.9,
+      "jobs": {
+        "publication-hygiene": {
+          "runner": "ubuntu-latest",
+          "needs": null,
+          "if": "${{ always() && true }}",
+          "permissions": {
+            "contents": "read"
+          },
+          "timeout_minutes": 45,
+          "secrets": [],
+          "commands": [
+            "test \"$RUNNER_ENVIRONMENT\" = github-hosted\nactual=$(gh api \"repos/$GITHUB_REPOSITORY\" --jq '.private')\ntest \"$actual\" = \"$EXPECTED_PRIVATE\" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }",
+            "python scripts/repository_hygiene.py --history"
+          ],
+          "environment": null
+        }
+      }
+    }
+  ],
+  "run_sample": [
+    {
+      "id": 38144508840,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "fix/production-documentation-links",
+      "created_at": "2026-10-11T13:46:21Z",
+      "run_started_at": "2026-10-11T13:46:21Z",
+      "updated_at": "2026-10-11T13:46:36Z"
+    },
+    {
+      "id": 38144508676,
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "fix/production-documentation-links",
+      "created_at": "2026-10-11T13:46:21Z",
+      "run_started_at": "2026-10-11T13:46:21Z",
+      "updated_at": "2026-10-11T13:55:11Z"
+    },
+    {
+      "id": 38144505200,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "fix/production-documentation-links",
+      "created_at": "2026-10-11T13:46:18Z",
+      "run_started_at": "2026-10-11T13:46:18Z",
+      "updated_at": "2026-10-11T13:54:40Z"
+    },
+    {
+      "id": 38144505196,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "fix/production-documentation-links",
+      "created_at": "2026-10-11T13:46:18Z",
+      "run_started_at": "2026-10-11T13:46:18Z",
+      "updated_at": "2026-10-11T13:46:31Z"
+    },
+    {
+      "id": 38144058091,
+      "path": ".github/workflows/docs-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-11T13:39:39Z",
+      "run_started_at": "2026-10-11T13:39:39Z",
+      "updated_at": "2026-10-11T13:46:20Z"
+    },
+    {
+      "id": 38144057060,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-11T13:39:38Z",
+      "run_started_at": "2026-10-11T13:39:38Z",
+      "updated_at": "2026-10-11T13:39:51Z"
+    },
+    {
+      "id": 38144056898,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-11T13:39:38Z",
+      "run_started_at": "2026-10-11T13:39:38Z",
+      "updated_at": "2026-10-11T13:47:43Z"
+    },
+    {
+      "id": 38143350655,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:08Z",
+      "run_started_at": "2026-10-11T13:29:08Z",
+      "updated_at": "2026-10-11T13:29:52Z"
+    },
+    {
+      "id": 38143349588,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:07Z",
+      "run_started_at": "2026-10-11T13:29:07Z",
+      "updated_at": "2026-10-11T13:29:24Z"
+    },
+    {
+      "id": 38143349391,
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:07Z",
+      "run_started_at": "2026-10-11T13:29:07Z",
+      "updated_at": "2026-10-11T13:36:29Z"
+    },
+    {
+      "id": 38143348381,
+      "path": ".github/workflows/docs-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:06Z",
+      "run_started_at": "2026-10-11T13:29:06Z",
+      "updated_at": "2026-10-11T13:34:09Z"
+    },
+    {
+      "id": 38143345702,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:03Z",
+      "run_started_at": "2026-10-11T13:29:03Z",
+      "updated_at": "2026-10-11T13:29:17Z"
+    },
+    {
+      "id": 38143345701,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "docs/ecosystem-acceptance",
+      "created_at": "2026-10-11T13:29:03Z",
+      "run_started_at": "2026-10-11T13:29:03Z",
+      "updated_at": "2026-10-11T13:37:32Z"
+    },
+    {
+      "id": 38138646410,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T12:16:34Z",
+      "run_started_at": "2026-10-11T12:16:34Z",
+      "updated_at": "2026-10-11T12:23:19Z"
+    },
+    {
+      "id": 38138646403,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T12:16:34Z",
+      "run_started_at": "2026-10-11T12:16:34Z",
+      "updated_at": "2026-10-11T12:16:45Z"
+    },
+    {
+      "id": 38138644042,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T12:16:32Z",
+      "run_started_at": "2026-10-11T12:16:32Z",
+      "updated_at": "2026-10-11T12:16:47Z"
+    },
+    {
+      "id": 38138644022,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T12:16:32Z",
+      "run_started_at": "2026-10-11T12:16:32Z",
+      "updated_at": "2026-10-11T12:24:13Z"
+    },
+    {
+      "id": 38138627376,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-11T12:16:16Z",
+      "run_started_at": "2026-10-11T12:16:16Z",
+      "updated_at": "2026-10-11T12:22:19Z"
+    },
+    {
+      "id": 38138627373,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-11T12:16:16Z",
+      "run_started_at": "2026-10-11T12:16:16Z",
+      "updated_at": "2026-10-11T12:16:30Z"
+    },
+    {
+      "id": 38138307030,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T12:11:10Z",
+      "run_started_at": "2026-10-11T12:11:10Z",
+      "updated_at": "2026-10-11T12:11:40Z"
+    },
+    {
+      "id": 38137384032,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-11T11:56:12Z",
+      "run_started_at": "2026-10-11T11:56:12Z",
+      "updated_at": "2026-10-11T11:56:27Z"
+    },
+    {
+      "id": 38137384031,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-11T11:56:12Z",
+      "run_started_at": "2026-10-11T11:56:12Z",
+      "updated_at": "2026-10-11T12:03:12Z"
+    },
+    {
+      "id": 38137113177,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:51:47Z",
+      "run_started_at": "2026-10-11T11:51:47Z",
+      "updated_at": "2026-10-11T11:52:01Z"
+    },
+    {
+      "id": 38136903572,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:48:20Z",
+      "run_started_at": "2026-10-11T11:48:20Z",
+      "updated_at": "2026-10-11T11:53:48Z"
+    },
+    {
+      "id": 38136851152,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:47:28Z",
+      "run_started_at": "2026-10-11T11:47:28Z",
+      "updated_at": "2026-10-11T11:47:58Z"
+    },
+    {
+      "id": 38136851079,
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:47:28Z",
+      "run_started_at": "2026-10-11T11:47:28Z",
+      "updated_at": "2026-10-11T11:55:39Z"
+    },
+    {
+      "id": 38136848461,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:47:25Z",
+      "run_started_at": "2026-10-11T11:47:25Z",
+      "updated_at": "2026-10-11T11:54:53Z"
+    },
+    {
+      "id": 38136848457,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:47:25Z",
+      "run_started_at": "2026-10-11T11:47:25Z",
+      "updated_at": "2026-10-11T11:47:38Z"
+    },
+    {
+      "id": 38136734875,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:45:32Z",
+      "run_started_at": "2026-10-11T11:45:32Z",
+      "updated_at": "2026-10-11T11:45:58Z"
+    },
+    {
+      "id": 38136667833,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:44:30Z",
+      "run_started_at": "2026-10-11T11:44:30Z",
+      "updated_at": "2026-10-11T11:44:51Z"
+    },
+    {
+      "id": 38136455992,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/runner-implemented-verification",
+      "created_at": "2026-10-11T11:41:01Z",
+      "run_started_at": "2026-10-11T11:41:01Z",
+      "updated_at": "2026-10-11T11:42:13Z"
+    },
+    {
+      "id": 38136455982,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/runner-implemented-verification",
+      "created_at": "2026-10-11T11:41:01Z",
+      "run_started_at": "2026-10-11T11:41:01Z",
+      "updated_at": "2026-10-11T11:48:32Z"
+    },
+    {
+      "id": 38136455843,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:41:00Z",
+      "run_started_at": "2026-10-11T11:41:00Z",
+      "updated_at": "2026-10-11T11:41:12Z"
+    },
+    {
+      "id": 38136455835,
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:41:00Z",
+      "run_started_at": "2026-10-11T11:41:00Z",
+      "updated_at": "2026-10-11T11:47:08Z"
+    },
+    {
+      "id": 38136350855,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:39:19Z",
+      "run_started_at": "2026-10-11T11:39:19Z",
+      "updated_at": "2026-10-11T11:39:31Z"
+    },
+    {
+      "id": 38136350828,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "ci/isolated-local-runner",
+      "created_at": "2026-10-11T11:39:19Z",
+      "run_started_at": "2026-10-11T11:39:19Z",
+      "updated_at": "2026-10-11T11:46:49Z"
+    },
+    {
+      "id": 38136133123,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T11:35:39Z",
+      "run_started_at": "2026-10-11T11:35:39Z",
+      "updated_at": "2026-10-11T11:43:05Z"
+    },
+    {
+      "id": 38136133119,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T11:35:39Z",
+      "run_started_at": "2026-10-11T11:35:39Z",
+      "updated_at": "2026-10-11T11:35:50Z"
+    },
+    {
+      "id": 38136036723,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:34:05Z",
+      "run_started_at": "2026-10-11T11:34:05Z",
+      "updated_at": "2026-10-11T11:40:05Z"
+    },
+    {
+      "id": 38136036714,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T11:34:05Z",
+      "run_started_at": "2026-10-11T11:34:05Z",
+      "updated_at": "2026-10-11T11:34:15Z"
+    },
+    {
+      "id": 38131858934,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T10:24:51Z",
+      "run_started_at": "2026-10-11T10:24:51Z",
+      "updated_at": "2026-10-11T10:24:55Z"
+    },
+    {
+      "id": 38131858922,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T10:24:51Z",
+      "run_started_at": "2026-10-11T10:24:51Z",
+      "updated_at": "2026-10-11T10:24:55Z"
+    },
+    {
+      "id": 38131801358,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T10:23:52Z",
+      "run_started_at": "2026-10-11T10:23:52Z",
+      "updated_at": "2026-10-11T10:23:56Z"
+    },
+    {
+      "id": 38131801322,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T10:23:52Z",
+      "run_started_at": "2026-10-11T10:23:52Z",
+      "updated_at": "2026-10-11T10:23:56Z"
+    },
+    {
+      "id": 38124841620,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T08:27:05Z",
+      "run_started_at": "2026-10-11T08:27:05Z",
+      "updated_at": "2026-10-11T08:27:10Z"
+    },
+    {
+      "id": 38124841593,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "security/main-branch-governance",
+      "created_at": "2026-10-11T08:27:05Z",
+      "run_started_at": "2026-10-11T08:27:05Z",
+      "updated_at": "2026-10-11T08:27:09Z"
+    },
+    {
+      "id": 38124043088,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T08:13:21Z",
+      "run_started_at": "2026-10-11T08:13:21Z",
+      "updated_at": "2026-10-11T08:13:25Z"
+    },
+    {
+      "id": 38124043047,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T08:13:21Z",
+      "run_started_at": "2026-10-11T08:13:21Z",
+      "updated_at": "2026-10-11T08:13:25Z"
+    },
+    {
+      "id": 38123585565,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T08:05:24Z",
+      "run_started_at": "2026-10-11T08:05:24Z",
+      "updated_at": "2026-10-11T08:14:50Z"
+    },
+    {
+      "id": 38123585563,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T08:05:24Z",
+      "run_started_at": "2026-10-11T08:05:24Z",
+      "updated_at": "2026-10-11T08:05:35Z"
+    },
+    {
+      "id": 38123003264,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T07:55:17Z",
+      "run_started_at": "2026-10-11T07:55:17Z",
+      "updated_at": "2026-10-11T07:55:41Z"
+    },
+    {
+      "id": 38107276666,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T03:05:41Z",
+      "run_started_at": "2026-10-11T03:05:41Z",
+      "updated_at": "2026-10-11T03:12:05Z"
+    },
+    {
+      "id": 38106785212,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:56:48Z",
+      "run_started_at": "2026-10-11T02:56:48Z",
+      "updated_at": "2026-10-11T02:57:01Z"
+    },
+    {
+      "id": 38106785200,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:56:48Z",
+      "run_started_at": "2026-10-11T02:56:48Z",
+      "updated_at": "2026-10-11T03:04:49Z"
+    },
+    {
+      "id": 38106122480,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:44:30Z",
+      "run_started_at": "2026-10-11T02:44:30Z",
+      "updated_at": "2026-10-11T02:44:44Z"
+    },
+    {
+      "id": 38105826742,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:38:52Z",
+      "run_started_at": "2026-10-11T02:38:52Z",
+      "updated_at": "2026-10-11T02:45:11Z"
+    },
+    {
+      "id": 38105381595,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:30:33Z",
+      "run_started_at": "2026-10-11T02:30:33Z",
+      "updated_at": "2026-10-11T02:30:44Z"
+    },
+    {
+      "id": 38105381541,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:30:33Z",
+      "run_started_at": "2026-10-11T02:30:33Z",
+      "updated_at": "2026-10-11T02:38:22Z"
+    },
+    {
+      "id": 38104836883,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:20:32Z",
+      "run_started_at": "2026-10-11T02:20:32Z",
+      "updated_at": "2026-10-11T02:20:50Z"
+    },
+    {
+      "id": 38104790398,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:19:44Z",
+      "run_started_at": "2026-10-11T02:19:44Z",
+      "updated_at": "2026-10-11T02:29:51Z"
+    },
+    {
+      "id": 38104790332,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-11T02:19:44Z",
+      "run_started_at": "2026-10-11T02:19:44Z",
+      "updated_at": "2026-10-11T02:19:55Z"
+    },
+    {
+      "id": 38092759008,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T22:48:02Z",
+      "run_started_at": "2026-10-10T22:48:02Z",
+      "updated_at": "2026-10-10T22:53:53Z"
+    },
+    {
+      "id": 38092162468,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T22:38:11Z",
+      "run_started_at": "2026-10-10T22:38:11Z",
+      "updated_at": "2026-10-10T22:38:21Z"
+    },
+    {
+      "id": 38092162461,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T22:38:11Z",
+      "run_started_at": "2026-10-10T22:38:11Z",
+      "updated_at": "2026-10-10T22:47:44Z"
+    },
+    {
+      "id": 38091692734,
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-10T22:30:39Z",
+      "run_started_at": "2026-10-10T22:30:39Z",
+      "updated_at": "2026-10-10T22:40:25Z"
+    },
+    {
+      "id": 38091692688,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-10T22:30:39Z",
+      "run_started_at": "2026-10-10T22:30:39Z",
+      "updated_at": "2026-10-10T22:30:51Z"
+    },
+    {
+      "id": 38091635167,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-10T22:29:53Z",
+      "run_started_at": "2026-10-10T22:29:53Z",
+      "updated_at": "2026-10-10T22:30:06Z"
+    },
+    {
+      "id": 38091635148,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "audit/platform-master-acceptance",
+      "created_at": "2026-10-10T22:29:53Z",
+      "run_started_at": "2026-10-10T22:29:53Z",
+      "updated_at": "2026-10-10T22:37:46Z"
+    },
+    {
+      "id": 38090540485,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T22:12:24Z",
+      "run_started_at": "2026-10-10T22:12:24Z",
+      "updated_at": "2026-10-10T22:12:37Z"
+    },
+    {
+      "id": 38089668668,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-10T21:58:48Z",
+      "run_started_at": "2026-10-10T21:58:48Z",
+      "updated_at": "2026-10-10T21:59:02Z"
+    },
+    {
+      "id": 38089600715,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "main",
+      "created_at": "2026-10-10T21:57:38Z",
+      "run_started_at": "2026-10-10T21:57:38Z",
+      "updated_at": "2026-10-10T21:58:20Z"
+    },
+    {
+      "id": 38088985623,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:47:48Z",
+      "run_started_at": "2026-10-10T21:47:48Z",
+      "updated_at": "2026-10-10T21:47:59Z"
+    },
+    {
+      "id": 38088985578,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:47:47Z",
+      "run_started_at": "2026-10-10T21:47:47Z",
+      "updated_at": "2026-10-10T21:56:39Z"
+    },
+    {
+      "id": 38088509721,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:40:18Z",
+      "run_started_at": "2026-10-10T21:40:18Z",
+      "updated_at": "2026-10-10T21:46:21Z"
+    },
+    {
+      "id": 38087814693,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:29:25Z",
+      "run_started_at": "2026-10-10T21:29:25Z",
+      "updated_at": "2026-10-10T21:39:27Z"
+    },
+    {
+      "id": 38087814685,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:29:25Z",
+      "run_started_at": "2026-10-10T21:29:25Z",
+      "updated_at": "2026-10-10T21:29:36Z"
+    },
+    {
+      "id": 38087751702,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:28:22Z",
+      "run_started_at": "2026-10-10T21:28:22Z",
+      "updated_at": "2026-10-10T21:28:37Z"
+    },
+    {
+      "id": 38087751685,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:28:22Z",
+      "run_started_at": "2026-10-10T21:28:22Z",
+      "updated_at": "2026-10-10T21:29:44Z"
+    },
+    {
+      "id": 38087568521,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:25:30Z",
+      "run_started_at": "2026-10-10T21:25:30Z",
+      "updated_at": "2026-10-10T21:25:44Z"
+    },
+    {
+      "id": 38087508634,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:24:36Z",
+      "run_started_at": "2026-10-10T21:24:36Z",
+      "updated_at": "2026-10-10T21:28:42Z"
+    },
+    {
+      "id": 38087508593,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:24:36Z",
+      "run_started_at": "2026-10-10T21:24:36Z",
+      "updated_at": "2026-10-10T21:24:49Z"
+    },
+    {
+      "id": 38086997833,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:16:43Z",
+      "run_started_at": "2026-10-10T21:16:43Z",
+      "updated_at": "2026-10-10T21:22:45Z"
+    },
+    {
+      "id": 38086376477,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:06:58Z",
+      "run_started_at": "2026-10-10T21:06:58Z",
+      "updated_at": "2026-10-10T21:07:13Z"
+    },
+    {
+      "id": 38086376327,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:06:58Z",
+      "run_started_at": "2026-10-10T21:06:58Z",
+      "updated_at": "2026-10-10T21:16:25Z"
+    },
+    {
+      "id": 38086114073,
+      "path": ".github/workflows/inspect-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T21:02:50Z",
+      "run_started_at": "2026-10-10T21:02:50Z",
+      "updated_at": "2026-10-10T21:03:11Z"
+    },
+    {
+      "id": 38085624754,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:55:15Z",
+      "run_started_at": "2026-10-10T20:55:15Z",
+      "updated_at": "2026-10-10T21:03:25Z"
+    },
+    {
+      "id": 38085421160,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:52:05Z",
+      "run_started_at": "2026-10-10T20:52:05Z",
+      "updated_at": "2026-10-10T20:52:30Z"
+    },
+    {
+      "id": 38084969012,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:45:10Z",
+      "run_started_at": "2026-10-10T20:45:10Z",
+      "updated_at": "2026-10-10T20:54:42Z"
+    },
+    {
+      "id": 38084968999,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:45:10Z",
+      "run_started_at": "2026-10-10T20:45:10Z",
+      "updated_at": "2026-10-10T20:45:24Z"
+    },
+    {
+      "id": 38084481075,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:37:40Z",
+      "run_started_at": "2026-10-10T20:37:40Z",
+      "updated_at": "2026-10-10T20:42:40Z"
+    },
+    {
+      "id": 38083912260,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:28:58Z",
+      "run_started_at": "2026-10-10T20:28:58Z",
+      "updated_at": "2026-10-10T20:29:09Z"
+    },
+    {
+      "id": 38083912258,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:28:58Z",
+      "run_started_at": "2026-10-10T20:28:58Z",
+      "updated_at": "2026-10-10T20:36:47Z"
+    },
+    {
+      "id": 38083576678,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:23:43Z",
+      "run_started_at": "2026-10-10T20:23:43Z",
+      "updated_at": "2026-10-10T20:27:06Z"
+    },
+    {
+      "id": 38082932200,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:14:03Z",
+      "run_started_at": "2026-10-10T20:14:03Z",
+      "updated_at": "2026-10-10T20:14:16Z"
+    },
+    {
+      "id": 38082932141,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:14:03Z",
+      "run_started_at": "2026-10-10T20:14:03Z",
+      "updated_at": "2026-10-10T20:23:34Z"
+    },
+    {
+      "id": 38082791317,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:11:55Z",
+      "run_started_at": "2026-10-10T20:11:55Z",
+      "updated_at": "2026-10-10T20:12:21Z"
+    },
+    {
+      "id": 38082791075,
+      "path": ".github/workflows/repository-hygiene.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:11:54Z",
+      "run_started_at": "2026-10-10T20:11:54Z",
+      "updated_at": "2026-10-10T20:12:06Z"
+    },
+    {
+      "id": 38082791063,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:11:54Z",
+      "run_started_at": "2026-10-10T20:11:54Z",
+      "updated_at": "2026-10-10T20:14:22Z"
+    },
+    {
+      "id": 38082520827,
+      "path": ".github/workflows/repair-hosting.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T20:07:49Z",
+      "run_started_at": "2026-10-10T20:07:49Z",
+      "updated_at": "2026-10-10T20:09:36Z"
+    },
+    {
+      "id": 38081847310,
+      "path": ".github/workflows/ci.yml",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "staging",
+      "created_at": "2026-10-10T19:57:43Z",
+      "run_started_at": "2026-10-10T19:57:43Z",
+      "updated_at": "2026-10-10T20:07:19Z"
+    }
+  ]
+}

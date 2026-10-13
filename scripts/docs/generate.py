@@ -481,6 +481,13 @@ def split(schema, tables):
                     {**n, "url": "https://docs.onesa.eu" + n["url"]} for n in d["nodes"]
                 ]
             source = (ROOT / d["source"]).read_text()
+            d["source_sha256"] = hashlib.sha256(source.encode()).hexdigest()
+            d["revision"] = (
+                os.environ.get("GITHUB_SHA")
+                or subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+                ).strip()
+            )
             d["relationships"] = [
                 {"from": a, "to": b}
                 for a, b in re.findall(
@@ -543,6 +550,32 @@ def split(schema, tables):
                 },
             },
         }
+        if scope == "internal":
+            from visual_policy import validate_navigation
+
+            navigation = validate_navigation(ROOT, catalog)
+            generated["engineering-navigation.json"] = navigation
+            for entry in navigation["architecture"] + navigation["chapters"]:
+                search.append(
+                    {
+                        "title": entry["title"],
+                        "url": entry["url"],
+                        "text": entry.get(
+                            "summary", "Engineering Onboarding reference"
+                        ),
+                    }
+                )
+            for entry in navigation["days"]:
+                search.append(
+                    {
+                        "title": entry["title"],
+                        "url": "/onboarding#day-" + entry["id"],
+                        "text": " ".join(entry["objectives"]),
+                    }
+                )
+            generated["provenance.json"]["navigation_sha256"] = hashlib.sha256(
+                (ROOT / "docs/ecosystem/visual-navigation.json").read_bytes()
+            ).hexdigest()
         generated["provenance.json"]["snapshot_sources"] = {
             k: v
             for k, v in json.loads(
@@ -573,6 +606,7 @@ def split(schema, tables):
         )
         if scope == "internal":
             mapping["database"] = "database"
+            mapping["onboarding"] = "onboarding"
         for path, component in mapping.items():
             (pages / f"{path}.tsx").write_text(
                 f'export {{default}} from "@site/src/pages/{component}";\n'

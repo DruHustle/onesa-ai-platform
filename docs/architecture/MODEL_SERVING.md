@@ -1,5 +1,7 @@
 # Interchangeable local model serving
 
+> Current hosted status, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
+
 Onesa remains a European-based, general-purpose platform. Business modules consume the
 ModelClient protocol; no application/frontend changes are required to choose mock, ollama
 or vllm through ONESA_MODEL_BACKEND. OllamaModelClient and VLLMModelClient share the same

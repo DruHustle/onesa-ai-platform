@@ -1,5 +1,7 @@
 # Separate application builds and tests
 
+> Current pipeline: [automated review, staging qualification and owner activation](../development/CI_CD_PIPELINE_REPORT.md). Prepared local changes are not live deployments; branch/PR optimization and automatic technical evidence supersede older manual-only details.
+
 Use Node 24 and Python 3.11. The existing Makefiles describe supported dependency installs.
 
 ## Frontend (repository root)
@@ -41,7 +43,7 @@ checks use an isolated mock stack, not the active application or a real inferenc
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
 
 Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers`,
-`tls-acceptance`. Add `publication-hygiene` to required checks. CI runs on all pushes and pull requests so required jobs can report consistently. No remote
+`tls-acceptance`. Add `publication-hygiene` to required checks. CI runs relevant main/staging PR checks and full release-source push checks, with fail-closed summaries. No remote
 CI success is implied by local build/test results.
 
 ## Identity worker lifecycle
@@ -61,3 +63,9 @@ After building the backend production image, run
 installed Uvicorn/factory, provider PORT, liveness, missing dependency 503, SIGTERM,
 and distinct production configuration failure using isolated containers. CI runs it
 against the final backend security candidate image; it does not qualify inference.
+
+## Reproducible external-review index
+
+From the AI repository, run `python3 scripts/release/review_package.py --workspace .. --output docs/internal/release-audit/external-review/<new-review-id>`. Optionally supply the approved `--public-build` and protected `--internal-build` directories. The collector reads independent repository identities, source routes, API operations and workflow hashes; it never contacts providers, reads environment values or authorizes release. The resulting mode-600 manifest and SHA256SUMS preserve source/build classifications, dirty-source limits and unmatched route-test status. Give the external reviewer this restricted index together with the existing deployment/security/recovery evidence, exact Actions run links and read-only reproduction commands. `READY_FOR_INDEPENDENT_REVIEW` describes package availability; the reviewer verdict remains pending.
+
+The compatibility `qualify.py decision` command rejects all retired editable approval JSON. Actual release decisions use the existing trusted qualification and owner-controlled promotion workflows.

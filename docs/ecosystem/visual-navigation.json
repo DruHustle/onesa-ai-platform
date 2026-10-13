@@ -1,0 +1,327 @@
+{
+  "version": "0.3.0",
+  "classification": "internal",
+  "reviewed_at": "2026-10-13",
+  "architecture": [
+    {
+      "id": "system-overview",
+      "title": "System Overview",
+      "diagram": "ecosystem-current",
+      "url": "/docs/ecosystem/COMPLETE_ARCHITECTURE",
+      "summary": "Trace the three independent applications and their trust boundaries."
+    },
+    {
+      "id": "complete-onesa-ecosystem",
+      "title": "Complete Onesa Ecosystem",
+      "diagram": "ecosystem-current",
+      "url": "/docs/ecosystem/COMPLETE_ARCHITECTURE",
+      "summary": "Select products and follow their detailed references."
+    },
+    {
+      "id": "infrastructure-architecture",
+      "title": "Infrastructure Architecture",
+      "diagram": "infrastructure-current",
+      "url": "/docs/ecosystem/INFRASTRUCTURE",
+      "summary": "Separate provider responsibilities and staging from production."
+    },
+    {
+      "id": "company-portal-architecture",
+      "title": "Company Portal Architecture",
+      "diagram": "portal-current",
+      "url": "/docs/ecosystem/PORTAL_DESIGN",
+      "summary": "Follow website CMS recruitment and administration."
+    },
+    {
+      "id": "ai-platform-architecture",
+      "title": "AI Platform Architecture",
+      "diagram": "system",
+      "url": "/docs/architecture/SYSTEM_ARCHITECTURE",
+      "summary": "Identify shared modular API services and provider adapters."
+    },
+    {
+      "id": "ai-robot-architecture",
+      "title": "AI Robot Architecture",
+      "diagram": "robot-current",
+      "url": "/docs/ecosystem/ROBOT_DESIGN",
+      "summary": "Separate cloud simulation from unavailable physical control."
+    },
+    {
+      "id": "ci-cd-deployment-pipeline",
+      "title": "CI/CD & Deployment Pipeline",
+      "diagram": "delivery-current",
+      "url": "/docs/engineering/DEPLOYMENT",
+      "summary": "Trace actual workflows and the enforced release path."
+    },
+    {
+      "id": "data-flow-database-schemas",
+      "title": "Data Flow & Database Schemas",
+      "diagram": "data-current",
+      "url": "/docs/database/SCHEMA",
+      "summary": "Open source-generated ERDs and actual constraints in Database."
+    },
+    {
+      "id": "authentication-authorization",
+      "title": "Authentication & Authorization",
+      "diagram": "identity-current",
+      "url": "/docs/api/AUTHENTICATION",
+      "summary": "Compare independent product sessions and permissions."
+    },
+    {
+      "id": "ai-inference-rag-workflows",
+      "title": "AI Inference & RAG Workflows",
+      "diagram": "ai-rag-current",
+      "url": "/docs/architecture/DATA_FLOWS",
+      "summary": "Trace real configured inference embedding retrieval and citations."
+    },
+    {
+      "id": "portal-jobs-document-scanning",
+      "title": "Portal Jobs & Document Scanning",
+      "diagram": "portal-scan-current",
+      "url": "/docs/ecosystem/PORTAL_DESIGN",
+      "summary": "Explain quarantine clean release failures and retries."
+    },
+    {
+      "id": "robotics-ros-2-workflows",
+      "title": "Robotics & ROS 2 Workflows",
+      "diagram": "robot-current",
+      "url": "/docs/ecosystem/ROBOT_DESIGN",
+      "summary": "Understand messages and the independent safety gate."
+    },
+    {
+      "id": "security-architecture",
+      "title": "Security Architecture",
+      "diagram": "docs-access-current",
+      "url": "/docs/security/SECURITY_ARCHITECTURE",
+      "summary": "Inspect identity origin private-storage and server-side boundaries."
+    },
+    {
+      "id": "monitoring-operations",
+      "title": "Monitoring & Operations",
+      "diagram": "operations-current",
+      "url": "/docs/operations/MONITORING",
+      "summary": "Distinguish a working health check from delivered alert evidence."
+    },
+    {
+      "id": "backup-disaster-recovery",
+      "title": "Backup & Disaster Recovery",
+      "diagram": "recovery-current",
+      "url": "/docs/database/BACKUP_RESTORE",
+      "summary": "Restore only into isolated targets and verify before recovery."
+    },
+    {
+      "id": "development-phases-roadmap",
+      "title": "Development Phases & Roadmap",
+      "diagram": "maturity-current",
+      "url": "/docs/product/ROADMAP",
+      "summary": "Separate software staging production research and hardware milestones."
+    }
+  ],
+  "chapters": [
+    {
+      "title": "Start Here",
+      "url": "/docs/onboarding/START_HERE"
+    },
+    {
+      "title": "Understanding Onesa",
+      "url": "/docs/ecosystem/COMPLETE_ARCHITECTURE"
+    },
+    {
+      "title": "Repository Structure",
+      "url": "/docs/onboarding/DAY_2"
+    },
+    {
+      "title": "Development Environment",
+      "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+    },
+    {
+      "title": "Frontend Architecture",
+      "url": "/docs/design/FRONTEND_DESIGN"
+    },
+    {
+      "title": "Backend Architecture",
+      "url": "/docs/design/BACKEND_DESIGN"
+    },
+    {
+      "title": "Databases & Storage",
+      "url": "/docs/database/SCHEMA"
+    },
+    {
+      "title": "APIs & Integrations",
+      "url": "/docs/api/API_REFERENCE"
+    },
+    {
+      "title": "Authentication & Permissions",
+      "url": "/docs/api/AUTHENTICATION"
+    },
+    {
+      "title": "GitHub Workflow",
+      "url": "/docs/onboarding/DAY_3"
+    },
+    {
+      "title": "CI/CD & Deployments",
+      "url": "/docs/engineering/DEPLOYMENT"
+    },
+    {
+      "title": "Infrastructure Providers",
+      "url": "/docs/ecosystem/INFRASTRUCTURE"
+    },
+    {
+      "title": "Testing & Quality Assurance",
+      "url": "/docs/testing/TEST_STRATEGY"
+    },
+    {
+      "title": "Security Practices",
+      "url": "/docs/security/SECRETS_MANAGEMENT"
+    },
+    {
+      "title": "Monitoring & Troubleshooting",
+      "url": "/docs/deployment/TROUBLESHOOTING"
+    },
+    {
+      "title": "Incident Response",
+      "url": "/docs/operations/INCIDENT_RESPONSE"
+    },
+    {
+      "title": "First Engineering Contribution",
+      "url": "/docs/onboarding/FIRST_CONTRIBUTION"
+    }
+  ],
+  "days": [
+    {
+      "id": "1",
+      "title": "Day 1 \u2014 Understand Onesa",
+      "diagram": "day-one",
+      "url": "/docs/onboarding/DAY_1",
+      "objectives": [
+        "Explain Onesa UG and all three products.",
+        "Identify frontend API worker database model and documentation providers.",
+        "Distinguish public engineering and private release evidence."
+      ],
+      "checkpoints": [
+        "Select each product in the ecosystem diagram and open its reference.",
+        "Name one staging-only capability and one planned hardware capability.",
+        "Find the canonical runbook and restricted evidence boundary."
+      ],
+      "references": [
+        {
+          "title": "Complete Architecture",
+          "url": "/docs/ecosystem/COMPLETE_ARCHITECTURE"
+        },
+        {
+          "title": "Infrastructure",
+          "url": "/docs/ecosystem/INFRASTRUCTURE"
+        },
+        {
+          "title": "Documentation System",
+          "url": "/docs/development/DOCUMENTATION_SYSTEM"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Day 2 \u2014 Understand the software",
+      "diagram": "day-two",
+      "url": "/docs/onboarding/DAY_2",
+      "objectives": [
+        "Trace one endpoint from frontend to API schema and storage.",
+        "Explain session CSRF roles and ownership.",
+        "Prepare isolated development without production data."
+      ],
+      "checkpoints": [
+        "Choose an endpoint in the API explorer and identify its request/response model.",
+        "Find the owner foreign key in a generated ERD.",
+        "Run publication hygiene locally and use synthetic development fixtures."
+      ],
+      "references": [
+        {
+          "title": "Local Development",
+          "url": "/docs/deployment/LOCAL_DEVELOPMENT"
+        },
+        {
+          "title": "Authentication",
+          "url": "/docs/api/AUTHENTICATION"
+        },
+        {
+          "title": "Schema",
+          "url": "/docs/database/SCHEMA"
+        },
+        {
+          "title": "Portal Database",
+          "url": "/docs/ecosystem/PORTAL_DATABASE"
+        },
+        {
+          "title": "Robot Database",
+          "url": "/docs/ecosystem/ROBOT_DATABASE"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Day 3 \u2014 Understand delivery",
+      "diagram": "day-three",
+      "url": "/docs/onboarding/DAY_3",
+      "objectives": [
+        "Explain dev \u2192 staging \u2192 main and actual workflow entry points.",
+        "Match a CI run to its source revision and provider deployment.",
+        "Recognize failures and the rollback boundary."
+      ],
+      "checkpoints": [
+        "Read deploy.yml and release-candidate.yml in their owning repositories.",
+        "Explain why private GitHub Free protection cannot be assumed.",
+        "Describe recovery after a failed hosted check without skipping it."
+      ],
+      "references": [
+        {
+          "title": "Ci Cd Pipeline Report",
+          "url": "/docs/development/CI_CD_PIPELINE_REPORT"
+        },
+        {
+          "title": "Free Github Plan",
+          "url": "/docs/development/FREE_GITHUB_PLAN"
+        },
+        {
+          "title": "Deployment",
+          "url": "/docs/engineering/DEPLOYMENT"
+        },
+        {
+          "title": "Recovery",
+          "url": "/docs/operations/RECOVERY"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Day 4 \u2014 Understand operations",
+      "diagram": "day-four",
+      "url": "/docs/onboarding/DAY_4",
+      "objectives": [
+        "Read health and scanner status without revealing secrets.",
+        "Locate monitoring backup restore and incident runbooks.",
+        "Identify operational evidence still missing."
+      ],
+      "checkpoints": [
+        "Use ssh -O check onesa-portal-worker from authorized owner setup.",
+        "Inspect only redacted status; never compose config without --quiet.",
+        "Identify the isolated restore command and on-call owner escalation path."
+      ],
+      "references": [
+        {
+          "title": "Monitoring",
+          "url": "/docs/operations/MONITORING"
+        },
+        {
+          "title": "Incident Response",
+          "url": "/docs/operations/INCIDENT_RESPONSE"
+        },
+        {
+          "title": "Backup Restore",
+          "url": "/docs/database/BACKUP_RESTORE"
+        },
+        {
+          "title": "Operations",
+          "url": "/docs/ecosystem/OPERATIONS"
+        }
+      ]
+    }
+  ]
+}

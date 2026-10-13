@@ -1,5 +1,7 @@
 # Vercel frontend and Render backend
 
+> Current private-Free release policy: [safeguards and external owner authorization](../development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
+
 Staging accepts the current Vercel Standard Protection API value
 `prod_deployment_urls_and_all_previews`, as well as existing protected modes.
 Missing or unknown protection still blocks Preview configuration/deployment.
@@ -38,12 +40,11 @@ AI route duration is 150 seconds for bounded streamed generation; verify plan li
 
 ## Render
 
-`render.yaml` configures Docker services with app-only build contexts, private
-PostgreSQL, Frankfurt region, readiness checks and disabled native auto-deploys. Templates
-use paid always-on resources: review actual pricing/capacity before applying. No
-resources or charges are created by storing this file. Databases disable public IP
-access by default; allow only an approved temporary operator address if external
-migration access is needed, and remove it afterwards.
+`render.yaml` references only the existing Free Docker API with the app's independent
+build context, Frankfurt region, readiness check and native auto-deploy disabled.
+Reuse the approved Neon and Cloudflare resources; no managed database is declared.
+Do not create duplicate services or regenerate credentials. Saving the reference is
+not a provider deployment or production qualification.
 
 Create/provision database schema with a separate migration-owner identity; then supply
 only a restricted application URL in Render's secret environment settings. Do not use
@@ -120,7 +121,7 @@ database URLs or application secrets belong in the repository.
 ## Final release qualification — 2026-10-09
 
 Prepared configuration is not a hosted deployment. Production promotion additionally
-requires the exact-commit `RELEASE_QUALIFICATION_JSON` Actions secret with all four
+historically required the exact-commit `RELEASE_QUALIFICATION_JSON` secret with all four
 reviewed gates passing and a matching source fingerprint. The local audit decision
 is NO-GO. Do not supply a passing attestation until target, operations and content
 approvals actually exist. See restricted `docs/internal/release-audit/` evidence.
@@ -160,3 +161,9 @@ missing database/model credentials and qualification remain explicit blockers.
 ## Current AI staging deployment
 
 The exact staging revision a25bfb02a46101aaa3afd74bfc51ce371b3d1673 passed CI and hosted deployment workflow 38105826742. Render uses Dockerfile CMD with its command override cleared; /health and /core-ready return 200. Hosted authentication, account isolation, CSRF and restart persistence passed 39 checks; protected Preview passed 15 desktop/tablet/mobile checks. This resolves the staging exit-127 startup fault. /ready remains an honest 503 because no approved model endpoint exists. Real semantic embeddings, worker delivery and public production acceptance remain unqualified. Subsequent releases must pass current-revision CI and the staging workflow again.
+
+## Automated qualification migration
+
+See [automated release qualification](AUTOMATED_QUALIFICATION.md) for immutable
+Actions evidence, explicit owner reviews, build integrity and the guarded migration.
+The legacy JSON secret fallback is retired. Private-Free production uses the external owner handoff; production credential removal/rotation and provider control verification remain owner actions.

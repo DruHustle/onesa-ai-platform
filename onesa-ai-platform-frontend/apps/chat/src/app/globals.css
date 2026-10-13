@@ -532,10 +532,10 @@ p {
   overflow-wrap: anywhere;
 }
 
-.documentation-help { display: inline-block; font-size: .85rem; color: #2366d1; margin: .4rem 0; }
+.documentation-help { display: inline-block; font-size: .85rem; color: var(--accent); margin: .4rem 0; }
 /* Feature navigation remains available at narrow widths without horizontal overflow. */
 .feature-shell > header nav{flex-wrap:wrap;min-width:0}
-.feature-shell .brand span{color:#2366d1}
+.feature-shell .brand span{color:var(--accent)}
 .sidebar .caption{color:#c2cfdf}
 .locale-select select{color:var(--ink);border-color:var(--line)}
 select:focus-visible{outline:3px solid #2366d1;outline-offset:3px}
@@ -560,3 +560,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .auth-shell { background: radial-gradient(ellipse at top left, #16445b, var(--navy) 70%); }
 .auth-card { border-radius: 4px; }
 .send { background: var(--cyan); color: var(--navy); font-weight: 700; }
+
+/* Automatic visitor-local night palette; no appearance selector. */
+html[data-theme=dark],html[data-theme=dark] body{color-scheme:dark;--bg:#0b1523;--ink:#e5edf6;--muted:#b4c4d6;--line:#557a9e;--accent:#83baff}
+html[data-theme=dark] :is(button,input,textarea,select,.feature-card,.message.assistant,.chat-header,.composer,.auth-panel){background:#14243a;color:var(--ink)}
+html[data-theme=dark] :is(input,textarea)::placeholder{color:var(--muted);opacity:1}
+html[data-theme=dark] .auth-card{background:#14243a;color:#e5edf6}
+html[data-theme=dark] :is(.message.user,.input-wrap,.notice){background:#14243a;color:#e5edf6}
+html[data-theme=dark] .auth-card .brand span{color:#83baff}
+
+.company-footer{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;padding:1rem;font-size:.875rem;line-height:1.6;overflow-wrap:anywhere}.company-footer a{text-decoration:underline;text-underline-offset:.2em}

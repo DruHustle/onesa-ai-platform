@@ -1,0 +1,29 @@
+flowchart TB
+Repos[Portal AI Robot repositories] --> Hosted[GitHub-hosted Actions]
+Local[Local isolated runner - dormant private-only option] -. not required for untrusted PRs .-> Hosted
+Hosted --> Vercel[Vercel separate product frontends and public docs]
+Hosted --> Render[Render separate product APIs]
+Package[Qualified ARM64 source packaging] --> Oracle[Oracle VM scanner and worker]
+subgraph Staging[STAGING - synthetic data only]
+PST[Portal restricted role - distinct Neon project]
+AST[AI restricted role - distinct Neon project in US region]
+RST[Robot separate Turso database]
+Bucket[Portal private staging bucket]
+CF[Workers AI staging-scoped configured credential]
+end
+Render --> PST
+Render --> AST
+Render --> RST
+Render --> CF
+Oracle --> PST
+Oracle --> Bucket
+subgraph Production[PRODUCTION - independent qualification required]
+PPR[Portal existing production Neon and bucket]
+APR[AI existing production Neon]
+RPR[Robot durable production host unresolved]
+Legacy[Existing Render Portal worker retained until replacement qualifies]
+end
+Render --> PPR
+Render --> APR
+Legacy --> PPR
+Pages[Separate engineering Pages output] -. fail-closed worker and Access policies .-> Guard[Protection and owner-login acceptance pending]

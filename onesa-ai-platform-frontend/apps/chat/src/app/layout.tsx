@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import {company} from "../lib/company";
 import "./globals.css";
+import {dayNightBoot} from "../lib/day-night-boot";
+import {headers} from "next/headers";
 import { cookies } from "next/headers";
 import { LocaleProvider, type Locale } from "../lib/i18n";
 export const dynamic = "force-dynamic";
@@ -22,9 +25,11 @@ export default async function Layout({
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
+      <head><script nonce={(await headers()).get("x-nonce")||undefined} dangerouslySetInnerHTML={{__html:dayNightBoot}}/></head>
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        <footer className="company-footer"><span>{company.legalName}</span><a href={company.mailHref}>{company.email}</a><a href={company.telephoneHref}>{company.telephone}</a><a href={`https://onesa.eu/${locale}/impressum`}>{locale === "de" ? "Impressum" : "Legal Notice"}</a><a href={`https://onesa.eu/${locale}/privacy`}>{locale === "de" ? "Datenschutz" : "Privacy"}</a></footer>
       </body>
     </html>
   );

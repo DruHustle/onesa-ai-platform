@@ -1,5 +1,219 @@
 # Development changelog
 
+## 2026-10-13 — Record isolated production Cloudflare serving configuration
+
+The existing production Render service now has its own account-scoped Workers AI token and verified synthetic generation/embedding connectivity. Record renewal dates and the distinction between saved configuration and an accepted live release. The unused unauthenticated demo's public route is disabled reversibly; no application deployment or DNS cutover is implied.
+
+## 2026-10-13 — Preserve redirect denial in the Cloudflare verifier runtime
+
+The deployed verifier denied the approved owner because workerd rejected the signing-key fetch's `redirect: error` option. Use manual redirect handling and refuse every non-success response, retaining bounded fetches, trusted issuer, signature/audience/identity/host checks and MFA policies. Verify malicious signing-key redirects cannot expose assets; local workerd evidence remains separate from hosted acceptance.
+
+## 2026-10-13 — Verify the ecosystem onboarding homepage
+
+Update the authenticated documentation browser assertion to the new three-product homepage heading. Keep login, private asset denial, revocation, database/API and assistant checks enforced.
+
+## 2026-10-13 — Align visual generators with required formatter checks
+
+Format the changed documentation generator and validator using the repository's pinned Ruff rules. Preserve generated content, classification and access checks; run the complete required Python checks before pushing the correction.
+
+## 2026-10-13 — Visual architecture and engineering onboarding
+
+Make Architecture & Workflows and Engineering Onboarding adjacent persistent sections. Add source-controlled ecosystem, provider, delivery, quarantine/retry, AI, identity, data, operations/recovery, maturity and four-day learning diagrams. Reuse the existing accessible viewer and add individual PDF exports, source/build metadata and a browser-local learning checklist. Keep detailed navigation and workflows in the internal output, validate references and schema/source drift in CI, and refresh obsolete staging labels without asserting production or Access acceptance.
+
+## 2026-10-13 — Reconcile database isolation and remove obsolete deployment entries
+
+Pin staging probes to the verified *-staging Neon project and reject the production endpoint. Privately initialize/rebind only the empty synthetic target with the existing staging role contract, preserving production and model credentials. Replace the historical paid Render database declaration with an existing Free API reference and preserve keys instead of generating replacements. Correct approved reply-to examples; all supported provider adapters remain available.
+
+## 2026-10-12 — Approved company contact and legal links
+
+Display the owner-approved legal name, email and telephone across the independent chat application, with locale-aware links to the central company legal and privacy pages. Use a committed snapshot derived from the maintained Portal record; no sibling runtime or private record is required by this build. Preserve automatic styling, authentication and unverified privacy-processing gates.
+
+## 2026-10-12 — Registered private-Free staging entry point
+
+Allow the existing manual, owner-only staging bridge on private repositories so the repository-secret fallback is usable before new workflows reach main. Keep production guards, exact-source qualification, named staging secrets and protected Preview checks; test rejection of untrusted actors/events, main refs and production targets.
+
+## 2026-10-12 — Cloudflare release profile compatibility
+
+Accept the implemented Cloudflare inference/semantic embedding selectors in staging preflight. Preserve rejection of mock, lexical, missing and non-staging profiles; actual hosted generation and retrieval remain required. Document the supported account endpoints and versioned 256-dimensional adapter.
+
+## 2026-10-12 — verified staging secret scope
+
+- Select the verified public `Staging` environment through the non-secret `STAGING_SECRET_SCOPE` variable while keeping repository-level `STAGING_*` secrets as the private-Free fallback.
+- Share one deployment sequence between mutually exclusive owner-only jobs; preserve source qualification, target checks and production separation.
+- Test both scope selections, private fallback and untrusted actor rejection; diagnostics disclose only availability booleans.
+
+## 2026-10-12 — Verify configured staging secret injection
+
+Add trusted owner-only environment and repository availability modes to the existing
+hosting inspector. Test required names as booleans, without checking out code, calling
+providers or displaying values. Preserve the Staging entries and independently verify
+usable injection and actual repository entitlement. Private-Free repository fallback
+remains documented; secret names alone never prove authentication or data isolation.
+Exercise real diagnostic code with synthetic sentinel values and assert they are never
+logged. Oracle configuration remains independent of GitHub secret entry.
+
+
+## 2026-10-12 — Qualify free-cloud adapters and automatic day/night styling
+
+Add explicit authenticated Cloudflare generation and semantic embedding adapters,
+with bounded responses, reviewed model profiles and versioned normalized 256-dimensional
+Matryoshka vectors. Keep mock, Ollama and vLLM providers interchangeable; local adapter
+tests do not prove hosted inference. Add server-side Access verification to every
+internal documentation route and asset, with fail-closed packaging and origin checks.
+Chat and documentation follow visitor-local 07:00/19:00 transitions without a theme
+selector or stored manual override. Preserve CSP, strict accessibility assertions and
+public/internal output separation. Repository-level staging secrets support private
+GitHub Free; existing environment secrets must be reconciled privately before deployment.
+Ignore regenerable Wrangler cache; preserve private provider and approval evidence.
+
+## 2026-10-12 — Rename Zero Trust organization to Onesa
+
+Apply the owner's requested organization display name and verify the existing login
+domain, MFA configuration, identity provider, applications and policies on readback.
+Cloudflare's partial update cleared an omitted MFA field; restore the approved
+TOTP/security-key enrollment configuration and verify that every unrelated
+organization field matches the snapshot. Eight-hour MFA sessions and global
+enforcement off are retained. Record owner-confirmed authenticator verification
+separately from API-observed sign-in and pending protected-docs MFA/bypass acceptance.
+The Pages Git installation error still blocks the documentation project.
+
+## 2026-10-12 — Enable owner MFA enrollment portal
+
+Diagnose the missing App Launcher configuration and enable the required enrollment
+portal with a policy limited to the two confirmed owner email addresses. Reuse the
+existing email-PIN provider and eight-hour session, preserving organization settings
+and unrelated applications. Owner MFA enrollment/authentication still requires actual
+browser verification; engineering app enforcement and hosted bypass tests remain
+pending the Pages Git connection and successful owner verification.
+
+## 2026-10-12 — Verify approved Cloudflare MFA enrollment capability
+
+Apply the owner's explicit approval for TOTP/security-key enrollment with eight-hour
+sessions and global enforcement off. Provider readback preserves all unrelated
+organization settings, identity providers and existing application policies. Record
+the successful configuration separately from personal enrollment/authentication and
+hosted docs acceptance, which remain unverified. The Pages Git installation still
+rejects project creation with8000011; no internal upload or application enforcement
+was performed. Existing recovery/admin methods are preserved; docs enforcement waits
+for the owner's successful enrollment and authentication.
+
+## 2026-10-12 — Prepare separate Cloudflare engineering documentation
+
+Add a dependency-free harmless bootstrap target for `onesa-engineering-docs` and
+retain the Access-wrapped internal packaging path with all requests protected. Reject
+stale revisions, overlapping output paths and symlink artifacts; run packaging tests
+in documentation checks. The Cloudflare build mode marks hosted assistance unavailable
+because this gateway serves only authorized documents. Record exact Pages build
+settings, separate main/preview/custom-host policies, independent MFA and Free Functions
+fail-closed requirements. The owner's two allowed identities stay in ignored local
+setup, and repository visibility stays public until the announced launch. Local
+preparation does not activate Zero Trust, create/deploy a project or qualify hosted access.
+
+## 2026-10-12 — Separate save-only production startup operator
+
+The legacy main repair cannot run in the staging-only environment. Add an explicit owner-dispatched production startup operation on current dev after full exact-source CI/hygiene. It verifies the existing free Frankfurt production service and disabled auto-deploy, preserves reviewed Dockerfile/script startup, and clears an unrecognized override only. Readback requires unchanged functional configuration, environment and deployment identity. No deployment, database change, model target, credential transfer or production approval is implied.
+
+## 2026-10-12 — Approved AI browser favicon
+
+Add the existing owner-supplied Onesa64×64 ICO through the Next.js file-based metadata convention, so the AI app emits an actual branded icon link and serves its own asset. Copy the approved Portal icon byte-for-byte (SHA256 `7d236707ace84a0117de7dd6fcb97e4664b96f859b9e1bdc3325e7fe3b097e89`); no unrelated logo or image transformation is introduced.
+
+## 2026-10-12 — Remove appearance switching
+
+Remove Auto/Light/Dark controls, preference logic, timers and custom palette switching at the owner’s request. Retain the fixed light surfaces and navy/cyan brand elements, with responsive and authenticated acceptance checks. Public and protected documentation use the fixed light default with the framework switch disabled. Remove only assets and tests belonging to the retired feature.
+
+
+## 2026-10-12 — Explicit hosted trust roots and failed deployment receipts
+
+Use the existing operating-system CA bundle explicitly so certificate/hostname verification does not depend on bundled libpq’s build-time certificate path. Keep channel binding required and reject absent trust stores. Database authentication, TLS, channel-binding and privilege failures return fixed codes only. After a verified backend deployment, retain actual hosted FAIL/BLOCKED receipts even if temporary fixture creation fails.
+
+
+## 2026-10-12 — Hosted fixture TLS and safe operation phases
+
+Use libpq system trust roots with verify-full and required channel binding on fresh hosted runners; saved query options cannot downgrade those controls. Return fixed database/identity phases on failure, retaining role/schema guards and private credentials.
+
+
+## 2026-10-12 — Consistent appearance and authenticated staging qualification
+
+- Chat and public/protected documentation implement persisted Auto/Light/Dark with visitor-local 07:00/19:00 transitions. Bootstrap runs before rendering; Chat retains CSP nonces and documentation synchronizes Docusaurus color context.
+- Fixed dark-theme form/card/message contrast and expanded every Chat page plus every public documentation sitemap route in both modes at desktop/mobile widths. All 124 documentation route/mode/width checks pass with zero axe findings, alongside 19 diagrams, 11 public PDFs, 3,056 internal-link checks, search and protected-path exclusions. The mobile search wrapper no longer covers appearance; inline links are distinguishable and theme color changes apply immediately.
+- Stage fixture schema is validated before deployment. Owner-dispatched temporary synthetic users receive two-hour access grants; private credentials stay in a 0600 runner file and are revoked/removed after verification. No production identities or migrations are changed.
+- Production documentation links default to the actual public docs domain; engineering links stay hidden until their protected target is configured.
+- Reuse the exact protected native Git staging Preview; do not create a second frontend deployment. Authentication diagnostics expose fixed phase/reason codes only. Real inference/embeddings/streaming remain mandatory and cannot be replaced by mock QA.
+- Local backend: 156 pass, four external serving tests skip. Chat: 24 Chromium/WebKit browser cases pass (four external serving cases skip); 61 release guard tests pass. Native documentation security regressions and both classified builds pass after manifest regeneration. Updated official immutable Node 24-compatible Actions; corrected docs deployment shell assignment to preserve failed-read errors. Actual hosted model readiness and production owner review remain release gates.
+
+## 2026-10-12 — Fail incomplete hosted staging acceptance
+
+Retain uploaded staging receipts but fail the workflow when hosted acceptance is FAIL,
+BLOCKED, incomplete, or falsely claims PASS with failed checks. A successful provider
+build/deploy is still recorded separately. Production qualification gates are unchanged.
+
+## 2026-10-12 — Safe hosted preflight diagnostics
+
+Report a fixed failure code for provider access, target identity, database binding,
+model configuration and Preview protection without printing values, URLs, provider
+responses or arbitrary exception text. Retain every existing validation/release gate;
+add regression coverage rejecting private exception text from diagnostics.
+
+## 2026-10-12 — Explicit staging secret forwarding
+
+Declare and forward only the staging secret names used by the reusable qualification
+workflow. GitHub otherwise resolves environment-only secrets to empty strings. Retain
+Staging environment precedence, preflight value/isolation checks and production gates;
+add contract coverage for missing mappings and prevent production credential forwarding.
+
+## 2026-10-12 — Initial qualified staging entry point
+
+Allow an explicitly selected staging dispatch through registered deploy.yml, reusing
+release-staging.yml and its Staging environment without inherited production secrets.
+Retain exact-source owner/branch/event, provider/database isolation and hosted model
+acceptance gates. Production requires its explicit target and existing authorization.
+This permits initial staging qualification before new workflow files reach main.
+
+## 2026-10-12 — Production provider credential boundary
+
+Correct legacy public production workflow bindings to use production provider secret
+names, preserving staging-only credentials in staging workflows and all existing
+qualification/approval gates. Private production jobs remain disabled; no provider
+values or deployments changed. Add a regression forbidding staging tokens in production.
+
+## 2026-10-12 — Public documentation search description
+
+Add the missing homepage description to public documentation so generated HTML
+provides a useful search snippet and social description. Preserve public-source
+selection, internal access controls and documentation deployment gates.
+
+## 2026-10-12 — Save reviewed production defaults without deployment
+
+Add an explicit owner-only operation on dev to save missing nonsecret settings to
+the identified AI production service, after exact-source CI and hygiene pass. Preserve
+existing values, reject staging/foreign targets, active deployments and linked groups,
+disable redirects, and verify readback and unchanged deployment identity. Do not copy
+database/API credentials, create resources or promote production. Preserve the reviewed
+Ollama and semantic embedding profiles pending actual hosted endpoints. Set the approved
+reply address to info@onesa.eu and keep email disabled until delivery is qualified.
+Add regression coverage to CI for these configuration and credential boundaries.
+
+## 2026-10-11 — Staging environment and branch configuration
+
+Scope staging credentials to the GitHub Staging environment, preserve each product’s Vercel project for staging previews, and standardize remote branches on dev/staging/main with restricted recovery archives. Keep production qualification and explicit owner approval enforced.
+
+
+
+## 2026-10-11 — Automated review and CI/CD optimization
+
+Add read-only Reviewdog, checksum-locked workflow/secret analyzers, negative pipeline
+tests, conservative PR paths, dependency caches, PR cancellation and required CI summary.
+Preserve full release-source checks and independently tested runtime evidence; remove
+Portal duplicate image builds. Add opt-in isolated staging and automatic technical
+qualification, retaining manual exact-digest owner authorization and external production
+credential custody. Legal/operational evidence never receives fabricated PASS.
+Dependabot version schedules are prepared; automatic security-update PRs were enabled
+and verified as requested. No other remote settings, pushes or live deployments. See the CI/CD pipeline report.
+
+## 2026-10-11 — Private-Free release safeguards
+
+Credential-free hosted PR CI; immutable Actions pins; exact-commit qualification and owner authorization with external production handoff; separate staging credentials; legacy JSON fallback removed; private credential-bearing production workflows excluded. Remote settings and deployments unchanged. See the private-Free safeguard report for owner migration and enforcement limits.
+
 ## 2026-10-11 — Preserve qualified staging with owner runner policy
 
 - Merge all current staging corrections and owner-approved runner routing by ordinary
@@ -547,6 +761,14 @@ leases, retries or provider idempotency. Hosted delivery remains unqualified.
 
 Consolidated policy references and templates, preserved later audited runtime fixes, and reconciled deployment notes with actual staging evidence. Prepared protection settings remain reference only under GitHub Free. Original local work and private environment files are preserved. Public production qualification is unchanged.
 
+## 2026-10-11 — Automated qualification (local implementation)
+
+Added versioned exact-candidate Actions evidence, tested runtime digests, encrypted
+reviewed Vercel prebuilt artifacts, owner approval/revocation records, staged/provider
+receipts and fail-closed promotion/hosted checks. Legacy qualification is retained
+behind an explicit verified migration switch. No production release or legal approval
+was issued; target acceptance adapters/configuration and remote validation remain open.
+
 ## Documentation ecosystem reference 0.3.0 — 2026-10-11
 
 Extended the existing Docusaurus portal across Company Portal, AI Platform and
@@ -557,3 +779,18 @@ accessible labels/nested controls and low-contrast badges. Added static interact
 link, classification, PDF and accessibility gates to hosted/private CI and docs hosting.
 The public static build remains independent of application release approval. Hosted
 internal access and actual model/hardware functionality are not claimed complete.
+
+## 2026-10-11 — Remote CI integration review
+
+Removed pip caching from the publication hygiene job because it installs no packages; GitHub runner cleanup otherwise fails when the cache directory is absent.
+Preserved the newly merged ecosystem documentation, pinned its additional checkout actions, and scoped scanner exceptions to three verified source checksums.
+
+Generated development-lockfile hashes for all 81 already-pinned packages. A clean dependency calculation validates hashes instead of relying on an existing local environment; no package versions changed.
+
+## 2026-10-13 — Hosted protected visual documentation acceptance
+
+Verified the qualified staging revision through actual owner Cloudflare Access MFA, then published the classified internal output to the existing protected Pages staging project. Confirmed 16 architecture sections, 17 onboarding chapters, four learning days, 73 diagrams with 292 rendered/editable exports, responsive automatic day/night views, search and accessible interactions. All 15 anonymous origin and Preview resource probes redirected to Access; authenticated responses remain private/no-store/noindex. Public Preview qualification passed independently at the same source. Production publication and custom internal DNS are not inferred from staging acceptance.
+
+## 2026-10-13 — Reject retired approvals and reconcile architecture evidence
+
+Retire the compatibility qualification command’s acceptance of locally editable gate JSON, even when its source hash matches. Actual release authority remains the existing trusted qualification/promotion workflows. Add forged and malformed approval regressions. Update canonical architecture/workflow references with actual isolated Portal/AI staging and protected engineering publication evidence; preserve Robot’s HTTP401 and production operational limitations.

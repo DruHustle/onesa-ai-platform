@@ -2,6 +2,7 @@
 
 import ipaddress
 import os
+import re
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
         env_prefix="ONESA_", extra="ignore", hide_input_in_errors=True
     )
 
-    model_backend: Literal["mock", "ollama", "vllm"] = "mock"
+    model_backend: Literal["mock", "ollama", "vllm", "cloudflare"] = "mock"
     model_name: str = Field(default="Qwen/Qwen3-4B-Instruct-2507", min_length=1)
     model_max_output_tokens: int = Field(default=1024, ge=1, le=8192)
     model_context_length: int = Field(default=8192, ge=512, le=131072)
@@ -53,7 +54,7 @@ class Settings(BaseSettings):
     generation_timeout: float = Field(default=60, ge=1, le=120)
     model_base_url: str = ""
     model_api_key: str = ""
-    embedding_backend: Literal["lexical", "http"] = "lexical"
+    embedding_backend: Literal["lexical", "http", "cloudflare"] = "lexical"
     embedding_name: str = "onesa-lexical-256-v1"
     embedding_base_url: str = ""
     embedding_api_key: str = ""
@@ -97,6 +98,33 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Authentication mail requires a persistent delivery key and sender credentials"
             )
+        if self.model_backend == "cloudflare":
+            if (
+                not re.fullmatch(
+                    r"https://api\.cloudflare\.com/client/v4/accounts/[a-f0-9]{32}/ai/v1/?",
+                    self.model_base_url,
+                )
+                or len(self.model_api_key) < 32
+                or self.model_name != "@cf/qwen/qwen3-30b-a3b-fp8"
+            ):
+                raise ValueError(
+                    "Cloudflare inference requires its account HTTPS endpoint, "
+                    "token and reviewed model"
+                )
+        if self.embedding_backend == "cloudflare":
+            if (
+                not re.fullmatch(
+                    r"https://api\.cloudflare\.com/client/v4/accounts/[a-f0-9]{32}/ai/?",
+                    self.embedding_base_url,
+                )
+                or len(self.embedding_api_key) < 32
+                or self.embedding_name != "@cf/qwen/qwen3-embedding-0.6b"
+                or self.embedding_revision != "cf-qwen3-mrl256-v1"
+            ):
+                raise ValueError(
+                    "Cloudflare embeddings require their account HTTPS endpoint, "
+                    "token and versioned Qwen256 profile"
+                )
         if self.environment == "production":
             if self.model_backend == "mock":
                 raise ValueError("Production AI requires a configured real inference service")

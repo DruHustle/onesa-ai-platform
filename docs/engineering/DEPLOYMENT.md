@@ -1,5 +1,13 @@
 # Independent application deployment
 
+## Reviewed staging path — 2026-10-12
+
+After dev review and exact merged staging CI pass, use the registered owner bridge: `gh workflow run deploy.yml --ref staging -f target=staging -f fixture_mode=temporary`. Existing Staging-only credentials and approved synthetic scope/project fixture JSON are required. Temporary identities use random private credentials and two-hour grants; cleanup expires those exact grants and revokes their sessions. Provided credentials remain available with `fixture_mode=provided`. No production identities or migrations are changed.
+
+Vercel Git owns the protected exact-source staging Preview; Actions verifies that Preview and manually deploys the backend. Actual inference, embedding, streaming, user isolation and storage acceptance remain mandatory. Mock/local UI tests do not qualify hosted model readiness or production. Public documentation preview uses its independent `docs-hosting.yml` workflow; protected internal builds require the authenticated gateway and are excluded from static hosting.
+
+> Current private-Free release policy: [safeguards and external owner authorization](../development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
+
 Use separate versioned images from the frontend/backend Dockerfiles. Each build context
 is independent. Keep a common origin through TLS ingress; the Next.js server forwards
 API traffic using private `ONESA_API_URL`. Backend PostgreSQL/pgvector, inference and

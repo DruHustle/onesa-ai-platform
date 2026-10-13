@@ -18,7 +18,7 @@ This repository is independently maintained within `onesa-ug`. Keep its frontend
 backend in their existing subdirectories. Do not initialize a workspace-level Git
 repository, add sibling projects as submodules, or couple their release cycles.
 
-Create a feature branch from `main`, make focused changes, and open a pull request.
+Use the retained `dev` branch for focused changes and open a pull request targeting `main` or `staging`. Only `dev`, `staging` and `main` are retained under the owner-selected branch policy.
 Preserve work already staged or modified locally. The verified team currently has one
 developer: require PRs and automated checks, with zero independent approvals until
 an authorized reviewer exists. Then require one independent review; seek two for
@@ -72,13 +72,15 @@ human data-classification review before publishing or uploading CI artifacts.
 
 ### Visibility, runner selection and access
 
-On 2026-10-11 the owner made the repositories public temporarily and selected
-standard GitHub-hosted Actions for public runs. Local runners may be used only for
-private repositories after isolation and registration are verified. Do not provision
-or re-register local runners for the public repositories. Keep existing job names,
-security gates, release guards and private data exclusions. The owner choice supersedes
-the earlier private-visibility recommendation and runner-submission pause for hosted CI.
-Do not change visibility, billing or ownership independently.
+The current owner request selects private GitHub Free safeguards. Credential-free
+PR checks use GitHub-hosted runners within the free private quota; a local runner
+must not be a mandatory dependency for untrusted PR validation. Keep the retained
+private-only reusable runner dormant unless separately isolated and authorized.
+Production credentials must be held outside editable repository Actions. Repository
+writers can alter workflows to read repository secrets; restrict write access.
+Readback on 2026-10-11 still returned public and account plan null. Do not change
+visibility, billing, ownership, access or provider settings without authorization.
+See `docs/development/PRIVATE_FREE_SAFEGUARDS.md` for scope and owner actions.
 
 ### Protect main
 
@@ -153,8 +155,19 @@ authenticated hosting and acceptance exist; never silently substitute mock infer
 
 ## Selected GitHub Free policy
 
-Follow `docs/development/FREE_GITHUB_PLAN.md`: public repositories use standard
-GitHub-hosted Actions; local runners are private-only and need verified provisioning.
-Do not upgrade billing, change visibility or transfer ownership. Use authorized
-feature/audit/staging branches and verified CI with least practical write access.
-Do not claim server enforcement or production readiness without current evidence.
+Follow `docs/development/FREE_GITHUB_PLAN.md` and the private-Free safeguard report.
+Native private-Free branch/environment protection is unavailable. Direct pushes remain
+possible; CI and qualification block only the authorized deployment path. Private
+production uses credential-free owner authorization and externally controlled promotion.
+Retain exact-commit security/staging checks and separate hardware authorization. Do
+not claim remote safeguards are active until the owner completes and verifies migration.
+
+## Current automated CI/CD policy
+
+Use dev PRs to main/staging. Prior acceptance branch commits are preserved in restricted recovery bundles; do not recreate remote branches without owner authorization.
+Reviewdog annotations are read-only CI evidence, not an independent human review.
+The mandatory security/summary checks and full exact-main runtime records are release
+requirements. Automatic staging is private-only and default-off pending scoped targets;
+production credentials remain outside editable repository Actions. See
+[the pipeline report](docs/development/CI_CD_PIPELINE_REPORT.md) for tested limits,
+reviewed workflow_run exceptions, owner actions and remote activation status.

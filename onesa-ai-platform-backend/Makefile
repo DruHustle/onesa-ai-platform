@@ -3,7 +3,7 @@ PYTHON := $(if $(wildcard .venv/bin/python),.venv/bin/python,../.venv/bin/python
 .PHONY: install check test run image
 install:
 	python3 -m venv .venv
-	.venv/bin/python -m pip install -r requirements-dev.lock
+	.venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
 	.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
 check:
 	$(PYTHON) -m ruff check .

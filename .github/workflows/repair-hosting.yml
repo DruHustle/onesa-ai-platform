@@ -1,8 +1,15 @@
-# Public: hosted only. Private: full local validation precedes cloud execution.
 name: Repair existing hosting configuration
 'on':
   workflow_dispatch:
     inputs:
+      production_defaults:
+        description: Save missing reviewed AI production defaults only, without deploying
+        type: boolean
+        default: false
+      production_startup:
+        description: Verify or repair only the reviewed production startup override, without deploying
+        type: boolean
+        default: false
       staging_action:
         description: Isolated AI staging operation
         type: choice
@@ -21,11 +28,58 @@ concurrency:
   group: hosting-configuration-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  local-validation:
-    if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'DruHustle')) }}
-    uses: ./.github/workflows/_local-validation.yml
+  production-defaults:
+    if: github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform'
+      && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle'
+      && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev'
+      && github.run_attempt == 1 && (inputs.production_defaults == true || inputs.production_startup == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - name: Verify current source and successful CI before provider access
+      env:
+        GH_TOKEN: ${{ github.token }}
+        DEFAULTS_REQUESTED: ${{ inputs.production_defaults }}
+        STARTUP_REQUESTED: ${{ inputs.production_startup }}
+      run: |
+        test "$RUNNER_ENVIRONMENT" = github-hosted
+        test "$DEFAULTS_REQUESTED:$STARTUP_REQUESTED" != true:true
+        test "$(gh api repos/DruHustle/onesa-ai-platform --jq '.private')" = false
+        test "$(gh api repos/DruHustle/onesa-ai-platform/branches/dev --jq '.commit.sha')" = "$GITHUB_SHA"
+        for workflow in ci.yml repository-hygiene.yml; do
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs" \
+            -f head_sha="$GITHUB_SHA" -f event=push -f per_page=1 \
+            --jq '.workflow_runs[0] | select(.head_sha == env.GITHUB_SHA and .status == "completed" and .conclusion == "success") | .id' \
+            | python3 -c 'import sys; assert sys.stdin.read().strip().isdigit(), "Exact-source CI must pass"'
+        done
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        ref: ${{ github.sha }}
+    - name: Save reviewed missing defaults and verify unchanged deployment
+      if: inputs.production_defaults == true
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: python3 scripts/production_defaults.py
+    - name: Require current staging CI before startup settings change
+      if: inputs.production_startup == true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        candidate=$(gh api repos/DruHustle/onesa-ai-platform/branches/staging --jq '.commit.sha')
+        test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$candidate" --jq '.tree.sha')" = "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.tree.sha')"
+        for workflow in ci.yml repository-hygiene.yml; do
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs" \
+            -f head_sha="$candidate" -f event=push -f per_page=1 \
+            --jq '.workflow_runs[0] | select(.status == "completed" and .conclusion == "success") | .head_sha' \
+            | python3 -c 'import sys; assert sys.stdin.read().strip() == sys.argv[1], "Current staging CI must pass"' "$candidate"
+        done
+    - name: Verify or repair only the production startup override
+      if: inputs.production_startup == true
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: python3 scripts/production_startup.py
   inspect:
-    environment: Staging
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -40,15 +94,17 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: |-
-        test "$RUNNER_ENVIRONMENT" = github-hosted
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo 'Visibility changed; dispatch fresh validation under the current policy'; exit 1; }
-    - uses: actions/checkout@v4
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
       with:
         python-version: '3.11'
     - name: Install staging database diagnostic dependencies
@@ -57,39 +113,41 @@ jobs:
     - name: Inspect only the authorized AI staging service
       if: github.ref == 'refs/heads/staging' && inputs.staging_action != 'deploy-preview' && inputs.staging_action != 'deploy-staging'
       env:
-        STAGING_MIGRATION_DATABASE_URL: ${{ inputs.staging_action == 'migration-probe' && secrets.STAGING_MIGRATION_DATABASE_URL || '' }}
+        STAGING_MIGRATION_DATABASE_URL: ${{ inputs.staging_action == 'migration-probe' && secrets.STAGING_MIGRATION_DATABASE_URL
+          || '' }}
       run: python scripts/staging.py "${{ inputs.staging_action }}"
     - name: Require successful CI on the current staging revision
       if: inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging'
-      uses: actions/github-script@v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
       with:
-        script: |
-          if (context.ref !== 'refs/heads/staging') throw new Error('Preview requires staging');
-          const {owner, repo} = context.repo;
-          const ref = await github.rest.git.getRef({owner, repo, ref: 'heads/staging'});
-          if (ref.data.object.sha !== context.sha) throw new Error('Staging revision changed');
-          for (const workflow_id of ['ci.yml', 'repository-hygiene.yml']) {
-            const runs = await github.rest.actions.listWorkflowRuns({owner, repo, workflow_id, head_sha: context.sha, event: 'push', per_page: 20});
-            const run = runs.data.workflow_runs[0];
-            if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
-              throw new Error(`${workflow_id} must pass before Preview deployment`);
-            }
-          }
+        script: "if (context.ref !== 'refs/heads/staging') throw new Error('Preview requires staging');\nconst {owner, repo}\
+          \ = context.repo;\nconst ref = await github.rest.git.getRef({owner, repo, ref: 'heads/staging'});\nif (ref.data.object.sha\
+          \ !== context.sha) throw new Error('Staging revision changed');\nfor (const workflow_id of ['ci.yml', 'repository-hygiene.yml'])\
+          \ {\n  const runs = await github.rest.actions.listWorkflowRuns({owner, repo, workflow_id, head_sha: context.sha,\
+          \ event: 'push', per_page: 20});\n  const run = runs.data.workflow_runs[0];\n  if (!run || run.status !== 'completed'\
+          \ || run.conclusion !== 'success') {\n    throw new Error(`${workflow_id} must pass before Preview deployment`);\n\
+          \  }\n}\n"
     - name: Verify protected project and configure staging-only routing
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       run: python scripts/staging.py configure-preview
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       with:
         node-version: '24'
     - name: Build and deploy protected Preview only
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
-      run: |
-        npm install --global vercel@63.1.0
+      run: 'npm install --global vercel@63.1.0
+
         vercel pull --yes --environment=preview --git-branch=staging --token="$VERCEL_TOKEN"
+
         VERCEL=1 vercel build --token="$VERCEL_TOKEN"
-        vercel deploy --prebuilt --token="$VERCEL_TOKEN" --meta githubCommitRef=staging --meta githubCommitSha="$GITHUB_SHA" > /tmp/vercel-staging-url.txt
+
+        vercel deploy --prebuilt --token="$VERCEL_TOKEN" --meta githubCommitRef=staging --meta githubCommitSha="$GITHUB_SHA"
+        > /tmp/vercel-staging-url.txt
+
         cat /tmp/vercel-staging-url.txt >> "$GITHUB_STEP_SUMMARY"
+
+        '
     - name: Initialize the identified empty staging database and restricted runtime
       if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'
       env:
@@ -111,22 +169,26 @@ jobs:
       if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'
       env:
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      run: |
-        cd onesa-ai-platform-frontend/apps/chat
+      run: 'cd onesa-ai-platform-frontend/apps/chat
+
         npx playwright install --with-deps chromium
+
         cd ../../..
+
         node scripts/staging_ui.cjs
+
+        '
     - name: Record sanitized hosted acceptance evidence
       if: github.ref == 'refs/heads/staging' && inputs.staging_action == 'deploy-staging'
-      run: |
-        cat /tmp/onesa-staging-acceptance.json >> "$GITHUB_STEP_SUMMARY"
+      run: 'cat /tmp/onesa-staging-acceptance.json >> "$GITHUB_STEP_SUMMARY"
+
         cat /tmp/onesa-staging-ui.json >> "$GITHUB_STEP_SUMMARY"
+
+        '
     - name: Read configuration and deployment status without revealing credentials
       if: github.ref != 'refs/heads/staging'
       run: python scripts/repair_hosting.py
     - name: Read back repaired configuration
       if: github.ref != 'refs/heads/staging'
       run: python scripts/inspect_hosting.py
-    needs:
-    - local-validation
-    if: ${{ always() && (github.event.repository.private == false || needs.local-validation.result == 'success') }}
+    if: ${{ github.event.repository.private == false && (always() && true) && inputs.production_defaults != true && inputs.production_startup != true }}

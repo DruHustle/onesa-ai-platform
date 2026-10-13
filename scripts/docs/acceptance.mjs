@@ -27,37 +27,41 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch();
 const context=await browser.newContext();
+await context.addInitScript(()=>{Date.prototype.getHours=()=>Number(sessionStorage.getItem('onesa-test-hour')||12);});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,accessibility:[],widths:[]};
 try{
+ await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();
  expect(catalog.map(d=>d.id).sort()).toEqual([...policy.public_diagrams].sort());
- for(const diagram of catalog)for(const ext of ['svg','png','mmd']){
+ for(const diagram of catalog)for(const ext of ['svg','png','mmd','pdf']){
   const response=await context.request.get(`${origin}/generated/diagrams/${diagram.id}.${ext}`);expect(response.status()).toBe(200);expect((await response.body()).length).toBeGreaterThan(20);
  }
  const manifest=await (await context.request.get(origin+'/generated/manuals.json')).json();
  expect(manifest.map(m=>m.category).sort()).toEqual([...policy.public_pdfs].sort());
  for(const manual of manifest){const response=await context.request.get(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(policy.version);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
- for(const url of ['/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await context.request.get(origin+url)).status()).toBe(404);
+ for(const url of ['/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await context.request.get(origin+url)).status()).toBe(404);
  const portal=await (await context.request.get(origin+'/generated/openapi-portal.json')).json();expect(Object.keys(portal.paths).every(p=>p.startsWith('/api/v1/public/'))).toBe(true);
  const robots=await (await context.request.get(origin+'/robots.txt')).text();expect(robots).toContain('Allow: /');expect(robots).toContain('Sitemap: https://docs.onesa.eu/sitemap.xml');
  const sitemap=await (await context.request.get(origin+'/sitemap.xml')).text();expect(sitemap).toContain('https://docs.onesa.eu/');expect(sitemap).not.toContain('localhost');expect(sitemap).not.toContain('/docs/ecosystem/');
- for(const route of ['/','/architecture','/downloads','/api-explorer',...policy.public_sources.filter(p=>p.startsWith('docs/public/')&&p.endsWith('.md')).map(p=>'/'+p.slice(0,-3))]){
-  await page.goto(origin+route);await page.waitForLoadState('networkidle');
+ const publicRoutes=[...new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>new URL(match[1]).pathname))];
+ expect(publicRoutes.length).toBeGreaterThan(10);
+ for(const mode of ['light','dark']){
+  await page.evaluate(mode=>sessionStorage.setItem('onesa-test-hour',mode==='dark'?'20':'12'),mode);
+ for(const width of [320,1440]) for(const route of publicRoutes){
+  await page.setViewportSize({width,height:900});
+  await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme',mode);await page.waitForLoadState('networkidle');
   const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
-  evidence.accessibility.push({route,violations:results.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))});
+  evidence.accessibility.push({route,mode,width,violations:results.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))});
   const blocking=results.violations.filter(v=>['critical','serious'].includes(v.impact));
   expect(blocking.map(v=>({id:v.id,targets:v.nodes.slice(0,4).map(n=>({target:n.target,summary:n.failureSummary}))})),`Accessibility at ${route}`).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${mode} ${route} overflow at ${width}px`).toBe(true);
   const links=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')).filter(h=>h?.startsWith('/')&&!h.startsWith('//')));
   for(const url of new Set(links)){expect((await context.request.get(origin+url.split('#')[0])).status(),`Broken public link: ${url}`).toBe(200);evidence.links++;}
  }
- for(const route of ['/docs/public/examples','/api-explorer']){
-  await page.emulateMedia({colorScheme:'dark'});await page.goto(origin+route);await page.waitForLoadState('networkidle');
-  const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
-  expect(results.violations.filter(v=>['critical','serious'].includes(v.impact)).map(v=>({id:v.id,targets:v.nodes.slice(0,4).map(n=>({target:n.target,summary:n.failureSummary}))})),`Dark-mode accessibility at ${route}`).toEqual([]);
-  evidence.accessibility.push({route,mode:'dark',violations:results.violations.map(v=>({id:v.id,impact:v.impact}))});
  }
- await page.emulateMedia({colorScheme:'light'});
+ const mode='dark';
  await page.goto(origin+'/architecture');
  for(const view of [...new Set(catalog.map(d=>d.view))]){
   await page.getByRole('button',{name:view==='logical'?'Logical architecture':'Deployment architecture',exact:true}).click();
@@ -72,8 +76,10 @@ try{
  await page.goto(origin+'/api-explorer');for(const product of ['ai','portal','robot']){await page.getByLabel('API product').selectOption(product);await expect(page.locator('.swagger-ui .opblock').first()).toBeVisible();await expect(page.getByRole('button',{name:'Try it out',exact:true})).toHaveCount(0);}
  await page.goto(origin+'/');await page.keyboard.press('Control+k');await page.getByLabel('Search documentation').fill('Robot');await expect(page.locator('.search-results a').first()).toBeVisible();await page.keyboard.press('Escape');
  for(const width of [320,390,768,1024,1440])for(const route of ['/','/architecture','/downloads','/api-explorer']){
-  await page.setViewportSize({width,height:900});await page.goto(origin+route);await page.waitForLoadState('networkidle');
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({width,route,overflow:false});
+  await page.setViewportSize({width,height:900});await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();
+  if(route==='/api-explorer')await expect(page.locator('.swagger-ui .opblock').first()).toBeVisible();
+  if(route==='/architecture')await expect(page.locator('.diagram-canvas svg')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({mode,width,route,overflow:false});
  }
  expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...evidence},null,2));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

@@ -44,7 +44,9 @@
     "public-deployment",
     "public-model-host",
     "public-release",
-    "public-recovery"
+    "public-recovery",
+    "public-documentation-access",
+    "public-maturity"
   ],
   "public_screenshots": [
     "authentication",

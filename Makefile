@@ -9,7 +9,7 @@ API := onesa-ai-platform-backend
 .PHONY: install check test run openapi up down frontend-check training-check
 install:
 	python3 -m venv .venv
-	$(PYTHON) -m pip install -r $(API)/requirements-dev.lock
+	$(PYTHON) -m pip install --require-hashes -r $(API)/requirements-dev.lock
 	$(PYTHON) -m pip install --no-deps --no-build-isolation -e $(API)
 
 check:
@@ -69,10 +69,14 @@ docs-internal: docs-api
 
 docs-validate:
 	$(PYTHON) scripts/docs/validate.py
+	node scripts/docs/visual-acceptance.mjs
 
 docs-check:
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_source_policy.py
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_visual_policy.py
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_prepare_cloudflare.py
 	npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
+	node --test scripts/docs/cloudflare-access.test.mjs
 	npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
 	$(PYTHON) -m ruff check scripts/docs
 	$(PYTHON) scripts/docs/validate.py
@@ -113,3 +117,11 @@ contract-check:
 .PHONY: docs-static-acceptance
 docs-static-acceptance:
 	node scripts/docs/acceptance.mjs
+
+.PHONY: docs-cloudflare-placeholder docs-cloudflare-package
+docs-cloudflare-placeholder:
+	python3 scripts/docs/prepare_cloudflare.py --placeholder --output build/cloudflare-docs
+
+# Build/validate the reviewed internal docs first; this target never deploys them.
+docs-cloudflare-package:
+	$(PYTHON) scripts/docs/prepare_cloudflare.py --output build/cloudflare-docs

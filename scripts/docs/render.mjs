@@ -37,7 +37,9 @@ for(const scope of ['public','internal']){
   const source=await fs.readFile(path.join(root,diagram.source),'utf8');
   const svg=await render(source,scope+'_'+diagram.id.replaceAll('-','_'));svgById[diagram.id]=svg;
   await fs.writeFile(path.join(diagramDir,diagram.id+'.svg'),svg);await fs.writeFile(path.join(diagramDir,diagram.id+'.mmd'),source);
-  const shot=await browser.newPage({viewport:{width:1400,height:1800},deviceScaleFactor:2});await shot.setContent(`<html><body style="margin:0;background:white"><div style="padding:24px">${svg}</div></body></html>`);await shot.locator('svg').evaluate(el=>{el.style.maxWidth='1350px';el.style.width='100%';el.style.height='auto';});await shot.locator('svg').screenshot({path:path.join(diagramDir,diagram.id+'.png')});await shot.close();
+  const shot=await browser.newPage({viewport:{width:1400,height:1800},deviceScaleFactor:2});await shot.setContent(`<html><body style="margin:0;background:white"><div style="padding:24px">${svg}</div></body></html>`);await shot.locator('svg').evaluate(el=>{el.style.maxWidth='1350px';el.style.width='100%';el.style.height='auto';});await shot.locator('svg').screenshot({path:path.join(diagramDir,diagram.id+'.png')});
+  const figure=await browser.newPage();await figure.setContent(`<html lang="en"><head><title>${escape(diagram.title)}</title><style>@page{size:A4;margin:15mm}body{font:12px Arial;color:#10263e}svg{max-width:100%;max-height:220mm;height:auto}h1{font-size:20px}p{overflow-wrap:anywhere}</style></head><body><h1>${escape(diagram.title)}</h1><p>${escape(diagram.status)}</p>${svg}<p>${escape(diagram.explanation||diagram.status)}</p><p>${escape(scope)} · v0.3.0 · source ${escape(diagram.source)} · revision ${escape(diagram.revision||'')}</p></body></html>`);
+  await figure.pdf({path:path.join(diagramDir,diagram.id+'.pdf'),format:'A4',printBackground:true,tagged:true});await figure.close();await shot.close();
  }
  const policy=JSON.parse(await fs.readFile(path.join(root,'docs/documentation-policy.json'),'utf8'));
  const selectedNames=scope==='public'?policy.public_pdfs:names;
@@ -96,6 +98,6 @@ for(const scope of ['public','internal']){
  }
  await fs.writeFile(path.join(staticDir,'manuals.json'),JSON.stringify(manuals,null,2)+'\n');
  const output=path.join(root,'docs/generated',scope);await fs.mkdir(output,{recursive:true});await fs.rm(path.join(output,'diagrams'),{recursive:true,force:true});await fs.rm(path.join(output,'manuals'),{recursive:true,force:true});await fs.cp(diagramDir,path.join(output,'diagrams'),{recursive:true});await fs.cp(manualDir,path.join(output,'manuals'),{recursive:true});await fs.copyFile(path.join(staticDir,'manuals.json'),path.join(output,'manuals.json'));
- console.log(`${scope}: ${catalog.length} SVG/PNG diagrams, ${manuals.length} real PDF manuals`);
+ console.log(`${scope}: ${catalog.length} SVG/PNG/PDF diagrams, ${manuals.length} real PDF manuals`);
 }
 await browser.close();console.log(`Rendered ${counter} classified manuals.`);

@@ -1,5 +1,25 @@
 # Hosted AI configuration inventory — 2026-10-10
 
+## Save-only production startup verification — 2026-10-12
+
+Use `gh workflow run repair-hosting.yml --ref dev -f production_startup=true` after current dev CI and hygiene pass. This separate job uses the repository's production provider binding and no Staging environment. Only the fixed existing Free Frankfurt AI API target is accepted, with native auto-deploy already off. A reviewed blank override or `sh /app/start.sh` is preserved; an unrecognized override is cleared for Dockerfile CMD. The operator verifies functional settings, all environment values and the latest deployment ID unchanged except the intended command. It never deploys or repairs database credentials. Full real-model staging, operations/legal approval and exact-main release qualification still apply. Do not select both production operations in one dispatch.
+
+## Save-only production defaults — 2026-10-12
+
+The owner authorized adding known settings, including `info@onesa.eu`, to the existing
+production Render service. `repair-hosting.yml` has an explicit `production_defaults`
+operation on reviewed `dev`, requiring successful exact-source CI/hygiene and first-attempt
+owner dispatch. It saves missing nonsecret values only, preserves existing credentials
+and custom profiles, verifies the production target/native auto-deploy off, and records
+readback and unchanged deployment identity. It does not deploy, change Vercel, create
+resources or supply missing production database/model/embedding credentials.
+
+The retained Ollama tag and pinned semantic embedding metadata are prepared profiles,
+not proof of a hosted model. Keep model/embedding endpoints unconfigured until real
+approved services exist; email stays disabled pending worker/delivery qualification.
+The historical inventory below does not describe the post-operation state. The workflow
+receipt is the current evidence; production release gates remain mandatory.
+
 Names only. Never paste credential values into chat, Git, generated reports or
 frontend/public variables. The source of truth is backend `app/config.py`; all
 **47** declared settings below use its existing `ONESA_` prefix. The read-only
@@ -106,3 +126,33 @@ path tests, and separately verified exposed-credential revocation/replacement.
 The owner now requires free services only. See [free staging setup](FREE_STAGING_SETUP.md).
 The historical [database/GPU proposal](HOSTED_AI_PROPOSAL.md) preserves permissions,
 TLS, restore procedures and the exact paid-resource approvals still needed.
+
+## Owner-created Workers AI endpoint — verified 2026-10-12
+
+Authenticated readback confirms `onesa-ai-platform-worker-ai` exists in the selected
+owner account and has an `AI` binding. Its URL is
+`https://onesa-ai-platform-worker-ai.andrewgotora.workers.dev`. The deployed module
+is the Cloudflare example: every request runs two hardcoded prompts against
+`@cf/meta/llama-3-8b-instruct` and returns their responses. It does not check a bearer
+credential, accept the Onesa chat request, expose an OpenAI-compatible API, or run an
+embedding model. Anonymous root, health, readiness and model-list checks returned
+HTTP 500. Correct resource identity and an AI binding do not establish real serving
+readiness. No Worker code, binding or model was changed during that inspection.
+
+Readback on 2026-10-13 found no custom domains, zone routes or application dependency
+on this demo. Its public `workers.dev` route was disabled reversibly, with the existing
+Worker and AI binding retained; anonymous requests now return HTTP 404. This removes
+the unauthenticated example execution path. Both application environments instead use
+the account API below with separate server-side credentials. See the maintained
+[configuration inventory](AI_CONFIGURATION_INVENTORY.md) for actual verification and
+expiry dates; configured production credentials alone do not qualify a live release.
+
+The prepared Cloudflare backend transport expects authenticated account API bases:
+`https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1` for inference and
+`https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai` for embeddings.
+It validates the reviewed Qwen3 generation model and Qwen3 embedding/MRL256 profile;
+the demo's Llama model and URL do not satisfy that configuration. Keep provider tokens
+server-side. Actual authenticated streaming, embedding shape, ingestion/retrieval and
+user isolation acceptance remain required before hosted AI is qualified. See
+[Workers AI REST API](https://developers.cloudflare.com/workers-ai/get-started/rest-api/)
+and [OpenAI compatibility](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/).

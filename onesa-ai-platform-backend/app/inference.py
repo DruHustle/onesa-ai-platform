@@ -170,6 +170,25 @@ class VLLMModelClient(OpenAIModelClient):
     """NVIDIA/Linux serving using the shared OpenAI-compatible implementation."""
 
 
+class CloudflareModelClient(OpenAIModelClient):
+    """Workers AI OpenAI transport; catalog checks do not qualify actual inference."""
+
+    async def healthy(self) -> bool:
+        async with self.connection() as client:
+            response = await client.get(
+                self.settings.model_base_url.rstrip("/").removesuffix("/v1") + "/models/search",
+                params={"search": self.settings.model_name, "per_page": 20},
+            )
+            response.raise_for_status()
+            if len(response.content) > 1024 * 1024:
+                return False
+            data = response.json()
+            return data.get("success") is True and any(
+                isinstance(row, dict) and row.get("name") == self.settings.model_name
+                for row in data.get("result", [])
+            )
+
+
 class OllamaModelClient(OpenAIModelClient):
     """Native host Ollama /v1; no model downloads, cloud routing or silent fallback."""
 
@@ -177,6 +196,8 @@ class OllamaModelClient(OpenAIModelClient):
 def build_model_client(settings: Settings) -> ModelClient:
     if settings.model_backend == "mock":
         return MockModelClient()
+    if settings.model_backend == "cloudflare":
+        return CloudflareModelClient(settings)
     if settings.model_backend == "ollama":
         return OllamaModelClient(settings)
     return VLLMModelClient(settings)
@@ -186,7 +207,9 @@ def model_metadata(settings: Settings) -> dict[str, Any]:
     identifier = settings.model_name
     if settings.model_backend == "mock":
         identifier = "deterministic-mock"
-    elif "://" in identifier or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}", identifier):
+    elif "://" in identifier or not re.fullmatch(
+        r"(?:@cf/)?[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}", identifier
+    ):
         identifier = "configured-model"
     return {
         "id": "default",

@@ -4,6 +4,7 @@ export default defineConfig({
   workers: 1,
   projects: ["chromium", "firefox", "webkit"].map(browserName => ({name: browserName, use: {browserName: browserName as "chromium" | "firefox" | "webkit"}})),
   use: {
+    timezoneId: "Europe/Berlin",
     baseURL: process.env.ONESA_BROWSER_URL || "http://localhost:3100",
 
     // Local acceptance CA is verified independently; this opt-in affects this browser context only.

@@ -3,6 +3,6 @@ flowchart TB
   Migration[Alembic - one-shot service] --> PG[(PostgreSQL and pgvector)]
   API --> PG
   API --> Model[OpenAI-compatible model server]
-  API -. optional HTTP .-> Embeddings[Semantic embeddings - unqualified]
+  API -. optional HTTP .-> Embeddings[Semantic embeddings - staging verified]
   API --> Modules[Auth / Chat / Knowledge / Agents / Travel]
   Offline[Separate training and registry tools] -. reviewed configuration .-> Model

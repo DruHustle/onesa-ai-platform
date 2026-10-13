@@ -1,0 +1,12 @@
+flowchart TB
+APIs[API liveness and dependency readiness] --> Checks[Authenticated bounded operational checks]
+Worker[Oracle worker recent database heartbeat] --> Checks
+Scan[ClamAV PONG and signature freshness] --> Checks
+Providers[Vercel Render Cloudflare deployment identity] --> Checks
+Checks --> Evidence[Exact source deployment IDs and private redacted receipts]
+Checks --> Failure[Real failure or missing dependency]
+Failure --> Contain[Stop affected processing preserve data and evidence]
+Contain --> Diagnose[Inspect scoped logs and status without secrets]
+Diagnose --> Fix[Reviewed fix and synthetic staging qualification]
+Fix --> Restore[Restore prior qualified service or safely redeploy]
+Alerts[Alert transport delivery - pending] -. actual delivery must be tested .-> Owner[Responsible operator]

@@ -1,0 +1,16 @@
+flowchart TB
+Upload[Owned bounded TXT or PDF upload] --> Parse[Validate and sandbox PDF extraction]
+Parse --> Chunk[Bounded text chunks]
+Chunk --> Embed[Configured versioned embedding adapter]
+Embed --> CF[Workers AI Qwen3 embedding staging path]
+CF --> MRL[1024 dimensions truncated to 256 and normalized]
+MRL --> Vector[pgvector chunks and embedding_version]
+Question[Owned query] --> Query[Matching query embedding version]
+Query --> Retrieve[User document and version filtered cosine retrieval]
+Vector --> Retrieve
+Retrieve --> Context[Attributed untrusted source context]
+Context --> Model[Configured generation adapter]
+Model --> Answer[Answer and persisted source citations]
+Failure[Embedding outage] --> Retain[Fail request; preserve old index on reindex]
+Delete[Owned document delete] --> Cascade[Remove chunks via relationships]
+Lexical[Explicit lexical baseline for development] -. separate labelled profile .-> Embed

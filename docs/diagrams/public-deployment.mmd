@@ -1,8 +1,11 @@
 flowchart TB
-Browser[HTTPS public product origin] --> Vercel[Vercel frontend server]
+Browser[HTTPS product frontend] --> Vercel[Vercel product frontend]
 Vercel --> Render[Render product API]
-Render --> Neon[Dedicated product Neon PostgreSQL]
-Render --> Storage[Private persistent object storage]
-Render -. separately provisioned authenticated TLS .-> Model[External model host unavailable]
-Docs[Vercel separate public docs project] --> Public[Allowlisted static build only]
-Internal[Authenticated engineering gateway] -. separate hosted qualification required .-> Identity[AI engineering session permission]
+Render --> Neon[Independent product PostgreSQL and vector storage]
+Render --> Storage[Private object storage]
+Oracle[Oracle background worker - staging verified] --> Neon
+Oracle --> Storage
+Oracle --> ClamAV[Private scanner - staging verified]
+Render --> Model[Workers AI inference and embeddings - staging verified]
+Docs[Separate Vercel public docs] --> Public[Allowlisted public output]
+Internal[Separate engineering Pages build] -. hosted access qualification pending .-> Access[Cloudflare Access and fail-closed origin verifier]
