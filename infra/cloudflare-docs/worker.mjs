@@ -25,7 +25,8 @@ function configuration(env) {
 async function publicKeys(issuer, kid) {
   const cached=keys.get(issuer);
   if (cached && cached.expires>Date.now() && cached.keys.some(x=>x.kid===kid)) return cached.keys;
-  const response=await fetch(issuer+'/cdn-cgi/access/certs',{redirect:'error',signal:AbortSignal.timeout(3000)});
+  // workerd rejects redirect:'error'; manual plus !ok refuses every 3xx without following it.
+  const response=await fetch(issuer+'/cdn-cgi/access/certs',{redirect:'manual',signal:AbortSignal.timeout(3000)});
   if (!response.ok) throw new Error('Access keys unavailable');
   const raw=await response.text();
   if (raw.length>65536) throw new Error('Access key response exceeds bound');

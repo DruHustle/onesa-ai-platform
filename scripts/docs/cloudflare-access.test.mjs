@@ -30,3 +30,14 @@ test('denial diagnostics never disclose assertions or provider error bodies',asy
   assert.ok(!logged.join('').includes(hostile));assert.ok(!logged.join('').includes('e30.e30.invalid'));
  }finally{console.warn=original;}
 });
+
+test('signing-key redirects fail closed without following an untrusted destination',async()=>{
+ const savedJwk=jwk,original=globalThis.fetch;let assets=0,fetches=0;
+ jwk={...jwk,kid:'uncached-redirect-test'};
+ try{
+  const credential=await token();
+  globalThis.fetch=async(url,options)=>{fetches++;assert.equal(url,'https://'+env.CF_ACCESS_TEAM_DOMAIN+'/cdn-cgi/access/certs');assert.equal(options.redirect,'manual');return new Response(null,{status:302,headers:{Location:'https://untrusted.example.invalid/keys'}});};
+  const response=await gateway.fetch(new Request('https://onesa-test.pages.dev/docs',{headers:{'cf-access-jwt-assertion':credential}}),{...env,ASSETS:{fetch:()=>{assets++;return new Response('must remain private');}}});
+  assert.equal(response.status,401);assert.equal(assets,0);assert.equal(fetches,1);
+ }finally{jwk=savedJwk;globalThis.fetch=original;}
+});

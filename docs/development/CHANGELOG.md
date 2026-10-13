@@ -1,5 +1,9 @@
 # Development changelog
 
+## 2026-10-13 — Preserve redirect denial in the Cloudflare verifier runtime
+
+The deployed verifier denied the approved owner because workerd rejected the signing-key fetch's `redirect: error` option. Use manual redirect handling and refuse every non-success response, retaining bounded fetches, trusted issuer, signature/audience/identity/host checks and MFA policies. Verify malicious signing-key redirects cannot expose assets; local workerd evidence remains separate from hosted acceptance.
+
 ## 2026-10-13 — Verify the ecosystem onboarding homepage
 
 Update the authenticated documentation browser assertion to the new three-product homepage heading. Keep login, private asset denial, revocation, database/API and assistant checks enforced.
