@@ -22,9 +22,26 @@ existing staging Render service. Enter `ONESA_MODEL_API_KEY` and
 `ONESA_EMBEDDING_API_KEY` privately; the code requires tokens of at least 32 characters.
 Do not reuse staging credentials in production or silently replace index revisions.
 
-Latest hosted inspection still reports degraded Ollama serving and absent endpoint/key
-bindings; model transport mocks are local adapter evidence only. The historical matrix
-below predates this adapter and does not supersede the current supported selectors.
+Authenticated configuration on 2026-10-12 installed and privately read back all nine
+supported profile overrides on staging Render service `srv-db56mju7bikc73950f60`.
+Real generation and native `[1, 1024]` embeddings succeeded with synthetic inputs.
+Full hosted staging run
+[38308265976](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38308265976)
+passed at exact staging source `fe29aea06eb07e4a6d1f19ea476b49e29e77fd13`, including
+authentication, streaming, inference, embeddings, storage and user isolation.
+
+The short-lived credential **Onesa AI staging Render - 2026-10-12** is restricted to
+Workers AI Read/Write on the verified account and is stored only in the staging
+Render API-key settings. It expires **2026-11-11T22:59:00Z**; renew through the private
+Cloudflare API-token dashboard before expiry and verify hosted connectivity afterward.
+Account scope does not provide model-level or staging/production environment isolation.
+Keep production credentials separate. The existing demo Worker's `AI` binding is not
+an exportable REST token and was not replaced. No paid subscription, DNS change,
+production credential reuse or real personal-data test was performed. The temporary
+private token handoff was removed after successful Render readback.
+
+Model transport mocks remain local adapter evidence only. The historical matrix
+below predates this verified staging profile and does not supersede these results.
 
 **Production NO-GO. Free-only purchasing policy remains in effect.**
 The final staging verification section below supersedes earlier staging inspection
@@ -174,22 +191,25 @@ logs. Resolve them via the existing `RENDER_BACKEND_SERVICE_ID` and
 
 ## D. Concrete provisioning requests and approval boundaries
 
-### Database: owner-created Neon staging resource
+### Database: verified existing Neon staging resource
 
-The owner reports creating **`onesa-ai-platform-backend-db-staging`** on Neon. The supplied
-URL identifies AWS `eu-central-1` (Frankfurt), pooled host `ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech`,
-and SQL database **`neondb`**. The resource label is not the SQL database name.
-This is an owner-reported resource, not an authenticated ownership/plan/schema check.
-No new Render database should be provisioned for this staging setup. The former
-Render Free request is superseded; same-owner Render inventory can remain empty
-while the application uses this separate external Neon database. This external
-connection is not a Render Internal Database URL.
+Owner-authenticated Neon inventory on 12 October 2026 identifies project
+`wispy-bird-89774378`, `onesa-ai-platform-backend-db-staging`, branch
+`br-orange-sun-b5hknysn`, endpoint `ep-late-grass-b50h1251` in AWS `us-east-2`.
+Read-only SQL from Oracle verified certificate-checked TLS, empty public schema
+and no pre-existing application role. The qualified unchanged Alembic schema and vector extension
+were initialized on this empty staging target; the restricted `onesa_ai_staging_app`
+login, TLS and zero-user state passed actual verification. Use only approved synthetic data until the actual
+US-region transfer/processor requirements are verified; do not claim EU-only hosting.
 
-The owner credential was disclosed in chat. It has not been stored, reused for a
-connection test, copied into another product or submitted to Render. Rotate its
-password in Neon → this project's staging branch → Postgres database → Roles.
-Enter replacement credentials only in an approved private mechanism, not chat.
-[Neon role/password management](https://neon.com/docs/manage/roles).
+Fresh Render inspection instead found both staging and production using `neondb`
+on `ep-falling-thunder-b9x4ka3b`, production project `misty-base-09405924`.
+Previous hosted tests were executed, but they do not prove staging/production provider
+isolation. The saved staging runtime now points to this separate target with `onesa_ai_staging_app`;
+the existing GitHub Staging `STAGING_MIGRATION_DATABASE_URL` was privately aligned.
+Fresh exact-source hosted acceptance remains required before staging qualification.
+No production records or configuration are changed by this inspection. Preserve both
+existing projects; do not create a duplicate database or copy records between them.
 
 1. Verify the actual Neon project/branch belongs to Onesa AI staging only, its
    Free plan, PostgreSQL version (16 requested), contents and intended use. Preserve

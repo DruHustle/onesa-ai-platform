@@ -568,3 +568,5 @@ html[data-theme=dark] :is(input,textarea)::placeholder{color:var(--muted);opacit
 html[data-theme=dark] .auth-card{background:#14243a;color:#e5edf6}
 html[data-theme=dark] :is(.message.user,.input-wrap,.notice){background:#14243a;color:#e5edf6}
 html[data-theme=dark] .auth-card .brand span{color:#83baff}
+
+.company-footer{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;padding:1rem;font-size:.875rem;line-height:1.6;overflow-wrap:anywhere}.company-footer a{text-decoration:underline;text-underline-offset:.2em}

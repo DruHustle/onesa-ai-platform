@@ -77,3 +77,18 @@ html[data-theme=dark] .breadcrumbs__link{color:#d5e0e8;}
 html[data-theme=dark]{--ifm-link-color:#8dc9d0;--ifm-link-hover-color:#b5e2e6;}
 
 html[data-theme=dark]{--ifm-background-color:#081b32;--ifm-background-surface-color:#10263e;--ifm-font-color-base:#f5f7fa;}
+
+/* Architecture and engineering learning paths remain navigable at mobile widths. */
+.workflow-index{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:1.5rem 0}.workflow-index button{text-align:left;overflow-wrap:anywhere}
+.learning-days{display:flex;flex-wrap:wrap;gap:1rem;margin:1.5rem 0}.learning-days a{padding:.7rem;border:1px solid #52789b66;border-radius:4px}
+.learning-stage{scroll-margin-top:6rem;border-top:1px solid #52789b66;padding-block:2rem}.learning-checkpoints label{display:flex;align-items:flex-start;gap:.6rem;margin:.9rem 0}.learning-checkpoints input{flex:none;margin-top:.4rem}
+.diagram-alternative{font-size:.85rem;overflow-wrap:anywhere}.diagram-alternative code{white-space:normal}
+@media(max-width:996px){.workflow-index{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.workflow-index{grid-template-columns:1fr}.learning-days{flex-direction:column}}
+
+.source-note a{opacity:1;color:var(--ifm-link-color);text-decoration:underline}.portal-page .source-note{opacity:1}
+
+html[data-theme=dark] .portal-home .button--primary,html[data-theme=dark] .portal-page .button--primary{color:#081b32;background:#8dc9d0;border-color:#8dc9d0}
+
+/* Color changes at automatic day/night boundaries stay instant and readable. */
+.button{transition-property:box-shadow,transform}

@@ -1,5 +1,29 @@
 # Development changelog
 
+## 2026-10-13 — Preserve redirect denial in the Cloudflare verifier runtime
+
+The deployed verifier denied the approved owner because workerd rejected the signing-key fetch's `redirect: error` option. Use manual redirect handling and refuse every non-success response, retaining bounded fetches, trusted issuer, signature/audience/identity/host checks and MFA policies. Verify malicious signing-key redirects cannot expose assets; local workerd evidence remains separate from hosted acceptance.
+
+## 2026-10-13 — Verify the ecosystem onboarding homepage
+
+Update the authenticated documentation browser assertion to the new three-product homepage heading. Keep login, private asset denial, revocation, database/API and assistant checks enforced.
+
+## 2026-10-13 — Align visual generators with required formatter checks
+
+Format the changed documentation generator and validator using the repository's pinned Ruff rules. Preserve generated content, classification and access checks; run the complete required Python checks before pushing the correction.
+
+## 2026-10-13 — Visual architecture and engineering onboarding
+
+Make Architecture & Workflows and Engineering Onboarding adjacent persistent sections. Add source-controlled ecosystem, provider, delivery, quarantine/retry, AI, identity, data, operations/recovery, maturity and four-day learning diagrams. Reuse the existing accessible viewer and add individual PDF exports, source/build metadata and a browser-local learning checklist. Keep detailed navigation and workflows in the internal output, validate references and schema/source drift in CI, and refresh obsolete staging labels without asserting production or Access acceptance.
+
+## 2026-10-13 — Reconcile database isolation and remove obsolete deployment entries
+
+Pin staging probes to the verified *-staging Neon project and reject the production endpoint. Privately initialize/rebind only the empty synthetic target with the existing staging role contract, preserving production and model credentials. Replace the historical paid Render database declaration with an existing Free API reference and preserve keys instead of generating replacements. Correct approved reply-to examples; all supported provider adapters remain available.
+
+## 2026-10-12 — Approved company contact and legal links
+
+Display the owner-approved legal name, email and telephone across the independent chat application, with locale-aware links to the central company legal and privacy pages. Use a committed snapshot derived from the maintained Portal record; no sibling runtime or private record is required by this build. Preserve automatic styling, authentication and unverified privacy-processing gates.
+
 ## 2026-10-12 — Registered private-Free staging entry point
 
 Allow the existing manual, owner-only staging bridge on private repositories so the repository-secret fallback is usable before new workflows reach main. Keep production guards, exact-source qualification, named staging secrets and protected Preview checks; test rejection of untrusted actors/events, main refs and production targets.

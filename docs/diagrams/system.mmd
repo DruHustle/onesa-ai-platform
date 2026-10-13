@@ -10,6 +10,7 @@ flowchart TB
   Conversations --> PG
   Agent --> PG
   RAG --> PG
+  Adapter --> CF[Workers AI - real staging generation and embeddings]
   Adapter --> Ollama[Ollama - real Apple M3]
   Adapter --> Mock[Mock - deterministic]
   Adapter -. unverified target .-> VLLM[vLLM - NVIDIA]

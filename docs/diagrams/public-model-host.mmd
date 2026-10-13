@@ -1,8 +1,7 @@
 flowchart TB
-API[Render AI backend] -. authenticated TLS endpoint required .-> Gateway[Secured hosted gateway proposed]
-Gateway -. inference routes only .-> VLLM[vLLM GPU runtime proposed]
-Admin[Administrative and operational routes] -. separate protection required .-> Gateway
-VLLM --> Checkpoint[Approved model checkpoint and configuration]
-API -. independent endpoint and dimensions .-> Embed[Semantic embedding service unavailable]
-Local[Developer machine] --> Ollama[Native loopback Ollama development only]
-Health[Readiness cancellation recovery acceptance] -. must pass before availability .-> Gateway
+API[Render AI API] --> Auth[Authenticated bounded HTTPS adapter]
+Auth --> CF[Cloudflare Workers AI - staging verified]
+CF --> Generate[Generation streaming and cancellation]
+CF --> Embed[Versioned semantic embeddings and dimensions]
+Local[Developer machine] --> Ollama[Native loopback Ollama]
+API -. separately qualified GPU host .-> VLLM[vLLM future target - unqualified]

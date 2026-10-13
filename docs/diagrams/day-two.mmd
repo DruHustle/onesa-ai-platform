@@ -1,0 +1,5 @@
+flowchart TB
+Repos[Find three independent repos] --> Modules[Trace frontend proxy to backend endpoint]
+Modules --> Schema[Open generated API models and schema relationships]
+Schema --> Identity[Explain session CSRF role and ownership checks]
+Identity --> Local[Run isolated development checks with synthetic data]

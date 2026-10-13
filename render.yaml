@@ -1,12 +1,11 @@
-# HISTORICAL PAID BLUEPRINT: do not apply under the owner free-only policy.
-# Use docs/engineering/FREE_STAGING_SETUP.md; no resource has been changed by this file.
-# Apply only after provider access, scoped database credentials and launch settings are supplied.
+# Reference for the existing Free API. Reuse approved Neon and Cloudflare resources.
+# Never create a duplicate database, regenerate credentials or bypass release qualification.
 services:
   - type: web
     name: onesa-ai-platform-backend
     runtime: docker
     region: frankfurt
-    plan: 1c-2g
+    plan: free
     branch: main
     rootDir: onesa-ai-platform-backend
     dockerfilePath: ./Dockerfile
@@ -24,7 +23,7 @@ services:
       - key: ONESA_PUBLIC_ORIGIN
         sync: false
       - key: ONESA_METRICS_TOKEN
-        generateValue: true
+        sync: false
       - key: ONESA_MODEL_BACKEND
         sync: false
       - key: ONESA_MODEL_NAME
@@ -34,16 +33,8 @@ services:
       - key: ONESA_MODEL_API_KEY
         sync: false
       - key: ONESA_EMBEDDING_BACKEND
-        value: lexical
+        sync: false
       - key: ONESA_AUTH_HASH_CONCURRENCY
         value: '2'
     buildFilter:
       paths: [onesa-ai-platform-backend/**, render.yaml]
-databases:
-  - name: onesa-ai-platform-db
-    region: frankfurt
-    plan: 0.5c-1g
-    databaseName: onesa
-    user: onesa_owner
-    postgresMajorVersion: '16'
-    ipAllowList: []

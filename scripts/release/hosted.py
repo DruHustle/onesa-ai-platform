@@ -256,9 +256,9 @@ def preflight():
     )
     url = urllib.parse.urlsplit(settings.get(database_key, ""))
     expected_host = (
-        "ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech"
+        "ep-late-grass-b50h1251-pooler.c-7.us-east-2.aws.neon.tech"
         if PRODUCT.endswith("platform")
-        else "ep-autumn-glade-b9760olg-pooler.c-7.eu-central-1.aws.neon.tech"
+        else "ep-morning-shadow-b9jkzgsz-pooler.c-7.eu-central-1.aws.neon.tech"
     )
     require(
         url.hostname == expected_host

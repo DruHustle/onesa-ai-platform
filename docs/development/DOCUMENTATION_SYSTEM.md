@@ -1,6 +1,6 @@
 # Documentation system
 
-Documentation version 0.2.0 implements Amendment 002.2, superseding overlapping 002 requirements.
+Documentation version 0.3.0 implements Amendment 002.2, superseding overlapping 002 requirements.
 The public portal defaults to localhost:3200; internal engineering to localhost:3201;
 Onesa applications remain localhost:3100. These are configurable development origins.
 
@@ -151,3 +151,21 @@ remains honestly unavailable in the isolated preview; no authentication bypass
 was used. The docs skip-link and hero spacing overflow were corrected. Robot
 static preview checks passed at the same widths. Authenticated application styling
 was updated in source but not verified against a live signed-in session.
+
+## Visual architecture and onboarding
+
+The internal homepage and persistent navigation expose adjacent **Architecture & Workflows** and **Engineering Onboarding** entries. `docs/ecosystem/visual-navigation.json` supplies sixteen architecture sections, seventeen onboarding references and the four-day learning path; it is emitted only into the internal build. Learning notes remain in the browser and never count as qualification evidence.
+
+Use the diagram catalog and editable `docs/diagrams/*.mmd` definitions. Every build supplies classification, actual source hash and revision metadata; the existing viewer supports keyboard/pointer pan, zoom, enlargement and SVG/PNG/PDF/Mermaid exports. Diagram status labels distinguish source implementation, verified staging, production limits and planned hardware/research.
+
+After reviewing committed sibling changes, refresh cross-product references offline:
+
+```sh
+.venv/bin/python scripts/docs/sync_ecosystem.py --portal ../onesa-company-portal --robot ../onesa-ai-robot
+.venv/bin/python scripts/docs/ecosystem.py --portal ../onesa-company-portal --robot ../onesa-ai-robot
+make docs-assets docs-public docs-internal docs-validate
+```
+
+Review the updated pinned commits, contracts, SQL and hashes before committing. Portal OpenAPI comes from its Fastify exporter; Robot from its FastAPI exporter. Local and remote journal ERDs derive their actual DDL; AI schemas regenerate from metadata and migrations. The generator never exports live rows or credentials. `visual_policy.py` rejects missing references, undefined diagrams and wrong classification. CI renders all Mermaid, checks separate assets/schema drift and runs `visual-acceptance.mjs` for navigation, four-day checklists, diagram interaction, mobile layouts and automatic light/night accessibility. Its browser-intercepted fixture is local rendering evidence, never proof of hosted Access.
+
+See the [source index](../ecosystem/VISUAL_WORKFLOWS.md), [onboarding overview](../onboarding/START_HERE.md) and [hosting controls](../engineering/DOCUMENTATION_HOSTING.md). Publishing engineering content still requires actual Access/MFA and direct-origin/preview/index/download qualification.

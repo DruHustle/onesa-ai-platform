@@ -1,9 +1,9 @@
 {
   "onesa-company-portal": {
     "repository": "https://github.com/DruHustle/onesa-company-portal",
-    "commit": "44f1df7e6dec8cc292bb6e221043e3dabd164ece",
+    "commit": "811933abd530bae69eeaa0cf129d81b4ba3988c3",
     "sources": {
-      "README.md": "7bb6b780c7c29044b731024ad76c01c79f3865993f6e103bc42f4cf477cd0863",
+      "README.md": "f18aaac95af59d67314af2081cbda2a904d20bbdc82ee88f23edd2582a61a2c4",
       "docs/api/API.md": "0cb3867fd67d896a77fc68da8aeed4fcee416681146978a87c0c9caf963530cc",
       "onesa-company-portal-backend/src/api/export.ts": "188c9ab87220abc0902cc371302166107fa294a23a89eae5f27d8b8622f7b380",
       "onesa-company-portal-backend/openapi/openapi.json": "126a27b6870d280f7dc8bf348c7727cf57de0e2f0d452b79ca26d05b8c0f86fa",
@@ -18,13 +18,17 @@
   },
   "onesa-ai-robot": {
     "repository": "https://github.com/DruHustle/onesa-ai-robot",
-    "commit": "5426245d4f782fa5cc51289f613b8f79c66ae1a5",
+    "commit": "9d9d6db96ab65f4a6ada44cf3dc0560aec5869fb",
     "sources": {
-      "README.md": "1a03a3f521945f7203d69baae303dcc861fc1790433f7d046aae1a1eabab0dc5",
-      "docs/engineering/SIMULATION_ARCHITECTURE.md": "6749e306087a72a0539285658258c6382b411832c4878ddd1b78345dc3be06c9",
-      "ros2/README.md": "fc87d185a1624d0bd3e81fc7815cbdafdb2334ae1f5f72b53f332b189c7c7d49",
-      "onesa-ai-robot-backend/robot_api/main.py": "8d05e50191a768073a53a85071c2543e266ab2adf64a37a33d295b4645a5e27c",
-      "onesa-ai-robot-frontend/contracts/openapi.json": "e71aa4e4eca7097d05277463ed6a53d70671c3f83d9069c9e143bb2ddbb5ef22"
+      "README.md": "fbac1d0a875f55b5d6f5c0bdf649eafd65d61e7647f5c57be7eee3434405644d",
+      "docs/engineering/SIMULATION_ARCHITECTURE.md": "031a0a7fa25e5ebd6e363536f0e330c968e6b62b396cf59abcfaed2a7ed7340e",
+      "ros2/README.md": "69f6b482fb0ebf0622805756ca9f9485ada4bbcf4e012ea0088f9d81d2d90057",
+      "onesa-ai-robot-backend/robot_api/main.py": "3136e69102ae17ab792f4b7c11f709b892a93e6157c02cbd578e3e03c44fdc74",
+      "onesa-ai-robot-frontend/contracts/openapi.json": "dd5f7e8d8d0626c5abbd723b6aa3987bad622c00c4b574bd7fb27e50f421fb26",
+      "onesa-ai-robot-backend/robot_api/turso.py": "5f042544866d5594295f60c63069852182090691aaa3157f9c490ccadab84906",
+      "onesa-ai-robot-backend/robot_api/safety.py": "515f346d259a7e20c675ea5d98c74652324e4bd717f5df00ce9ca590e6bf82b8",
+      "ros2/onesa_sim_interfaces/msg/SimulationTelemetry.msg": "47a5bb25c6b48ae82eb81d456ca96dbf74cd3a497d3e0edd295d48a7cf212355",
+      "ros2/onesa_sim_interfaces/msg/SimulationProposal.msg": "771847c2e3e8da25173496c985159ebe981d1bf3241e48a23726753753fc3578"
     }
   }
 }

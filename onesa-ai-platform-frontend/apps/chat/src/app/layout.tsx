@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import {company} from "../lib/company";
 import "./globals.css";
 import {dayNightBoot} from "../lib/day-night-boot";
 import {headers} from "next/headers";
@@ -28,6 +29,7 @@ export default async function Layout({
       <head><script nonce={(await headers()).get("x-nonce")||undefined} dangerouslySetInnerHTML={{__html:dayNightBoot}}/></head>
       <body>
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        <footer className="company-footer"><span>{company.legalName}</span><a href={company.mailHref}>{company.email}</a><a href={company.telephoneHref}>{company.telephone}</a><a href={`https://onesa.eu/${locale}/impressum`}>{locale === "de" ? "Impressum" : "Legal Notice"}</a><a href={`https://onesa.eu/${locale}/privacy`}>{locale === "de" ? "Datenschutz" : "Privacy"}</a></footer>
       </body>
     </html>
   );

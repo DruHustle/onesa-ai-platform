@@ -1,0 +1,14 @@
+stateDiagram-v2
+[*] --> Validated: authorized type size and checksum validation
+Validated --> Quarantine: private storage plus files row
+Quarantine --> Scanning: worker bounded private retrieval
+Scanning --> Clean: complete clean INSTREAM response
+Scanning --> Rejected: known infection response
+Scanning --> Quarantine: scanner timeout failure or unavailable
+Clean --> Download: authorized clean-only download
+Rejected --> Denied: download rejected
+Quarantine --> Denied: download rejected
+Clean --> DeletionPending: approved delete schedules outbox
+Rejected --> DeletionPending: approved delete schedules outbox
+DeletionPending --> Removed: bounded idempotent removal
+DeletionPending --> Failed: finite retry exhaustion

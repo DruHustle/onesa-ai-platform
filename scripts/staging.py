@@ -16,7 +16,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 SERVICE_ID = "srv-db56mju7bikc73950f60"
-DATABASE_HOST = "ep-falling-thunder-b9x4ka3b-pooler.c-7.eu-central-1.aws.neon.tech"
+DATABASE_HOST = "ep-late-grass-b50h1251-pooler.c-7.us-east-2.aws.neon.tech"
 
 
 def target():

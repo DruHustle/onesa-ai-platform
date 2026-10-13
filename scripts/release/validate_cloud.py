@@ -18,16 +18,28 @@ for service in blueprint["services"]:
     assert service["branch"] == "main"
     assert service["autoDeployTrigger"] == "off"
     assert (ROOT / service["rootDir"] / service["dockerfilePath"]).is_file()
-assert all(database["ipAllowList"] == [] for database in blueprint["databases"])
+assert not blueprint.get("databases"), "Reuse the existing Neon project"
+assert len(blueprint["services"]) == 1 and blueprint["services"][0]["type"] == "web"
+assert all(service["plan"] == "free" for service in blueprint["services"])
+assert not any(
+    "generateValue" in entry
+    for service in blueprint["services"]
+    for entry in service["envVars"]
+), "Preserve existing credentials"
 front = ROOT / (
     "onesa-ai-platform-frontend/apps/chat"
     if ROOT.name == "onesa-ai-platform"
     else "onesa-company-portal-frontend"
 )
 vercel = json.loads((front / "vercel.json").read_text())
-assert vercel["git"]["deploymentEnabled"] is False
+deployments = vercel["git"]["deploymentEnabled"]
+assert deployments is False or deployments == {
+    "main": False,
+    "dev": False,
+    "staging": True,
+}, "Native production/dev deployments must remain disabled"
 print(
-    "PASS: official Blueprint schema, independent Docker contexts, main, manual deployment and private database ingress"
+    "PASS: official Blueprint schema, independent Docker contexts, main, manual Free API deployment and no duplicate database"
 )
 print(
     "BLOCKED: hosted domains, credentials, migrations, model/storage/email/scanner and acceptance must be verified separately"

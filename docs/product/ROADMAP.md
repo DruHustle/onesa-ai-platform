@@ -1,5 +1,7 @@
 # Roadmap and milestone evidence
 
+> Current hosted status, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
+
 | Milestone | Delivered | Remaining evidence |
 | --- | --- | --- |
 | 0 Discovery/design | Continuation workflow, PRD/architecture/contracts, build/test baseline | No invented architecture sign-off |

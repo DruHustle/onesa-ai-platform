@@ -1,0 +1,6 @@
+flowchart TB
+Source[Implemented application foundations] --> Stage[Synthetic staging qualification]
+Stage --> Production[Production only after real technical operational and privacy gates]
+Stage --> Limits[Outstanding acceptance limits documented]
+Research[Future model research] -. separate evaluated release .-> Production
+Robot[Software simulation] -. independent safety and hardware authorization .-> Hardware[Physical capabilities not enabled]

@@ -4,7 +4,7 @@ This public portal includes reviewed product guides, high-level architecture, pu
 
 ## Internal engineering experience
 
-Detailed implementation schemas, administrative APIs, infrastructure configuration, incident procedures and restricted engineering PDFs are built separately. The existing gateway requires an active Onesa AI session with engineering allowlist permission on every page, index, script, diagram and PDF. Sign out revokes access; identity service failure denies access. Internal assets must never be served by this public Vercel project.
+Detailed implementation schemas, administrative APIs, infrastructure configuration, incident procedures and restricted engineering PDFs are built separately. The retained local gateway requires an active Onesa AI session with engineering allowlist permission on every page, index, script, diagram and PDF. The separate Cloudflare Pages target uses an implemented fail-closed server verifier for Access identity, approved audiences and hosts. Hosted Access/MFA and authorized-user acceptance must pass before publishing internal content. Sign out revokes access; identity service failure denies access. Internal assets must never be served by this public Vercel project.
 
 The AI application's Engineering docs link can be enabled only with an approved authenticated internal origin. An independently protected internal hosting target and cross-origin identity design still need hosted acceptance. No internal hostname or synthetic login credential is published here. Until that deployment exists, use the authorized local engineering gateway and repository build guide. This public site deliberately does not offer a link to an invented live internal service.
 

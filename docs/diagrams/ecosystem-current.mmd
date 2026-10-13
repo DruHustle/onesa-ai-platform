@@ -1,0 +1,31 @@
+flowchart TB
+Company[Onesa UG] --> Portal[Company Portal]
+Company --> AI[AI Platform]
+Company --> Robot[AI Robot software and simulation]
+Company --> Public[Public docs on Vercel]
+Company --> Internal[Engineering docs separate Pages build]
+Portal --> PF[Vercel frontend]
+PF --> PA[Render Fastify API]
+PA --> PDB[Neon Portal PostgreSQL]
+PA --> PS[Private S3-compatible bucket]
+PDB --> Oracle[Oracle ARM64 worker - staging verified]
+Oracle --> Scan[ClamAV private Unix socket - staging verified]
+AI --> AF[Vercel Next.js frontend]
+AF --> AA[Render FastAPI backend]
+AA --> ADB[Neon AI PostgreSQL and pgvector]
+AA --> CF[Workers AI generation and embeddings - staging verified]
+Robot --> RF[Vercel operator frontend]
+RF --> RA[Render simulation API]
+RA --> Turso[Turso journal - staging only]
+RA -. separate hardware authorization .-> Edge[Local ROS 2 interfaces - preparatory]
+GitHub[Three independent GitHub repos] --> Actions[GitHub-hosted CI and qualification]
+Actions --> PF
+Actions --> AF
+Actions --> RF
+Internal -. protection acceptance pending .-> Access[Cloudflare Access identity and MFA]
+classDef verified fill:#e6f4ee,stroke:#14654a,color:#10263e
+classDef pending fill:#fff2d4,stroke:#8a5c00,color:#10263e
+classDef planned fill:#edf1f7,stroke:#52789b,color:#10263e,stroke-dasharray:5 5
+class Oracle,Scan,CF verified
+class Internal,Access pending
+class Edge planned

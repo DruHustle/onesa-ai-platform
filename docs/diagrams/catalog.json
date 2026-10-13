@@ -185,199 +185,208 @@
     "id": "inference",
     "title": "AI inference pipeline",
     "view": "logical",
-    "status": "Real Ollama path verified; mock labelled; NVIDIA target unverified",
+    "status": "Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
     "source": "docs/diagrams/inference.mmd",
     "url": "/docs/architecture/MODEL_SERVING",
     "nodes": [
       {
         "id": "User",
         "label": "User",
-        "responsibility": "User. See the linked source for boundaries and interfaces.",
+        "responsibility": "User. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "Web",
         "label": "Next.js frontend",
-        "responsibility": "Next.js frontend. See the linked source for boundaries and interfaces.",
+        "responsibility": "Next.js frontend. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "API",
         "label": "Authenticated API",
-        "responsibility": "Authenticated API. See the linked source for boundaries and interfaces.",
+        "responsibility": "Authenticated API. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "Adapter",
         "label": "Shared ModelClient",
-        "responsibility": "Shared ModelClient. See the linked source for boundaries and interfaces.",
+        "responsibility": "Shared ModelClient. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "CF",
+        "label": "Workers AI - staging verified",
+        "responsibility": "Workers AI - staging verified. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "Ollama",
         "label": "Native Ollama",
-        "responsibility": "Native Ollama. See the linked source for boundaries and interfaces.",
+        "responsibility": "Native Ollama. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "Mock",
         "label": "Deterministic mock",
-        "responsibility": "Deterministic mock. See the linked source for boundaries and interfaces.",
+        "responsibility": "Deterministic mock. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "VLLM",
         "label": "Private vLLM",
-        "responsibility": "Private vLLM. See the linked source for boundaries and interfaces.",
+        "responsibility": "Private vLLM. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "Stream",
         "label": "Response stream",
-        "responsibility": "Response stream. See the linked source for boundaries and interfaces.",
+        "responsibility": "Response stream. Real Ollama development and Cloudflare staging inference verified; NVIDIA remains unqualified",
         "url": "/docs/architecture/MODEL_SERVING"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "components",
     "title": "Components and service boundaries",
     "view": "logical",
-    "status": "Application modules share one API process; not independent microservices",
+    "status": "One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
     "source": "docs/diagrams/components.mmd",
     "url": "/docs/architecture/COMPONENTS",
     "nodes": [
       {
         "id": "Web",
         "label": "Next.js - HTTP and SSE",
-        "responsibility": "Next.js - HTTP and SSE. See the linked source for boundaries and interfaces.",
+        "responsibility": "Next.js - HTTP and SSE. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "API",
         "label": "FastAPI - single modular service",
-        "responsibility": "FastAPI - single modular service. See the linked source for boundaries and interfaces.",
+        "responsibility": "FastAPI - single modular service. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "Migration",
         "label": "Alembic - one-shot service",
-        "responsibility": "Alembic - one-shot service. See the linked source for boundaries and interfaces.",
+        "responsibility": "Alembic - one-shot service. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "PG",
-        "label": "PostgreSQL and pgvector",
-        "responsibility": "PostgreSQL and pgvector. See the linked source for boundaries and interfaces.",
+        "label": "(PostgreSQL and pgvector)",
+        "responsibility": "(PostgreSQL and pgvector). One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "Model",
         "label": "OpenAI-compatible model server",
-        "responsibility": "OpenAI-compatible model server. See the linked source for boundaries and interfaces.",
+        "responsibility": "OpenAI-compatible model server. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "Embeddings",
-        "label": "Semantic embeddings - unqualified",
-        "responsibility": "Semantic embeddings - unqualified. See the linked source for boundaries and interfaces.",
+        "label": "Semantic embeddings - staging verified",
+        "responsibility": "Semantic embeddings - staging verified. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "Modules",
         "label": "Auth / Chat / Knowledge / Agents / Travel",
-        "responsibility": "Auth / Chat / Knowledge / Agents / Travel. See the linked source for boundaries and interfaces.",
+        "responsibility": "Auth / Chat / Knowledge / Agents / Travel. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       },
       {
         "id": "Offline",
         "label": "Separate training and registry tools",
-        "responsibility": "Separate training and registry tools. See the linked source for boundaries and interfaces.",
+        "responsibility": "Separate training and registry tools. One modular API process; Cloudflare embeddings verified in staging, production acceptance separate",
         "url": "/docs/architecture/COMPONENTS"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "rag",
     "title": "Knowledge and RAG",
     "view": "logical",
-    "status": "Lexical vectors verified; semantic HTTP adapter not qualified",
+    "status": "Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
     "source": "docs/diagrams/rag.mmd",
     "url": "/docs/architecture/DATA_FLOWS",
     "nodes": [
       {
         "id": "Upload",
         "label": "Owned TXT or PDF upload",
-        "responsibility": "Owned TXT or PDF upload. See the linked source for boundaries and interfaces.",
+        "responsibility": "Owned TXT or PDF upload. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Parse",
         "label": "Validate and extract text",
-        "responsibility": "Validate and extract text. See the linked source for boundaries and interfaces.",
+        "responsibility": "Validate and extract text. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Chunk",
         "label": "Bounded chunking",
-        "responsibility": "Bounded chunking. See the linked source for boundaries and interfaces.",
+        "responsibility": "Bounded chunking. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Embed",
         "label": "Versioned lexical embeddings - 256",
-        "responsibility": "Versioned lexical embeddings - 256. See the linked source for boundaries and interfaces.",
+        "responsibility": "Versioned lexical embeddings - 256. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "PG",
-        "label": "pgvector storage",
-        "responsibility": "pgvector storage. See the linked source for boundaries and interfaces.",
+        "label": "(pgvector storage)",
+        "responsibility": "(pgvector storage). Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Question",
         "label": "User question",
-        "responsibility": "User question. See the linked source for boundaries and interfaces.",
+        "responsibility": "User question. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Query",
         "label": "Query embedding",
-        "responsibility": "Query embedding. See the linked source for boundaries and interfaces.",
+        "responsibility": "Query embedding. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Retrieve",
         "label": "Owner and version filtered retrieval",
-        "responsibility": "Owner and version filtered retrieval. See the linked source for boundaries and interfaces.",
+        "responsibility": "Owner and version filtered retrieval. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Context",
         "label": "Untrusted attributed context",
-        "responsibility": "Untrusted attributed context. See the linked source for boundaries and interfaces.",
+        "responsibility": "Untrusted attributed context. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Adapter",
         "label": "Shared model adapter",
-        "responsibility": "Shared model adapter. See the linked source for boundaries and interfaces.",
+        "responsibility": "Shared model adapter. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Answer",
         "label": "Answer and persisted sources",
-        "responsibility": "Answer and persisted sources. See the linked source for boundaries and interfaces.",
+        "responsibility": "Answer and persisted sources. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       },
       {
         "id": "Semantic",
-        "label": "Semantic HTTP adapter - unqualified",
-        "responsibility": "Semantic HTTP adapter - unqualified. See the linked source for boundaries and interfaces.",
+        "label": "Semantic adapters - Workers AI staging verified",
+        "responsibility": "Semantic adapters - Workers AI staging verified. Versioned 256-dimensional vectors; real Workers AI staging semantic path verified, production pending",
         "url": "/docs/architecture/DATA_FLOWS"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "agents",
@@ -1458,275 +1467,285 @@
     "id": "public-portal",
     "title": "Company Portal architecture",
     "view": "logical",
-    "status": "Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+    "status": "Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
     "source": "docs/diagrams/public-portal.mmd",
     "url": "/docs/public/company-portal",
     "nodes": [
       {
         "id": "Company",
         "label": "Public company frontend",
-        "responsibility": "Public company frontend. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Public company frontend. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Public",
         "label": "Public proxy paths only",
-        "responsibility": "Public proxy paths only. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Public proxy paths only. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Portal",
         "label": "Authenticated Portal frontend",
-        "responsibility": "Authenticated Portal frontend. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Authenticated Portal frontend. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Private",
         "label": "Session CSRF and roles",
-        "responsibility": "Session CSRF and roles. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Session CSRF and roles. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "API",
         "label": "Fastify published content API",
-        "responsibility": "Fastify published content API. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Fastify published content API. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "PG",
         "label": "Portal PostgreSQL",
-        "responsibility": "Portal PostgreSQL. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Portal PostgreSQL. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Files",
         "label": "Private object storage",
-        "responsibility": "Private object storage. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Private object storage. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Queue",
         "label": "Durable bounded outboxes",
-        "responsibility": "Durable bounded outboxes. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Durable bounded outboxes. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Worker",
-        "label": "Worker deployment unqualified",
-        "responsibility": "Worker deployment unqualified. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "label": "Oracle worker - staging verified",
+        "responsibility": "Oracle worker - staging verified. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       },
       {
         "id": "Mail",
         "label": "Provider accepted is not delivered",
-        "responsibility": "Provider accepted is not delivered. Implemented source and isolated tests; hosted worker and runtime acceptance pending",
+        "responsibility": "Provider accepted is not delivered. Implemented source; Oracle staging jobs and ClamAV verified; production qualification pending",
         "url": "/docs/public/company-portal"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-ai-platform",
     "title": "AI Platform architecture",
     "view": "logical",
-    "status": "Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+    "status": "Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
     "source": "docs/diagrams/public-ai-platform.mmd",
     "url": "/docs/public/ai-platform",
     "nodes": [
       {
         "id": "Web",
         "label": "Next.js Chat Knowledge Agents Travel",
-        "responsibility": "Next.js Chat Knowledge Agents Travel. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Next.js Chat Knowledge Agents Travel. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Proxy",
         "label": "Same-origin server API boundary",
-        "responsibility": "Same-origin server API boundary. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Same-origin server API boundary. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "API",
         "label": "FastAPI identity and ownership",
-        "responsibility": "FastAPI identity and ownership. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "FastAPI identity and ownership. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Chat",
         "label": "Persisted conversations",
-        "responsibility": "Persisted conversations. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Persisted conversations. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "RAG",
         "label": "Knowledge parsing and retrieval",
-        "responsibility": "Knowledge parsing and retrieval. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Knowledge parsing and retrieval. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Agents",
         "label": "Registered permitted tools",
-        "responsibility": "Registered permitted tools. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Registered permitted tools. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Travel",
         "label": "Owned saved itineraries",
-        "responsibility": "Owned saved itineraries. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Owned saved itineraries. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "DB",
         "label": "Separate AI PostgreSQL",
-        "responsibility": "Separate AI PostgreSQL. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "responsibility": "Separate AI PostgreSQL. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Model",
-        "label": "Generation unavailable without real endpoint",
-        "responsibility": "Generation unavailable without real endpoint. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "label": "Configured generation adapter - Workers AI staging verified",
+        "responsibility": "Configured generation adapter - Workers AI staging verified. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Embed",
-        "label": "Separate embedding dependency unavailable",
-        "responsibility": "Separate embedding dependency unavailable. Hosted staging core verified; real hosted generation and semantic retrieval unavailable",
+        "label": "Configured embeddings - Workers AI staging verified",
+        "responsibility": "Configured embeddings - Workers AI staging verified. Real hosted Workers AI generation and embeddings tested; corrected staging storage needs requalification",
         "url": "/docs/public/ai-platform"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-routing",
     "title": "AI inference and model routing",
     "view": "logical",
-    "status": "Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+    "status": "Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
     "source": "docs/diagrams/public-routing.mmd",
     "url": "/docs/public/ai-platform",
     "nodes": [
       {
         "id": "Request",
         "label": "Owned authenticated request",
-        "responsibility": "Owned authenticated request. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Owned authenticated request. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Client",
         "label": "Shared model adapter",
-        "responsibility": "Shared model adapter. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Shared model adapter. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
+        "url": "/docs/public/ai-platform"
+      },
+      {
+        "id": "CF",
+        "label": "Workers AI - staging verified",
+        "responsibility": "Workers AI - staging verified. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Ollama",
         "label": "Ollama local development only",
-        "responsibility": "Ollama local development only. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Ollama local development only. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Mock",
         "label": "Labelled deterministic test mock",
-        "responsibility": "Labelled deterministic test mock. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Labelled deterministic test mock. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "VLLM",
         "label": "vLLM proposed production runtime",
-        "responsibility": "vLLM proposed production runtime. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "vLLM proposed production runtime. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Stream",
         "label": "Streaming timeout and cancellation",
-        "responsibility": "Streaming timeout and cancellation. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Streaming timeout and cancellation. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Persist",
         "label": "Persist owned message state",
-        "responsibility": "Persist owned message state. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Persist owned message state. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Error",
         "label": "Honest model error no silent mock fallback",
-        "responsibility": "Honest model error no silent mock fallback. Adapters implemented; local Ollama previously verified; hosted vLLM unavailable",
+        "responsibility": "Honest model error no silent mock fallback. Configurable Cloudflare Ollama vLLM and labelled mock adapters; no silent mock fallback",
         "url": "/docs/public/ai-platform"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-rag",
     "title": "Knowledge and RAG pipeline",
     "view": "logical",
-    "status": "Implemented pipeline; lexical baseline available; hosted semantic embeddings unqualified",
+    "status": "Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
     "source": "docs/diagrams/public-rag.mmd",
     "url": "/docs/public/ai-platform",
     "nodes": [
       {
         "id": "Upload",
         "label": "Authorized bounded upload",
-        "responsibility": "Authorized bounded upload. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Authorized bounded upload. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Validate",
         "label": "Type size and parse validation",
-        "responsibility": "Type size and parse validation. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Type size and parse validation. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Parse",
         "label": "Text parsing",
-        "responsibility": "Text parsing. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Text parsing. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Chunk",
         "label": "Document chunking",
-        "responsibility": "Document chunking. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Document chunking. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Embed",
         "label": "Versioned lexical or approved semantic embeddings",
-        "responsibility": "Default 256-dimensional lexical hashing or an explicitly configured semantic HTTP adapter; hosted semantic capacity is not qualified.",
+        "responsibility": "Versioned lexical or approved semantic embeddings. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Vector",
         "label": "pgvector matching dimensions",
-        "responsibility": "pgvector matching dimensions. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "pgvector matching dimensions. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Query",
         "label": "Owned document query",
-        "responsibility": "Owned document query. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Owned document query. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Retrieve",
         "label": "Authorization constrained retrieval",
-        "responsibility": "Authorization constrained retrieval. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Authorization constrained retrieval. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Sources",
         "label": "Supporting sources and citations",
-        "responsibility": "Supporting sources and citations. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Supporting sources and citations. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Delete",
         "label": "Owned update or delete",
-        "responsibility": "Owned update or delete. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Owned update or delete. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Index",
         "label": "Index consistency and retrieval removal",
-        "responsibility": "Index consistency and retrieval removal. Semantic implementation present; live embeddings and private persistence need hosted acceptance",
+        "responsibility": "Index consistency and retrieval removal. Real Workers AI semantic adapter tested in staging; production and corrected database acceptance separate",
         "url": "/docs/public/ai-platform"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-agents",
@@ -2216,135 +2235,143 @@
     "id": "public-deployment",
     "title": "Vercel Render Neon deployment",
     "view": "deployment",
-    "status": "Actual provider roles; configuration does not establish a working production release",
+    "status": "Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
     "source": "docs/diagrams/public-deployment.mmd",
     "url": "/docs/public/deployment-overview",
     "nodes": [
       {
         "id": "Browser",
-        "label": "HTTPS public product origin",
-        "responsibility": "HTTPS public product origin. Actual provider roles; configuration does not establish a working production release",
+        "label": "HTTPS product frontend",
+        "responsibility": "HTTPS product frontend. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Vercel",
-        "label": "Vercel frontend server",
-        "responsibility": "Vercel frontend server. Actual provider roles; configuration does not establish a working production release",
+        "label": "Vercel product frontend",
+        "responsibility": "Vercel product frontend. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Render",
         "label": "Render product API",
-        "responsibility": "Render product API. Actual provider roles; configuration does not establish a working production release",
+        "responsibility": "Render product API. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Neon",
-        "label": "Dedicated product Neon PostgreSQL",
-        "responsibility": "Dedicated product Neon PostgreSQL. Actual provider roles; configuration does not establish a working production release",
+        "label": "Independent product PostgreSQL and vector storage",
+        "responsibility": "Independent product PostgreSQL and vector storage. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Storage",
-        "label": "Private persistent object storage",
-        "responsibility": "Private persistent object storage. Actual provider roles; configuration does not establish a working production release",
+        "label": "Private object storage",
+        "responsibility": "Private object storage. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Oracle",
+        "label": "Oracle background worker - staging verified",
+        "responsibility": "Oracle background worker - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "ClamAV",
+        "label": "Private scanner - staging verified",
+        "responsibility": "Private scanner - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Model",
-        "label": "External model host unavailable",
-        "responsibility": "External model host unavailable. Actual provider roles; configuration does not establish a working production release",
+        "label": "Workers AI inference and embeddings - staging verified",
+        "responsibility": "Workers AI inference and embeddings - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Docs",
-        "label": "Vercel separate public docs project",
-        "responsibility": "Vercel separate public docs project. Actual provider roles; configuration does not establish a working production release",
+        "label": "Separate Vercel public docs",
+        "responsibility": "Separate Vercel public docs. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Public",
-        "label": "Allowlisted static build only",
-        "responsibility": "Allowlisted static build only. Actual provider roles; configuration does not establish a working production release",
+        "label": "Allowlisted public output",
+        "responsibility": "Allowlisted public output. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Internal",
-        "label": "Authenticated engineering gateway",
-        "responsibility": "Authenticated engineering gateway. Actual provider roles; configuration does not establish a working production release",
+        "label": "Separate engineering Pages build",
+        "responsibility": "Separate engineering Pages build. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       },
       {
-        "id": "Identity",
-        "label": "AI engineering session permission",
-        "responsibility": "AI engineering session permission. Actual provider roles; configuration does not establish a working production release",
+        "id": "Access",
+        "label": "Cloudflare Access and fail-closed origin verifier",
+        "responsibility": "Cloudflare Access and fail-closed origin verifier. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
         "url": "/docs/public/deployment-overview"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-model-host",
     "title": "Model-serving infrastructure",
     "view": "deployment",
-    "status": "Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+    "status": "Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
     "source": "docs/diagrams/public-model-host.mmd",
     "url": "/docs/public/ai-platform",
     "nodes": [
       {
         "id": "API",
-        "label": "Render AI backend",
-        "responsibility": "Render AI backend. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "label": "Render AI API",
+        "responsibility": "Render AI API. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
-        "id": "Gateway",
-        "label": "Secured hosted gateway proposed",
-        "responsibility": "Secured hosted gateway proposed. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "id": "Auth",
+        "label": "Authenticated bounded HTTPS adapter",
+        "responsibility": "Authenticated bounded HTTPS adapter. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
-        "id": "VLLM",
-        "label": "vLLM GPU runtime proposed",
-        "responsibility": "vLLM GPU runtime proposed. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "id": "CF",
+        "label": "Cloudflare Workers AI - staging verified",
+        "responsibility": "Cloudflare Workers AI - staging verified. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
-        "id": "Admin",
-        "label": "Administrative and operational routes",
-        "responsibility": "Administrative and operational routes. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
-        "url": "/docs/public/ai-platform"
-      },
-      {
-        "id": "Checkpoint",
-        "label": "Approved model checkpoint and configuration",
-        "responsibility": "Approved model checkpoint and configuration. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "id": "Generate",
+        "label": "Generation streaming and cancellation",
+        "responsibility": "Generation streaming and cancellation. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Embed",
-        "label": "Semantic embedding service unavailable",
-        "responsibility": "Semantic embedding service unavailable. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "label": "Versioned semantic embeddings and dimensions",
+        "responsibility": "Versioned semantic embeddings and dimensions. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Local",
         "label": "Developer machine",
-        "responsibility": "Developer machine. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "responsibility": "Developer machine. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
         "id": "Ollama",
-        "label": "Native loopback Ollama development only",
-        "responsibility": "Native loopback Ollama development only. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "label": "Native loopback Ollama",
+        "responsibility": "Native loopback Ollama. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
-        "id": "Health",
-        "label": "Readiness cancellation recovery acceptance",
-        "responsibility": "Readiness cancellation recovery acceptance. Real development Ollama established; hosted GPU and embedding dependencies not provisioned",
+        "id": "VLLM",
+        "label": "vLLM future target - unqualified",
+        "responsibility": "vLLM future target - unqualified. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       }
-    ]
+    ],
+    "reviewed_at": "2026-10-13"
   },
   {
     "id": "public-release",
@@ -2837,5 +2864,1877 @@
         "url": "/docs/ecosystem/PORTAL_DATABASE"
       }
     ]
+  },
+  {
+    "id": "ecosystem-current",
+    "title": "Complete Onesa Ecosystem Architecture",
+    "view": "logical",
+    "status": "Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+    "source": "docs/diagrams/ecosystem-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Company",
+        "label": "Onesa UG",
+        "responsibility": "Onesa UG. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Portal",
+        "label": "Company Portal",
+        "responsibility": "Company Portal. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/PORTAL_DESIGN"
+      },
+      {
+        "id": "AI",
+        "label": "AI Platform",
+        "responsibility": "AI Platform. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
+      },
+      {
+        "id": "Robot",
+        "label": "AI Robot software and simulation",
+        "responsibility": "AI Robot software and simulation. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/ROBOT_DESIGN"
+      },
+      {
+        "id": "Public",
+        "label": "Public docs on Vercel",
+        "responsibility": "Public docs on Vercel. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Internal",
+        "label": "Engineering docs separate Pages build",
+        "responsibility": "Engineering docs separate Pages build. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/engineering/DOCUMENTATION_HOSTING"
+      },
+      {
+        "id": "PF",
+        "label": "Vercel frontend",
+        "responsibility": "Vercel frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PA",
+        "label": "Render Fastify API",
+        "responsibility": "Render Fastify API. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PDB",
+        "label": "Neon Portal PostgreSQL",
+        "responsibility": "Neon Portal PostgreSQL. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/PORTAL_DATABASE"
+      },
+      {
+        "id": "PS",
+        "label": "Private S3-compatible bucket",
+        "responsibility": "Private S3-compatible bucket. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Oracle",
+        "label": "Oracle ARM64 worker - staging verified",
+        "responsibility": "Oracle ARM64 worker - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/PORTAL_DESIGN"
+      },
+      {
+        "id": "Scan",
+        "label": "ClamAV private Unix socket - staging verified",
+        "responsibility": "ClamAV private Unix socket - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/PORTAL_DESIGN"
+      },
+      {
+        "id": "AF",
+        "label": "Vercel Next.js frontend",
+        "responsibility": "Vercel Next.js frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AA",
+        "label": "Render FastAPI backend",
+        "responsibility": "Render FastAPI backend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "ADB",
+        "label": "Neon AI PostgreSQL and pgvector",
+        "responsibility": "Neon AI PostgreSQL and pgvector. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/database"
+      },
+      {
+        "id": "CF",
+        "label": "Workers AI generation and embeddings - staging verified",
+        "responsibility": "Workers AI generation and embeddings - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/architecture/MODEL_SERVING"
+      },
+      {
+        "id": "RF",
+        "label": "Vercel operator frontend",
+        "responsibility": "Vercel operator frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RA",
+        "label": "Render simulation API",
+        "responsibility": "Render simulation API. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Turso",
+        "label": "Turso journal - staging only",
+        "responsibility": "Turso journal - staging only. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/ROBOT_DATABASE"
+      },
+      {
+        "id": "Edge",
+        "label": "Local ROS 2 interfaces - preparatory",
+        "responsibility": "Local ROS 2 interfaces - preparatory. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/ROBOT_DESIGN"
+      },
+      {
+        "id": "GitHub",
+        "label": "Three independent GitHub repos",
+        "responsibility": "Three independent GitHub repos. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Actions",
+        "label": "GitHub-hosted CI and qualification",
+        "responsibility": "GitHub-hosted CI and qualification. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/engineering/DEPLOYMENT"
+      },
+      {
+        "id": "Access",
+        "label": "Cloudflare Access identity and MFA",
+        "responsibility": "Cloudflare Access identity and MFA. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "url": "/docs/engineering/DOCUMENTATION_HOSTING"
+      }
+    ],
+    "explanation": "Source implemented; Oracle and Workers AI verified in staging; production acceptance pending. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "infrastructure-current",
+    "title": "Infrastructure and environment boundaries",
+    "view": "deployment",
+    "status": "Provider roles verified; corrected staging database bindings require new hosted acceptance",
+    "source": "docs/diagrams/infrastructure-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Repos",
+        "label": "Portal AI Robot repositories",
+        "responsibility": "Portal AI Robot repositories. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Hosted",
+        "label": "GitHub-hosted Actions",
+        "responsibility": "GitHub-hosted Actions. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Local",
+        "label": "Local isolated runner - dormant private-only option",
+        "responsibility": "Local isolated runner - dormant private-only option. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Vercel",
+        "label": "Vercel separate product frontends and public docs",
+        "responsibility": "Vercel separate product frontends and public docs. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Render",
+        "label": "Render separate product APIs",
+        "responsibility": "Render separate product APIs. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Package",
+        "label": "Qualified ARM64 source packaging",
+        "responsibility": "Qualified ARM64 source packaging. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Oracle",
+        "label": "Oracle VM scanner and worker",
+        "responsibility": "Oracle VM scanner and worker. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Staging",
+        "label": "STAGING - synthetic data only",
+        "responsibility": "STAGING - synthetic data only. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PST",
+        "label": "Portal restricted role - distinct Neon project",
+        "responsibility": "Portal restricted role - distinct Neon project. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AST",
+        "label": "AI restricted role - distinct Neon project in US region",
+        "responsibility": "AI restricted role - distinct Neon project in US region. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RST",
+        "label": "Robot separate Turso database",
+        "responsibility": "Robot separate Turso database. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Bucket",
+        "label": "Portal private staging bucket",
+        "responsibility": "Portal private staging bucket. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CF",
+        "label": "Workers AI staging-scoped configured credential",
+        "responsibility": "Workers AI staging-scoped configured credential. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Production",
+        "label": "PRODUCTION - independent qualification required",
+        "responsibility": "PRODUCTION - independent qualification required. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PPR",
+        "label": "Portal existing production Neon and bucket",
+        "responsibility": "Portal existing production Neon and bucket. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "APR",
+        "label": "AI existing production Neon",
+        "responsibility": "AI existing production Neon. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RPR",
+        "label": "Robot durable production host unresolved",
+        "responsibility": "Robot durable production host unresolved. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Legacy",
+        "label": "Existing Render Portal worker retained until replacement qualifies",
+        "responsibility": "Existing Render Portal worker retained until replacement qualifies. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Pages",
+        "label": "Separate engineering Pages output",
+        "responsibility": "Separate engineering Pages output. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Guard",
+        "label": "Protection and owner-login acceptance pending",
+        "responsibility": "Protection and owner-login acceptance pending. Provider roles verified; corrected staging database bindings require new hosted acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Provider roles verified; corrected staging database bindings require new hosted acceptance. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "delivery-current",
+    "title": "dev to staging to main deployment and recovery",
+    "view": "deployment",
+    "status": "Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+    "source": "docs/diagrams/delivery-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Dev",
+        "label": "dev source changes",
+        "responsibility": "dev source changes. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Review",
+        "label": "Reviewdog static review and publication hygiene",
+        "responsibility": "Reviewdog static review and publication hygiene. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CI",
+        "label": "Unit integration browser builds and security scanning",
+        "responsibility": "Unit integration browser builds and security scanning. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stage",
+        "label": "Reviewed PR to staging",
+        "responsibility": "Reviewed PR to staging. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Bridge",
+        "label": "Portal and AI deploy.yml staging bridge",
+        "responsibility": "Portal and AI deploy.yml staging bridge. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot release-candidate.yml staging bridge",
+        "responsibility": "Robot release-candidate.yml staging bridge. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "VS",
+        "label": "Vercel protected Preview and Render staging APIs",
+        "responsibility": "Vercel protected Preview and Render staging APIs. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "ARM",
+        "label": "scripts/oracle_worker.py qualified ARM64 rollout",
+        "responsibility": "scripts/oracle_worker.py qualified ARM64 rollout. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Oracle",
+        "label": "Oracle synthetic staging worker and ClamAV",
+        "responsibility": "Oracle synthetic staging worker and ClamAV. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Acceptance",
+        "label": "Hosted E2E identity ownership persistence",
+        "responsibility": "Hosted E2E identity ownership persistence. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CF",
+        "label": "Actual Cloudflare generation and embedding tests",
+        "responsibility": "Actual Cloudflare generation and embedding tests. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Gates",
+        "label": "CODE_VERIFIED STAGING_VERIFIED OPERATIONS_VERIFIED CONTENT_LEGAL_APPROVED",
+        "responsibility": "CODE_VERIFIED STAGING_VERIFIED OPERATIONS_VERIFIED CONTENT_LEGAL_APPROVED. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Owner",
+        "label": "Single authorized owner decision - accepted",
+        "responsibility": "Single authorized owner decision - accepted. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Main",
+        "label": "Qualified PR staging to main",
+        "responsibility": "Qualified PR staging to main. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Prod",
+        "label": "Vercel Render qualified Oracle and separate docs deploys",
+        "responsibility": "Vercel Render qualified Oracle and separate docs deploys. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Verify",
+        "label": "Exact revision readiness hosted tests and monitoring",
+        "responsibility": "Exact revision readiness hosted tests and monitoring. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Fail",
+        "label": "FAIL - fix on dev and re-run",
+        "responsibility": "FAIL - fix on dev and re-run. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Recovery",
+        "label": "Stop unsafe processing and restore previous qualified artifacts",
+        "responsibility": "Stop unsafe processing and restore previous qualified artifacts. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Investigate",
+        "label": "Preserve evidence and investigate before requalification",
+        "responsibility": "Preserve evidence and investigate before requalification. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Runner",
+        "label": "Private-only local runner option - dormant",
+        "responsibility": "Private-only local runner option - dormant. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "portal-current",
+    "title": "Company Portal website CMS and private administration",
+    "view": "logical",
+    "status": "Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+    "source": "docs/diagrams/portal-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Visitor",
+        "label": "Visitor",
+        "responsibility": "Visitor. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Site",
+        "label": "Company frontend public paths",
+        "responsibility": "Company frontend public paths. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Staff",
+        "label": "Staff",
+        "responsibility": "Staff. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Portal",
+        "label": "Authenticated Portal frontend",
+        "responsibility": "Authenticated Portal frontend. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "API",
+        "label": "Fastify public API",
+        "responsibility": "Fastify public API. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Auth",
+        "label": "Session CSRF and role checks",
+        "responsibility": "Session CSRF and role checks. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CMS",
+        "label": "Content drafts facts revisions and publication",
+        "responsibility": "Content drafts facts revisions and publication. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "HR",
+        "label": "Recruitment applications and owned file metadata",
+        "responsibility": "Recruitment applications and owned file metadata. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Enquiry",
+        "label": "Persist enquiry before notification",
+        "responsibility": "Persist enquiry before notification. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PG",
+        "label": "Portal PostgreSQL",
+        "responsibility": "Portal PostgreSQL. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Bucket",
+        "label": "Private object storage",
+        "responsibility": "Private object storage. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Worker",
+        "label": "Oracle staging worker",
+        "responsibility": "Oracle staging worker. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Scan",
+        "label": "ClamAV Unix socket",
+        "responsibility": "ClamAV Unix socket. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Mail",
+        "label": "SMTP or Resend conditional adapter - delivery not qualified",
+        "responsibility": "SMTP or Resend conditional adapter - delivery not qualified. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Deletion",
+        "label": "Durable storage deletion outbox",
+        "responsibility": "Durable storage deletion outbox. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Audit",
+        "label": "Audit events without document bodies",
+        "responsibility": "Audit events without document bodies. Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Implemented API boundaries; staging scanner and jobs verified, production remains separately qualified. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "portal-scan-current",
+    "title": "Upload quarantine scanning release and failure",
+    "view": "logical",
+    "status": "Actual quarantine gates and clean-only download; scanner failure never releases files",
+    "source": "docs/diagrams/portal-scan-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Quarantine",
+        "label": "Quarantine",
+        "responsibility": "Private uploads remain blocked until a successful scan.",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Clean",
+        "label": "Clean",
+        "responsibility": "Clean files still require authorization and any relevant publication approval.",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Rejected",
+        "label": "Rejected",
+        "responsibility": "Known infected files cannot be downloaded.",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Failed",
+        "label": "Failed deletion",
+        "responsibility": "Exhausted deletion retries require operator investigation.",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Actual quarantine gates and clean-only download; scanner failure never releases files. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "portal-jobs-current",
+    "title": "Durable Portal jobs retries and restart recovery",
+    "view": "logical",
+    "status": "Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+    "source": "docs/diagrams/portal-jobs-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Accept",
+        "label": "Persist business action",
+        "responsibility": "Persist business action. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Queue",
+        "label": "Transactional jobs or deletion outbox",
+        "responsibility": "Transactional jobs or deletion outbox. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Claim",
+        "label": "FOR UPDATE SKIP LOCKED bounded claim",
+        "responsibility": "FOR UPDATE SKIP LOCKED bounded claim. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Execute",
+        "label": "Attempt count increment and finite execution",
+        "responsibility": "Attempt count increment and finite execution. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Success",
+        "label": "Provider accepted or storage deleted",
+        "responsibility": "Provider accepted or storage deleted. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Retry",
+        "label": "Failure - delayed exponential retry",
+        "responsibility": "Failure - delayed exponential retry. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Failed",
+        "label": "Terminal failed state - investigate safely",
+        "responsibility": "Terminal failed state - investigate safely. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Crash",
+        "label": "Crash or shutdown",
+        "responsibility": "Crash or shutdown. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Lease",
+        "label": "Stale running lease expires after five minutes",
+        "responsibility": "Stale running lease expires after five minutes. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "SIG",
+        "label": "Graceful shutdown",
+        "responsibility": "Graceful shutdown. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stop",
+        "label": "Stop new claims and finish bounded work",
+        "responsibility": "Stop new claims and finish bounded work. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Scan",
+        "label": "Quarantined files scan separately",
+        "responsibility": "Quarantined files scan separately. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Keep",
+        "label": "Error keeps quarantine and emits scan_failed",
+        "responsibility": "Error keeps quarantine and emits scan_failed. Existing PostgreSQL queue implementation; scanner errors remain quarantined",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Existing PostgreSQL queue implementation; scanner errors remain quarantined. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "ai-chat-current",
+    "title": "Authenticated chat streaming persistence and outage",
+    "view": "logical",
+    "status": "Workers AI native and hosted inference previously verified; corrected DB requalification pending",
+    "source": "docs/diagrams/ai-chat-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [],
+    "explanation": "Workers AI native and hosted inference previously verified; corrected DB requalification pending. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "ai-rag-current",
+    "title": "Ingestion semantic embeddings RAG and citations",
+    "view": "logical",
+    "status": "Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+    "source": "docs/diagrams/ai-rag-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Upload",
+        "label": "Owned bounded TXT or PDF upload",
+        "responsibility": "Owned bounded TXT or PDF upload. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Parse",
+        "label": "Validate and sandbox PDF extraction",
+        "responsibility": "Validate and sandbox PDF extraction. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Chunk",
+        "label": "Bounded text chunks",
+        "responsibility": "Bounded text chunks. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Embed",
+        "label": "Configured versioned embedding adapter",
+        "responsibility": "Configured versioned embedding adapter. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CF",
+        "label": "Workers AI Qwen3 embedding staging path",
+        "responsibility": "Workers AI Qwen3 embedding staging path. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "MRL",
+        "label": "1024 dimensions truncated to 256 and normalized",
+        "responsibility": "1024 dimensions truncated to 256 and normalized. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Vector",
+        "label": "pgvector chunks and embedding_version",
+        "responsibility": "pgvector chunks and embedding_version. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Question",
+        "label": "Owned query",
+        "responsibility": "Owned query. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Query",
+        "label": "Matching query embedding version",
+        "responsibility": "Matching query embedding version. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Retrieve",
+        "label": "User document and version filtered cosine retrieval",
+        "responsibility": "User document and version filtered cosine retrieval. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Context",
+        "label": "Attributed untrusted source context",
+        "responsibility": "Attributed untrusted source context. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Model",
+        "label": "Configured generation adapter",
+        "responsibility": "Configured generation adapter. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Answer",
+        "label": "Answer and persisted source citations",
+        "responsibility": "Answer and persisted source citations. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Failure",
+        "label": "Embedding outage",
+        "responsibility": "Embedding outage. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Retain",
+        "label": "Fail request; preserve old index on reindex",
+        "responsibility": "Fail request; preserve old index on reindex. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Delete",
+        "label": "Owned document delete",
+        "responsibility": "Owned document delete. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Cascade",
+        "label": "Remove chunks via relationships",
+        "responsibility": "Remove chunks via relationships. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Lexical",
+        "label": "Explicit lexical baseline for development",
+        "responsibility": "Explicit lexical baseline for development. Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Source implemented; real Workers AI semantic path tested against prior DB, corrected target acceptance pending. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "robot-current",
+    "title": "Robot cloud simulation and local edge boundary",
+    "view": "logical",
+    "status": "Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+    "source": "docs/diagrams/robot-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Operator",
+        "label": "Operator",
+        "responsibility": "Operator. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Web",
+        "label": "Vercel static interface",
+        "responsibility": "Vercel static interface. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Proxy",
+        "label": "Node same-origin proxy",
+        "responsibility": "Node same-origin proxy. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "API",
+        "label": "Render FastAPI operator session and CSRF",
+        "responsibility": "Render FastAPI operator session and CSRF. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Propose",
+        "label": "Bounded motion proposal",
+        "responsibility": "Bounded motion proposal. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Approve",
+        "label": "Separate approval within deadline",
+        "responsibility": "Separate approval within deadline. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Safety",
+        "label": "Independent SafetyGate freshness limits and stopped state",
+        "responsibility": "Independent SafetyGate freshness limits and stopped state. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Sim",
+        "label": "Synthetic joint simulation",
+        "responsibility": "Synthetic joint simulation. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Journal",
+        "label": "Turso staging journal and exclusive owner lease",
+        "responsibility": "Turso staging journal and exclusive owner lease. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Telemetry",
+        "label": "Software telemetry to interface",
+        "responsibility": "Software telemetry to interface. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Watchdog",
+        "label": "Heartbeat loss revocation or emergency stop",
+        "responsibility": "Heartbeat loss revocation or emergency stop. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stop",
+        "label": "Revoke authority and stop",
+        "responsibility": "Revoke authority and stop. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Restart",
+        "label": "Restart",
+        "responsibility": "Restart. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stopped",
+        "label": "Clear sessions cancel unfinished tasks start stopped",
+        "responsibility": "Clear sessions cancel unfinished tasks start stopped. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Edge",
+        "label": "LOCAL EDGE - preparatory only",
+        "responsibility": "LOCAL EDGE - preparatory only. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "ROS",
+        "label": "ROS 2 SimulationTelemetry and SimulationProposal messages",
+        "responsibility": "ROS 2 SimulationTelemetry and SimulationProposal messages. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Sensors",
+        "label": "Vision audio VLA sensor controller interfaces - planned",
+        "responsibility": "Vision audio VLA sensor controller interfaces - planned. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Actuator",
+        "label": "Physical drivers and actuation - unavailable and forbidden",
+        "responsibility": "Physical drivers and actuation - unavailable and forbidden. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "identity-current",
+    "title": "Product identities sessions roles and documentation access",
+    "view": "logical",
+    "status": "Independent product auth; application MFA differs from separately required documentation MFA",
+    "source": "docs/diagrams/identity-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Browser",
+        "label": "User login",
+        "responsibility": "User login. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Portal",
+        "label": "Portal credentials session CSRF",
+        "responsibility": "Portal credentials session CSRF. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AI",
+        "label": "AI credentials invitation session CSRF",
+        "responsibility": "AI credentials invitation session CSRF. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot existing operator session CSRF",
+        "responsibility": "Robot existing operator session CSRF. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Roles",
+        "label": "Owner admin editor business HR viewer boundary checks",
+        "responsibility": "Owner admin editor business HR viewer boundary checks. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Owned",
+        "label": "Enabled user and resource ownership",
+        "responsibility": "Enabled user and resource ownership. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RobotRole",
+        "label": "Single configured operator and independent safety",
+        "responsibility": "Single configured operator and independent safety. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Sensitive",
+        "label": "Fresh proof and configured MFA for sensitive account changes",
+        "responsibility": "Fresh proof and configured MFA for sensitive account changes. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Sessions",
+        "label": "Expiry logout disabling revocation",
+        "responsibility": "Expiry logout disabling revocation. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Deny",
+        "label": "Authorization removed server-side",
+        "responsibility": "Authorization removed server-side. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Docs",
+        "label": "Engineering reader",
+        "responsibility": "Engineering reader. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Access",
+        "label": "Cloudflare Access approved identity and MFA - hosted acceptance pending",
+        "responsibility": "Cloudflare Access approved identity and MFA - hosted acceptance pending. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "JWT",
+        "label": "Server verifies signature audience issuer identity and approved host",
+        "responsibility": "Server verifies signature audience issuer identity and approved host. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Assets",
+        "label": "Every private page asset index and download",
+        "responsibility": "Every private page asset index and download. Independent product auth; application MFA differs from separately required documentation MFA",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Independent product auth; application MFA differs from separately required documentation MFA. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "docs-access-current",
+    "title": "Public and protected engineering documentation",
+    "view": "deployment",
+    "status": "Origin and preview Access MFA policies and bindings verified; 15 anonymous redirects passed, authorized-user and content acceptance pending",
+    "source": "docs/diagrams/docs-access-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Reader",
+        "label": "Documentation reader",
+        "responsibility": "Documentation reader. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Public",
+        "label": "Vercel docs.onesa.eu",
+        "responsibility": "Vercel docs.onesa.eu. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Allow",
+        "label": "Allowlisted public build diagrams search and downloads",
+        "responsibility": "Allowlisted public build diagrams search and downloads. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Engineer",
+        "label": "Approved engineer",
+        "responsibility": "Approved engineer. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Policy",
+        "label": "Access application identity and MFA gate - pending hosted acceptance",
+        "responsibility": "Access application identity and MFA gate - pending hosted acceptance. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Token",
+        "label": "Signed Access assertion",
+        "responsibility": "Signed Access assertion. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Worker",
+        "label": "Pages fail-closed JWT verifier implemented",
+        "responsibility": "Pages fail-closed JWT verifier implemented. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Private",
+        "label": "Separate internal pages diagrams assets indexes and PDFs",
+        "responsibility": "Separate internal pages diagrams assets indexes and PDFs. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Anonymous",
+        "label": "Anonymous wrong audience forged token or disallowed host",
+        "responsibility": "Anonymous wrong audience forged token or disallowed host. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Denied",
+        "label": "Deny before accessing assets",
+        "responsibility": "Deny before accessing assets. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Origin",
+        "label": "pages.dev direct domains preview aliases and custom host",
+        "responsibility": "pages.dev direct domains preview aliases and custom host. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Missing",
+        "label": "Missing server bindings or unavailable identity",
+        "responsibility": "Missing server bindings or unavailable identity. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Source",
+        "label": "Public Git repositories",
+        "responsibility": "Public Git repositories. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Boundary",
+        "label": "Hosted access protection does not make committed source confidential",
+        "responsibility": "Hosted access protection does not make committed source confidential. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "data-current",
+    "title": "Data lifecycle and environment separation",
+    "view": "logical",
+    "status": "Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+    "source": "docs/diagrams/data-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Stage",
+        "label": "STAGING - approved synthetic fixtures only",
+        "responsibility": "STAGING - approved synthetic fixtures only. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "P",
+        "label": "Portal API",
+        "responsibility": "Portal API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PDB",
+        "label": "Portal staging PostgreSQL metadata and queue",
+        "responsibility": "Portal staging PostgreSQL metadata and queue. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PB",
+        "label": "Private staging bucket quarantine and clean files",
+        "responsibility": "Private staging bucket quarantine and clean files. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "W",
+        "label": "Oracle staging worker",
+        "responsibility": "Oracle staging worker. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "A",
+        "label": "AI API",
+        "responsibility": "AI API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "ADB",
+        "label": "Separate AI staging PostgreSQL documents chunks vectors",
+        "responsibility": "Separate AI staging PostgreSQL documents chunks vectors. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "R",
+        "label": "Robot simulation API",
+        "responsibility": "Robot simulation API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RDB",
+        "label": "Separate Turso staging tasks sessions stop journal",
+        "responsibility": "Separate Turso staging tasks sessions stop journal. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Prod",
+        "label": "PRODUCTION - existing independent bindings",
+        "responsibility": "PRODUCTION - existing independent bindings. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PP",
+        "label": "Portal production API",
+        "responsibility": "Portal production API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PPDB",
+        "label": "Production Neon and private bucket",
+        "responsibility": "Production Neon and private bucket. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AP",
+        "label": "AI production API",
+        "responsibility": "AI production API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "APDB",
+        "label": "Production Neon",
+        "responsibility": "Production Neon. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RP",
+        "label": "Robot production durability unresolved",
+        "responsibility": "Robot production durability unresolved. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Block",
+        "label": "No ephemeral persistence acceptance",
+        "responsibility": "No ephemeral persistence acceptance. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Logs",
+        "label": "Provider logs and restricted source-bound receipts",
+        "responsibility": "Provider logs and restricted source-bound receipts. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Retention",
+        "label": "Approved deletion and retention jobs",
+        "responsibility": "Approved deletion and retention jobs. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "NoCopy",
+        "label": "No staging-to-production records or credentials copied",
+        "responsibility": "No staging-to-production records or credentials copied. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "operations-current",
+    "title": "Monitoring incident response and evidence",
+    "view": "deployment",
+    "status": "Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+    "source": "docs/diagrams/operations-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "APIs",
+        "label": "API liveness and dependency readiness",
+        "responsibility": "API liveness and dependency readiness. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Checks",
+        "label": "Authenticated bounded operational checks",
+        "responsibility": "Authenticated bounded operational checks. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Worker",
+        "label": "Oracle worker recent database heartbeat",
+        "responsibility": "Oracle worker recent database heartbeat. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Scan",
+        "label": "ClamAV PONG and signature freshness",
+        "responsibility": "ClamAV PONG and signature freshness. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Providers",
+        "label": "Vercel Render Cloudflare deployment identity",
+        "responsibility": "Vercel Render Cloudflare deployment identity. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Evidence",
+        "label": "Exact source deployment IDs and private redacted receipts",
+        "responsibility": "Exact source deployment IDs and private redacted receipts. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Failure",
+        "label": "Real failure or missing dependency",
+        "responsibility": "Real failure or missing dependency. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Contain",
+        "label": "Stop affected processing preserve data and evidence",
+        "responsibility": "Stop affected processing preserve data and evidence. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Diagnose",
+        "label": "Inspect scoped logs and status without secrets",
+        "responsibility": "Inspect scoped logs and status without secrets. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Fix",
+        "label": "Reviewed fix and synthetic staging qualification",
+        "responsibility": "Reviewed fix and synthetic staging qualification. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Restore",
+        "label": "Restore prior qualified service or safely redeploy",
+        "responsibility": "Restore prior qualified service or safely redeploy. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Alerts",
+        "label": "Alert transport delivery - pending",
+        "responsibility": "Alert transport delivery - pending. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Owner",
+        "label": "Responsible operator",
+        "responsibility": "Responsible operator. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "recovery-current",
+    "title": "Backup restore rollback and disaster recovery",
+    "view": "deployment",
+    "status": "Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+    "source": "docs/diagrams/recovery-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Database",
+        "label": "Product database",
+        "responsibility": "Product database. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Backup",
+        "label": "Authorized encrypted scoped backup",
+        "responsibility": "Authorized encrypted scoped backup. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Retain",
+        "label": "Approved retention and private backup storage",
+        "responsibility": "Approved retention and private backup storage. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Isolated",
+        "label": "Restore into isolated disposable target",
+        "responsibility": "Restore into isolated disposable target. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Verify",
+        "label": "Schema revision checksums counts ownership and app smoke",
+        "responsibility": "Schema revision checksums counts ownership and app smoke. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Files",
+        "label": "Private object storage",
+        "responsibility": "Private object storage. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Manifest",
+        "label": "Object checksums and metadata consistency",
+        "responsibility": "Object checksums and metadata consistency. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot journal",
+        "responsibility": "Robot journal. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Safe",
+        "label": "Consistent journal snapshot and stopped restored state",
+        "responsibility": "Consistent journal snapshot and stopped restored state. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Evidence",
+        "label": "Private restore evidence",
+        "responsibility": "Private restore evidence. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Deploy",
+        "label": "Bad release",
+        "responsibility": "Bad release. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stop",
+        "label": "Contain writes and stop unsafe processing",
+        "responsibility": "Contain writes and stop unsafe processing. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Rollback",
+        "label": "Previous qualified artifacts with schema compatibility checks",
+        "responsibility": "Previous qualified artifacts with schema compatibility checks. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Post",
+        "label": "Hosted post-rollback tests",
+        "responsibility": "Hosted post-rollback tests. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Gate",
+        "label": "No destructive restore over production without separate approval",
+        "responsibility": "No destructive restore over production without separate approval. Source runbooks and isolated verification tools exist; production backup/restore acceptance pending",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Source runbooks and isolated verification tools exist; production backup/restore acceptance pending. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "maturity-current",
+    "title": "Product maturity and evidence required for release",
+    "view": "logical",
+    "status": "Source and historical staging evidence do not establish complete production acceptance",
+    "source": "docs/diagrams/maturity-current.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Foundation",
+        "label": "Completed foundations - three apps APIs tests and diagrams",
+        "responsibility": "Completed foundations - three apps APIs tests and diagrams. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Active",
+        "label": "Active phase - correct isolation and hosted release qualification",
+        "responsibility": "Active phase - correct isolation and hosted release qualification. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Portal",
+        "label": "Portal Oracle staging scan queue and recovery verified",
+        "responsibility": "Portal Oracle staging scan queue and recovery verified. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AI",
+        "label": "AI Workers AI generation and embeddings verified on prior binding",
+        "responsibility": "AI Workers AI generation and embeddings verified on prior binding. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Robot",
+        "label": "Robot software simulation and auth implemented",
+        "responsibility": "Robot software simulation and auth implemented. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "PGate",
+        "label": "New hosted target acceptance mail backups and production worker replacement",
+        "responsibility": "New hosted target acceptance mail backups and production worker replacement. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "AGate",
+        "label": "Corrected separate staging DB acceptance and production model operations",
+        "responsibility": "Corrected separate staging DB acceptance and production model operations. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "RGate",
+        "label": "Rolling journal handoff hosted test and durable production host",
+        "responsibility": "Rolling journal handoff hosted test and durable production host. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Release",
+        "label": "Only genuinely qualified production capabilities released",
+        "responsibility": "Only genuinely qualified production capabilities released. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Research",
+        "label": "Approved training multilingual and multimodal research",
+        "responsibility": "Approved training multilingual and multimodal research. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Hardware",
+        "label": "Physical ROS 2 sensors and robot actuation - not authorized",
+        "responsibility": "Physical ROS 2 sensors and robot actuation - not authorized. Source and historical staging evidence do not establish complete production acceptance",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Source and historical staging evidence do not establish complete production acceptance. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "first-contribution",
+    "title": "First safe engineering contribution",
+    "view": "logical",
+    "status": "Current three retained branches; no additional branches or discretionary reviewer requirements",
+    "source": "docs/diagrams/first-contribution.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Read",
+        "label": "Read AGENTS runbooks and actual current evidence",
+        "responsibility": "Read AGENTS runbooks and actual current evidence. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Scope",
+        "label": "Pick one small reversible issue",
+        "responsibility": "Pick one small reversible issue. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Dev",
+        "label": "Work on existing dev preserving other changes",
+        "responsibility": "Work on existing dev preserving other changes. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Test",
+        "label": "Run focused tests contracts builds and security",
+        "responsibility": "Run focused tests contracts builds and security. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Docs",
+        "label": "Update affected diagram API or schema reference",
+        "responsibility": "Update affected diagram API or schema reference. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Review",
+        "label": "Inspect staged diff and automated review",
+        "responsibility": "Inspect staged diff and automated review. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Push",
+        "label": "Push dev and PR to staging",
+        "responsibility": "Push dev and PR to staging. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "CI",
+        "label": "Exact source full CI and hosted synthetic staging acceptance",
+        "responsibility": "Exact source full CI and hosted synthetic staging acceptance. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Gate",
+        "label": "Release qualification and authorized owner decision",
+        "responsibility": "Release qualification and authorized owner decision. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Main",
+        "label": "PR staging to main",
+        "responsibility": "PR staging to main. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Verify",
+        "label": "Deploy and verify actual source and recovery",
+        "responsibility": "Deploy and verify actual source and recovery. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Failure",
+        "label": "Failed check",
+        "responsibility": "Failed check. Current three retained branches; no additional branches or discretionary reviewer requirements",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Current three retained branches; no additional branches or discretionary reviewer requirements. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "day-one",
+    "title": "Day 1 \u2014 Understand Onesa",
+    "view": "logical",
+    "status": "Day 1: company products infrastructure documentation; learning completion is not release qualification",
+    "source": "docs/diagrams/day-one.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Company",
+        "label": "Read company and product boundaries",
+        "responsibility": "Read company and product boundaries. Day 1: company products infrastructure documentation; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Ecosystem",
+        "label": "Explore ecosystem and select each product",
+        "responsibility": "Explore ecosystem and select each product. Day 1: company products infrastructure documentation; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Providers",
+        "label": "Identify frontend API worker model and storage providers",
+        "responsibility": "Identify frontend API worker model and storage providers. Day 1: company products infrastructure documentation; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Docs",
+        "label": "Find public guides and protected runbooks",
+        "responsibility": "Find public guides and protected runbooks. Day 1: company products infrastructure documentation; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Check",
+        "label": "Explain deployed staging pending and planned status",
+        "responsibility": "Explain deployed staging pending and planned status. Day 1: company products infrastructure documentation; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Day 1: company products infrastructure documentation; learning completion is not release qualification. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "day-two",
+    "title": "Day 2 \u2014 Understand the software",
+    "view": "logical",
+    "status": "Day 2: repositories APIs storage identity; learning completion is not release qualification",
+    "source": "docs/diagrams/day-two.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Repos",
+        "label": "Find three independent repos",
+        "responsibility": "Find three independent repos. Day 2: repositories APIs storage identity; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Modules",
+        "label": "Trace frontend proxy to backend endpoint",
+        "responsibility": "Trace frontend proxy to backend endpoint. Day 2: repositories APIs storage identity; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Schema",
+        "label": "Open generated API models and schema relationships",
+        "responsibility": "Open generated API models and schema relationships. Day 2: repositories APIs storage identity; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Identity",
+        "label": "Explain session CSRF role and ownership checks",
+        "responsibility": "Explain session CSRF role and ownership checks. Day 2: repositories APIs storage identity; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Local",
+        "label": "Run isolated development checks with synthetic data",
+        "responsibility": "Run isolated development checks with synthetic data. Day 2: repositories APIs storage identity; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Day 2: repositories APIs storage identity; learning completion is not release qualification. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "day-three",
+    "title": "Day 3 \u2014 Understand delivery",
+    "view": "logical",
+    "status": "Day 3: dev staging main and qualification; learning completion is not release qualification",
+    "source": "docs/diagrams/day-three.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Dev",
+        "label": "Change on dev",
+        "responsibility": "Change on dev. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Review",
+        "label": "Automated review tests security and builds",
+        "responsibility": "Automated review tests security and builds. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Stage",
+        "label": "PR to staging and protected hosted tests",
+        "responsibility": "PR to staging and protected hosted tests. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Evidence",
+        "label": "Match source SHA artifact and deployment",
+        "responsibility": "Match source SHA artifact and deployment. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Main",
+        "label": "Owner-authorized qualified PR to main",
+        "responsibility": "Owner-authorized qualified PR to main. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Recovery",
+        "label": "Verify live results and rehearse safe rollback",
+        "responsibility": "Verify live results and rehearse safe rollback. Day 3: dev staging main and qualification; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Day 3: dev staging main and qualification; learning completion is not release qualification. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "day-four",
+    "title": "Day 4 \u2014 Understand operations",
+    "view": "logical",
+    "status": "Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+    "source": "docs/diagrams/day-four.mmd",
+    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "nodes": [
+      {
+        "id": "Providers",
+        "label": "Locate provider projects without displaying secrets",
+        "responsibility": "Locate provider projects without displaying secrets. Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Health",
+        "label": "Read scoped liveness readiness heartbeat and scanner health",
+        "responsibility": "Read scoped liveness readiness heartbeat and scanner health. Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Incident",
+        "label": "Identify failed gate and containment runbook",
+        "responsibility": "Identify failed gate and containment runbook. Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Restore",
+        "label": "Review isolated backup restore procedure",
+        "responsibility": "Review isolated backup restore procedure. Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Check",
+        "label": "Document missing evidence and escalation responsibility",
+        "responsibility": "Document missing evidence and escalation responsibility. Day 4: providers monitoring incidents and recovery; learning completion is not release qualification",
+        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      }
+    ],
+    "explanation": "Day 4: providers monitoring incidents and recovery; learning completion is not release qualification. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "public-documentation-access",
+    "title": "Public and engineering documentation access",
+    "view": "deployment",
+    "status": "Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+    "source": "docs/diagrams/public-documentation-access.mmd",
+    "url": "/docs/public/documentation-access",
+    "nodes": [
+      {
+        "id": "Reader",
+        "label": "Reader",
+        "responsibility": "Reader. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Public",
+        "label": "Public docs allowlisted pages diagrams search and downloads",
+        "responsibility": "Public docs allowlisted pages diagrams search and downloads. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Engineer",
+        "label": "Approved engineer",
+        "responsibility": "Approved engineer. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Access",
+        "label": "Identity and MFA policy",
+        "responsibility": "Identity and MFA policy. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Verify",
+        "label": "Server-side signed identity verification",
+        "responsibility": "Server-side signed identity verification. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Engineering",
+        "label": "Separate engineering build",
+        "responsibility": "Separate engineering build. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Anonymous",
+        "label": "Unauthorized or invalid identity",
+        "responsibility": "Unauthorized or invalid identity. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Denied",
+        "label": "Private assets denied",
+        "responsibility": "Private assets denied. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      },
+      {
+        "id": "Private",
+        "label": "Detailed schemas operational guides and onboarding",
+        "responsibility": "Detailed schemas operational guides and onboarding. Public allowlist deployed; separate engineering Access protection still needs hosted acceptance",
+        "url": "/docs/public/documentation-access"
+      }
+    ],
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "public-maturity",
+    "title": "Software staging production research and hardware phases",
+    "view": "deployment",
+    "status": "Working source and staging evidence do not imply production or hardware acceptance",
+    "source": "docs/diagrams/public-maturity.mmd",
+    "url": "/docs/public/roadmap",
+    "nodes": [
+      {
+        "id": "Source",
+        "label": "Implemented application foundations",
+        "responsibility": "Implemented application foundations. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Stage",
+        "label": "Synthetic staging qualification",
+        "responsibility": "Synthetic staging qualification. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Production",
+        "label": "Production only after real technical operational and privacy gates",
+        "responsibility": "Production only after real technical operational and privacy gates. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Limits",
+        "label": "Outstanding acceptance limits documented",
+        "responsibility": "Outstanding acceptance limits documented. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Research",
+        "label": "Future model research",
+        "responsibility": "Future model research. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Robot",
+        "label": "Software simulation",
+        "responsibility": "Software simulation. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      },
+      {
+        "id": "Hardware",
+        "label": "Physical capabilities not enabled",
+        "responsibility": "Physical capabilities not enabled. Working source and staging evidence do not imply production or hardware acceptance",
+        "url": "/docs/public/roadmap"
+      }
+    ],
+    "reviewed_at": "2026-10-13"
+  },
+  {
+    "id": "robot-journal-database",
+    "title": "Robot remote staging journal schema",
+    "view": "implemented schema",
+    "status": "Generated from actual pinned Turso DDL; independent task history and exclusive lease, no invented foreign keys",
+    "source": "docs/diagrams/robot-journal-database.mmd",
+    "url": "/docs/ecosystem/ROBOT_DATABASE",
+    "nodes": []
   }
 ]
