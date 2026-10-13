@@ -11,8 +11,29 @@ def validate_navigation(root: Path, catalog: list[dict]) -> dict:
     )
     if navigation.get("classification") != "internal":
         raise ValueError("Engineering navigation must be internal")
+    required_architecture = {
+        "infrastructure-architecture",
+        "company-portal-architecture",
+        "system-overview",
+        "monitoring-operations",
+        "development-phases-roadmap",
+        "privacy-governance",
+        "ai-inference-rag-workflows",
+        "robotics-ros-2-workflows",
+        "backup-disaster-recovery",
+        "ai-platform-architecture",
+        "ai-robot-architecture",
+        "ci-cd-deployment-pipeline",
+        "data-flow-database-schemas",
+        "authentication-authorization",
+        "security-architecture",
+        "complete-onesa-ecosystem",
+        "portal-jobs-document-scanning",
+    }
+    architecture_ids = [entry.get("id") for entry in navigation.get("architecture", [])]
     if (
-        len(navigation.get("architecture", [])) != 16
+        not required_architecture.issubset(architecture_ids)
+        or len(architecture_ids) != len(set(architecture_ids))
         or len(navigation.get("chapters", [])) != 17
     ):
         raise ValueError(

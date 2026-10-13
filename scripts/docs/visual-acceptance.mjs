@@ -44,7 +44,7 @@ try{
  await page.setViewportSize({width:1440,height:1000});await page.goto(fixture+'/');
  const navLinks=await page.locator('.navbar__items:not(.navbar__items--right) a.navbar__link').allTextContents();
  const architectureIndex=navLinks.indexOf('Architecture & Workflows');expect(architectureIndex).toBeGreaterThanOrEqual(0);expect(navLinks[architectureIndex+1]).toBe('Engineering Onboarding');
- await page.goto(fixture+'/architecture');await expect(page.locator('.workflow-index button')).toHaveCount(16);
+ await page.goto(fixture+'/architecture');await expect(page.locator('.workflow-index button')).toHaveCount(navigation.architecture.length);
  for(const topic of navigation.architecture){await page.getByRole('button',{name:topic.title,exact:true}).click();await expect(page.locator('.diagram-canvas svg')).toBeVisible();await expect(page.locator('.diagram-panel')).toContainText(catalog.find(d=>d.id===topic.diagram).title);results.diagrams++;}
  await page.getByLabel('Zoom in',{exact:true}).click();await expect(page.locator('.diagram-canvas > div')).toHaveAttribute('style',/1.25/);
  await page.locator('.diagram-canvas').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('.diagram-canvas > div')).toHaveAttribute('style',/30px/);

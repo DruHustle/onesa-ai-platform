@@ -1,0 +1,9 @@
+flowchart TD
+ A[Approved policies and processor decisions] --> B[Verify actual implemented processing]
+ B --> C[Prepare accurate English and German notice drafts]
+ C --> D[Existing CMS editorial and legal review]
+ D --> E{Both notice versions approved?}
+ E -->|No| F[Amend and retain unpublished drafts]
+ F --> C
+ E -->|Yes| G[Publish approved CMS revisions only]
+ G --> H[Verify public pages and published revision evidence]

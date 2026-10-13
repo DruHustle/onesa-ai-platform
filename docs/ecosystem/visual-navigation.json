@@ -114,6 +114,13 @@
       "diagram": "maturity-current",
       "url": "/docs/product/ROADMAP",
       "summary": "Separate software staging production research and hardware milestones."
+    },
+    {
+      "id": "privacy-governance",
+      "title": "Privacy Governance",
+      "diagram": "privacy-document-review",
+      "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+      "summary": "Follow protected drafts, scoped owner approval, retention safeguards, processor review and bilingual notice publication."
     }
   ],
   "chapters": [
