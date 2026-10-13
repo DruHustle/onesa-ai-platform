@@ -786,3 +786,7 @@ Generated development-lockfile hashes for all 81 already-pinned packages. A clea
 ## 2026-10-13 — Hosted protected visual documentation acceptance
 
 Verified the qualified staging revision through actual owner Cloudflare Access MFA, then published the classified internal output to the existing protected Pages staging project. Confirmed 16 architecture sections, 17 onboarding chapters, four learning days, 73 diagrams with 292 rendered/editable exports, responsive automatic day/night views, search and accessible interactions. All 15 anonymous origin and Preview resource probes redirected to Access; authenticated responses remain private/no-store/noindex. Public Preview qualification passed independently at the same source. Production publication and custom internal DNS are not inferred from staging acceptance.
+
+## 2026-10-13 — Reject retired approvals and reconcile architecture evidence
+
+Retire the compatibility qualification command’s acceptance of locally editable gate JSON, even when its source hash matches. Actual release authority remains the existing trusted qualification/promotion workflows. Add forged and malformed approval regressions. Update canonical architecture/workflow references with actual isolated Portal/AI staging and protected engineering publication evidence; preserve Robot’s HTTP401 and production operational limitations.

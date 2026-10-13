@@ -6,8 +6,7 @@
 
 Onesa AI is a European-based, general-purpose, modular artificial intelligence platform
 for enterprise, developer, institutional and consumer applications across European and
-international markets. Shared self-hosted infrastructure serves Chat, Knowledge, Agents
-and Travel using configurable open-weight models.
+international markets. Shared modular services support Chat, Knowledge, Agents and Travel through configurable model providers. Cloudflare Workers AI serves the verified synthetic staging scope; native Ollama remains a local development option, and self-managed vLLM is an interchangeable future deployment target. This does not claim a hosted Onesa GPU cluster or qualified production inference.
 
 African languages and regional knowledge are optional international specializations;
 they do not define or limit the platform. See [market scope](docs/product/MARKET_SCOPE.md)
@@ -34,7 +33,7 @@ PostgreSQL and the API are private; only the loopback Chat port is published.
   CSRF protection, authentication throttling and per-user ownership.
 - Next.js/TypeScript/Tailwind Chat with streamed Markdown/code responses, history,
   conversation editing/deletion, cancellation, mobile and keyboard navigation.
-- Configurable mock/Ollama/vLLM inference behind a stable model-client interface.
+- Configurable mock/Ollama/vLLM/Cloudflare inference behind a stable model-client interface.
 - Validated text/PDF ingestion, versioned pgvector retrieval, reindexing and chat sources.
 - Registered bounded tools, permission checks, execution history and cancellation.
 - Structured, saved and revisable travel itineraries.
