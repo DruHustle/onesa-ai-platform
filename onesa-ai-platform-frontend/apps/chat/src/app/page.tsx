@@ -49,6 +49,7 @@ export default function Chat() {
   const abort = useRef<AbortController | null>(null),
     bottom = useRef<HTMLDivElement | null>(null),
     entry = useRef<HTMLTextAreaElement | null>(null);
+  const credentialDraft = useRef<HTMLInputElement | null>(null);
   const refreshList = useCallback(async () => {
     const response = await call("/conversations");
     setList((await response.json()).items);
@@ -160,7 +161,7 @@ export default function Chat() {
   }, [menu, closeMenu]);
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (checking || busy) return;
+    if (checking || busy || unavailable) return;
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -341,6 +342,7 @@ export default function Chat() {
             setUnavailable(false);
             setError("");
             setSessionAttempt(previous => previous + 1);
+            credentialDraft.current?.focus();
           }}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
           <form onSubmit={authenticate} aria-busy={checking || busy}>
             {signup && (
@@ -349,6 +351,7 @@ export default function Chat() {
                 <input
                   name="name"
                   disabled={busy}
+                  onFocus={event => { credentialDraft.current = event.currentTarget; }}
                   autoComplete="name"
                   required
                   maxLength={80}
@@ -357,13 +360,15 @@ export default function Chat() {
             )}
             <label>
               {copy.email}
-              <input name="email" type="email" autoComplete="email" required disabled={busy}/>
+              <input name="email" type="email" autoComplete="email" required disabled={busy}
+                onFocus={event => { credentialDraft.current = event.currentTarget; }}/>
             </label>
             <label>
               {copy.password}
               <input
                 name="password"
                 disabled={busy}
+                onFocus={event => { credentialDraft.current = event.currentTarget; }}
                 type="password"
                 autoComplete={signup ? "new-password" : "current-password"}
                 required
@@ -376,14 +381,14 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <button className="send" disabled={busy || checking}>
+            <button className="send" disabled={busy || checking || unavailable}>
               {busy ? copy.wait : signup ? copy.create : copy.signIn}
             </button>
           </form>
           <LanguageSelect />
           <button
             className="switch"
-            disabled={checking}
+            disabled={checking || busy || unavailable}
             onClick={() => {
               setSignup(!signup);
               setError("");

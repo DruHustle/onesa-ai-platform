@@ -15,8 +15,10 @@ failure/recovery, documenting hardware, configuration, sample sizes and bottlene
 
 The initial sign-in page shows its branded main content and editable credential drafts
 during the session check. Submission and account-mode changes remain disabled until that
-check completes; the submit handler also rejects Enter or programmatic submission while
-checking. A late verified session opens its workspace without replaying a draft login.
+check confirms the session state; the submit handler also rejects Enter or programmatic
+submission while checking or unavailable. A failed check requires explicit Retry, which
+preserves credential drafts and restores the last edited field. A late verified session
+opens its workspace without replaying a draft login.
 The browser gives session
 bootstrap eight seconds, cancels it on timeout or unmount, and exposes connection retry
 in place. Anonymous sessions, invitation restrictions and service failures retain their

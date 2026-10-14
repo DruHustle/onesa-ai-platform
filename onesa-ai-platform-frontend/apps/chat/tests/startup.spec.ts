@@ -117,12 +117,19 @@ test("a late verified session replaces the sign-in draft without replaying a log
 
 test("a hung session check is cancelled within ten seconds and retry preserves entered fields without reloading", async ({ page }) => {
   test.setTimeout(25000);
+  await authenticated(page);
+  await page.route("**/api/v1/auth/login", route => json(route, user));
   let attempt = 0;
   let release!: () => void;
   let observed!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
   const requested = new Promise<void>(resolve => { observed = resolve; });
   const cancelled: string[] = [];
+  const mutations: string[] = [];
+  page.on("request", request => {
+    const path = new URL(request.url()).pathname;
+    if (request.method() === "POST" && ["/api/v1/auth/login", "/api/v1/auth/register"].includes(path)) mutations.push(path);
+  });
   page.on("requestfailed", request => {
     if (new URL(request.url()).pathname === "/api/v1/auth/me") cancelled.push(request.failure()?.errorText ?? "cancelled");
   });
@@ -143,19 +150,29 @@ test("a hung session check is cancelled within ten seconds and retry preserves e
     await requested;
     const started = Date.now();
     await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
+    await page.getByLabel("Email", { exact: true }).fill("retry@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("synthetic-retry-password");
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
     await expect(page.locator("main").getByRole("alert")).toContainText("The service is unavailable", { timeout: 10000 });
     expect(Date.now() - started).toBeLessThan(10000);
     await expect.poll(() => cancelled.length).toBeGreaterThan(0);
-    await page.getByLabel("Email", { exact: true }).fill("retry@example.test");
-    await page.getByLabel("Password", { exact: true }).fill("synthetic-retry-password");
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "New to Onesa? Create an account", exact: true })).toBeDisabled();
+    await page.getByLabel("Password", { exact: true }).press("Enter");
+    await page.locator(".auth-card form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+    expect(mutations).toEqual([]);
     await page.getByRole("button", { name: "Retry connection", exact: true }).click();
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
     await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
     await expect(page.getByLabel("Email", { exact: true })).toHaveValue("retry@example.test");
     await expect(page.getByLabel("Password", { exact: true })).toHaveValue("synthetic-retry-password");
+    await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
+    expect(mutations).toEqual([]);
     expect(attempt).toBe(2);
     expect(navigations).toBe(1);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByLabel("Message Onesa AI")).toBeEnabled();
+    expect(mutations).toEqual(["/api/v1/auth/login"]);
   } finally {
     release();
   }
