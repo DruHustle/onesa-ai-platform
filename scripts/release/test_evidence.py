@@ -390,6 +390,68 @@ class GateTests(unittest.TestCase):
             marker, hosted_suite.safe_suite_failure_reason(ValueError(marker))
         )
 
+    def test_hosted_stream_details_accept_only_static_categories_and_bounded_codes(
+        self,
+    ):
+        import hosted_suite
+
+        reasons = {
+            "provider_stream_error",
+            "invalid_stream_json",
+            "invalid_stream_shape",
+            "invalid_stream_delta",
+            "stream_terminated_early",
+            "empty_model_response",
+            "response_size_limit",
+            "generation_lease_lost",
+        }
+        for reason in reasons:
+            with self.subTest(reason=reason):
+                error = hosted_suite.HostedStreamFailure(
+                    "generation_failed", reason, 3040
+                )
+                self.assertEqual(
+                    hosted_suite.safe_suite_failure_reason(error),
+                    "STREAM_DETAIL_" + reason.upper(),
+                )
+                self.assertEqual(error.provider_error_code, 3040)
+                self.assertEqual(error.code, "GENERATION_FAILED")
+        for reason in [
+            "PRIVATE-provider-message",
+            {"private": "value"},
+            [],
+            True,
+            None,
+        ]:
+            with self.subTest(reason_type=type(reason).__name__):
+                error = hosted_suite.HostedStreamFailure("generation_failed", reason)
+                self.assertIsNone(error.reason)
+                self.assertEqual(
+                    hosted_suite.safe_suite_failure_reason(error),
+                    "STREAM_ERROR_GENERATION_FAILED",
+                )
+                self.assertNotIn("PRIVATE", str(error))
+        for code in [True, -1, 1000000, "PRIVATE", {"private": "value"}]:
+            with self.subTest(code_type=type(code).__name__):
+                self.assertIsNone(
+                    hosted_suite.HostedStreamFailure(
+                        "generation_failed", "provider_stream_error", code
+                    ).provider_error_code
+                )
+
+        class FailedClient:
+            def model_call(self, *_args, **_kwargs):
+                return b'event: message_start\ndata: {}\n\nevent: error\ndata: {"code":"generation_failed","failure_reason":"provider_stream_error","provider_error_code":3040,"message":"PRIVATE-provider-body"}\n\n'
+
+        with self.assertRaises(hosted_suite.HostedStreamFailure) as caught:
+            hosted_suite.generation(FailedClient(), {})
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(caught.exception),
+            "STREAM_DETAIL_PROVIDER_STREAM_ERROR",
+        )
+        self.assertEqual(caught.exception.provider_error_code, 3040)
+        self.assertNotIn("PRIVATE", str(caught.exception))
+
     def test_hosted_staging_exit_gate_rejects_failure_blocked_and_false_pass_records(
         self,
     ):

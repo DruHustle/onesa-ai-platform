@@ -7,7 +7,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.inference import MockModelClient
+from app.inference import InferenceError, MockModelClient
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from tests.conftest import signup
 
@@ -115,6 +115,40 @@ def test_model_failure_keeps_user_but_not_partial_assistant(api: TestClient, pg:
         assert run is not None and run.status == "failed"
         row = db.get(Conversation, UUID(identifier))
         assert row is not None and row.active_run_id is None
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_failed_chat_reports_safe_reason_and_releases_lease(api, pg, empty):
+    import json
+
+    class Broken(MockModelClient):
+        async def stream(self, messages):
+            if empty:
+                return
+            yield "partial"
+            raise InferenceError(
+                "generation_failed", reason="provider_stream_error", provider_error_code=3040
+            )
+
+    signup(api)
+    identifier = new(api)
+    api.app.state.model_client = Broken()
+    response = api.post(
+        "/api/v1/chat/completions", json={"conversation_id": identifier, "content": "Synthetic"}
+    )
+    error_frame = next(
+        frame for frame in response.text.split("\n\n") if frame.startswith("event: error")
+    )
+    error = json.loads(error_frame.split("data: ", 1)[1])
+    assert error["code"] == "generation_failed"
+    assert error["message"] == "Response interrupted; retry"
+    assert error["failure_reason"] == ("empty_model_response" if empty else "provider_stream_error")
+    assert error.get("provider_error_code") == (None if empty else 3040)
+    assert "event: message_end" not in response.text
+    with Session(pg) as db:
+        assert db.scalar(select(func.count()).select_from(Message)) == 1
+        assert db.scalar(select(InferenceRun)).status == "failed"
+        assert db.get(Conversation, UUID(identifier)).active_run_id is None
 
 
 def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):

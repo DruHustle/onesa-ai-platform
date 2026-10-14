@@ -194,12 +194,12 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                             stats.first_token_seconds = time.monotonic() - started
                         size += len(chunk)
                         if size > 128000:
-                            raise ValueError("Response exceeds size limit")
+                            raise InferenceError("generation_failed", reason="response_size_limit")
                         chunks.append(chunk)
                         yield event("content_delta", {"text": chunk})
             text = "".join(chunks)
             if not text:
-                raise ValueError("Empty model response")
+                raise InferenceError("generation_failed", reason="empty_model_response")
             stats.total_seconds = time.monotonic() - started
             telemetry.update(
                 {
@@ -226,7 +226,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 {"model": metadata, "metrics": telemetry},
             )
             if identifier is None:
-                raise ValueError("Generation lease lost")
+                raise InferenceError("generation_failed", reason="generation_lease_lost")
             status = "completed"
             yield event(
                 "message_end",
@@ -241,14 +241,17 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 if isinstance(exc, InferenceError)
                 else "generation_failed"
             )
-            yield event(
-                "error",
-                {
-                    "code": code,
-                    "message": "Response interrupted; retry",
-                    "request_id": request.state.request_id,
-                },
-            )
+            detail: dict[str, Any] = {
+                "code": code,
+                "message": "Response interrupted; retry",
+                "request_id": request.state.request_id,
+            }
+            if isinstance(exc, InferenceError):
+                if exc.reason is not None:
+                    detail["failure_reason"] = exc.reason
+                if exc.provider_error_code is not None:
+                    detail["provider_error_code"] = exc.provider_error_code
+            yield event("error", detail)
         finally:
             from app.observability import record_generation
 
