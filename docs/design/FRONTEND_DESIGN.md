@@ -44,3 +44,8 @@ configured operator origin and allow only `/api/v1/*`, health and readiness. Met
 and inference addresses have no browser route. Server fetch handles disconnect signals;
 real browser stop/reload acceptance is recorded in PLATFORM_SPLIT_REPORT.md. Production
 Caddy may proxy API routes directly to FastAPI using the same public origin.
+
+
+## Shared interface contract
+
+Read [Onesa Design System](../architecture/ONESA_DESIGN_SYSTEM.md) and the pinned consumer manifest before frontend changes. AI and Docs retain distinct product shells over shared semantic tokens. Browser/OS preference controls appearance without selectors, clock timers or stored overrides. Verify drafts, focus, streams, forced colors, reduced motion and affected routes in both modes; local verification does not prove deployed acceptance.

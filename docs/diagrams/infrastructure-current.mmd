@@ -27,3 +27,8 @@ Render --> PPR
 Render --> APR
 Legacy --> PPR
 Pages[Separate engineering Pages output] -. fail-closed worker and Access policies .-> Guard[Protection and owner-login acceptance pending]
+
+OwnerPC[Approved owner PC] -->|Encrypted Tailscale tailnet| PrivateVM[Oracle private management endpoint]
+PrivateVM -->|Pinned ordinary OpenSSH| Oracle
+Tailnet[Scoped tailnet membership and policy] -. administration only .-> OwnerPC
+Tailnet -. application authorization remains separate .-> PrivateVM

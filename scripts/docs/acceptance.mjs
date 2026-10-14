@@ -27,11 +27,12 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch();
 const context=await browser.newContext();
-await context.addInitScript(()=>{Date.prototype.getHours=()=>Number(sessionStorage.getItem('onesa-test-hour')||12);});
+await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,accessibility:[],widths:[]};
 try{
- await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await context.addInitScript(()=>{localStorage.setItem('theme','dark');localStorage.setItem('onesa-unrelated-fixture','preserved');});
+ await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();
  expect(catalog.map(d=>d.id).sort()).toEqual([...policy.public_diagrams].sort());
  for(const diagram of catalog)for(const ext of ['svg','png','mmd','pdf']){
@@ -40,14 +41,14 @@ try{
  const manifest=await (await context.request.get(origin+'/generated/manuals.json')).json();
  expect(manifest.map(m=>m.category).sort()).toEqual([...policy.public_pdfs].sort());
  for(const manual of manifest){const response=await context.request.get(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(policy.version);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
- for(const url of ['/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await context.request.get(origin+url)).status()).toBe(404);
+ for(const url of ['/docs/architecture/ONESA_DESIGN_SYSTEM','/docs/operations/TAILSCALE_ADMINISTRATION','/generated/diagrams/onesa-design-system.svg','/generated/diagrams/tailscale-administration.pdf','/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await context.request.get(origin+url)).status()).toBe(404);
  const portal=await (await context.request.get(origin+'/generated/openapi-portal.json')).json();expect(Object.keys(portal.paths).every(p=>p.startsWith('/api/v1/public/'))).toBe(true);
  const robots=await (await context.request.get(origin+'/robots.txt')).text();expect(robots).toContain('Allow: /');expect(robots).toContain('Sitemap: https://docs.onesa.eu/sitemap.xml');
  const sitemap=await (await context.request.get(origin+'/sitemap.xml')).text();expect(sitemap).toContain('https://docs.onesa.eu/');expect(sitemap).not.toContain('localhost');expect(sitemap).not.toContain('/docs/ecosystem/');
  const publicRoutes=[...new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>new URL(match[1]).pathname))];
  expect(publicRoutes.length).toBeGreaterThan(10);
  for(const mode of ['light','dark']){
-  await page.evaluate(mode=>sessionStorage.setItem('onesa-test-hour',mode==='dark'?'20':'12'),mode);
+  await page.emulateMedia({colorScheme:mode});
  for(const width of [320,1440]) for(const route of publicRoutes){
   await page.setViewportSize({width,height:900});
   await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();
@@ -81,5 +82,6 @@ try{
   if(route==='/architecture')await expect(page.locator('.diagram-canvas svg')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({mode,width,route,overflow:false});
  }
+ await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await page.getByLabel('Search documentation').fill('Robot');await page.getByLabel('Search documentation').focus();await page.emulateMedia({colorScheme:'dark'});await expect(page.getByLabel('Search documentation')).toHaveValue('Robot');await expect(page.getByLabel('Search documentation')).toBeFocused();expect(await page.evaluate(()=>localStorage.getItem('theme'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('onesa-unrelated-fixture'))).toBe('preserved');
  expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...evidence},null,2));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

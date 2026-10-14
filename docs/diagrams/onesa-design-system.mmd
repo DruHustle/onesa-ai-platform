@@ -1,0 +1,15 @@
+flowchart TB
+  Source[Company repository canonical contract 1.0.0] --> Review[Reviewed immutable source and SHA256]
+  Review --> Company[Company local artifact]
+  Review --> AI[AI Platform local artifact]
+  Review --> Robot[AI Robot local artifact]
+  Review --> Docs[Docs local artifact]
+  Company --> Marketing[Public editorial and protected administration shells]
+  AI --> Workspace[Chat Knowledge Agents Travel workspace]
+  Robot --> Operator[Public product and protected operator shells]
+  Docs --> Publication[Separate public and Access-protected engineering builds]
+  Preference[Effective browser or OS preference] --> Semantic[Light and dark semantic mappings]
+  Semantic --> Marketing
+  Semantic --> Workspace
+  Semantic --> Operator
+  Semantic --> Publication

@@ -1,12 +1,12 @@
 {
   "onesa-company-portal": {
     "repository": "https://github.com/DruHustle/onesa-company-portal",
-    "commit": "c5d67731f0c6b6d0534149b9f5e81bc718b23f09",
+    "commit": "7289c02a0905c34752e9e244bc9f6fbd0f87a1d4",
     "sources": {
-      "README.md": "f18aaac95af59d67314af2081cbda2a904d20bbdc82ee88f23edd2582a61a2c4",
+      "README.md": "b5321fd9ea258f53f6e38681e88fe78690649e35445775ac21c5b3b10298fdce",
       "docs/api/API.md": "2f9fbb21557078c7d4b3fa37b8d6928d7dc59ad8021bb5bf41bd3cea78d27210",
       "onesa-company-portal-backend/src/api/export.ts": "188c9ab87220abc0902cc371302166107fa294a23a89eae5f27d8b8622f7b380",
-      "onesa-company-portal-backend/openapi/openapi.json": "b69a8e1ffe247ec6622b771edd58357d3433d1f88871babd947afce7cdd97977",
+      "onesa-company-portal-backend/openapi/openapi.json": "469966929f68697962eea465c0f30929e8d02bd2ff24c812285571078fb8efba",
       "onesa-company-portal-backend/migrations/001_initial.sql": "7d9b7ee898859ec4cd858f9cba4e43bc7c62a866323ca6786d2d7571cf4e26e9",
       "onesa-company-portal-backend/migrations/002_security_workflows.sql": "f4900254857995fd7da68ad51f2f5728ad2376213aad4d943a1ffc5ee8ab8fec",
       "onesa-company-portal-backend/migrations/003_document_versions.sql": "f6e0bf91cb2f547754d7eaafbe38e28edc563b25101e3d7878beb9f901e42b15",
@@ -15,18 +15,18 @@
       "onesa-company-portal-backend/migrations/006_bounded_transfers.sql": "da997d58639f6dd6e6eac5cf5a845e59422b1a96e2e0f4ba6b38c4d84ce111be",
       "onesa-company-portal-backend/migrations/007_operational_state.sql": "f1c27cd7ada57de2b262feb67e6c8290419b27e8094754ed01ca3ebed4ea76ea",
       "onesa-company-portal-backend/migrations/008_privacy_governance.sql": "c016c076686dfcb2982c743359ad94bfa24fca71bc1250e20fc3b7c655df02e3",
-      "docs/engineering/PRIVACY_GOVERNANCE.md": "b0da3d69f3760a6e28c6deb5715bed5509ed24b9e05ea1c2a15611acfe3dd725"
+      "docs/engineering/PRIVACY_GOVERNANCE.md": "76080ce33ce1a230cad4552f453ffa81439dc48b924c0d96bc11c12f397211a2"
     }
   },
   "onesa-ai-robot": {
     "repository": "https://github.com/DruHustle/onesa-ai-robot",
-    "commit": "b0d40c6d2ccab2b1663166ebf311b4a9755ad045",
+    "commit": "5d736137643fc470ef14cb9a04586a899edfacd2",
     "sources": {
-      "README.md": "fbac1d0a875f55b5d6f5c0bdf649eafd65d61e7647f5c57be7eee3434405644d",
-      "docs/engineering/SIMULATION_ARCHITECTURE.md": "031a0a7fa25e5ebd6e363536f0e330c968e6b62b396cf59abcfaed2a7ed7340e",
+      "README.md": "e5d5b0b39ee1c7dd3aa6be0ff4ab28a4a416cd3f38a916fb2ac5f99a0816c8a0",
+      "docs/engineering/SIMULATION_ARCHITECTURE.md": "7ec8a9df405db438767ce0987ee00841fd61d61af05f1dd8279a037bb87fe5f3",
       "ros2/README.md": "69f6b482fb0ebf0622805756ca9f9485ada4bbcf4e012ea0088f9d81d2d90057",
-      "onesa-ai-robot-backend/robot_api/main.py": "075d1b8fcedc7f1c6063d43cd63156a1249cc4cb8ea03632fc43d4060900a237",
-      "onesa-ai-robot-frontend/contracts/openapi.json": "dd5f7e8d8d0626c5abbd723b6aa3987bad622c00c4b574bd7fb27e50f421fb26",
+      "onesa-ai-robot-backend/robot_api/main.py": "0d2529e396459f084b37c83872e1fbd7031fa0e911249bc191d061add559b594",
+      "onesa-ai-robot-frontend/contracts/openapi.json": "39f7a1bf6e6d18cf07da815f8f52b34a317a95f840cc916ed3c708684720319e",
       "onesa-ai-robot-backend/robot_api/turso.py": "6cc3f1c5fb7e7caed627842f235ee2e29999f423333028b6fc1e7123b82e4db4",
       "onesa-ai-robot-backend/robot_api/safety.py": "515f346d259a7e20c675ea5d98c74652324e4bd717f5df00ce9ca590e6bf82b8",
       "ros2/onesa_sim_interfaces/msg/SimulationTelemetry.msg": "47a5bb25c6b48ae82eb81d456ca96dbf74cd3a497d3e0edd295d48a7cf212355",

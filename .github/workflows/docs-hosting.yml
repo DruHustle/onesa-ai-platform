@@ -41,6 +41,7 @@ jobs:
     timeout-minutes: 30
     env:
       ONESA_DOCS_SCOPE: public
+      ONESA_DOCS_ENVIRONMENT: ${{ inputs.target == 'production' && 'production' || inputs.target == 'preview' && 'staging' || 'development' }}
       ONESA_DOCS_STATIC_HOSTING: 'true'
       ONESA_DOCS_URL: ${{ inputs.docs_url }}
       ONESA_APPLICATION_URL: ${{ inputs.application_url }}

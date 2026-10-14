@@ -45,7 +45,7 @@ not demonstrate private-Free branch or environment enforcement.
 
 Remotes remain `https://github.com/DruHustle/<repository>.git`. Feature, audit,
 staging and earlier release/security branches coexist with main. Development uses
-feature branches and PRs **targeting main**. There is no enforced private-Free ban
+the existing dev branch and PRs **targeting staging**, then qualified staging promotion to main. There is no enforced private-Free ban
 on direct pushes, merges without checks, force pushes or workflow modifications.
 
 [GitHub branch protection availability](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches)
@@ -219,7 +219,7 @@ handoff does not resolve that blocker or authorize paid disks.
 | Production credentials absent from editable repository CI | External owner custody after migration | **Not yet active remotely**; current repository keys must be removed/rotated by owner |
 | Production Git/deploy-hook automation disabled | Provider account settings after verified owner action | Local configs are prepared; existing service settings not freshly verified |
 | Manual owner issue/dispatch/digest, revocation, freshness | Workflow/API provenance and trusted external verifier | Owner must review source; writable repository cannot police a malicious workflow author by itself |
-| Feature branches, PR targeting main, solo-owner merge review | Team discipline plus release eligibility check | Direct pushes and unchecked merges remain possible on private Free |
+| Dev to staging to main, solo-owner merge review | Team discipline plus release eligibility check | Direct pushes and unchecked merges remain possible on private Free |
 | Hardware/robot physical authorization | Separate owner/hardware safety process | Cloud approval never grants physical authority; current software cannot actuate hardware |
 
 [GitHub's security guidance](https://docs.github.com/en/actions/reference/security/secure-use)

@@ -134,7 +134,9 @@ regressions, shell syntax, default/custom-port argv and diff checks passed.
 The local Docker image builds successfully. Hosted settings and deployment have
 not been changed; production remains gated.
 
-## Shared Onesa interface identity (2026-10-10)
+## Historical interface identity (2026-10-10; superseded)
+
+The current shared contract, product variants and system-preference appearance are maintained in [Onesa Design System](../architecture/ONESA_DESIGN_SYSTEM.md). Earlier clock schedules and disconnected navy/cyan skins below are historical evidence.
 
 Public/internal documentation and the AI application now use the company homepage
 navy (#081b32), cyan (#53dbe8), blue (#2366d1), neutral surfaces and Arial typography.

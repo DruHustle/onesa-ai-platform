@@ -26,3 +26,8 @@ Open the [interactive Day 3 workflow](/onboarding#day-3). Source: `docs/diagrams
 Portal and AI use the registered `deploy.yml` staging bridge with `target=staging`, `fixture_mode=temporary` and `application=both`. Robot uses `release-candidate.yml` with `target=staging` and `application=frontend`. Trusted jobs validate actor, source and exact targets before loading secrets. Oracle uses Portal `scripts/oracle_worker.py` with exact qualified staging SHA and separately verified synthetic data. Documentation uses `docs-hosting.yml` and classified public output; engineering Pages needs separate protection qualification.
 
 The retained local runner is a private-only, isolated option and is dormant. GitHub-hosted review and mandatory checks do not depend on it. Private GitHub Free does not provide paid branch/environment protections. Current public repository environment secret availability is separately verified; repository-level fallback is not environment isolation.
+
+
+## Security update exception
+
+The permanent branches remain dev, staging and main. Temporary Dependabot security-fix PRs and reviewed urgent candidates are permitted; ordinary version PR automation stays limit 0. Use credential-free hosted PR checks and the [security release procedure](../engineering/DEPLOYMENT.md#security-releases-and-permanent-branches). An urgent candidate excludes unfinished dev, qualifies in existing isolated staging and requires owner-controlled production release plus reconciliation into dev/staging. Never copy production secrets into bot jobs or enable blind auto-merge.

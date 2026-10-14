@@ -1,5 +1,28 @@
 # Independent application deployment
 
+## Security releases and permanent branches
+
+Keep dev, staging and main as the only permanent branches. Temporary Dependabot
+security-fix PRs and reviewed security release candidates are allowed. Security updates
+target the actual GitHub default branch (currently main); ordinary version-update settings
+for dev do not change that behavior. Keep automatic security-fix generation, alerts,
+scans and owner notifications; ordinary version PR creation remains limit 0.
+
+Review fixes through credential-free hosted PR checks and normally integrate on dev,
+then staging and main. For urgent remediation when dev contains unfinished work,
+construct the candidate from exact current production plus the reviewed fix only.
+Qualify it in existing isolated staging, bind tests/artifacts/approval to that source,
+use owner-controlled production release, then reconcile into dev and staging. No new
+permanent environment, blind auto-merge, deployment secrets in bot jobs or unsafe
+pull-request triggers are permitted. Cleanup temporary branches only after confirmed
+incorporation and review of evidence/artifact/rollback dependencies. A green bot check
+is not authorization to ship unrelated dev work or skip operations/privacy gates.
+
+The [CI/CD runbook](CI_CD.md) records the implemented staging/main guards and the
+conditional urgent procedure. Direct qualification from a temporary branch when
+staging contains unrelated unfinished work is not implemented. Preserve that work
+and report the limitation; never reset staging or weaken exact-source checks.
+
 ## Reviewed staging path — 2026-10-12
 
 After dev review and exact merged staging CI pass, use the registered owner bridge: `gh workflow run deploy.yml --ref staging -f target=staging -f fixture_mode=temporary`. Existing Staging-only credentials and approved synthetic scope/project fixture JSON are required. Temporary identities use random private credentials and two-hour grants; cleanup expires those exact grants and revokes their sessions. Provided credentials remain available with `fixture_mode=provided`. No production identities or migrations are changed.

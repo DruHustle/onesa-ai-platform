@@ -29,3 +29,8 @@ classDef planned fill:#edf1f7,stroke:#52789b,color:#10263e,stroke-dasharray:5 5
 class Oracle,Scan,CF verified
 class Internal,Access pending
 class Edge planned
+
+OwnerPC[Approved owner PC] -->|Encrypted Tailscale tailnet| PrivateVM[Oracle private management endpoint]
+PrivateVM -->|Pinned ordinary OpenSSH| Oracle
+Tailnet[Scoped tailnet membership and policy] -. administration only .-> OwnerPC
+Tailnet -. application authorization remains separate .-> PrivateVM
