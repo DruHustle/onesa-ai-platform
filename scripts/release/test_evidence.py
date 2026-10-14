@@ -81,6 +81,10 @@ def fixtures():
         "status": "PASS",
         "render_deployment_id": "dep-test",
         "vercel_deployment_id": "dpl_test",
+        "critical_workflow_checks": {
+            name: "PASS" for name in e.platform_workflow_check_names()
+        },
+        "observed_model": {"real_inference": True, "backend": "cloudflare"},
     }
     stage_origin = {
         "run_id": 20,
@@ -172,6 +176,159 @@ class GateTests(unittest.TestCase):
         e.validate_approval(
             self.approval, self.evidence, self.origin, self.run, SHA, now=NOW
         )
+
+    def test_bounded_hosted_sse_parser_rejects_partial_foreign_and_oversized_frames(
+        self,
+    ):
+        import hosted_suite
+
+        valid = b'event: content_delta\ndata: {"text":\ndata: "synthetic"}\n\n'
+        self.assertEqual(
+            list(hosted_suite.stream_events(io.BytesIO(valid))),
+            [("content_delta", {"text": "synthetic"})],
+        )
+        for payload in [
+            b'event: content_delta\ndata: {"text":"unfinished"}\n',
+            b"event: unauthorized\ndata: {}\n\n",
+            b"event: content_delta\ndata: []\n\n",
+            b"data: " + b"x" * 65537 + b"\n\n",
+        ]:
+            with self.subTest(length=len(payload)), self.assertRaises(e.Rejected):
+                list(hosted_suite.stream_events(io.BytesIO(payload)))
+
+    def test_streamed_generation_cannot_pass_mock_error_empty_or_unfinished_content(
+        self,
+    ):
+        import hosted_suite
+
+        class Response:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def model_call(self, *args):
+                return self.payload
+
+        def frame(name, data):
+            return f"event: {name}\ndata: {json.dumps(data)}\n\n".encode()
+
+        start = {"model": {"real_inference": True, "backend": "cloudflare"}}
+        good = (
+            frame("message_start", start)
+            + frame("content_delta", {"text": "Synthetic parsed content"})
+            + frame("message_end", {})
+        )
+        self.assertEqual(
+            hosted_suite.generation(Response(good), {})[0], "Synthetic parsed content"
+        )
+        for payload in [
+            frame(
+                "message_start", {"model": {"real_inference": False, "backend": "mock"}}
+            )
+            + frame("content_delta", {"text": "mock"})
+            + frame("message_end", {}),
+            frame("message_start", start)
+            + frame("error", {})
+            + frame("message_end", {}),
+            frame("message_start", start) + frame("message_end", {}),
+            frame("message_start", start)
+            + frame("content_delta", {"text": 5})
+            + frame("message_end", {}),
+            frame("message_start", start) + frame("content_delta", {"text": "partial"}),
+        ]:
+            with self.subTest(length=len(payload)), self.assertRaises(e.Rejected):
+                hosted_suite.generation(Response(payload), {})
+
+    def test_critical_workflows_require_current_run_full_hosted_ui_and_real_model(self):
+        import hosted
+
+        self.assertEqual(
+            hosted.PLATFORM_API_WORKFLOWS | hosted.PLATFORM_UI_WORKFLOWS,
+            e.platform_workflow_check_names(),
+        )
+        suite = {
+            "candidate_commit": SHA,
+            "workflow_run_id": 40,
+            "frontend_origin": "https://synthetic.vercel.app",
+            "status": "PASS",
+            "workflow_checks": {name: "PASS" for name in hosted.PLATFORM_API_WORKFLOWS},
+            "model": {"real_inference": True, "backend": "cloudflare"},
+        }
+        ui = {
+            "candidate_commit": SHA,
+            "workflow_run_id": 40,
+            "origin": "https://synthetic.vercel.app",
+            "status": "PASS",
+            "workflow_checks": {name: "PASS" for name in hosted.PLATFORM_UI_WORKFLOWS},
+            "real_hosted": True,
+            "synthetic_only": True,
+            "browser": "chromium",
+            "views": [
+                {
+                    "viewport": viewport,
+                    "route": route,
+                    "mode": mode,
+                    "system_scheme": mode,
+                    "overflow": False,
+                    "axe_violations": 0,
+                }
+                for viewport in ["desktop", "tablet", "mobile"]
+                for route in [
+                    "/",
+                    "/knowledge",
+                    "/agents",
+                    "/travel",
+                    "/settings",
+                    "/recovery",
+                    "/invitation",
+                ]
+                for mode in ["light", "dark"]
+            ],
+        }
+
+        def observed(a, b):
+            return hosted.platform_workflow_evidence(
+                a, b, SHA, "https://synthetic.vercel.app", 40
+            )[0]
+
+        self.assertTrue(all(value == "PASS" for value in observed(suite, ui).values()))
+        for a, b in [(None, ui), (suite, None), (None, None)]:
+            self.assertNotEqual(set(observed(a, b).values()), {"PASS"})
+        for mutation in [
+            lambda item: item.update(status="FAIL"),
+            lambda item: item["views"].pop(),
+            lambda item: item["views"][0].update(axe_violations=1),
+            lambda item: item.update(real_hosted=False),
+            lambda item: item["workflow_checks"].pop(
+                "actual_stop_and_session_preservation"
+            ),
+        ]:
+            partial = copy.deepcopy(ui)
+            mutation(partial)
+            self.assertNotEqual(set(observed(suite, partial).values()), {"PASS"})
+        for record, key, value in [
+            (ui, "workflow_run_id", 41),
+            (ui, "candidate_commit", "f" * 40),
+            (suite, "frontend_origin", "https://foreign.vercel.app"),
+        ]:
+            foreign = copy.deepcopy(record)
+            foreign[key] = value
+            with self.assertRaises(e.Rejected):
+                observed(
+                    foreign if record is suite else suite,
+                    foreign if record is ui else ui,
+                )
+        mock = copy.deepcopy(suite)
+        mock["model"].update(real_inference=False, backend="mock")
+        self.assertEqual(observed(mock, ui)["real_context_and_history"], "FAIL")
+
+    def test_trusted_stage_reader_rejects_legacy_or_partial_critical_pass(self):
+        if e.PRODUCT != "onesa-ai-platform":
+            return
+        for key in ["critical_workflow_checks", "observed_model"]:
+            record = copy.deepcopy(self.evidence["staging"]["record"])
+            del record[key]
+            with self.assertRaises(e.Rejected):
+                e.verify_stage(record, SHA, FINGERPRINT, self.evidence["builds"], NOW)
 
     def test_hosted_suite_failure_code_preserves_status_without_request_or_secret_data(
         self,

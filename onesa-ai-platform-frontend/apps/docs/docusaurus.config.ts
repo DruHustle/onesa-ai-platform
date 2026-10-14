@@ -26,7 +26,8 @@ if (apiUrl && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(apiUrl)) {
 }
 const config: Config = {
   title: internal ? 'Onesa Engineering Docs' : 'Onesa Developer Docs', tagline: 'Engineering Intelligent Possibilities',
-  url:process.env.ONESA_DOCS_URL || (staticHosting ? 'https://docs.onesa.eu' : `http://localhost:${internal ? 3201 : 3200}`), staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], favicon:'favicon.ico', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
+  url:process.env.ONESA_DOCS_URL || (staticHosting ? 'https://docs.onesa.eu' : `http://localhost:${internal ? 3201 : 3200}`), staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], favicon:'brand/icons/v1/onesa-docs.svg', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
+  headTags:[{tagName:'link',attributes:{rel:'icon',href:'/favicon.ico',type:'image/vnd.microsoft.icon',sizes:'16x16 32x32 64x64'}},{tagName:'link',attributes:{rel:'icon',href:'/brand/icons/v1/onesa-docs.svg',type:'image/svg+xml',sizes:'any'}},{tagName:'link',attributes:{rel:'apple-touch-icon',href:'/brand/icons/v1/onesa-docs-180.png',type:'image/png',sizes:'180x180'}}],
   onBrokenLinks:'throw', onBrokenAnchors:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
   plugins:[function onesaProductContext(){return {name:'onesa-product-context',async postBuild({outDir}:{outDir:string}){const visit=async(directory:string):Promise<void>=>{for(const entry of await readdir(directory,{withFileTypes:true})){const file=join(directory,entry.name);if(entry.isDirectory())await visit(file);else if(entry.name.endsWith('.html')){const html=await readFile(file,'utf8');await writeFile(file,html.replace(/<html\b/,'<html data-onesa-product="docs"'));}}};await visit(outDir);}};}],

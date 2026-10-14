@@ -4,6 +4,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const docsRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));
 const {chromium,expect}=docsRequire('@playwright/test');
@@ -46,7 +47,22 @@ const browser=await chromium.launch();
 const context=await browser.newContext();
 await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
-const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],accessibility:[],widths:[]};
+const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
+async function checkIdentityIcons(){
+ const source=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json'),'utf8'));
+ await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('href','/brand/icons/v1/onesa-docs.svg');
+ await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('sizes','any');
+ await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('sizes','180x180');
+ for(const name of ['onesa-docs.svg','onesa-docs.ico','onesa-docs-180.png']){
+  const asset=source.products[0].files.find(file=>file.name===name);
+  const route=name.endsWith('.ico')?'/favicon.ico':'/brand/icons/v1/'+name;
+  const response=await context.request.get(origin+route);expect(response.status()).toBe(200);
+  const mime=response.headers()['content-type'].split(';')[0];
+  expect(name.endsWith('.ico')?['image/x-icon','image/vnd.microsoft.icon']:[asset.mime]).toContain(mime);
+  expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(asset.sha256);
+  evidence.icons.push({path:route,status:200,mime,sha256:asset.sha256});
+ }
+}
 async function checkApplicationsNavigation(view){
  let dropdown;
  if(view==='mobile'){
@@ -80,6 +96,7 @@ async function checkApplicationsNavigation(view){
 try{
  await context.addInitScript(()=>{localStorage.setItem('theme','dark');localStorage.setItem('onesa-unrelated-fixture','preserved');});
  await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await checkIdentityIcons();
  await checkApplicationsNavigation('desktop');
  await page.setViewportSize({width:390,height:900});await page.goto(origin+'/');await checkApplicationsNavigation('mobile');await page.setViewportSize({width:1440,height:900});
  const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();

@@ -19,6 +19,7 @@ from evidence import (
     Rejected,
     digest,
     require,
+    require_platform_workflows,
     save,
     staging_check_names,
     trusted_run,
@@ -34,6 +35,116 @@ BACKEND_ORIGINS = {
     "onesa-company-portal": "https://onesa-company-portal-backend-staging.onrender.com",
     "onesa-ai-platform": "https://onesa-ai-platform-backend-staging.onrender.com",
 }
+
+PLATFORM_API_WORKFLOWS = {
+    "anonymous_models_denied",
+    "real_context_and_history",
+    "real_rag_citations_and_isolation",
+    "actual_upload_quota_and_input_bound",
+    "real_agent_planning_permissions_and_isolation",
+    "real_travel_planning_revision_isolation_and_boundary",
+    "active_stop_and_direct_ownership_denial",
+}
+PLATFORM_UI_WORKFLOWS = {
+    "hosted_all_route_modes_and_accessibility",
+    "live_drafts_focus_session_and_no_mode_requests",
+    "actual_stream_mode_change_without_resubmission",
+    "actual_stop_and_session_preservation",
+}
+
+
+def platform_workflow_evidence(suite, ui, sha, origin, run_id):
+    """Fail closed on missing, partial or foreign current-run application evidence."""
+    result = {
+        name: "NOT TESTED" for name in PLATFORM_API_WORKFLOWS | PLATFORM_UI_WORKFLOWS
+    }
+    model = {}
+    for record, expected, origin_key in [
+        (suite, PLATFORM_API_WORKFLOWS, "frontend_origin"),
+        (ui, PLATFORM_UI_WORKFLOWS, "origin"),
+    ]:
+        if record is None:
+            continue
+        require(
+            isinstance(record, dict)
+            and record.get("candidate_commit") == sha
+            and record.get("workflow_run_id") == run_id
+            and record.get(origin_key) == origin,
+            "Critical workflow candidate mismatch",
+        )
+        observed = record.get("workflow_checks", {})
+        require(isinstance(observed, dict), "Invalid critical workflow results")
+        for name in expected:
+            value = observed.get(name, "NOT TESTED")
+            require(
+                value in {"PASS", "FAIL", "BLOCKED", "NOT TESTED"},
+                "Invalid workflow result",
+            )
+            result[name] = value
+        if record.get("status") != "PASS":
+            for name in expected:
+                if result[name] == "PASS":
+                    result[name] = "FAIL"
+    if suite is not None:
+        model = suite.get("model", {})
+        if not (
+            isinstance(model, dict)
+            and model.get("real_inference") is True
+            and model.get("backend") in {"cloudflare", "ollama", "vllm"}
+        ):
+            result["real_context_and_history"] = "FAIL"
+            model = {}
+        else:
+            model = {
+                key: model.get(key)
+                for key in [
+                    "backend",
+                    "model_identifier",
+                    "revision",
+                    "context_tokens",
+                    "real_inference",
+                ]
+            }
+    if ui is not None:
+        expected_views = {
+            (viewport, route, mode)
+            for viewport in ["desktop", "tablet", "mobile"]
+            for route in [
+                "/",
+                "/knowledge",
+                "/agents",
+                "/travel",
+                "/settings",
+                "/recovery",
+                "/invitation",
+            ]
+            for mode in ["light", "dark"]
+        }
+        views = ui.get("views", [])
+        valid_views = (
+            isinstance(views, list)
+            and len(views) == len(expected_views)
+            and all(isinstance(view, dict) for view in views)
+            and {
+                (view.get("viewport"), view.get("route"), view.get("mode"))
+                for view in views
+            }
+            == expected_views
+            and all(
+                view.get("overflow") is False
+                and view.get("axe_violations") == 0
+                and view.get("system_scheme") == view.get("mode")
+                for view in views
+            )
+        )
+        if not (
+            valid_views
+            and ui.get("real_hosted") is True
+            and ui.get("synthetic_only") is True
+            and ui.get("browser") == "chromium"
+        ):
+            result["hosted_all_route_modes_and_accessibility"] = "FAIL"
+    return result, model
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -198,6 +309,7 @@ def require_stage_acceptance(record):
         and all(value == "PASS" for value in checks.values()),
         "Hosted staging acceptance incomplete",
     )
+    require_platform_workflows(record)
 
 
 def require_full_serving_profile(settings):
@@ -438,6 +550,7 @@ def stage(qualification, render_receipt, origin):
             checks["inference"] = observed.get("model_generation", "BLOCKED")
             checks["embeddings"] = observed.get("semantic_embeddings", "BLOCKED")
 
+    suite = None
     suite_path = Path(os.environ["RUNNER_TEMP"], "hosted-suite.json")
     if suite_path.exists():
         suite = json.loads(suite_path.read_text())
@@ -453,6 +566,40 @@ def stage(qualification, render_receipt, origin):
                 "Unsupported hosted check",
             )
             checks[name] = result
+    critical_results, observed_model, ui_summary = {}, {}, {}
+    if PRODUCT.endswith("platform"):
+        ui_path = Path(os.environ["RUNNER_TEMP"], "hosted-ui.json")
+        ui = json.loads(ui_path.read_text()) if ui_path.exists() else None
+        critical_results, observed_model = platform_workflow_evidence(
+            suite, ui, sha, origin, int(os.environ["GITHUB_RUN_ID"])
+        )
+        if ui is not None:
+            ui_summary = {
+                "browser": ui.get("browser"),
+                "views": len(ui.get("views", [])),
+                "manual_safari_and_screen_reader": "NOT TESTED",
+                "identity_icons": [],
+            }
+            for icon in ui.get("identity_icons", []):
+                require(
+                    isinstance(icon, dict)
+                    and icon.get("path")
+                    in {
+                        "/favicon.ico",
+                        "/brand/icons/v1/onesa-ai.svg",
+                        "/brand/icons/v1/onesa-ai-180.png",
+                    }
+                    and re.fullmatch(r"[a-f0-9]{64}", icon.get("sha256", ""))
+                    and icon.get("status") == 200,
+                    "Invalid hosted icon observation",
+                )
+                ui_summary["identity_icons"].append(
+                    {key: icon[key] for key in ["path", "sha256", "status"]}
+                )
+        if not all(value == "PASS" for value in critical_results.values()):
+            checks["critical_workflows"] = (
+                "FAIL" if "FAIL" in critical_results.values() else "NOT TESTED"
+            )
     status = (
         "PASS"
         if all(value == "PASS" for value in checks.values())
@@ -469,6 +616,9 @@ def stage(qualification, render_receipt, origin):
         "environment": "Staging",
         "status": status,
         "checks": checks,
+        "critical_workflow_checks": critical_results,
+        "observed_model": observed_model,
+        "ui_acceptance": ui_summary,
         "verified_at": datetime.now(timezone.utc).isoformat(),
         "workflow_run_id": int(os.environ["GITHUB_RUN_ID"]),
         "render_service_id": receipt["service_id"],
@@ -477,7 +627,8 @@ def stage(qualification, render_receipt, origin):
         "frontend_origin": origin,
         "backend_origin": backend,
         "limitations": [
-            "Complete authenticated, integration and dependency acceptance is required; see the individual hosted check results"
+            "Hosted application evidence uses approved synthetic staging identities; it grants no customer-data or live booking authority",
+            "Manual Safari and screen-reader verification remains NOT TESTED",
         ],
     }
 

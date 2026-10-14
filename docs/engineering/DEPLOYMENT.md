@@ -29,6 +29,8 @@ After dev review and exact merged staging CI pass, use the registered owner brid
 
 Vercel Git owns the protected exact-source staging Preview; Actions verifies that Preview and manually deploys the backend. Actual inference, embedding, streaming, user isolation and storage acceptance remain mandatory. Mock/local UI tests do not qualify hosted model readiness or production. Public documentation preview uses its independent `docs-hosting.yml` workflow; protected internal builds require the authenticated gateway and are excluded from static hosting.
 
+The existing hosted producer also requires real conversation context/history, persisted source citations, bounded uploads, model-planned permitted tools, Travel creation/revision/conflict and owner isolation, and active cancellation. Browser acceptance covers all seven protected routes at desktop/tablet/mobile in both system modes, with live draft/focus/session preservation and an actual active stream and Stop. Source/run/origin binding, real-model metadata and complete browser coverage are checked by the receipt reader; absent, partial or foreign evidence fails closed. Temporary credentials stay in private runner files and are revoked after probes. Travel live data and bookings, manual Safari and screen-reader review remain outside the demonstrated synthetic scope.
+
 > Current private-Free release policy: [safeguards and external owner authorization](../development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
 
 Use separate versioned images from the frontend/backend Dockerfiles. Each build context

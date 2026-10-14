@@ -67,6 +67,8 @@ The logo links to the current product home; the active capability has `aria-curr
 
 Preserve the approved master mark and recorded source/rights. Use existing approved favicon derivatives and router metadata; do not invent an official mark or add a service worker for icons. Validate icon bytes, dimensions, MIME, HTTP status, document titles and actual tabs at each deployed target. Private customer content, governance records and live telemetry never become decorative screenshots. Internal annotated examples use synthetic fixtures and captions.
 
+Identity icons version 1.0.0 trace the common O from the unchanged, owner-supplied Company orbit artwork. Company uses a square frame, AI a diamond, Robot a circle and Docs a folded book, with their approved product accents. The consumer manifest pins each local provenance record and its derivative hashes. SVG, 16/32/64-pixel ICO frames and the 180-pixel Apple icon provide small-size and browser fallbacks. These technical derivatives do not assert a new official or registered logo. Both public and protected Docs use the Docs identity; access and environment remain separate labels. Native browser-tab appearance must be verified after deployment, alongside metadata and response checks.
+
 Do use a compact form/card and precise unavailable state in a workspace. Do not introduce a marketing hero into Chat, a governance table or operator telemetry. Do use a clear source and capture caption for documentation screenshots. Do not invent activity, compliance scores, physical capability or commercial milestones for appearance.
 
 ## Representative verification and maintenance

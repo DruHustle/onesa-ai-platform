@@ -544,6 +544,38 @@ def staging_check_names():
     return required
 
 
+def platform_workflow_check_names():
+    return {
+        "anonymous_models_denied",
+        "real_context_and_history",
+        "real_rag_citations_and_isolation",
+        "actual_upload_quota_and_input_bound",
+        "real_agent_planning_permissions_and_isolation",
+        "real_travel_planning_revision_isolation_and_boundary",
+        "active_stop_and_direct_ownership_denial",
+        "hosted_all_route_modes_and_accessibility",
+        "live_drafts_focus_session_and_no_mode_requests",
+        "actual_stream_mode_change_without_resubmission",
+        "actual_stop_and_session_preservation",
+    }
+
+
+def require_platform_workflows(stage):
+    if PRODUCT != "onesa-ai-platform":
+        return
+    checks = stage.get("critical_workflow_checks", {})
+    model = stage.get("observed_model", {})
+    require(
+        isinstance(checks, dict)
+        and platform_workflow_check_names() <= checks.keys()
+        and all(checks[name] == "PASS" for name in platform_workflow_check_names())
+        and isinstance(model, dict)
+        and model.get("real_inference") is True
+        and model.get("backend") in {"cloudflare", "ollama", "vllm"},
+        "Critical hosted application workflows unresolved",
+    )
+
+
 def verify_stage(stage, sha, fingerprint, builds, now=None):
     require(
         stage["repository"] == REPOSITORY
@@ -566,6 +598,7 @@ def verify_stage(stage, sha, fingerprint, builds, now=None):
         "Staging deployment identifiers missing",
     )
     if stage["status"] == "PASS":
+        require_platform_workflows(stage)
         require(
             all(stage["checks"][name] == "PASS" for name in required),
             "Staging checks unresolved",

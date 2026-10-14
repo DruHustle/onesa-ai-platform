@@ -8,6 +8,7 @@ import base64
 import hashlib
 import hmac
 import http.cookiejar
+import io
 import json
 import os
 import re
@@ -72,6 +73,38 @@ class Session:
             NoRedirect(), urllib.request.HTTPCookieProcessor(self.cookies)
         )
         self.csrf = None
+        self.last_model_request = 0.0
+
+    def model_call(self, method, path, body=None, expected=200):
+        # Respect the real staging service's admission budget; never raise its limits for QA.
+        remaining = 30 - (time.monotonic() - self.last_model_request)
+        if remaining > 0:
+            time.sleep(remaining)
+        self.last_model_request = time.monotonic()
+        return self.call(method, path, body, expected=expected)
+
+    def stream(self, body):
+        remaining = 30 - (time.monotonic() - self.last_model_request)
+        if remaining > 0:
+            time.sleep(remaining)
+        self.last_model_request = time.monotonic()
+        headers = {
+            "Origin": self.origin,
+            "Content-Type": "application/json",
+            "X-CSRF-Token": self.csrf or "",
+            "x-vercel-protection-bypass": os.environ.get(
+                "VERCEL_AUTOMATION_BYPASS_SECRET", ""
+            ),
+        }
+        return self.opener.open(
+            urllib.request.Request(
+                self.origin + "/api/v1/chat/completions",
+                data=json.dumps(body).encode(),
+                headers=headers,
+                method="POST",
+            ),
+            timeout=150,
+        )
 
     def call(self, method, path, body=None, expected=200, csrf=True):
         headers = {
@@ -136,6 +169,97 @@ class Session:
         self.call("GET", "/api/v1/auth/me")
 
 
+def stream_events(response):
+    """Read bounded SSE JSON as data, including split frames; never execute output."""
+    total = 0
+    name = ""
+    data = []
+    for _ in range(8192):
+        line = response.readline(65537)
+        if not line:
+            require(not data, "Incomplete hosted stream frame")
+            return
+        total += len(line)
+        require(
+            len(line) <= 65536 and total <= 1024 * 1024, "Hosted stream exceeds bound"
+        )
+        text = line.decode("utf-8").rstrip("\r\n")
+        if not text:
+            if data:
+                require(
+                    name in {"message_start", "content_delta", "message_end", "error"},
+                    "Unsupported hosted stream event",
+                )
+                value = json.loads("\n".join(data))
+                require(isinstance(value, dict), "Hosted stream data must be an object")
+                yield name, value
+            name, data = "", []
+        elif text.startswith("event: "):
+            name = text[7:]
+        elif text.startswith("data: "):
+            data.append(text[6:])
+    raise Rejected("Hosted stream event limit reached")
+
+
+def generation(client, body):
+    response = client.model_call("POST", "/api/v1/chat/completions", body)
+    require(isinstance(response, bytes), "Real streamed inference missing")
+    frames = list(stream_events(io.BytesIO(response)))
+    names = [name for name, _ in frames]
+    require(
+        names
+        and names[0] == "message_start"
+        and names[-1] == "message_end"
+        and "error" not in names,
+        "Real streamed inference did not complete",
+    )
+    start = frames[0][1]
+    require(
+        start.get("model", {}).get("real_inference") is True
+        and start["model"].get("backend") in {"cloudflare", "ollama", "vllm"},
+        "Hosted inference metadata is not real",
+    )
+    chunks = [value.get("text") for name, value in frames if name == "content_delta"]
+    require(
+        all(isinstance(chunk, str) for chunk in chunks), "Invalid hosted stream content"
+    )
+    text = "".join(chunks)
+    require(bool(text.strip()), "Hosted model returned empty content")
+    return text, start
+
+
+def upload_quota(client, other):
+    owned = []
+    payload = {
+        "filename": "release-quota.txt",
+        "media_type": "text/plain",
+        "size": 1,
+        "sha256": hashlib.sha256(b"x").hexdigest(),
+    }
+    try:
+        for _ in range(2):
+            identifier = client.call(
+                "POST", "/api/v1/knowledge/uploads", payload, expected=201
+            )["id"]
+            owned.append(identifier)
+        denied = client.call("POST", "/api/v1/knowledge/uploads", payload, expected=429)
+        require(
+            denied.get("error", {}).get("code") == "upload_quota",
+            "Actual upload quota not enforced",
+        )
+        other.call(
+            "POST",
+            "/api/v1/knowledge/uploads/" + owned[0] + "/chunks",
+            {"sequence": 0, "base64": base64.b64encode(b"x").decode()},
+            expected=404,
+        )
+    finally:
+        for identifier in owned:
+            client.call(
+                "DELETE", "/api/v1/knowledge/uploads/" + identifier, expected=204
+            )
+
+
 def run_suite(origin):
     checks = {
         name: "BLOCKED"
@@ -154,9 +278,11 @@ def run_suite(origin):
         "schema_version": 1,
         "repository": REPOSITORY,
         "candidate_commit": os.environ["GITHUB_SHA"],
+        "workflow_run_id": int(os.environ.get("GITHUB_RUN_ID", "0")),
         "frontend_origin": origin,
         "verified_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
+        "workflow_checks": {},
         "synthetic_fixture_ids": [],
         "status": "BLOCKED",
     }
@@ -186,11 +312,39 @@ def run_suite(origin):
     users = config["users"]
     clients = [Session(origin), Session(origin)]
     active = "authentication"
+    workflow = "authentication"
     try:
         for client, user in zip(clients, users, strict=True):
             client.login(user)
         checks["authentication"] = "PASS"
         if PRODUCT.endswith("platform"):
+            detail = record["workflow_checks"]
+            active = "authentication"
+            anonymous = Session(origin)
+            for path in [
+                "/models",
+                "/conversations",
+                "/knowledge/documents",
+                "/agents/runs",
+                "/travel/trips",
+            ]:
+                anonymous.call("GET", "/api/v1" + path, expected=401)
+            detail["anonymous_models_denied"] = "PASS"
+            model = clients[0].call("GET", "/api/v1/models")["items"][0]
+            require(
+                model.get("real_inference") is True and model["backend"] != "mock",
+                "Actual real hosted model required",
+            )
+            record["model"] = {
+                key: model.get(key)
+                for key in [
+                    "backend",
+                    "model_identifier",
+                    "revision",
+                    "context_tokens",
+                    "real_inference",
+                ]
+            }
             active = "critical_workflows"
             conversation = clients[0].call(
                 "POST",
@@ -212,25 +366,46 @@ def run_suite(origin):
             )
             checks["user_data_isolation"] = "PASS"
             active = "streaming"
-            response = clients[0].call(
-                "POST",
-                "/api/v1/chat/completions",
+            workflow = "real_context_and_history"
+            memory = "RELEASE-" + secrets.token_hex(8)
+            _, _start = generation(
+                clients[0],
                 {
                     "conversation_id": conversation,
-                    "content": "Return the word READY.",
+                    "content": "Remember this synthetic test code: "
+                    + memory
+                    + ". Acknowledge briefly.",
+                    "stream": True,
+                },
+            )
+            remembered, _ = generation(
+                clients[0],
+                {
+                    "conversation_id": conversation,
+                    "content": "What synthetic test code did I give you? Return only that exact code.",
                     "stream": True,
                 },
             )
             require(
-                isinstance(response, bytes)
-                and b"event: content_delta" in response
-                and b"event: message_end" in response
-                and b"event: error" not in response
-                and b"mock" not in response.lower(),
-                "Real streamed inference did not complete",
+                memory.lower() in remembered.lower(),
+                "Hosted conversation context was not retained",
             )
+            history = clients[0].call("GET", "/api/v1/conversations/" + conversation)[
+                "messages"
+            ]
+            require(
+                sum(message["role"] == "assistant" for message in history) >= 2
+                and any(
+                    memory in message["content"]["text"]
+                    for message in history
+                    if message["role"] == "user"
+                ),
+                "Actual chat history not persisted",
+            )
+            detail["real_context_and_history"] = "PASS"
             checks["streaming"] = checks["inference"] = "PASS"
             active = "embeddings"
+            workflow = "real_rag_citations_and_isolation"
             text = b"Synthetic release qualification document: Onesa release tests use isolated fixtures."
             upload = clients[0].call(
                 "POST",
@@ -271,6 +446,207 @@ def run_suite(origin):
                 "Semantic retrieval did not return the newly stored synthetic document",
             )
             checks["embeddings"] = checks["storage_integrations"] = "PASS"
+            answer, grounded = generation(
+                clients[0],
+                {
+                    "conversation_id": conversation,
+                    "content": "What does the synthetic qualification document say about release tests? Attribute the answer to its title.",
+                    "document_ids": [document],
+                    "stream": True,
+                },
+            )
+            require(
+                any(
+                    source.get("document_id") == document
+                    for source in grounded.get("sources", [])
+                ),
+                "Real RAG citation metadata missing",
+            )
+            history = clients[0].call("GET", "/api/v1/conversations/" + conversation)[
+                "messages"
+            ]
+            require(
+                any(
+                    any(
+                        source.get("document_id") == document
+                        for source in message["content"].get("sources", [])
+                    )
+                    for message in history
+                    if message["role"] == "assistant"
+                ),
+                "RAG citations not persisted",
+            )
+            require("isolated" in answer.lower(), "Real source-grounded fact missing")
+            other_search = clients[1].call(
+                "POST",
+                "/api/v1/knowledge/search",
+                {"query": "isolated release qualification"},
+            )
+            require(
+                not any(
+                    source.get("document_id") == document
+                    for source in other_search["sources"]
+                ),
+                "Semantic retrieval crossed ownership",
+            )
+            clients[1].call(
+                "POST",
+                "/api/v1/knowledge/search",
+                {"query": "isolated release qualification", "document_ids": [document]},
+                expected=404,
+            )
+            detail["real_rag_citations_and_isolation"] = "PASS"
+            active = "critical_workflows"
+            workflow = "actual_upload_quota_and_input_bound"
+            upload_quota(clients[0], clients[1])
+            clients[0].model_call(
+                "POST",
+                "/api/v1/chat/completions",
+                {"conversation_id": conversation, "content": "x" * 32001},
+                expected=422,
+            )
+            detail["actual_upload_quota_and_input_bound"] = "PASS"
+            workflow = "real_agent_planning_permissions_and_isolation"
+            explicit = clients[0].model_call(
+                "POST",
+                "/api/v1/agents/runs",
+                {
+                    "goal": "Synthetic explicit addition",
+                    "allowed_tools": ["arithmetic"],
+                    "steps": [
+                        {
+                            "tool": "arithmetic",
+                            "arguments": {"operation": "add", "values": [2, 3]},
+                        }
+                    ],
+                },
+                expected=201,
+            )
+            require(
+                explicit["status"] == "completed"
+                and explicit["steps"][0]["result"]["result"] == 5,
+                "Actual explicit tool execution failed",
+            )
+            clients[1].call(
+                "GET", "/api/v1/agents/runs/" + explicit["id"], expected=404
+            )
+            clients[0].model_call(
+                "POST",
+                "/api/v1/agents/runs",
+                {
+                    "goal": "Denied tool permission",
+                    "allowed_tools": [],
+                    "steps": [
+                        {
+                            "tool": "arithmetic",
+                            "arguments": {"operation": "add", "values": [2, 3]},
+                        }
+                    ],
+                },
+                expected=403,
+            )
+            planned = clients[0].model_call(
+                "POST",
+                "/api/v1/agents/runs",
+                {
+                    "goal": "Use arithmetic to add 17 and 25. Return one tool call using operation add and values [17,25].",
+                    "allowed_tools": ["arithmetic"],
+                },
+                expected=201,
+            )
+            require(
+                planned["status"] == "completed"
+                and any(
+                    step.get("result", {}).get("result") == 42
+                    for step in planned["steps"]
+                ),
+                "Real model tool planning did not complete",
+            )
+            clients[1].call("GET", "/api/v1/agents/runs/" + planned["id"], expected=404)
+            record["synthetic_fixture_ids"].extend([explicit["id"], planned["id"]])
+            detail["real_agent_planning_permissions_and_isolation"] = "PASS"
+            workflow = "real_travel_planning_revision_isolation_and_boundary"
+            preference = {
+                "destination": "Heidelberg",
+                "duration": 1,
+                "budget": 75,
+                "currency": "EUR",
+                "preferences": "Suggest just one concise walking activity. No live research or booking.",
+            }
+            trip = clients[0].model_call(
+                "POST", "/api/v1/travel/trips", preference, expected=201
+            )
+            record["synthetic_fixture_ids"].append(trip["id"])
+            require(
+                trip["itinerary"]["backend"] == model["backend"]
+                and trip["live_data_verified"] is False
+                and bool(trip["notice"])
+                and len(trip["itinerary"]["days"]) == 1,
+                "Real itinerary or explicit live-data boundary missing",
+            )
+            clients[0].call("GET", "/api/v1/travel/trips/" + trip["id"])
+            clients[1].call("GET", "/api/v1/travel/trips/" + trip["id"], expected=404)
+            clients[1].call(
+                "PUT",
+                "/api/v1/travel/trips/" + trip["id"],
+                {**preference, "expected_revision": 1},
+                expected=404,
+            )
+            changed = clients[0].model_call(
+                "PUT",
+                "/api/v1/travel/trips/" + trip["id"],
+                {
+                    **preference,
+                    "preferences": "Suggest one quiet walking activity, without live research.",
+                    "expected_revision": 1,
+                },
+            )
+            require(changed["revision"] == 2, "Actual trip revision not persisted")
+            clients[0].model_call(
+                "PUT",
+                "/api/v1/travel/trips/" + trip["id"],
+                {**preference, "expected_revision": 1},
+                expected=409,
+            )
+            clients[1].call(
+                "DELETE", "/api/v1/travel/trips/" + trip["id"], expected=404
+            )
+            clients[0].call(
+                "DELETE", "/api/v1/travel/trips/" + trip["id"], expected=204
+            )
+            detail["real_travel_planning_revision_isolation_and_boundary"] = "PASS"
+            workflow = "active_stop_and_direct_ownership_denial"
+            with clients[0].stream(
+                {
+                    "conversation_id": conversation,
+                    "content": "Write a detailed numbered explanation of vector similarity in 100 paragraphs.",
+                    "stream": True,
+                }
+            ) as streaming:
+                name, started = next(stream_events(streaming))
+                require(
+                    name == "message_start"
+                    and started["model"]["real_inference"] is True,
+                    "Actual active stream did not start",
+                )
+                clients[1].call(
+                    "POST",
+                    "/api/v1/conversations/" + conversation + "/cancel",
+                    {"run_id": started["run_id"]},
+                    expected=404,
+                )
+                clients[0].call(
+                    "POST",
+                    "/api/v1/conversations/" + conversation + "/cancel",
+                    {"run_id": started["run_id"]},
+                    expected=204,
+                )
+            clients[0].call(
+                "PATCH",
+                "/api/v1/conversations/" + conversation,
+                {"title": "Synthetic stopped generation"},
+            )
+            detail["active_stop_and_direct_ownership_denial"] = "PASS"
             clients[0].call(
                 "DELETE", "/api/v1/knowledge/documents/" + document, expected=204
             )
@@ -340,6 +716,7 @@ def run_suite(origin):
         checks[active] = "FAIL"
         record["status"] = "FAIL"
         record["failure_code"] = safe_suite_failure_code(error)
+        record["failure_workflow"] = workflow
         record["failure_phase"] = (
             error.phase if isinstance(error, HostedRequestFailure) else active
         )
@@ -448,6 +825,7 @@ def main():
         print(
             "Hosted failure phase: " + record.get("failure_phase", "workflow-request")
         )
+        print("Hosted workflow: " + record.get("failure_workflow", "authentication"))
 
 
 if __name__ == "__main__":
