@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 SCRIPT = Path(__file__).with_name("vercel_host.py")
 REVISION = "a" * 40
+PROJECT = "prj_Dtm2zO8sQQFqmnospPZgxbCi9Bbr"
 
 
 class DeploymentIdentityTests(unittest.TestCase):
@@ -25,7 +26,7 @@ class DeploymentIdentityTests(unittest.TestCase):
 
         env = {
             "VERCEL_TOKEN": "test",
-            "VERCEL_ORG_ID": "team_test",
+            "VERCEL_ORG_ID": "team_ZCFijEEeYUAKYka9HEyEeyGm",
             "DOCS_DEPLOYMENT_URL": "https://onesa-docs-test.vercel.app",
             "GITHUB_SHA": REVISION,
         }
@@ -43,16 +44,19 @@ class DeploymentIdentityTests(unittest.TestCase):
 
     def test_verified_docs_revision_is_read_only(self):
         code, output, requests = self.run_check(
-            {"name": "onesa-docs", "id": "prj_docs"},
+            {"name": "onesa-docs", "id": PROJECT},
             {
                 "id": "dpl_test",
-                "projectId": "prj_docs",
+                "projectId": PROJECT,
                 "readyState": "READY",
+                "target": None,
                 "meta": {"onesaSourceRevision": REVISION},
             },
         )
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(output)["sourceRevision"], REVISION)
+        self.assertEqual(json.loads(output)["projectId"], PROJECT)
+        self.assertIsNone(json.loads(output)["target"])
         self.assertTrue(all(r.get_method() == "GET" for r in requests))
 
     def test_different_application_project_is_rejected_before_deployment_lookup(self):
@@ -69,16 +73,36 @@ class DeploymentIdentityTests(unittest.TestCase):
             {"meta": {"onesaSourceRevision": "b" * 40}},
         ]:
             deployment = {
-                "projectId": "prj_docs",
+                "projectId": PROJECT,
                 "readyState": "READY",
+                "target": None,
                 "meta": {"onesaSourceRevision": REVISION},
                 **fields,
             }
             with self.subTest(fields=fields):
                 code, _, _ = self.run_check(
-                    {"name": "onesa-docs", "id": "prj_docs"}, deployment
+                    {"name": "onesa-docs", "id": PROJECT}, deployment
                 )
                 self.assertIn("verification failed", code)
+
+    def test_same_name_foreign_project_is_rejected_before_lookup(self):
+        code, _, requests = self.run_check(
+            {"name": "onesa-docs", "id": "prj_other"}, {}
+        )
+        self.assertIn("scope mismatch", code)
+        self.assertEqual(len(requests), 1)
+
+    def test_absent_provider_target_is_not_reinterpreted_as_preview(self):
+        code, _, _ = self.run_check(
+            {"name": "onesa-docs", "id": PROJECT},
+            {
+                "id": "dpl_test",
+                "projectId": PROJECT,
+                "readyState": "READY",
+                "meta": {"onesaSourceRevision": REVISION},
+            },
+        )
+        self.assertIn("verification failed", code)
 
 
 if __name__ == "__main__":

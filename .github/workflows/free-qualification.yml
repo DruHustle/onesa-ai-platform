@@ -3,8 +3,17 @@ name: Free release qualification
   workflow_dispatch:
     inputs:
       staging_run:
-        description: Successful exact-commit isolated staging run
+        description: Successful exact-commit application staging or scoped Docs Preview run
         type: string
+        required: true
+      delivery_scope:
+        description: Explicit independent component authority; full retains all application gates
+        type: choice
+        options:
+        - full
+        - docs-public
+        - docs-internal
+        default: full
         required: true
   workflow_run:
     workflows:
@@ -36,7 +45,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
-      run: python3 scripts/release/free_gate.py qualify --output "$RUNNER_TEMP/free-release/record.json"
+        DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
+      run: python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-release-qualification
