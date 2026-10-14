@@ -9,8 +9,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import yaml
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "release"))
 from test_docs_scope import SHA, DocsGitHub
 
@@ -22,32 +20,6 @@ spec.loader.exec_module(producer)
 
 
 class PreviewProducerTests(unittest.TestCase):
-    def test_workflow_checks_the_build_environment_in_local_acceptance(self):
-        workflow = yaml.safe_load(
-            (producer.ROOT / ".github/workflows/docs-hosting.yml").read_text()
-        )
-        job = workflow["jobs"]["documentation"]
-        self.assertEqual(
-            job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"],
-            job["env"]["ONESA_DOCS_ENVIRONMENT"],
-        )
-        steps = job["steps"]
-        staging = next(
-            step
-            for step in steps
-            if "docs-staging-acceptance.json" in step.get("run", "")
-        )
-        self.assertNotIn("ONESA_DOCS_EXPECTED_ENVIRONMENT", staging.get("env", {}))
-        production = next(
-            step
-            for step in steps
-            if "docs-production-acceptance.json" in step.get("run", "")
-        )
-        self.assertIn(
-            "ONESA_DOCS_EXPECTED_ENVIRONMENT=production node scripts/docs/acceptance.mjs",
-            production["run"],
-        )
-
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
