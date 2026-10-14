@@ -15,7 +15,7 @@ name: Free release authorization
         type: string
         required: false
       decision:
-        description: Authorize external owner handoff or revoke older approval
+        description: Approve scoped owner handoff or revoke; protected Docs still requires external live validation
         type: choice
         options:
         - revoke
@@ -23,7 +23,7 @@ name: Free release authorization
         default: revoke
         required: true
       delivery_scope:
-        description: Must match the reviewed qualification; Docs never authorizes Chat or API
+        description: Match qualification; internal is conditional with no production grant; Docs never authorizes Chat or API
         type: choice
         options:
         - full
