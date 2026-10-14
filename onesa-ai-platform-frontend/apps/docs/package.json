@@ -11,7 +11,7 @@
     "verify": "node ../../../scripts/docs/verify.mjs",
     "build:public": "ONESA_DOCS_SCOPE=public docusaurus build --out-dir build-public",
     "build:internal": "ONESA_DOCS_SCOPE=internal docusaurus build --out-dir build-internal",
-    "test:security": "node --test ../../../scripts/docs/security.test.cjs src/lib/application-origin.test.mjs ../../../scripts/docs/search.test.mjs",
+    "test:security": "node --test ../../../scripts/docs/security.test.cjs src/lib/application-origin.test.mjs ../../../scripts/docs/search.test.mjs ../../../scripts/docs/preview-access.test.mjs",
     "test:search": "node --test ../../../scripts/docs/search.test.mjs"
   },
   "dependencies": {

@@ -4,13 +4,20 @@ import argparse
 import json
 import os
 from pathlib import Path
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "operation", choices=["prepare", "domain", "inspect", "verify-deployment"]
+    "operation",
+    choices=[
+        "prepare",
+        "domain",
+        "inspect",
+        "verify-deployment",
+        "prepare-preview-access",
+    ],
 )
 parser.add_argument("--create", action="store_true")
 args = parser.parse_args()
@@ -29,6 +36,19 @@ query = (
 )
 
 
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        return None
+
+
+class ProviderHTTPError(SystemExit):
+    def __init__(self, status):
+        self.status = status
+        super().__init__(
+            f"Scoped public Docs provider request failed with HTTP {status}"
+        )
+
+
 def api(path, body=None):
     request = Request(
         "https://api.vercel.com"
@@ -40,21 +60,43 @@ def api(path, body=None):
             "Content-Type": "application/json",
         },
     )
-    with urlopen(request, timeout=30) as response:
-        return json.load(response)
+    try:
+        with build_opener(NoRedirect()).open(request, timeout=30) as response:
+            raw = response.read(1024 * 1024 + 1)
+        if len(raw) > 1024 * 1024:
+            raise SystemExit("Scoped public Docs provider response exceeds bound")
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise SystemExit(
+                "Scoped public Docs provider response has an invalid shape"
+            )
+        return value
+    except HTTPError as error:
+        status = error.code
+        error.close()
+        raise ProviderHTTPError(status) from None
+    except (URLError, TimeoutError, ValueError):
+        raise SystemExit("Scoped public Docs provider request unavailable") from None
 
 
-if args.operation in {"prepare", "inspect", "verify-deployment"}:
+if args.operation in {
+    "prepare",
+    "inspect",
+    "verify-deployment",
+    "prepare-preview-access",
+}:
     selected = os.environ.get("VERCEL_DOCS_PROJECT_ID") or "onesa-docs"
+    if selected not in {PUBLIC_PROJECT, "onesa-docs"}:
+        raise SystemExit("Public Docs project scope mismatch before provider lookup")
     try:
         project = api("/v9/projects/" + selected)
-    except HTTPError as error:
-        if error.code == 404 and args.operation == "inspect":
+    except ProviderHTTPError as error:
+        if error.status == 404 and args.operation == "inspect":
             print(json.dumps({"project": "onesa-docs", "exists": False}))
             raise SystemExit(0)
-        if error.code != 404 or not args.create or args.operation != "prepare":
+        if error.status != 404 or not args.create or args.operation != "prepare":
             raise SystemExit(
-                f"Docs project lookup failed with HTTP {error.code}"
+                f"Docs project lookup failed with HTTP {error.status}"
             ) from None
         project = api(
             "/v11/projects",
@@ -68,6 +110,58 @@ if args.operation in {"prepare", "inspect", "verify-deployment"}:
         raise SystemExit("Public Docs project scope mismatch")
     if project["id"] == os.environ.get("APPLICATION_VERCEL_PROJECT_ID"):
         raise SystemExit("Docs and application projects must be independent")
+    if args.operation == "prepare-preview-access":
+        # Read only: the owner creates this project-only credential separately.
+        bypasses = project.get("protectionBypass")
+        if bypasses is None:
+            bypasses = {}
+        if not isinstance(bypasses, dict):
+            raise SystemExit("Public Docs Preview credential map has an invalid shape")
+        candidates = [
+            secret
+            for secret, metadata in bypasses.items()
+            if isinstance(metadata, dict)
+            and metadata.get("scope") == "automation-bypass"
+            and metadata.get("note") == "onesa-docs-preview-qualification-v1"
+        ]
+        if len(candidates) != 1:
+            raise SystemExit(
+                "Owner-managed public Docs Preview test credential required"
+            )
+        secret = candidates[0]
+        if (
+            not isinstance(secret, str)
+            or not 20 <= len(secret) <= 512
+            or any(c in secret for c in "\r\n")
+        ):
+            raise SystemExit("Public Docs Preview test credential has an invalid shape")
+        runner = Path(os.environ["RUNNER_TEMP"])
+        if (
+            not runner.is_dir()
+            or runner.is_symlink()
+            or any(parent.is_symlink() for parent in runner.parents)
+            or runner.stat().st_mode & 0o022
+        ):
+            raise SystemExit("Trusted private runner directory required")
+        directory = runner.resolve()
+        path = Path(os.environ["DOCS_PREVIEW_ACCESS_FILE"])
+        if (
+            path.parent.resolve() != directory
+            or path.exists()
+            or path.is_symlink()
+            or any(parent.is_symlink() for parent in path.parents)
+        ):
+            raise SystemExit(
+                "New private runner-owned Preview credential file required"
+            )
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w") as output:
+            json.dump({"projectId": project["id"], "secret": secret}, output)
+            output.write("\n")
+        print(
+            "Existing owner-managed public Docs Preview test credential prepared privately"
+        )
+        raise SystemExit(0)
     if args.operation == "verify-deployment":
         from urllib.parse import urlsplit
 
@@ -146,9 +240,9 @@ else:
     domain = "docs.onesa.eu"
     try:
         record = api(f"/v9/projects/{identifier}/domains/{domain}")
-    except HTTPError as error:
-        if error.code != 404:
-            raise SystemExit(f"Domain lookup failed with HTTP {error.code}") from None
+    except ProviderHTTPError as error:
+        if error.status != 404:
+            raise SystemExit(f"Domain lookup failed with HTTP {error.status}") from None
         raise SystemExit(
             "Existing docs domain assignment is missing; owner approval is required before changing it"
         )
@@ -162,7 +256,7 @@ else:
         configuration = api(f"/v6/domains/{domain}/config")
         result["recommendedCNAME"] = configuration.get("recommendedCNAME", [])
         result["misconfigured"] = configuration.get("misconfigured")
-    except HTTPError as error:
-        result["dns_readback_http_status"] = error.code
+    except ProviderHTTPError as error:
+        result["dns_readback_http_status"] = error.status
     print(json.dumps(result, indent=2))
     (directory / "domain-readback.json").write_text(json.dumps(result, indent=2) + "\n")

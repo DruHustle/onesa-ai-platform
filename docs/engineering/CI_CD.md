@@ -140,6 +140,20 @@ and that automatic main production delivery is disabled. Protected Docs needs it
 own actual all-path Access, approved engineering identity and MFA acceptance; a
 local fixture or public Docs approval does not satisfy that requirement.
 
+Public Docs Preview acceptance uses a separately owner-managed Vercel automation
+bypass credential for the dedicated Docs project while its Vercel Authentication
+configuration remains enabled. The owner creates and reviews this credential;
+the workflow only reads the named existing entry and removes its private runner
+file after use. Its provider reach covers all deployments of that public Docs
+project until revoked and includes some bot and system mitigation bypasses. The
+test sends it only to the exact verified Preview origin. Authenticated fetches
+refuse redirects; browser navigation can continue without that header to an
+external destination. The credential never enters URLs, logs, cookies or public
+artifacts. Revoke
+only the newly owned entry after the required qualification previews, preserving
+existing credentials. This mechanism does not apply to protected engineering
+Docs, the AI application or its API.
+
 Run `scripts/release/free_gate.py verify` from a clean independently reviewed exact-main
 checkout outside repository Actions using owner GitHub authentication. Latest revocation,
 failed/pending authorization, stale evidence, main movement or changed review invalidates

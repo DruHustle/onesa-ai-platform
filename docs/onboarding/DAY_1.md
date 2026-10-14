@@ -4,7 +4,7 @@ Open the [interactive Day 1 workflow](/onboarding#day-1). Source: `docs/diagrams
 
 ## Learning objectives
 
-- Explain Onesa UG and all three products.
+- Explain Onesa UG and its products.
 - Identify frontend API worker database model and documentation providers.
 - Distinguish public engineering and private release evidence.
 
