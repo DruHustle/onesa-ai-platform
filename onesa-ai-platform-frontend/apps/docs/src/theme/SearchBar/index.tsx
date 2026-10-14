@@ -40,6 +40,12 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
+    // Adopt real input made before hydration; keep an idle reader's index deferred.
+    const input = box.current;
+    if (input) {
+      setQuery(input.value);
+      if (document.activeElement === input) activate();
+    }
     const key = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -65,7 +71,7 @@ export default function Search() {
   const matches = useMemo(() => searchDocumentation(entries, query), [entries, query]);
   return <div className="global-search">
     <input ref={box} aria-label="Search documentation" placeholder="Search docs… ⌘K"
-      aria-controls={open ? resultsId : undefined} value={query} onFocus={activate}
+      aria-controls={open ? resultsId : undefined} defaultValue="" onFocus={activate}
       onChange={event => {setQuery(event.target.value); activate();}}
       onKeyDown={event => {
         if (event.key === 'Enter' && matches[0]) window.location.assign(matches[0].url);

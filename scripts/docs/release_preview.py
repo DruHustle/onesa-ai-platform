@@ -46,6 +46,9 @@ def preview_record(
     production_public,
     production_acceptance,
     production_artifact_digest,
+    *,
+    validation_channel="ci",
+    staging_acceptance=None,
 ):
     e.require(
         re.fullmatch(r"[a-f0-9]{40}", sha) and str(run_id).isdigit(),
@@ -93,8 +96,17 @@ def preview_record(
         "Actual public Preview identity required",
     )
     e.require(
+        validation_channel in {"ci", "native-owner"},
+        "Explicit Docs validation channel required",
+    )
+    pending_native = validation_channel == "native-owner"
+    if pending_native:
+        e.require(hosted is None, "Pending native mode cannot claim hosted evidence")
+        hosted = staging_acceptance
+        e.require(isinstance(hosted, dict), "Typed local staging acceptance required")
+    e.require(
         hosted.get("result") == "PASS"
-        and hosted.get("origin") == origin.geturl().rstrip("/")
+        and (pending_native or hosted.get("origin") == origin.geturl().rstrip("/"))
         and len(hosted.get("navigation", [])) == 2
         and len(hosted.get("icons", [])) == 3
         and len(hosted.get("accessibility", [])) >= 124
@@ -115,6 +127,8 @@ def preview_record(
         and len(production_acceptance.get("widths", [])) >= 20,
         "Qualified production-context Docs variant required",
     )
+    f.docs_acceptance_schema(hosted)
+    f.docs_acceptance_schema(production_acceptance)
     checks = {
         name: "PASS"
         for name in [
@@ -127,6 +141,8 @@ def preview_record(
             "hosted_preview_acceptance",
         ]
     }
+    if pending_native:
+        checks["hosted_preview_acceptance"] = "PENDING_NATIVE_OWNER"
     record = {
         "schema_version": 1,
         "repository": e.REPOSITORY,
@@ -141,7 +157,7 @@ def preview_record(
         "scopes": {
             "public": {
                 "classification": "public",
-                "status": "PASS",
+                "status": "BLOCKED" if pending_native else "PASS",
                 "checks": checks,
                 "build_environment": "production",
                 "build_sha256": build_digest(production_public),
@@ -167,7 +183,14 @@ def preview_record(
             },
         },
     }
-    f.public_docs_proof(record["scopes"]["public"], sha)
+    if pending_native:
+        proof = record["scopes"]["public"]
+        del proof["hosted_acceptance"]
+        proof["validation_channel"] = "native-owner"
+        proof["staging_acceptance"] = hosted
+        record["native_validation_required"] = True
+    else:
+        f.public_docs_proof(record["scopes"]["public"], sha)
     return record
 
 
@@ -192,16 +215,24 @@ def main():
         os.environ["GITHUB_RUN_ID"],
         folder / "build-public",
         folder / "build-internal",
-        json.loads(Path(os.environ["DOCS_HOSTED_ACCEPTANCE"]).read_text()),
+        None
+        if os.environ.get("DOCS_VALIDATION_CHANNEL", "ci") == "native-owner"
+        else json.loads(Path(os.environ["DOCS_HOSTED_ACCEPTANCE"]).read_text()),
         json.loads(Path(os.environ["DOCS_PREVIEW_IDENTITY"]).read_text()),
         os.environ["DOCS_PUBLIC_ARTIFACT_DIGEST"],
         Path(os.environ["DOCS_PRODUCTION_PUBLIC_DIRECTORY"]),
         json.loads(Path(os.environ["DOCS_PRODUCTION_ACCEPTANCE"]).read_text()),
         os.environ["DOCS_PRODUCTION_ARTIFACT_DIGEST"],
+        validation_channel=os.environ.get("DOCS_VALIDATION_CHANNEL", "ci"),
+        staging_acceptance=json.loads(
+            Path(os.environ["DOCS_STAGING_ACCEPTANCE"]).read_text()
+        )
+        if os.environ.get("DOCS_VALIDATION_CHANNEL", "ci") == "native-owner"
+        else None,
     )
     e.save(record, os.environ["DOCS_QUALIFICATION_OUTPUT"])
     print(
-        "Public Docs Preview proof recorded; protected Docs remains blocked pending actual Access proof."
+        "Docs record emitted; pending native evidence never grants release authority."
     )
 
 

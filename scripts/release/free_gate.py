@@ -17,7 +17,7 @@ import subprocess
 import time
 import zipfile
 from datetime import datetime, timezone
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 import evidence as e
 
@@ -29,6 +29,8 @@ PUBLIC_DOCS_PROJECT = "prj_Dtm2zO8sQQFqmnospPZgxbCi9Bbr"
 INTERNAL_DOCS_METADATA_ASSET = "protected-docs-preview-qualification.json"
 INTERNAL_DOCS_METADATA_BYTES = 64 * 1024
 INTERNAL_DOCS_CONDITIONAL_AUTHORITY = "REQUIRES_EXTERNAL_LIVE_VALIDATION"
+PUBLIC_DOCS_METADATA_ASSET = "public-docs-native-preview-qualification.json"
+PUBLIC_DOCS_METADATA_KIND = "onesa-docs-public-native-preview-metadata"
 
 
 def docs_acceptance_schema(acceptance):
@@ -698,6 +700,543 @@ def internal_docs_preview_metadata(
     }
 
 
+def public_docs_native_preview(github, sha, staging_run):
+    """Verify pending Preview custody and bytes; never establish hosted PASS."""
+    from urllib.parse import urlsplit
+
+    e.require(e.PRODUCT == "onesa-ai-platform", "Public Docs is Platform-only")
+    e.require(
+        (type(staging_run) is int and staging_run > 0)
+        or (
+            isinstance(staging_run, str)
+            and re.fullmatch(r"[0-9]{1,20}", staging_run)
+            and int(staging_run) > 0
+        ),
+        "Explicit positive registered Preview run required",
+    )
+    fingerprint = _internal_docs_local_source(sha)
+    code, references = e.checked_ci(github, sha)
+    e.require(code == "PASS", "Exact source CI required for native Preview")
+    now = datetime.now(timezone.utc)
+    for reference in references:
+        ci_run = github.run(reference["run_id"])
+        e.trusted_run(
+            ci_run, reference["workflow"], sha, {"staging", "main"}, event="push"
+        )
+        _internal_docs_fresh(ci_run.get("updated_at"), now)
+    run = github.run(staging_run)
+    e.trusted_run(run, "docs-hosting.yml", sha, {"staging", "main"})
+    _internal_docs_fresh(run.get("updated_at"), now)
+    record, origin = github.artifact(run, "documentation-qualification")
+    e.require(
+        isinstance(record, dict)
+        and type(record.get("schema_version")) is int
+        and record["schema_version"] == 1
+        and record.get("repository") == e.REPOSITORY
+        and record.get("candidate_commit") == sha
+        and record.get("workflow_run_id") == run["id"]
+        and record.get("source_sha256") == fingerprint
+        and record.get("target") == "preview"
+        and record.get("native_validation_required") is True
+        and record.get("production_deployment_requested") is False
+        and record.get("application_deployment_authorized") is False
+        and record.get("backend_deployment_authorized") is False,
+        "Source-bound pending native Preview required",
+    )
+    _internal_docs_fresh(record.get("verified_at"), now)
+    scopes = record.get("scopes")
+    e.require(isinstance(scopes, dict), "Classified Preview scopes required")
+    proof = scopes.get("public")
+    e.require(isinstance(proof, dict), "Public Preview proof required")
+    checks = proof.get("checks")
+    local = {
+        "classified_build",
+        "dependency_security",
+        "public_private_boundary",
+        "system_appearance_and_accessibility",
+        "diagrams_pdfs_navigation",
+        "hosted_preview_identity",
+    }
+    e.require(
+        proof.get("classification") == "public"
+        and proof.get("status") == "BLOCKED"
+        and proof.get("validation_channel") == "native-owner"
+        and proof.get("build_environment") == "production"
+        and "hosted_acceptance" not in proof
+        and isinstance(checks, dict)
+        and checks.keys() == local | {"hosted_preview_acceptance"}
+        and all(checks[key] == "PASS" for key in local)
+        and checks["hosted_preview_acceptance"] == "PENDING_NATIVE_OWNER",
+        "Hosted native validation must remain explicitly pending",
+    )
+    preview = proof.get("preview")
+    e.require(isinstance(preview, dict), "Actual Preview identity required")
+    try:
+        e.require(isinstance(preview.get("url"), str), "Preview origin string required")
+        parsed = urlsplit(preview["url"])
+        valid_origin = (
+            parsed.scheme == "https"
+            and parsed.hostname
+            and re.fullmatch(
+                r"onesa-docs-[a-z0-9]+-druhustles-projects\.vercel\.app",
+                parsed.hostname,
+            )
+            and not parsed.username
+            and not parsed.password
+            and not parsed.port
+            and not parsed.query
+            and not parsed.fragment
+            and preview["url"] == "https://" + parsed.hostname
+        )
+    except ValueError:
+        valid_origin = False
+    e.require(
+        valid_origin
+        and preview.get("project") == "onesa-docs"
+        and preview.get("projectId") == PUBLIC_DOCS_PROJECT
+        and isinstance(preview.get("deploymentId"), str)
+        and re.fullmatch(r"dpl_[A-Za-z0-9]+", preview["deploymentId"])
+        and preview.get("state") == "READY"
+        and preview.get("sourceRevision") == sha
+        and "target" in preview
+        and preview["target"] in {None, "preview"},
+        "Exact READY public Docs Preview identity required",
+    )
+    for key, context in [
+        ("staging_acceptance", "staging"),
+        ("production_acceptance", "production"),
+    ]:
+        accepted = proof.get(key)
+        e.require(isinstance(accepted, dict), "Actual typed local acceptance required")
+        docs_acceptance_schema(accepted)
+        e.require(
+            accepted.get("result") == "PASS"
+            and accepted.get("environment_context") == context
+            and accepted.get("provenance")
+            == {"revision": sha, "classification": "public"}
+            and type(accepted.get("links")) is int
+            and accepted["links"] > 0
+            and accepted.get("diagrams") == 21
+            and accepted.get("pdfs") == 11,
+            "Classified local context acceptance mismatch",
+        )
+    preview_proof = proof.get("preview_artifact")
+    e.require(isinstance(preview_proof, dict), "Staging archive proof required")
+    for variant in [proof, preview_proof]:
+        e.require(
+            all(
+                isinstance(variant.get(key), str)
+                and re.fullmatch(r"[a-f0-9]{64}", variant[key])
+                for key in ["artifact_sha256", "build_sha256"]
+            ),
+            "Exact public archive and tree hashes required",
+        )
+    stage_archive = public_docs_artifact(
+        github, run, preview_proof, "onesa-public-docs-staging"
+    )
+    production_archive = public_docs_artifact(github, run, proof)
+    e.require(
+        all(
+            type(item["id"]) is int and item["id"] > 0
+            for item in [stage_archive, production_archive]
+        )
+        and stage_archive["id"] != production_archive["id"],
+        "Distinct classified context archives required",
+    )
+    refreshed_run = github.run(staging_run)
+    e.trusted_run(refreshed_run, "docs-hosting.yml", sha, {"staging", "main"})
+    _internal_docs_fresh(refreshed_run.get("updated_at"), now)
+    e.require(refreshed_run == run, "Registered Preview run changed during review")
+    repeated, repeated_origin = github.artifact(
+        refreshed_run, "documentation-qualification"
+    )
+    refreshed_code, refreshed_ci = e.checked_ci(github, sha)
+    e.require(
+        record == repeated
+        and origin == repeated_origin
+        and refreshed_code == "PASS"
+        and references == refreshed_ci
+        and fingerprint == _internal_docs_local_source(sha),
+        "Preview custody, source or CI changed during review",
+    )
+    return {
+        "status": "REQUIRES_EXTERNAL_LIVE_VALIDATION",
+        "STAGING_VERIFIED": "BLOCKED",
+        "delivery_scope": "docs-public",
+        "classification": "public",
+        "application_deployment_authorized": False,
+        "backend_deployment_authorized": False,
+        "production_deployment_authorized": False,
+        "record": record,
+        "artifact": origin,
+        "public_site_artifact": production_archive,
+        "preview_site_artifact": stage_archive,
+        "ci": references,
+    }
+
+
+def public_docs_preview_metadata(github, sha, staging_run, custody):
+    """Validate owner metadata custody; external native acceptance remains mandatory."""
+    e.require(
+        isinstance(custody, dict)
+        and custody.keys()
+        == {"release_id", "asset_id", "asset_digest", "producer_sha256"},
+        "Exact owner metadata custody required",
+    )
+    release_id, asset_id = custody["release_id"], custody["asset_id"]
+    producer, asset_digest = custody["producer_sha256"], custody["asset_digest"]
+    e.require(
+        type(release_id) is int
+        and release_id > 0
+        and type(asset_id) is int
+        and asset_id > 0,
+        "Positive immutable metadata IDs required",
+    )
+    e.require(
+        isinstance(producer, str)
+        and re.fullmatch(r"[a-f0-9]{64}", producer)
+        and isinstance(asset_digest, str)
+        and re.fullmatch(r"sha256:[a-f0-9]{64}", asset_digest),
+        "Reviewed producer and metadata digests required",
+    )
+    current_main(github, sha)
+    stage = public_docs_native_preview(github, sha, staging_run)
+    for reference in stage["ci"]:
+        e.trusted_run(
+            github.run(reference["run_id"]),
+            reference["workflow"],
+            sha,
+            {"main"},
+            event="push",
+        )
+    now = datetime.now(timezone.utc)
+
+    def read_custody():
+        release = github.api(f"repos/{e.REPOSITORY}/releases/{release_id}")
+        e.require(
+            isinstance(release, dict)
+            and type(release.get("id")) is int
+            and release["id"] == release_id
+            and release.get("draft") is True
+            and release.get("published_at") is None
+            and isinstance(release.get("author"), dict)
+            and release["author"].get("login") == e.OWNER
+            and release.get("target_commitish") == sha
+            and release.get("tag_name") == "docs-public-native-qualification-" + sha
+            and (release.get("body") is None or release.get("body") == "")
+            and isinstance(release.get("assets"), list)
+            and len(release["assets"]) == 1
+            and isinstance(release["assets"][0], dict)
+            and release["assets"][0].get("id") == asset_id,
+            "Single owner-uploaded exact-source draft metadata required",
+        )
+        # Real asset entries contain additional provider metadata; only IDs/cardinality bind here.
+        asset = github.api(f"repos/{e.REPOSITORY}/releases/assets/{asset_id}")
+        e.require(
+            isinstance(asset, dict)
+            and type(asset.get("id")) is int
+            and asset["id"] == asset_id
+            and asset.get("name") == PUBLIC_DOCS_METADATA_ASSET
+            and asset.get("state") == "uploaded"
+            and isinstance(asset.get("uploader"), dict)
+            and asset["uploader"].get("login") == e.OWNER
+            and asset.get("digest") == asset_digest
+            and asset.get("content_type") == "application/json"
+            and type(asset.get("size")) is int
+            and 0 < asset["size"] <= INTERNAL_DOCS_METADATA_BYTES
+            and asset.get("url")
+            == f"https://api.github.com/repos/{e.REPOSITORY}/releases/assets/{asset_id}",
+            "Immutable owner-uploaded public metadata asset required",
+        )
+        for value in [release, asset]:
+            for key in ["created_at", "updated_at"]:
+                _internal_docs_fresh(value.get(key), now)
+        return {
+            key: release.get(key)
+            for key in [
+                "id",
+                "draft",
+                "published_at",
+                "target_commitish",
+                "tag_name",
+                "body",
+                "created_at",
+                "updated_at",
+            ]
+        }, {
+            key: asset.get(key)
+            for key in [
+                "id",
+                "name",
+                "state",
+                "digest",
+                "content_type",
+                "size",
+                "url",
+                "created_at",
+                "updated_at",
+            ]
+        }
+
+    before = read_custody()
+    raw = _internal_docs_asset_bytes(asset_id)
+    e.require(
+        isinstance(raw, bytes)
+        and len(raw) == before[1]["size"]
+        and "sha256:" + hashlib.sha256(raw).hexdigest() == asset_digest,
+        "Downloaded public metadata size or digest mismatch",
+    )
+    record = _internal_docs_json(raw)
+    _public_docs_native_metadata(record, sha, producer, stage, now)
+    e.require(read_custody() == before, "Public draft custody changed during read")
+    current_main(github, sha)
+    again = public_docs_native_preview(github, sha, staging_run)
+    e.require(
+        again == stage, "Public Preview, CI or archive custody changed during read"
+    )
+    return {
+        **stage,
+        "metadata": record,
+        "custody": {
+            "release_id": release_id,
+            "asset_id": asset_id,
+            "asset_digest": asset_digest,
+        },
+        "required_external_checks": [
+            "actual_native_full_public_acceptance",
+            "exact_preview_and_both_archive_bytes",
+            "retained_application_api_and_no_auto_production",
+            "fresh_latest_owner_decision",
+        ],
+    }
+
+
+def _public_docs_native_metadata(record, sha, producer, stage, now):
+    """Counts and hashes are metadata only; this validator never grants hosted PASS."""
+    keys = {
+        "schema_version",
+        "evidence_kind",
+        "repository",
+        "candidate_commit",
+        "source_sha256",
+        "verified_at",
+        "delivery_scope",
+        "classification",
+        "build_environment",
+        "producer_sha256",
+        "ci_sha256",
+        "staging_run_id",
+        "preview_record_sha256",
+        "preview_artifact_id",
+        "production_artifact_id",
+        "preview_artifact_sha256",
+        "production_artifact_sha256",
+        "preview_build_sha256",
+        "production_build_sha256",
+        "hosted_acceptance_sha256",
+        "preview",
+        "counts",
+        "application_deployment_authorized",
+        "backend_deployment_authorized",
+        "production_deployment_authorized",
+    }
+    e.require(
+        isinstance(record, dict) and record.keys() == keys,
+        "Exact sanitized public metadata schema required",
+    )
+    proof = stage["record"]["scopes"]["public"]
+    e.require(
+        type(record["schema_version"]) is int
+        and record["schema_version"] == 1
+        and record["evidence_kind"] == PUBLIC_DOCS_METADATA_KIND
+        and record["repository"] == e.REPOSITORY
+        and record["candidate_commit"] == sha
+        and record["source_sha256"] == e.source_hash()
+        and record["delivery_scope"] == "docs-public"
+        and record["classification"] == "public"
+        and record["build_environment"] == "staging"
+        and record["producer_sha256"] == producer
+        and record["ci_sha256"] == e.digest(stage["ci"])
+        and type(record["staging_run_id"]) is int
+        and record["staging_run_id"] == stage["artifact"]["run_id"]
+        and record["preview_record_sha256"] == e.digest(stage["record"])
+        and type(record["preview_artifact_id"]) is int
+        and record["preview_artifact_id"] == stage["preview_site_artifact"]["id"]
+        and type(record["production_artifact_id"]) is int
+        and record["production_artifact_id"] == stage["public_site_artifact"]["id"]
+        and record["preview_artifact_sha256"]
+        == proof["preview_artifact"]["artifact_sha256"]
+        and record["production_artifact_sha256"] == proof["artifact_sha256"]
+        and record["preview_build_sha256"] == proof["preview_artifact"]["build_sha256"]
+        and record["production_build_sha256"] == proof["build_sha256"]
+        and isinstance(record["hosted_acceptance_sha256"], str)
+        and re.fullmatch(r"[a-f0-9]{64}", record["hosted_acceptance_sha256"])
+        and all(
+            record[key] is False
+            for key in [
+                "application_deployment_authorized",
+                "backend_deployment_authorized",
+                "production_deployment_authorized",
+            ]
+        ),
+        "Public metadata source, producer, CI, archives or no-grant mismatch",
+    )
+    _internal_docs_fresh(record["verified_at"], now)
+    preview = proof["preview"]
+    e.require(
+        record["preview"]
+        == {
+            "provider": "vercel",
+            "project": "onesa-docs",
+            "project_id": PUBLIC_DOCS_PROJECT,
+            "deployment_id": preview["deploymentId"],
+            "origin": preview["url"].rstrip("/"),
+            "source_commit": sha,
+            "environment": "preview",
+        },
+        "Metadata Preview differs from registered producer",
+    )
+    counts = record["counts"]
+    expected = {
+        "accessibility_views": 124,
+        "layout_views": 20,
+        "navigation_views": 2,
+        "identity_icons": 3,
+        "diagrams": 21,
+        "manual_pdfs": 11,
+    }
+    e.require(
+        isinstance(counts, dict)
+        and counts.keys() == expected.keys() | {"links"}
+        and all(type(value) is int for value in counts.values())
+        and all(counts[key] == value for key, value in expected.items())
+        and 0 < counts["links"] <= 500000,
+        "Bounded public metadata counts required",
+    )
+    return record
+
+
+def public_docs_native_event(path, delivery_scope, producer, staging_run):
+    """Read bounded dispatch inputs as data, never shell code or a live proof."""
+    file = Path(path)
+    e.require(
+        str(file) == os.getenv("GITHUB_EVENT_PATH")
+        and file.is_file()
+        and not file.is_symlink()
+        and 0 < file.stat().st_size <= 1024 * 1024,
+        "Bounded native dispatch event required",
+    )
+    with file.open("rb") as stream:
+        raw = stream.read(1024 * 1024 + 1)
+    e.require(len(raw) <= 1024 * 1024, "Bounded native dispatch event required")
+    event = _internal_docs_json(raw)
+    e.require(isinstance(event, dict), "Structured dispatch event required")
+    inputs = event.get("inputs")
+    if inputs is None:
+        inputs = {}
+    e.require(
+        isinstance(inputs, dict)
+        and inputs.keys()
+        <= {
+            "staging_run",
+            "delivery_scope",
+            "metadata_release_id",
+            "metadata_asset_id",
+            "metadata_asset_digest",
+            "metadata_producer_sha256",
+            "native_custody_mode",
+            "native_metadata",
+        },
+        "Structured known dispatch inputs required",
+    )
+    mode = inputs.get("native_custody_mode", "none")
+    content = inputs.get("native_metadata", "")
+    e.require(
+        isinstance(mode, str) and mode in {"none", "actions-native"},
+        "Explicit native custody mode required",
+    )
+    e.require(isinstance(content, str), "Native metadata input must be JSON text")
+    if mode == "none":
+        e.require(
+            not content, "Native metadata requires explicit artifact custody mode"
+        )
+        return None
+    e.require(
+        os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch"
+        and delivery_scope == "docs-public"
+        and inputs.get("delivery_scope") == "docs-public"
+        and inputs.get("staging_run") == str(staging_run)
+        and inputs.get("metadata_producer_sha256") == producer
+        and isinstance(producer, str)
+        and re.fullmatch(r"[a-f0-9]{64}", producer)
+        and not any(
+            inputs.get(key)
+            for key in [
+                "metadata_release_id",
+                "metadata_asset_id",
+                "metadata_asset_digest",
+            ]
+        )
+        and 0 < len(content.encode("utf8")) <= 32768,
+        "Exact public native artifact inputs required; mixed custody is forbidden",
+    )
+    return {
+        "channel": "actions-native",
+        "metadata": _internal_docs_json(content),
+        "producer_sha256": producer,
+    }
+
+
+def public_docs_actions_preview_metadata(github, sha, staging_run, custody, run):
+    """The existing owner qualification artifact is custody, not a deployment grant."""
+    e.require(
+        isinstance(custody, dict)
+        and custody.keys() == {"channel", "metadata", "producer_sha256"}
+        and custody["channel"] == "actions-native"
+        and isinstance(custody["producer_sha256"], str)
+        and re.fullmatch(r"[a-f0-9]{64}", custody["producer_sha256"]),
+        "Exact native Actions metadata and producer pin required",
+    )
+    e.trusted_run(run, QUALIFICATION, sha, {"main"}, completed=False)
+    current_main(github, sha)
+    stage = public_docs_native_preview(github, sha, staging_run)
+    for reference in stage["ci"]:
+        e.trusted_run(
+            github.run(reference["run_id"]),
+            reference["workflow"],
+            sha,
+            {"main"},
+            event="push",
+        )
+    metadata = _public_docs_native_metadata(
+        custody["metadata"],
+        sha,
+        custody["producer_sha256"],
+        stage,
+        datetime.now(timezone.utc),
+    )
+    current_main(github, sha)
+    again = public_docs_native_preview(github, sha, staging_run)
+    e.require(
+        again == stage, "Public native source, Preview, CI or archive custody changed"
+    )
+    return {
+        **stage,
+        "metadata": metadata,
+        "custody": {
+            "channel": "actions-native",
+            "workflow_run_id": run["id"],
+            "metadata_sha256": e.digest(metadata),
+        },
+        "required_external_checks": [
+            "actual_native_full_public_acceptance",
+            "exact_preview_and_both_archive_bytes",
+            "retained_application_api_and_no_auto_production",
+            "fresh_latest_owner_decision",
+        ],
+    }
+
+
 def docs_qualification(github, sha, staging_run, delivery_scope):
     """A static Docs handoff grants no application/API deployment authority."""
     e.require(
@@ -1027,9 +1566,263 @@ def internal_docs_conditional_verify(github, sha, identifier, expected_producer_
     }
 
 
+def public_docs_conditional_qualification(github, sha, run, staging_run, custody):
+    """Owner metadata permits only an external live review, never hosted PASS."""
+    e.require(e.PRODUCT == "onesa-ai-platform", "Native public Docs is Platform-only")
+    e.require(
+        isinstance(custody, dict)
+        and custody.keys()
+        in (
+            {"release_id", "asset_id", "asset_digest", "producer_sha256"},
+            {"channel", "metadata", "producer_sha256"},
+        ),
+        "Exact owner native metadata references required",
+    )
+    e.trusted_run(run, QUALIFICATION, sha, {"main"}, completed=False)
+    pr = current_main(github, sha)
+    code, references = e.checked_ci(github, sha)
+    e.require(code == "PASS", "Essential exact-main CI required")
+    for reference in references:
+        e.trusted_run(
+            github.run(reference["run_id"]),
+            reference["workflow"],
+            sha,
+            {"main"},
+            event="push",
+        )
+    builds = e.artifacts_for_ci(github, references)
+    metadata = (
+        public_docs_actions_preview_metadata(github, sha, staging_run, custody, run)
+        if custody.get("channel") == "actions-native"
+        else public_docs_preview_metadata(github, sha, staging_run, custody)
+    )
+    return {
+        "schema_version": 1,
+        "repository": e.REPOSITORY,
+        "candidate_commit": sha,
+        "source_sha256": e.source_hash(),
+        "target_environment": "Production",
+        "pull_request": pr,
+        "ci": references,
+        "builds": builds,
+        "staging": metadata,
+        "delivery_scope": "docs-public",
+        "verified_at": run["created_at"],
+        "workflow_run_id": run["id"],
+        "status": "AWAITING_OWNER_CONDITIONAL_AUTHORIZATION",
+        "conditional_authority": INTERNAL_DOCS_CONDITIONAL_AUTHORITY,
+        "CODE_VERIFIED": "PASS",
+        "STAGING_VERIFIED": "BLOCKED",
+        "OPERATIONS_VERIFIED": "BLOCKED",
+        "CONTENT_LEGAL_APPROVED": "BLOCKED",
+        "security_status": "PASS",
+        "approval_provenance": None,
+        "scope": "docs-public",
+        "physical_hardware_authorized": False,
+        "application_deployment_authorized": False,
+        "backend_deployment_authorized": False,
+        "production_deployment_authorized": False,
+        "retained_application_commit": RETAINED_APPLICATION_COMMIT,
+        "retained_backend_commit": RETAINED_APPLICATION_COMMIT,
+    }
+
+
+def public_docs_live_qualification(
+    github, sha, identifier, *, expected_producer_sha256=None
+):
+    run = github.run(identifier)
+    e.trusted_run(run, QUALIFICATION, sha, {"main"})
+    record, origin = github.artifact(run, "free-release-qualification")
+    e.require(
+        isinstance(record, dict)
+        and record.get("workflow_run_id") == run["id"]
+        and record.get("delivery_scope") == "docs-public"
+        and e.fresh(record.get("verified_at", ""), datetime.now(timezone.utc)),
+        "Fresh exact native public qualification required",
+    )
+    stage = record.get("staging", {})
+    e.require(
+        isinstance(stage, dict)
+        and isinstance(stage.get("custody"), dict)
+        and isinstance(stage.get("metadata"), dict),
+        "Pinned owner draft custody required",
+    )
+    if stage["custody"].get("channel") == "actions-native":
+        e.require(
+            isinstance(expected_producer_sha256, str)
+            and re.fullmatch(r"[a-f0-9]{64}", expected_producer_sha256)
+            and stage["metadata"].get("producer_sha256") == expected_producer_sha256,
+            "Independently held native Actions producer pin required",
+        )
+        e.require(
+            stage["custody"]
+            == {
+                "channel": "actions-native",
+                "workflow_run_id": run["id"],
+                "metadata_sha256": e.digest(stage["metadata"]),
+            },
+            "Exact native Actions artifact custody required",
+        )
+        custody = {
+            "channel": "actions-native",
+            "metadata": stage["metadata"],
+            "producer_sha256": expected_producer_sha256,
+        }
+    else:
+        custody = {
+            **stage["custody"],
+            "producer_sha256": stage["metadata"].get("producer_sha256"),
+        }
+    refreshed = public_docs_conditional_qualification(
+        github, sha, run, stage["metadata"]["staging_run_id"], custody
+    )
+    e.require(refreshed == record, "Public custody, CI or qualification changed")
+    return record, origin
+
+
+def public_docs_conditional_authorization(
+    github,
+    sha,
+    run,
+    qualification_run,
+    fingerprint,
+    review_issue,
+    decision,
+    *,
+    expected_producer_sha256=None,
+):
+    e.trusted_run(run, WORKFLOW, sha, {"main"}, completed=False)
+    current_main(github, sha)
+    e.require(decision in {"approve", "revoke"}, "Explicit decision required")
+    # This channel reviews metadata custody only. Existing optional owner issues
+    # with production-control claims cannot substitute for external live checks.
+    e.require(not review_issue, "Conditional Docs uses explicit owner dispatch")
+    record = {
+        "repository": e.REPOSITORY,
+        "candidate_commit": sha,
+        "workflow_run_id": run["id"],
+        "approved_at": run["created_at"],
+        "approver": e.OWNER,
+        "decision": decision,
+        "target_environment": "Production",
+        "delivery_scope": "docs-public",
+        "conditional_authority": INTERNAL_DOCS_CONDITIONAL_AUTHORITY,
+        "STAGING_VERIFIED": "BLOCKED",
+        "physical_hardware_authorized": False,
+        "application_deployment_authorized": False,
+        "backend_deployment_authorized": False,
+        "production_deployment_authorized": False,
+    }
+    if decision == "approve":
+        qualified, origin = public_docs_live_qualification(
+            github,
+            sha,
+            qualification_run,
+            expected_producer_sha256=expected_producer_sha256,
+        )
+        e.require(
+            e.digest(qualified) == fingerprint,
+            "Owner must review exact conditional evidence digest",
+        )
+        record.update(
+            qualification=origin,
+            evidence_sha256=fingerprint,
+            source_sha256=qualified["source_sha256"],
+            owner_review={
+                "source": "owner-workflow-dispatch",
+                "workflow_run_id": run["id"],
+                "candidate_commit": sha,
+                "evidence_sha256": fingerprint,
+                "approver": e.OWNER,
+                "review_scope": "metadata-custody-only; external-live-validation-required",
+            },
+        )
+    return record
+
+
+def public_docs_conditional_verify(github, sha, identifier, expected_producer_sha256):
+    e.require(
+        isinstance(expected_producer_sha256, str)
+        and re.fullmatch(r"[a-f0-9]{64}", expected_producer_sha256),
+        "Independently held expected native public producer hash required",
+    )
+    runs = github.runs(WORKFLOW, sha)
+    e.require(
+        runs and str(runs[0]["id"]) == str(identifier),
+        "Only latest owner conditional authorization is usable",
+    )
+    run = github.run(identifier)
+    e.trusted_run(run, WORKFLOW, sha, {"main"})
+    approval, origin = github.artifact(run, "free-production-authorization")
+    e.require(
+        isinstance(approval, dict)
+        and approval.get("delivery_scope") == "docs-public"
+        and approval.get("decision") == "approve"
+        and e.fresh(approval.get("approved_at", ""), datetime.now(timezone.utc)),
+        "Conditional authorization unavailable, revoked or expired",
+    )
+    refreshed = public_docs_conditional_authorization(
+        github,
+        sha,
+        run,
+        approval["qualification"]["run_id"],
+        approval["evidence_sha256"],
+        None,
+        "approve",
+        expected_producer_sha256=expected_producer_sha256,
+    )
+    e.require(refreshed == approval, "Owner conditional approval changed")
+    qualified, qualified_origin = public_docs_live_qualification(
+        github,
+        sha,
+        approval["qualification"]["run_id"],
+        expected_producer_sha256=expected_producer_sha256,
+    )
+    e.require(
+        qualified["staging"]["metadata"]["producer_sha256"] == expected_producer_sha256,
+        "Public producer differs from independently held pin",
+    )
+    final_runs = github.runs(WORKFLOW, sha)
+    e.require(
+        final_runs and str(final_runs[0]["id"]) == str(identifier),
+        "Owner conditional authorization changed during verification",
+    )
+    final_run = github.run(identifier)
+    e.trusted_run(final_run, WORKFLOW, sha, {"main"})
+    final_approval, final_origin = github.artifact(
+        final_run, "free-production-authorization"
+    )
+    e.require(
+        final_approval == approval and final_origin == origin,
+        "Owner conditional artifact changed during verification",
+    )
+    current_main(github, sha)
+    return {
+        "status": "CONDITIONAL_EXTERNAL_HANDOFF",
+        "conditional_authority": INTERNAL_DOCS_CONDITIONAL_AUTHORITY,
+        "delivery_scope": "docs-public",
+        "STAGING_VERIFIED": "BLOCKED",
+        "application_deployment_authorized": False,
+        "backend_deployment_authorized": False,
+        "production_deployment_authorized": False,
+        "approval": approval,
+        "artifact": origin,
+        "qualification": qualified,
+        "qualification_artifact": qualified_origin,
+        "staging": qualified["staging"],
+        "verified_at": datetime.now(timezone.utc).isoformat(),
+        "deployment_triggered": False,
+        "git_push_prevented": False,
+    }
+
+
 def qualification(
     github, sha, run, staging_run, delivery_scope="full", *, metadata_custody=None
 ):
+    if delivery_scope == "docs-public" and metadata_custody is not None:
+        return public_docs_conditional_qualification(
+            github, sha, run, staging_run, metadata_custody
+        )
     if delivery_scope == "docs-internal":
         return internal_docs_conditional_qualification(
             github, sha, run, metadata_custody
@@ -1189,7 +1982,37 @@ def authorize(
     review_issue,
     decision,
     delivery_scope="full",
+    *,
+    expected_producer_sha256=None,
 ):
+    if delivery_scope == "docs-public" and expected_producer_sha256 is not None:
+        e.require(
+            isinstance(expected_producer_sha256, str)
+            and re.fullmatch(r"[a-f0-9]{64}", expected_producer_sha256),
+            "Explicit independently held native public producer pin required",
+        )
+        if decision == "approve":
+            proposed, _ = public_docs_live_qualification(
+                github,
+                sha,
+                qualification_run,
+                expected_producer_sha256=expected_producer_sha256,
+            )
+            e.require(
+                proposed["staging"]["metadata"]["producer_sha256"]
+                == expected_producer_sha256,
+                "Conditional public producer differs from supplied pin",
+            )
+        return public_docs_conditional_authorization(
+            github,
+            sha,
+            run,
+            qualification_run,
+            fingerprint,
+            review_issue,
+            decision,
+            expected_producer_sha256=expected_producer_sha256,
+        )
     if delivery_scope == "docs-internal":
         return internal_docs_conditional_authorization(
             github, sha, run, qualification_run, fingerprint, review_issue, decision
@@ -1244,6 +2067,10 @@ def authorize(
 def verify(
     github, sha, identifier, delivery_scope="full", *, expected_producer_sha256=None
 ):
+    if delivery_scope == "docs-public" and expected_producer_sha256 is not None:
+        return public_docs_conditional_verify(
+            github, sha, identifier, expected_producer_sha256
+        )
     if delivery_scope == "docs-internal":
         return internal_docs_conditional_verify(
             github, sha, identifier, expected_producer_sha256
@@ -1301,6 +2128,7 @@ def main():
     parser.add_argument(
         "--delivery-scope", choices=sorted(DELIVERY_SCOPES), default="full"
     )
+    parser.add_argument("--native-metadata-event")
     parser.add_argument("--metadata-release-id")
     parser.add_argument("--metadata-asset-id")
     parser.add_argument("--metadata-asset-digest")
@@ -1308,7 +2136,39 @@ def main():
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     metadata_custody = None
-    if args.mode == "qualify" and args.delivery_scope == "docs-internal":
+    if args.native_metadata_event:
+        e.require(args.mode == "qualify", "Native metadata is qualification-only")
+        metadata_custody = public_docs_native_event(
+            args.native_metadata_event,
+            args.delivery_scope,
+            args.metadata_producer_sha256,
+            args.staging_run,
+        )
+    if metadata_custody is not None:
+        e.require(
+            not any(
+                [
+                    args.metadata_release_id,
+                    args.metadata_asset_id,
+                    args.metadata_asset_digest,
+                ]
+            ),
+            "Mixed native and draft custody forbidden",
+        )
+    elif args.mode == "qualify" and (
+        args.delivery_scope == "docs-internal"
+        or (
+            args.delivery_scope == "docs-public"
+            and any(
+                [
+                    args.metadata_release_id,
+                    args.metadata_asset_id,
+                    args.metadata_asset_digest,
+                    args.metadata_producer_sha256,
+                ]
+            )
+        )
+    ):
         e.require(
             all(
                 isinstance(value, str) and re.fullmatch(r"[0-9]{1,20}", value)
@@ -1333,9 +2193,13 @@ def main():
             )
             and (
                 not args.metadata_producer_sha256
-                or (args.mode == "verify" and args.delivery_scope == "docs-internal")
+                or (
+                    args.mode == "verify"
+                    and args.delivery_scope in {"docs-internal", "docs-public"}
+                )
+                or (args.mode == "authorize" and args.delivery_scope == "docs-public")
             ),
-            "Metadata references apply only to explicit internal qualification",
+            "Metadata references require explicit Docs conditional qualification or verifier pin",
         )
     github = e.GitHub()
     sha = subprocess.check_output(
@@ -1364,10 +2228,14 @@ def main():
                 github,
                 sha,
                 args.authorization_run,
-                "docs-internal",
+                args.delivery_scope,
                 expected_producer_sha256=args.metadata_producer_sha256,
             )
             if args.delivery_scope == "docs-internal"
+            or (
+                args.delivery_scope == "docs-public"
+                and args.metadata_producer_sha256 is not None
+            )
             else verify(github, sha, args.authorization_run, args.delivery_scope)
         )
     else:
@@ -1395,6 +2263,9 @@ def main():
                 args.review_issue,
                 args.decision,
                 args.delivery_scope,
+                expected_producer_sha256=args.metadata_producer_sha256
+                if args.delivery_scope == "docs-public"
+                else None,
             )
         )
     e.save(record, args.output)
