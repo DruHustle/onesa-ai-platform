@@ -122,6 +122,24 @@ records the decision. Technical qualification records operations and content/leg
 limitations explicitly. A green producer or handoff artifact does not convert blocked
 scope into a full G01–G32 PASS or authorize public registration, real data or hardware.
 
+Independent Docs delivery uses the same workflows with an explicit
+`delivery_scope=docs-public` or `docs-internal`. The default remains `full`; an
+ambient `DELIVERY_SCOPE` never changes an external verifier's default. A Docs
+authorization cannot release the AI frontend or API. Its exact-source owner Docs
+Preview, classified archive and production-context acceptance replace only the
+application staging requirement for that scope. Full main CI, owner review,
+freshness, artifact provenance and latest revocation checks still apply.
+
+Dispatch public Docs Preview with `gh workflow run docs-hosting.yml --ref staging
+-f target=preview`. This workflow prepares its pinned CLI before deployment
+credentials, publishes a Preview only, and uploads separate accepted staging and
+production-context public archives. The external publisher consumes the qualified
+production archive rather than rebuilding ignored local output. It verifies that
+the canonical AI application and API still serve the retained qualified revision
+and that automatic main production delivery is disabled. Protected Docs needs its
+own actual all-path Access, approved engineering identity and MFA acceptance; a
+local fixture or public Docs approval does not satisfy that requirement.
+
 Run `scripts/release/free_gate.py verify` from a clean independently reviewed exact-main
 checkout outside repository Actions using owner GitHub authentication. Latest revocation,
 failed/pending authorization, stale evidence, main movement or changed review invalidates

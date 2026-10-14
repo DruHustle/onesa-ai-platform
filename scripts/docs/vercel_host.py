@@ -14,10 +14,14 @@ parser.add_argument(
 )
 parser.add_argument("--create", action="store_true")
 args = parser.parse_args()
+PUBLIC_PROJECT = "prj_Dtm2zO8sQQFqmnospPZgxbCi9Bbr"
+PUBLIC_ORGANIZATION = "team_ZCFijEEeYUAKYka9HEyEeyGm"
 token = os.environ.get("VERCEL_TOKEN", "")
 organization = os.environ.get("VERCEL_ORG_ID", "")
 if not token or not organization:
     raise SystemExit("Missing VERCEL_TOKEN or VERCEL_ORG_ID")
+if organization != PUBLIC_ORGANIZATION:
+    raise SystemExit("Public Docs organization scope mismatch")
 query = (
     "?" + urlencode({"teamId": organization})
     if organization.startswith("team_")
@@ -60,6 +64,8 @@ if args.operation in {"prepare", "inspect", "verify-deployment"}:
         raise SystemExit(
             "Refusing to publish docs into a differently named application project"
         )
+    if project.get("id") != PUBLIC_PROJECT:
+        raise SystemExit("Public Docs project scope mismatch")
     if project["id"] == os.environ.get("APPLICATION_VERCEL_PROJECT_ID"):
         raise SystemExit("Docs and application projects must be independent")
     if args.operation == "verify-deployment":
@@ -80,6 +86,7 @@ if args.operation in {"prepare", "inspect", "verify-deployment"}:
             or deployment.get("projectId") != project["id"]
             or deployment.get("readyState") != "READY"
             or deployment.get("meta", {}).get("onesaSourceRevision") != revision
+            or "target" not in deployment
         ):
             raise SystemExit(
                 "Deployment project, readiness or exact source revision verification failed"
@@ -89,9 +96,11 @@ if args.operation in {"prepare", "inspect", "verify-deployment"}:
                 {
                     "deploymentId": deployment.get("id"),
                     "project": project["name"],
+                    "projectId": project["id"],
                     "state": deployment["readyState"],
                     "url": origin,
                     "sourceRevision": revision,
+                    "target": deployment.get("target"),
                 },
                 indent=2,
             )

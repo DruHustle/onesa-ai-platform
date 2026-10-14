@@ -48,6 +48,12 @@ const context=await browser.newContext();
 await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
+const provenanceResponse=await context.request.get(origin+'/generated/provenance.json');
+expect(provenanceResponse.status()).toBe(200);
+const provenance=await provenanceResponse.json();
+expect(provenance.classification).toBe('public');
+if(process.env.GITHUB_SHA)expect(provenance.revision).toBe(process.env.GITHUB_SHA);
+evidence.provenance={revision:provenance.revision,classification:provenance.classification};
 async function checkIdentityIcons(){
  const source=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json'),'utf8'));
  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('href','/brand/icons/v1/onesa-docs.svg');
@@ -149,5 +155,11 @@ try{
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({mode,width,route,overflow:false});
  }
  await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await page.getByLabel('Search documentation').fill('Robot');await page.getByLabel('Search documentation').focus();await page.emulateMedia({colorScheme:'dark'});await expect(page.getByLabel('Search documentation')).toHaveValue('Robot');await expect(page.getByLabel('Search documentation')).toBeFocused();expect(await page.evaluate(()=>localStorage.getItem('theme'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('onesa-unrelated-fixture'))).toBe('preserved');
+ const expectedEnvironment=process.env.ONESA_DOCS_EXPECTED_ENVIRONMENT;
+ if(expectedEnvironment){
+  expect(['development','staging','production']).toContain(expectedEnvironment);
+  await expect(page.locator('.docs-audience')).toHaveText((expectedEnvironment==='production'?'':expectedEnvironment.toUpperCase()+' · ')+'Public developer documentation');
+  evidence.environment_context=expectedEnvironment;
+ }
  expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...evidence},null,2));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
