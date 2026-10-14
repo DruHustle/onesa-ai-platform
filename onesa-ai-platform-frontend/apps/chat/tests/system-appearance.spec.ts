@@ -15,6 +15,29 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+test('long authenticated identity remains readable in narrow settings in both system modes', async ({ page }) => {
+  const email = 'release-audit-38522346346-' + 'a'.repeat(24) + '@example.com';
+  await page.route('**/api/v1/auth/me', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ id: 'synthetic-user', display_name: 'Synthetic staging verification', email }),
+  }));
+  await page.route('**/api/v1/auth/sessions', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ total: 1, limit: 20, items: [{ id: 'synthetic-session', current: true, created_at: '2026-10-14T06:30:00Z', expires_at: '2026-10-15T06:30:00Z' }] }),
+  }));
+  await page.setViewportSize({ width: 320, height: 900 });
+  for (const mode of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: mode });
+    await page.goto('/settings');
+    const identity = page.getByText('Signed in as ' + email, { exact: true });
+    await expect(identity).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2)).toBe(true);
+    expect(await identity.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+    await expect(page.getByLabel('Display name', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save display name', exact: true })).toBeEnabled();
+  }
+});
+
 for (const mode of ['light', 'dark'] as const) test(`system ${mode}: independent clock, identity and representative routes`, async ({ page }, info) => {
   test.setTimeout(180000);
   const errors: string[] = [];

@@ -50,7 +50,7 @@ class HostedRequestFailure(Rejected):
 
 
 class HostedStreamFailure(Rejected):
-    def __init__(self, code):
+    def __init__(self, code, reason=None, provider_error_code=None):
         known = {
             "inference_unavailable": "INFERENCE_UNAVAILABLE",
             "inference_timeout": "INFERENCE_TIMEOUT",
@@ -63,11 +63,31 @@ class HostedStreamFailure(Rejected):
             if isinstance(code, str)
             else "UNCLASSIFIED_STREAM_ERROR"
         )
+        known_reasons = {
+            "provider_stream_error",
+            "invalid_stream_json",
+            "invalid_stream_shape",
+            "invalid_stream_delta",
+            "stream_terminated_early",
+            "empty_model_response",
+            "response_size_limit",
+            "generation_lease_lost",
+        }
+        self.reason = (
+            reason if isinstance(reason, str) and reason in known_reasons else None
+        )
+        self.provider_error_code = (
+            provider_error_code
+            if type(provider_error_code) is int and 0 <= provider_error_code <= 999999
+            else None
+        )
         super().__init__("Hosted stream emitted an error")
 
 
 def safe_suite_failure_reason(error):
     if isinstance(error, HostedStreamFailure):
+        if error.reason:
+            return "STREAM_DETAIL_" + error.reason.upper()
         return "STREAM_ERROR_" + error.code
     known = {
         "Real streamed inference missing": "STREAM_RESPONSE_MISSING",
@@ -244,8 +264,11 @@ def generation(client, body):
     frames = list(stream_events(io.BytesIO(response)))
     names = [name for name, _ in frames]
     if "error" in names:
+        failure = next(value for name, value in frames if name == "error")
         raise HostedStreamFailure(
-            next(value.get("code") for name, value in frames if name == "error")
+            failure.get("code"),
+            failure.get("failure_reason"),
+            failure.get("provider_error_code"),
         )
     require(
         names
@@ -772,6 +795,11 @@ def run_suite(origin):
         record["status"] = "FAIL"
         record["failure_code"] = safe_suite_failure_code(error)
         record["failure_reason"] = safe_suite_failure_reason(error)
+        if (
+            isinstance(error, HostedStreamFailure)
+            and error.provider_error_code is not None
+        ):
+            record["failure_provider_error_code"] = error.provider_error_code
         record["failure_workflow"] = workflow
         record["failure_phase"] = (
             error.phase if isinstance(error, HostedRequestFailure) else active
@@ -879,6 +907,11 @@ def main():
     if record.get("failure_code"):
         print("Hosted check failure: " + record["failure_code"])
         print("Hosted failure reason: " + record["failure_reason"])
+        if "failure_provider_error_code" in record:
+            print(
+                "Hosted provider error code: "
+                + str(record["failure_provider_error_code"])
+            )
         print(
             "Hosted failure phase: " + record.get("failure_phase", "workflow-request")
         )

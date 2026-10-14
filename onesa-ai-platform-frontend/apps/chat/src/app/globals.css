@@ -392,6 +392,7 @@ p {
   margin: 16px 0;
   display: grid;
   gap: 14px;
+  overflow-wrap: anywhere;
 }
 .feature-card label,
 .search-form label {
