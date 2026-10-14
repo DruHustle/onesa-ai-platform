@@ -22,6 +22,17 @@ use `npm --prefix onesa-ai-platform-frontend run docs:ci` and `make docs-assets
  docs-public docs-internal docs-validate` as one command without a line break.
 Regenerate ignored public/internal manuals in CI; do not commit them.
 
+`apps/chat/tests/startup.spec.ts` uses synthetic browser network fixtures for initial
+rendering, the eight-second session-check deadline and cancellation, connection retry
+without a page reload, optional document loading and deferred Markdown rendering. It
+runs with the ordinary `test:e2e` CI suite. For a targeted local check, build first with
+`npm --prefix onesa-ai-platform-frontend run build`, start the resulting frontend on
+an isolated loopback port, then run
+`ONESA_BROWSER_URL=http://127.0.0.1:<port> npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/startup.spec.ts`.
+These fixture checks qualify prepared source behavior; they do not measure hosted
+startup latency or establish a production deployment. See
+[Performance checks](../testing/PERFORMANCE_TESTS.md) for the startup boundaries.
+
 ## Backend (backend directory)
 
 ```sh

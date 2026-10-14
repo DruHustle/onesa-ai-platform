@@ -1,11 +1,11 @@
 "use client";
 import ApplicationsNav from "../components/applications-nav";
+import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
 import DocumentationHelp from "../components/documentation-help";
-import { useCallback, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+
+const MessageContent = lazy(() => import("../components/message-content"));
 
 type User = { id: string; display_name: string };
 type Conversation = { id: string; title: string };
@@ -26,6 +26,7 @@ export default function Chat() {
     real_inference: boolean;
   } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [sessionAttempt, setSessionAttempt] = useState(0);
   const [documents, setDocuments] = useState<{ id: string; title: string }[]>(
     [],
   );
@@ -48,15 +49,23 @@ export default function Chat() {
   const abort = useRef<AbortController | null>(null),
     bottom = useRef<HTMLDivElement | null>(null),
     entry = useRef<HTMLTextAreaElement | null>(null);
+  const credentialDraft = useRef<HTMLInputElement | null>(null);
   const refreshList = useCallback(async () => {
     const response = await call("/conversations");
     setList((await response.json()).items);
   }, []);
+  const acceptUser = useCallback((current: User) => {
+    // Ordinary chat does not depend on the optional document list.
+    setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
+    setUser(current);
+  }, []);
   useEffect(() => {
     let active = true;
-    api("GET /auth/me")
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
+    api("GET /auth/me", {signal})
       .then((u) => {
-        if (active) setUser(u);
+        if (active) acceptUser(u);
       })
       .catch((failure: unknown) => {
         if (!active) return;
@@ -68,19 +77,24 @@ export default function Chat() {
       });
     return () => {
       active = false;
+      controller.abort();
       abort.current?.abort();
     };
-  }, []);
+  }, [acceptUser, sessionAttempt]);
   useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
     if (user)
-      call("/models")
+      call("/models", "GET", undefined, signal)
         .then((r) => r.json())
-        .then((data) => setModel(data.items[0]))
-        .catch((e) => setError(e.message));
+        .then((data) => { if (active) setModel(data.items[0]); })
+        .catch((e) => { if (active) setError(e.message); });
     if (user)
-      call("/knowledge/documents")
+      call("/knowledge/documents", "GET", undefined, signal)
         .then((r) => r.json())
         .then((data) => {
+          if (!active) return;
           setDocuments(data.items);
           const id = new URLSearchParams(window.location.search).get(
             "document",
@@ -93,15 +107,20 @@ export default function Chat() {
           setKnowledgeReady(true);
         })
         .catch(() => {
+          if (!active) return;
           const id = new URLSearchParams(window.location.search).get("document");
           if (id) setError("Unable to load the selected document. Reload to retry.");
           else setKnowledgeReady(true);
         });
     if (user)
-      call("/conversations")
+      call("/conversations", "GET", undefined, signal)
         .then((r) => r.json())
-        .then((data) => setList(data.items))
-        .catch((e) => setError(e.message));
+        .then((data) => { if (active) setList(data.items); })
+        .catch((e) => { if (active) setError(e.message); });
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [user]);
   useEffect(() => {
     if (followLatest.current) bottom.current?.scrollIntoView({ behavior: "auto" });
@@ -142,6 +161,7 @@ export default function Chat() {
   }, [menu, closeMenu]);
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (checking || busy || unavailable) return;
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -156,7 +176,7 @@ export default function Chat() {
         "POST",
         data,
       );
-      setUser(await response.json());
+      acceptUser(await response.json());
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -306,12 +326,6 @@ export default function Chat() {
       setError((e as Error).message);
     }
   }
-  if (checking)
-    return (
-      <div className="loading" role="status">
-        {copy.opening}
-      </div>
-    );
   if (!user)
     return (
       <main className="auth-shell">
@@ -321,14 +335,23 @@ export default function Chat() {
           </div>
           <h1>{signup ? copy.createTitle : copy.welcome}</h1>
           <p>{copy.description}</p>
+          {checking && <p role="status">{copy.opening}</p>}
           <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
-          {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => window.location.reload()}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
-          <form onSubmit={authenticate}>
+          {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => {
+            setChecking(true);
+            setUnavailable(false);
+            setError("");
+            setSessionAttempt(previous => previous + 1);
+            credentialDraft.current?.focus();
+          }}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
+          <form onSubmit={authenticate} aria-busy={checking || busy}>
             {signup && (
               <label>
                 {copy.name}
                 <input
                   name="name"
+                  disabled={busy}
+                  onFocus={event => { credentialDraft.current = event.currentTarget; }}
                   autoComplete="name"
                   required
                   maxLength={80}
@@ -337,12 +360,15 @@ export default function Chat() {
             )}
             <label>
               {copy.email}
-              <input name="email" type="email" autoComplete="email" required />
+              <input name="email" type="email" autoComplete="email" required disabled={busy}
+                onFocus={event => { credentialDraft.current = event.currentTarget; }}/>
             </label>
             <label>
               {copy.password}
               <input
                 name="password"
+                disabled={busy}
+                onFocus={event => { credentialDraft.current = event.currentTarget; }}
                 type="password"
                 autoComplete={signup ? "new-password" : "current-password"}
                 required
@@ -355,13 +381,14 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <button className="send" disabled={busy}>
+            <button className="send" disabled={busy || checking || unavailable}>
               {busy ? copy.wait : signup ? copy.create : copy.signIn}
             </button>
           </form>
           <LanguageSelect />
           <button
             className="switch"
+            disabled={checking || busy || unavailable}
             onClick={() => {
               setSignup(!signup);
               setError("");
@@ -446,6 +473,7 @@ export default function Chat() {
         />
       )}
       <section lang="en" className="main" inert={menu ? true : undefined}>
+        <ProductionWorkspaceCue authenticated />
         <header className="topbar">
           <button
             ref={toggle}
@@ -519,12 +547,9 @@ export default function Chat() {
               <div className="label">
                 {m.role === "user" ? "You" : "Onesa AI"}
               </div>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
-              >
-                {m.content.text}
-              </ReactMarkdown>
+              <Suspense fallback={<div style={{whiteSpace: "pre-wrap"}}>{m.content.text}</div>}>
+                <MessageContent text={m.content.text}/>
+              </Suspense>
               {!!m.content.sources?.length && (
                 <div className="sources">
                   Sources:{" "}
@@ -551,9 +576,9 @@ export default function Chat() {
               <div className="label">
                 Onesa AI {busy ? "· Generating" : "· Interrupted"}
               </div>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {partial || "…"}
-              </ReactMarkdown>
+              <Suspense fallback={<div style={{whiteSpace: "pre-wrap"}}>{partial || "…"}</div>}>
+                <MessageContent text={partial || "…"} highlight={false}/>
+              </Suspense>
             </article>
           )}
           <div ref={bottom} />

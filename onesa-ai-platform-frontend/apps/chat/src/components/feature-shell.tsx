@@ -1,5 +1,6 @@
 "use client";
 import ApplicationsNav from "./applications-nav";
+import ProductionWorkspaceCue from "./production-workspace-cue";
 import DocumentationNav from "./documentation-nav";
 import DocumentationHelp from "./documentation-help";
 import Link from "next/link";
@@ -34,6 +35,7 @@ export default function FeatureShell({
       <section lang="en">
         <p className="eyebrow">Onesa AI Platform · {copy.workspace}</p>
         <h1>{title}</h1>
+        <ProductionWorkspaceCue />
         {!title.toLowerCase().includes("settings") && (
           <DocumentationHelp
             topic={

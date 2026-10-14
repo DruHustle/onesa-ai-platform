@@ -23,3 +23,5 @@ Public guides are explicitly allowlisted. Engineering pages, schemas, diagrams a
 ## Shared interface contract
 
 Read [Onesa Design System](../architecture/ONESA_DESIGN_SYSTEM.md) and the pinned consumer manifest before frontend changes. AI and Docs retain distinct product shells over shared semantic tokens. Browser/OS preference controls appearance without selectors, clock timers or stored overrides. Verify drafts, focus, streams, forced colors, reduced motion and affected routes in both modes; local verification does not prove deployed acceptance.
+
+Product-icon provenance is pinned in that same manifest. Preserve the approved source artwork, distinct small-size AI and Docs derivatives, SVG/ICO fallbacks and Apple icon metadata. Verify actual icon responses and browser tabs at each hosted target; generated assets carry no private node, account or customer details.

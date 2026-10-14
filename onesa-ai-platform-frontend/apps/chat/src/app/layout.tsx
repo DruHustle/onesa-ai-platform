@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   description:
     "Onesa AI Platform: private Chat, Knowledge, Agents and Travel workspaces with configurable inference providers.",
+  icons: {
+    icon: [{url: "/brand/icons/v1/onesa-ai.svg", type: "image/svg+xml", sizes: "any"}],
+    shortcut: "/favicon.ico",
+    apple: [{url: "/brand/icons/v1/onesa-ai-180.png", type: "image/png", sizes: "180x180"}],
+  },
 };
 export default async function Layout({
   children,
@@ -23,7 +28,7 @@ export default async function Layout({
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
   return (
-    <html lang={locale} data-onesa-product="ai">
+    <html lang={locale} data-onesa-product="ai" data-onesa-environment={process.env.VERCEL_ENV === "production" ? "production" : process.env.VERCEL_ENV === "preview" ? "staging" : undefined}>
       <body>
         {(() => {
           const environment = process.env.VERCEL_ENV === "preview" ? "STAGING" : process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "development" ? "DEVELOPMENT" : null;

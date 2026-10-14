@@ -117,12 +117,14 @@ jobs:
 
         cp /tmp/vercel-url.txt /tmp/vercel-staging-url.txt
 
-        .venv/bin/python scripts/staging_acceptance.py
-
-        node scripts/staging_ui.cjs'
+        .venv/bin/python scripts/staging_acceptance.py'
       if: env.STAGING_FIXTURES_CONFIGURED != 'true'
     - name: Install locked staging fixture tooling
       run: make install
+    - name: Install the existing locked hosted browser tooling
+      run: |
+        npm --prefix onesa-ai-platform-frontend run ci
+        npm --prefix onesa-ai-platform-frontend/apps/chat exec -- playwright install --with-deps chromium
     - name: Create only temporary approved synthetic staging identities
       if: inputs.fixture_mode != 'provided'
       run: .venv/bin/python scripts/release/fixture_lifecycle.py create
@@ -144,6 +146,12 @@ jobs:
         VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
         STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
+        STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
+    - name: Verify actual protected interfaces, live appearance, streaming and Stop
+      run: node scripts/staging_ui.cjs
+      env:
+        VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Capture provider identity and real hosted probes
       if: always() && steps.backend.outcome == 'success'

@@ -49,6 +49,8 @@ Use `--onesa-font-body` (Arial, Helvetica, sans-serif) and `--onesa-font-code` (
 
 Set deterministic `data-onesa-product` on the root HTML element. Product names, document titles, layout and relevant imagery provide identity even without color. Non-production environment labels come from trusted deployment configuration; operational simulation/live/stale labels come from actual data. Neither follows the palette.
 
+Authenticated AI workspaces also show a quiet PRODUCTION cue only when the server receives `VERCEL_ENV=production`. Its deterministic deployment attribute is independent of appearance and authorization. Anonymous sign-in content has no production banner; capability shells confirm the existing session before displaying the cue. A hostname or `NODE_ENV=production` alone never establishes this production context.
+
 ## Appearance and accessible behavior
 
 CSS `prefers-color-scheme` controls light/dark mappings and native `color-scheme`. A readable light base applies when the feature is unavailable. The earlier application clock schedule is superseded. There is no appearance selector, preference cookie, database field or application storage override. Language and onboarding progress preferences remain separate.
@@ -66,6 +68,8 @@ Measure ordinary text at 4.5:1 and qualifying large text and applicable non-text
 The logo links to the current product home; the active capability has `aria-current="page"`. Account controls stay product scoped. External product links use the unique Onesa UG, Onesa AI Platform, Onesa AI Robot and Onesa Developer Docs labels and indicate leaving the current product. Navigation does not merge sessions or confer access.
 
 Preserve the approved master mark and recorded source/rights. Use existing approved favicon derivatives and router metadata; do not invent an official mark or add a service worker for icons. Validate icon bytes, dimensions, MIME, HTTP status, document titles and actual tabs at each deployed target. Private customer content, governance records and live telemetry never become decorative screenshots. Internal annotated examples use synthetic fixtures and captions.
+
+Identity icons version 1.0.0 trace the common O from the unchanged, owner-supplied Company orbit artwork. Company uses a square frame, AI a diamond, Robot a circle and Docs a folded book, with their approved product accents. The consumer manifest pins each local provenance record and its derivative hashes. SVG, 16/32/64-pixel ICO frames and the 180-pixel Apple icon provide small-size and browser fallbacks. These technical derivatives do not assert a new official or registered logo. Both public and protected Docs use the Docs identity; access and environment remain separate labels. Native browser-tab appearance must be verified after deployment, alongside metadata and response checks.
 
 Do use a compact form/card and precise unavailable state in a workspace. Do not introduce a marketing hero into Chat, a governance table or operator telemetry. Do use a clear source and capture caption for documentation screenshots. Do not invent activity, compliance scores, physical capability or commercial milestones for appearance.
 
