@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {installPreviewAccess} from './preview-access.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
@@ -31,32 +31,15 @@ const expectedApplications=applications.applications.map(application=>({
  href:publicOrigin(application.id==='ai'?(process.env.ONESA_APPLICATION_URL||application.href):application.id==='docs'?(process.env.ONESA_PUBLIC_DOCUMENTATION_URL||application.href):application.href),
 }));
 const types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.pdf':'application/pdf','.css':'text/css','.xml':'application/xml','.txt':'text/plain','.mmd':'text/plain'};
-const server=http.createServer(async(req,res)=>{
- try{
-  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-  const requested=path.resolve(build,'.'+pathname);
-  if(!requested.startsWith(build+path.sep)&&requested!==build){res.writeHead(404);res.end();return;}
-  for(const file of [requested,path.join(requested,'index.html'),requested+'.html']){
-   try{const stat=await fs.stat(file);if(stat.isFile()){res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(await fs.readFile(file));return;}}catch{}
-  }
-  res.writeHead(404);res.end('Not found');
- }catch{res.writeHead(400);res.end('Invalid request');}
-});
-await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address().port}`;
-const browser=await chromium.launch();
-const context=await browser.newContext({serviceWorkers:'block'});
-const previewAccess=await installPreviewAccess(context,origin,process.env.GITHUB_SHA);
-const requestGet=url=>previewAccess.get(context.request,url);
-await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
-const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+export async function validatePublicDocumentation({page,requestGet,origin,expectedRevision,expectedEnvironment,storageFixture=false}){
+const errors=[];const onError=e=>errors.push(e.name);page.on('pageerror',onError);
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
 const provenanceResponse=await requestGet(origin+'/generated/provenance.json');
 expect(provenanceResponse.status()).toBe(200);
 expect(provenanceResponse.headers()['content-type'],'Public Docs provenance must be JSON, not a provider sign-in page').toContain('application/json');
 const provenance=await provenanceResponse.json();
 expect(provenance.classification).toBe('public');
-if(process.env.GITHUB_SHA)expect(provenance.revision).toBe(process.env.GITHUB_SHA);
+if(expectedRevision)expect(provenance.revision).toBe(expectedRevision);
 evidence.provenance={revision:provenance.revision,classification:provenance.classification};
 async function checkIdentityIcons(){
  const source=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json'),'utf8'));
@@ -104,7 +87,6 @@ async function checkApplicationsNavigation(view){
  else await dropdown.getByRole('button',{name:'Onesa applications',exact:true}).press('Enter');
 }
 try{
- await context.addInitScript(()=>{localStorage.setItem('theme','dark');localStorage.setItem('onesa-unrelated-fixture','preserved');});
  await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
  await checkIdentityIcons();
  await checkApplicationsNavigation('desktop');
@@ -158,12 +140,38 @@ try{
   if(route==='/architecture')await expect(page.locator('.diagram-canvas svg')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${route} overflow at ${width}px`).toBe(true);evidence.widths.push({mode,width,route,overflow:false});
  }
- await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await page.getByLabel('Search documentation').fill('Robot');await page.getByLabel('Search documentation').focus();await page.emulateMedia({colorScheme:'dark'});await expect(page.getByLabel('Search documentation')).toHaveValue('Robot');await expect(page.getByLabel('Search documentation')).toBeFocused();expect(await page.evaluate(()=>localStorage.getItem('theme'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('onesa-unrelated-fixture'))).toBe('preserved');
- const expectedEnvironment=process.env.ONESA_DOCS_EXPECTED_ENVIRONMENT;
+ await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await page.getByLabel('Search documentation').fill('Robot');await page.getByLabel('Search documentation').focus();await page.emulateMedia({colorScheme:'dark'});await expect(page.getByLabel('Search documentation')).toHaveValue('Robot');await expect(page.getByLabel('Search documentation')).toBeFocused();if(storageFixture){expect(await page.evaluate(()=>localStorage.getItem('theme'))).toBeNull();expect(await page.evaluate(()=>localStorage.getItem('onesa-unrelated-fixture'))).toBe('preserved');}
  if(expectedEnvironment){
   expect(['development','staging','production']).toContain(expectedEnvironment);
   await expect(page.locator('.docs-audience')).toHaveText((expectedEnvironment==='production'?'':expectedEnvironment.toUpperCase()+' · ')+'Public developer documentation');
   evidence.environment_context=expectedEnvironment;
  }
- expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...evidence},null,2));
-}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+ expect(errors).toEqual([]);return {result:'PASS',...evidence};
+}finally{page.off('pageerror',onError);}
+}
+
+async function main(){
+const server=http.createServer(async(req,res)=>{
+ try{
+  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  const requested=path.resolve(build,'.'+pathname);
+  if(!requested.startsWith(build+path.sep)&&requested!==build){res.writeHead(404);res.end();return;}
+  for(const file of [requested,path.join(requested,'index.html'),requested+'.html']){
+   try{const stat=await fs.stat(file);if(stat.isFile()){res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(await fs.readFile(file));return;}}catch{}
+  }
+  res.writeHead(404);res.end('Not found');
+ }catch{res.writeHead(400);res.end('Invalid request');}
+});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address().port}`;
+const browser=await chromium.launch();
+const context=await browser.newContext({serviceWorkers:'block'});
+const previewAccess=await installPreviewAccess(context,origin,process.env.GITHUB_SHA);
+const requestGet=url=>previewAccess.get(context.request,url);
+await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
+await context.addInitScript(()=>{localStorage.setItem('theme','dark');localStorage.setItem('onesa-unrelated-fixture','preserved');});
+const page=await context.newPage();
+try{console.log(JSON.stringify(await validatePublicDocumentation({page,requestGet,origin,expectedRevision:process.env.GITHUB_SHA,expectedEnvironment:process.env.ONESA_DOCS_EXPECTED_ENVIRONMENT,storageFixture:true}),null,2));}
+finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)await main();

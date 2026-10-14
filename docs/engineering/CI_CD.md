@@ -163,6 +163,53 @@ controls. It repeats custody/latest-authorization checks immediately before deli
 and performs protected hosted acceptance afterwards. A metadata record alone grants
 no production action and cannot establish private hosted PASS.
 
+Public Docs Preview can also use the explicit `native-owner` validation channel
+when the existing Preview is protected by Vercel SSO. The registered owner
+`docs-hosting.yml` producer still requires exact staging/main source and full CI,
+both immutable public archives, typed local staging/production acceptance and the
+actual READY Preview identity. It records hosted acceptance as
+`PENDING_NATIVE_OWNER`, public scope as `BLOCKED`, and requests no production
+deployment. A successful workflow carrying this pending record is not hosted PASS.
+The normal public channel, full application gate and protected channel remain strict.
+
+The owner-held read-only native producer verifies that pending record and actual
+archive bytes, then runs all hosted checks in the existing approved browser session
+without copying cookies, credentials or profile state. Its sanitized metadata binds
+exact source/CI, producer hash, Preview identity, registered record, both archive
+IDs/hashes, tree hashes and acceptance hash/counts. The existing qualification
+accepts the explicit `native_custody_mode=actions-native` and `native_metadata`
+dispatch inputs for public Docs only. It parses at most 32 KiB of count/hash-only JSON
+from `GITHUB_EVENT_PATH`, without shell interpolation, and rejects duplicate or
+nonfinite values, extra fields, mixed draft custody, caller PASS or true grants.
+The current owner/main workflow independently checks source, full main CI, Preview
+identity and both actual archives before retaining this metadata in the existing
+immutable `free-release-qualification` artifact. Its API digest, workflow run and
+exact record are checked again by authorization and the external reader; no new
+permission or artifact system is introduced. Metadata is custody only.
+
+Explicit public metadata custody selects only the conditional channel. Public
+conditional authorization and external verification require the independently held
+producer pin; absent custody/pin retains the normal strict public gate. The result
+is `CONDITIONAL_EXTERNAL_HANDOFF`, `REQUIRES_EXTERNAL_LIVE_VALIDATION`, staging
+`BLOCKED` and false application, backend and production grants. Default/full,
+protected and existing normal public consumers reject this conditional result.
+The native source proof ends with owner production review still required. No new
+publisher hook or production CLI is authorized by this source change. Any later
+reviewed executor must independently repeat native hosted acceptance, exact
+source/artifact/provider binding, retained application/API and no-auto-production
+controls, latest owner authority and post-release acceptance before claiming delivery.
+
+This path creates no second Preview bypass key, new workflow, service credential or
+GitHub permission. The public owner-draft alternative remains fail-closed: the
+one-shot 2026-10-14 main diagnostic `38616543571` failed with API unavailable and
+zero artifacts, rather than the expected schema rejection. The exact failed API
+endpoint and permission cause were not recorded. Do not retry, publish that draft,
+or expand permissions to infer capability. The existing Actions artifact channel
+already supports qualification uploads and authenticated reads; this native
+metadata mode still requires actual exact-source workflow and live validation.
+Pre-main native review can inspect a source-bound Preview but cannot qualify a
+future main SHA; conditional qualification requires current exact main and full CI.
+
 Workflow permissions remain `contents: read`. Actual read-only `GITHUB_TOKEN`
 visibility of the owner draft and asset must be verified on the real approved
 metadata; synthetic tests do not prove it. GitHub documents [draft release listing

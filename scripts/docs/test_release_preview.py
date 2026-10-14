@@ -38,18 +38,21 @@ class PreviewProducerTests(unittest.TestCase):
             self.folders.append(folder)
         self.proof = DocsGitHub().docs["scopes"]["public"]
 
-    def produce(self):
+    def produce(self, **options):
         return producer.preview_record(
             SHA,
             "20",
             self.folders[0],
             self.folders[1],
-            self.proof["hosted_acceptance"],
+            None
+            if options.get("validation_channel") == "native-owner"
+            else self.proof["hosted_acceptance"],
             self.proof["preview"],
             "a" * 64,
             self.folders[2],
             self.proof["production_acceptance"],
             "b" * 64,
+            **options,
         )
 
     def test_distinct_accepted_production_bytes_and_actual_preview_are_recorded(self):
@@ -63,6 +66,45 @@ class PreviewProducerTests(unittest.TestCase):
         self.assertFalse(record["application_deployment_authorized"])
         self.assertFalse(record["backend_deployment_authorized"])
         self.assertEqual(record["scopes"]["internal"]["status"], "BLOCKED")
+
+    def test_native_pending_record_never_becomes_normal_hosted_proof(self):
+        local = copy.deepcopy(self.proof["hosted_acceptance"])
+        local["origin"] = "http://127.0.0.1:4000"
+        with patch.object(producer.e, "source_hash", return_value="c" * 64):
+            record = self.produce(
+                validation_channel="native-owner", staging_acceptance=local
+            )
+        proof = record["scopes"]["public"]
+        self.assertEqual(proof["status"], "BLOCKED")
+        self.assertEqual(
+            proof["checks"]["hosted_preview_acceptance"], "PENDING_NATIVE_OWNER"
+        )
+        self.assertNotIn("hosted_acceptance", proof)
+        self.assertTrue(record["native_validation_required"])
+        self.assertEqual(proof["staging_acceptance"], local)
+        self.assertFalse(record["production_deployment_requested"])
+        with self.assertRaises(producer.e.Rejected):
+            producer.f.public_docs_proof(proof, SHA)
+
+    def test_native_pending_requires_actual_typed_local_acceptance(self):
+        for field, value in [
+            ("result", "FAIL"),
+            ("environment_context", None),
+            ("environment_context", "production"),
+            ("accessibility", [1] * 124),
+            ("navigation", []),
+            ("icons", []),
+            ("provenance", {"revision": "f" * 40, "classification": "public"}),
+        ]:
+            local = copy.deepcopy(self.proof["hosted_acceptance"])
+            local[field] = value
+            with self.subTest(field=field), self.assertRaises(producer.e.Rejected):
+                self.produce(
+                    validation_channel="native-owner", staging_acceptance=local
+                )
+        for channel in ["auto", "", None]:
+            with self.subTest(channel=channel), self.assertRaises(producer.e.Rejected):
+                self.produce(validation_channel=channel)
 
     def test_source_and_classification_are_checked_for_every_build(self):
         for folder in self.folders:
