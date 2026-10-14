@@ -242,6 +242,14 @@ jobs:
         .venv/bin/python scripts/docs/vercel_host.py prepare
 
         '
+    - name: Read owner-managed public Docs Preview test credential without mutation
+      if: inputs.target == 'preview'
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
+        DOCS_PREVIEW_ACCESS_FILE: ${{ runner.temp }}/docs-preview-access.json
+      run: .venv/bin/python scripts/docs/vercel_host.py prepare-preview-access
     - name: Publish verified public build as Preview only without dependency installation
       if: inputs.target != 'build'
       env:
@@ -264,7 +272,9 @@ jobs:
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
         APPLICATION_VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      run: 'DOCS_DEPLOYMENT_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")"
+      run: 'umask 077
+
+        DOCS_DEPLOYMENT_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")"
 
         export DOCS_DEPLOYMENT_URL
 
@@ -273,10 +283,16 @@ jobs:
         '
     - name: Verify actual public Preview interactions and boundary
       if: inputs.target == 'preview'
+      env:
+        ONESA_DOCS_PREVIEW_ACCESS_FILE: ${{ runner.temp }}/docs-preview-access.json
+        ONESA_DOCS_PREVIEW_IDENTITY_FILE: ${{ runner.temp }}/docs-preview-identity.json
       run: 'ONESA_DOCS_EXPECTED_ENVIRONMENT=staging ONESA_DOCS_TEST_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")" node
         scripts/docs/acceptance.mjs > "$RUNNER_TEMP/docs-hosted-acceptance.json"
 
         '
+    - name: Remove private runner-owned Preview test credential
+      if: always() && inputs.target == 'preview'
+      run: rm -f -- "$RUNNER_TEMP/docs-preview-access.json"
     - name: Record source-bound independent Docs Preview qualification
       if: inputs.target == 'preview'
       env:

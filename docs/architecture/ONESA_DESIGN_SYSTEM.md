@@ -73,6 +73,8 @@ Identity icons version 1.0.0 trace the common O from the unchanged, owner-suppli
 
 Do use a compact form/card and precise unavailable state in a workspace. Do not introduce a marketing hero into Chat, a governance table or operator telemetry. Do use a clear source and capture caption for documentation screenshots. Do not invent activity, compliance scores, physical capability or commercial milestones for appearance.
 
+Prefer product-count-neutral headlines and marketing copy, such as “Onesa products. One engineering map.” New products can join the family without rewriting that message. Actual inventories, repository and branch policies, and dated measurements retain their accurate counts.
+
 ## Representative verification and maintenance
 
 ![Synthetic AI Chat workspace: product identity and capability navigation on the left, honest inference status above content, composer below.](/generated/screenshots/chat.png)

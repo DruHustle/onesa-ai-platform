@@ -5,6 +5,7 @@ import http from 'node:http';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {installPreviewAccess} from './preview-access.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const docsRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));
 const {chromium,expect}=docsRequire('@playwright/test');
@@ -44,12 +45,15 @@ const server=http.createServer(async(req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin=process.env.ONESA_DOCS_TEST_URL||`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch();
-const context=await browser.newContext();
+const context=await browser.newContext({serviceWorkers:'block'});
+const previewAccess=await installPreviewAccess(context,origin,process.env.GITHUB_SHA);
+const requestGet=url=>previewAccess.get(context.request,url);
 await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
-const provenanceResponse=await context.request.get(origin+'/generated/provenance.json');
+const provenanceResponse=await requestGet(origin+'/generated/provenance.json');
 expect(provenanceResponse.status()).toBe(200);
+expect(provenanceResponse.headers()['content-type'],'Public Docs provenance must be JSON, not a provider sign-in page').toContain('application/json');
 const provenance=await provenanceResponse.json();
 expect(provenance.classification).toBe('public');
 if(process.env.GITHUB_SHA)expect(provenance.revision).toBe(process.env.GITHUB_SHA);
@@ -62,7 +66,7 @@ async function checkIdentityIcons(){
  for(const name of ['onesa-docs.svg','onesa-docs.ico','onesa-docs-180.png']){
   const asset=source.products[0].files.find(file=>file.name===name);
   const route=name.endsWith('.ico')?'/favicon.ico':'/brand/icons/v1/'+name;
-  const response=await context.request.get(origin+route);expect(response.status()).toBe(200);
+  const response=await requestGet(origin+route);expect(response.status()).toBe(200);
   const mime=response.headers()['content-type'].split(';')[0];
   expect(name.endsWith('.ico')?['image/x-icon','image/vnd.microsoft.icon']:[asset.mime]).toContain(mime);
   expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(asset.sha256);
@@ -105,18 +109,18 @@ try{
  await checkIdentityIcons();
  await checkApplicationsNavigation('desktop');
  await page.setViewportSize({width:390,height:900});await page.goto(origin+'/');await checkApplicationsNavigation('mobile');await page.setViewportSize({width:1440,height:900});
- const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();
+ const catalog=await (await requestGet(origin+'/generated/diagrams.json')).json();
  expect(catalog.map(d=>d.id).sort()).toEqual([...policy.public_diagrams].sort());
  for(const diagram of catalog)for(const ext of ['svg','png','mmd','pdf']){
-  const response=await context.request.get(`${origin}/generated/diagrams/${diagram.id}.${ext}`);expect(response.status()).toBe(200);expect((await response.body()).length).toBeGreaterThan(20);
+  const response=await requestGet(`${origin}/generated/diagrams/${diagram.id}.${ext}`);expect(response.status()).toBe(200);expect((await response.body()).length).toBeGreaterThan(20);
  }
- const manifest=await (await context.request.get(origin+'/generated/manuals.json')).json();
+ const manifest=await (await requestGet(origin+'/generated/manuals.json')).json();
  expect(manifest.map(m=>m.category).sort()).toEqual([...policy.public_pdfs].sort());
- for(const manual of manifest){const response=await context.request.get(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(policy.version);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
- for(const url of ['/docs/architecture/ONESA_DESIGN_SYSTEM','/docs/operations/TAILSCALE_ADMINISTRATION','/generated/diagrams/onesa-design-system.svg','/generated/diagrams/tailscale-administration.pdf','/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await context.request.get(origin+url)).status()).toBe(404);
- const portal=await (await context.request.get(origin+'/generated/openapi-portal.json')).json();expect(Object.keys(portal.paths).every(p=>p.startsWith('/api/v1/public/'))).toBe(true);
- const robots=await (await context.request.get(origin+'/robots.txt')).text();expect(robots).toContain('Allow: /');expect(robots).toContain('Sitemap: https://docs.onesa.eu/sitemap.xml');
- const sitemap=await (await context.request.get(origin+'/sitemap.xml')).text();expect(sitemap).toContain('https://docs.onesa.eu/');expect(sitemap).not.toContain('localhost');expect(sitemap).not.toContain('/docs/ecosystem/');
+ for(const manual of manifest){const response=await requestGet(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(policy.version);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
+ for(const url of ['/docs/architecture/ONESA_DESIGN_SYSTEM','/docs/operations/TAILSCALE_ADMINISTRATION','/generated/diagrams/onesa-design-system.svg','/generated/diagrams/tailscale-administration.pdf','/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await requestGet(origin+url)).status()).toBe(404);
+ const portal=await (await requestGet(origin+'/generated/openapi-portal.json')).json();expect(Object.keys(portal.paths).every(p=>p.startsWith('/api/v1/public/'))).toBe(true);
+ const robots=await (await requestGet(origin+'/robots.txt')).text();expect(robots).toContain('Allow: /');expect(robots).toContain('Sitemap: https://docs.onesa.eu/sitemap.xml');
+ const sitemap=await (await requestGet(origin+'/sitemap.xml')).text();expect(sitemap).toContain('https://docs.onesa.eu/');expect(sitemap).not.toContain('localhost');expect(sitemap).not.toContain('/docs/ecosystem/');
  const publicRoutes=[...new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>new URL(match[1]).pathname))];
  expect(publicRoutes.length).toBeGreaterThan(10);
  for(const mode of ['light','dark']){
@@ -131,7 +135,7 @@ try{
   expect(blocking.map(v=>({id:v.id,targets:v.nodes.slice(0,4).map(n=>({target:n.target,summary:n.failureSummary}))})),`Accessibility at ${route}`).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${mode} ${route} overflow at ${width}px`).toBe(true);
   const links=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')).filter(h=>h?.startsWith('/')&&!h.startsWith('//')));
-  for(const url of new Set(links)){expect((await context.request.get(origin+url.split('#')[0])).status(),`Broken public link: ${url}`).toBe(200);evidence.links++;}
+  for(const url of new Set(links)){expect((await requestGet(origin+url.split('#')[0])).status(),`Broken public link: ${url}`).toBe(200);evidence.links++;}
  }
  }
  const mode='dark';
