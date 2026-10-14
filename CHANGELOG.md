@@ -13,3 +13,7 @@ Maintained product copy uses count-neutral wording; protected public Docs Previe
 tests keep their credential within the verified deployment origin.
 Public Docs archive verification uses the producer's path ordering and retains
 the exact build and archive digest checks.
+Prepared protected Docs custody uses a conditional owner handoff with staging
+blocked and all deployment grants false until external live validation. Private
+site bytes stay outside GitHub artifacts; full and public release gates remain
+independent.

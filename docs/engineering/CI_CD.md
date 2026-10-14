@@ -21,9 +21,14 @@ monthly schedules, version grouping and seven-day cooldown metadata do not enabl
 ordinary version PRs at that limit. Automated security fixes remain enabled separately.
 The 2026-10-14 protected coordinator receipt verifies all three repositories have
 `enabled: true`, `paused: false`, enabled alerts and zero open alerts at readback.
-Owner notification delivery is owner-confirmed, separately from the API checks. The
-dependency-graph SBOM endpoint returned 404 and was not directly verified; do not
-describe that response as a disabled graph or change unrelated security settings.
+Owner notification delivery is owner-confirmed, separately from the API checks.
+The 2026-10-14 12:31 UTC coordinator readback directly verified all three dependency
+graph SBOM endpoints with HTTP 200; the earlier HTTP 404 observation remains in
+historical evidence. At that readback, weekly scans were active on the Portal and
+Robot default branches; the AI default branch still retained its earlier CI without
+the schedule. Normal reviewed promotion to main activates the prepared AI schedule.
+Do not claim source schedules are effective before that promotion or change unrelated
+security settings.
 
 Keep weekly full CI advisory, runtime-image, workflow and secret checks even when
 application source has not changed. Bot PRs use the same credential-free hosted checks
@@ -70,6 +75,11 @@ flowchart TD
   Stage --> CI[Full exact-source CI and isolated hosted staging]
   CI --> Main[Owner-reviewed PR to main; no automatic production]
   Main --> Exact[Full main CI plus matching staging qualification]
+  Main --> Draft[Protected Docs owner draft: sanitized metadata references only]
+  Draft --> Conditional[Existing qualification and authorization: conditional handoff; staging BLOCKED; no deployment grants]
+  Conditional --> Live[Owner-held verifier: exact private bytes, provider, Access and MFA acceptance]
+  Live --> Fresh[Repeat current source, custody and latest owner decision]
+  Fresh --> External
   Exact --> Evidence[Immutable source and artifact qualification]
   Evidence --> Owner[Scoped owner release decision and evidence digest]
   Owner --> External[Trusted external executor with owner-held credentials]
@@ -127,8 +137,39 @@ Independent Docs delivery uses the same workflows with an explicit
 ambient `DELIVERY_SCOPE` never changes an external verifier's default. A Docs
 authorization cannot release the AI frontend or API. Its exact-source owner Docs
 Preview, classified archive and production-context acceptance replace only the
-application staging requirement for that scope. Full main CI, owner review,
+application staging requirement for public Docs. Full main CI, owner review,
 freshness, artifact provenance and latest revocation checks still apply.
+
+Protected Docs uses an explicit conditional channel in these existing workflows.
+Qualification requires the immutable ID of an owner-created draft release, its
+single owner-uploaded `protected-docs-preview-qualification.json` asset ID and
+`sha256:` digest, and the reviewed producer hash. The asset is bounded to 64 KiB
+and contains only exact source/CI/provider references, counts, hashes and false
+deployment grants. Private HTML, PDFs, diagrams, identity claims and credentials
+remain outside GitHub artifacts. The draft remains unpublished.
+
+The internal qualification and owner authorization keep `STAGING_VERIFIED=BLOCKED`
+and all production, application and backend deployment grants false. External
+`verify --delivery-scope docs-internal --metadata-producer-sha256 <reviewed-hash>`
+requires the producer pin independently retained by the owner executor; metadata
+cannot choose this trust anchor. Its result is `CONDITIONAL_EXTERNAL_HANDOFF` with
+`conditional_authority=REQUIRES_EXTERNAL_LIVE_VALIDATION`. Public and full consumers
+reject this result. Before any private production write, the owner executor must
+independently verify current exact main CI/source, both classified private trees
+and archives with their actual acceptance, the actual Pages Preview/source,
+approved engineering session and current MFA policies, all four Access bindings,
+all-path denials, actual private asset/PDF/diagram bytes and retained application/API
+controls. It repeats custody/latest-authorization checks immediately before delivery
+and performs protected hosted acceptance afterwards. A metadata record alone grants
+no production action and cannot establish private hosted PASS.
+
+Workflow permissions remain `contents: read`. Actual read-only `GITHUB_TOKEN`
+visibility of the owner draft and asset must be verified on the real approved
+metadata; synthetic tests do not prove it. GitHub documents [draft release listing
+restrictions](https://docs.github.com/en/rest/releases/releases#list-releases) and
+[release-asset read permissions](https://docs.github.com/en/rest/releases/assets#get-a-release-asset).
+An unavailable draft fails closed. Do not add credentials or write permissions,
+publish the draft, or substitute caller JSON to bypass this condition.
 
 Dispatch public Docs Preview with `gh workflow run docs-hosting.yml --ref staging
 -f target=preview`. This workflow prepares its pinned CLI before deployment
