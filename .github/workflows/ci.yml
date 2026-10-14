@@ -68,9 +68,9 @@ jobs:
           onesa-ai-platform-backend/requirements.lock'
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
-    - name: 'Release requirement: qualification failure-path tests'
-      run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
     - run: make install
+    - name: 'Release requirement: qualification failure-path tests'
+      run: .venv/bin/python -m unittest discover -s scripts/release -p 'test_*.py'
     - run: .venv/bin/python scripts/check_secrets.py
     - run: 'python3 scripts/ci/analyze.py ruff -- .venv/bin/python -m ruff check scripts infra/operations --output-format
         json
