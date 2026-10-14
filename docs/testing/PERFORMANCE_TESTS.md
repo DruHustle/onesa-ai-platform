@@ -11,6 +11,24 @@ authenticated load/stress, multi-host or production capacity measurements exist 
 Before release measure representative concurrency/context/document sizes and dependency
 failure/recovery, documenting hardware, configuration, sample sizes and bottlenecks.
 
+## Prepared frontend startup behavior
+
+The initial sign-in page shows its branded main content during the session check, with
+authentication controls disabled until that check completes. The browser gives session
+bootstrap eight seconds, cancels it on timeout or unmount, and exposes connection retry
+in place. Anonymous sessions, invitation restrictions and service failures retain their
+distinct responses. This deadline is a recovery bound, not a hosted latency target.
+
+Markdown and syntax highlighting load when message content is rendered; plain text
+remains visible while that code loads. Ordinary chat is usable while the optional
+document list loads. A document supplied in the URL must still be verified as accessible
+before sending. Session, CSRF, ownership, inference and streaming contracts are unchanged.
+
+`apps/chat/tests/startup.spec.ts` exercises these cases through synthetic browser network
+fixtures in the normal `test:e2e` suite. Build the frontend before targeted local runs as
+described in [Build and Test](../engineering/BUILD_AND_TEST.md). Prepared source and local
+fixture results do not prove that these changes are live or establish production timings.
+
 ## Acceptance 005 workloads
 
 `scripts/acceptance/load.py` is bounded to explicitly isolated https://localhost:3443, verifies
