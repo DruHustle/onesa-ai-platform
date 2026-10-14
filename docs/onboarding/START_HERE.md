@@ -18,3 +18,8 @@ Then use [First Engineering Contribution](FIRST_CONTRIBUTION.md). Do not create 
 ## Documentation boundaries
 
 Public guides are explicitly allowlisted. Engineering pages, schemas, diagrams and downloads use a separate build and server-side authorization. Restricted release evidence and corporate records are excluded from both sites. Current source repositories are public: hosted Access does not make committed source confidential. Credentials, live records and incident evidence belong in approved private stores, not source examples.
+
+
+## Shared interface contract
+
+Read [Onesa Design System](../architecture/ONESA_DESIGN_SYSTEM.md) and the pinned consumer manifest before frontend changes. AI and Docs retain distinct product shells over shared semantic tokens. Browser/OS preference controls appearance without selectors, clock timers or stored overrides. Verify drafts, focus, streams, forced colors, reduced motion and affected routes in both modes; local verification does not prove deployed acceptance.

@@ -1,0 +1,9 @@
+flowchart LR
+  Owner[Authorized owner on existing PC] --> PC[Approved Tailscale client]
+  Policy[Tailnet control plane and scoped policy] -. membership and permissions .-> PC
+  Policy -. membership and permissions .-> VM[Oracle VM Tailscale client]
+  PC -->|Encrypted private tailnet transport| VM
+  VM -->|Ordinary pinned OpenSSH| OS[Least-privilege OS administration]
+  OS --> Worker[Portal worker and private scanner]
+  Public[Public browser] --> Frontend[Product HTTPS frontend and authorized API]
+  Public -. no administration route .-> Denial[No public worker scanner database or control listener]

@@ -1,12 +1,12 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const widths=[320,390,768,1024,1440];
-for(const [hour,mode] of [[12,'light'],[20,'dark']] as const) test(`release audit: responsive authenticated ${mode} views, reduced motion and axe`,async({page,baseURL},info)=>{
+for(const [hour,mode] of [[20,'light'],[12,'dark']] as const) test(`release audit: responsive authenticated ${mode} views, reduced motion and axe`,async({page,baseURL},info)=>{
  test.setTimeout(300000);
  const created=await page.request.post(`${baseURL}/api/v1/auth/register`,{headers:{Origin:baseURL!},data:{email:`layout-${info.project.name}-${Date.now()}@example.com`,password:'layout-synthetic-password-123!',display_name:'Layout fixture'}});
  expect(created.status()).toBe(201);
  await page.addInitScript(hour=>{Date.prototype.getHours=()=>hour;},hour);
- await page.emulateMedia({reducedMotion:'reduce'});
+ await page.emulateMedia({colorScheme:mode,reducedMotion:'reduce'});
  for(const width of widths){
   await page.setViewportSize({width,height:900});
   for(const route of ['/','/knowledge','/agents','/travel','/settings','/recovery','/invitation']){

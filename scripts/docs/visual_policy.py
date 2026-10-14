@@ -29,6 +29,7 @@ def validate_navigation(root: Path, catalog: list[dict]) -> dict:
         "security-architecture",
         "complete-onesa-ecosystem",
         "portal-jobs-document-scanning",
+        "onesa-design-system",
     }
     architecture_ids = [entry.get("id") for entry in navigation.get("architecture", [])]
     if (

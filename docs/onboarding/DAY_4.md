@@ -26,3 +26,8 @@ Open the [interactive Day 4 workflow](/onboarding#day-4). Source: `docs/diagrams
 With the authorized existing SSH setup: `ssh -O check onesa-portal-worker` and `ssh onesa-portal-worker`. Follow the Portal Oracle runtime runbook for `docker compose ... ps`, `config --quiet`, scanner PONG and the worker's health command. Do not print container environment, connection strings or private applicant files. Health does not prove mail delivery or restored backups.
 
 Keep production legacy worker processing available until its qualified replacement is operational. Database binding, bucket access and actual synthetic data provenance must pass independently. Recovery restores go to isolated targets; production overwrite needs separate destructive-operation authorization.
+
+
+## Private administration boundary
+
+The existing owner PC-to-Oracle Tailscale tunnel carries ordinary pinned OpenSSH administration. Tailnet policy, approved endpoints and OS authentication remain separate from application authorization. No public forwarding, subnet/exit routing or Tailscale SSH is implied; reverify current settings from protected operations evidence. See [Private PC-to-Oracle administration](../operations/TAILSCALE_ADMINISTRATION.md). Private node identifiers and addresses stay out of public artifacts.

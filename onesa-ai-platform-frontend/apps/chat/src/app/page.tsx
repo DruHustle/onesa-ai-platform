@@ -1,4 +1,5 @@
 "use client";
+import ApplicationsNav from "../components/applications-nav";
 import DocumentationNav from "../components/documentation-nav";
 import DocumentationHelp from "../components/documentation-help";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -316,7 +317,7 @@ export default function Chat() {
       <main className="auth-shell">
         <section className="auth-card">
           <div className="brand">
-            Onesa <span>AI</span>
+            Onesa <span>AI Platform</span>
           </div>
           <h1>{signup ? copy.createTitle : copy.welcome}</h1>
           <p>{copy.description}</p>
@@ -390,16 +391,17 @@ export default function Chat() {
           </button>
         )}
         <div className="brand">
-          Onesa <span>AI</span>
+          Onesa <span>AI Platform</span>
         </div>
         <div className="feature-nav">
-          <Link href="/">{copy.chat}</Link>
+          <Link href="/" aria-current="page">{copy.chat}</Link>
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
           <Link href="/settings" lang="en">Account settings</Link>
           <DocumentationNav />
         </div>
+        <ApplicationsNav />
         <button
           className="new"
           disabled={busy}
@@ -453,7 +455,7 @@ export default function Chat() {
           >
             ☰
           </button>
-          <h1>{list.find((c) => c.id === selected)?.title || "Onesa Chat"}</h1>
+          <h1>{list.find((c) => c.id === selected)?.title || "Chat"}</h1>
           {selected && (
             <>
               <button disabled={busy} onClick={rename}>

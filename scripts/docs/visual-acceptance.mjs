@@ -13,7 +13,7 @@ const publicBuild=path.join(root,'onesa-ai-platform-frontend/apps/docs/build-pub
 const types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.pdf':'application/pdf','.css':'text/css','.ico':'image/x-icon','.mmd':'text/plain'};
 const navigation=JSON.parse(await fs.readFile(path.join(internal,'generated/engineering-navigation.json'),'utf8'));
 const catalog=JSON.parse(await fs.readFile(path.join(internal,'generated/diagrams.json'),'utf8'));
-for(const forbidden of ['onboarding.html','generated/engineering-navigation.json','generated/diagrams/ecosystem-current.svg','docs/onboarding/START_HERE.html'])await expect(fs.stat(path.join(publicBuild,forbidden))).rejects.toThrow();
+for(const forbidden of ['docs/architecture/ONESA_DESIGN_SYSTEM.html','docs/operations/TAILSCALE_ADMINISTRATION.html','generated/diagrams/onesa-design-system.svg','generated/diagrams/tailscale-administration.pdf','onboarding.html','generated/engineering-navigation.json','generated/diagrams/ecosystem-current.svg','docs/onboarding/START_HERE.html'])await expect(fs.stat(path.join(publicBuild,forbidden))).rejects.toThrow();
 const browser=await chromium.launch();
 const context=await browser.newContext();
 const fixture='https://onesa-engineering.test';
@@ -27,12 +27,12 @@ await context.route('**/*',async route=>{
  }
  await route.fulfill({status:404,body:'Not found'});
 });
-await context.addInitScript(()=>{Date.prototype.getHours=()=>Number(sessionStorage.getItem('onesa-test-hour')||12);});
+await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const results={kind:'isolated-browser-fixture',hosted_access_verified:false,diagrams:0,chapters:navigation.chapters.length,learning_days:0,layouts:[],accessibility:[]};
 try{
  for(const mode of ['light','dark'])for(const width of [320,768,1440])for(const route of ['/','/architecture','/onboarding']){
-  await page.goto(fixture+'/');await page.evaluate(mode=>sessionStorage.setItem('onesa-test-hour',mode==='dark'?'20':'12'),mode);
+  await page.emulateMedia({colorScheme:mode});
   await page.setViewportSize({width,height:900});await page.goto(fixture+route);
   await expect(page.locator('main').first()).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-theme',mode);
   if(route==='/architecture'||route==='/onboarding')await expect(page.locator('.diagram-canvas svg').first()).toBeVisible();
@@ -51,7 +51,7 @@ try{
  await page.getByRole('button',{name:'Enlarge diagram',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('.diagram-panel.expanded')).toHaveCount(0);
  for(const diagram of catalog)for(const extension of ['svg','png','pdf','mmd'])expect((await fs.stat(path.join(internal,'generated/diagrams',diagram.id+'.'+extension))).size).toBeGreaterThan(20);
  await page.goto(fixture+'/onboarding');await expect(page.locator('.learning-stage')).toHaveCount(4);await expect(page.locator('.learning-stage .diagram-canvas svg')).toHaveCount(4);
- await page.locator('.learning-checkpoints input').first().check();await page.reload();await expect(page.locator('.learning-checkpoints input').first()).toBeChecked();
+ await page.locator('.learning-checkpoints input').first().check();await page.locator('.learning-checkpoints input').first().focus();await page.emulateMedia({colorScheme:'light'});await expect(page.locator('.learning-checkpoints input').first()).toBeChecked();await expect(page.locator('.learning-checkpoints input').first()).toBeFocused();await page.emulateMedia({colorScheme:'dark'});await expect(page.locator('.learning-checkpoints input').first()).toBeChecked();await page.reload();await expect(page.locator('.learning-checkpoints input').first()).toBeChecked();
  for(const day of navigation.days){await expect(page.locator('#day-'+day.id)).toContainText(day.title);await expect(page.locator('#day-'+day.id+' .learning-checkpoints input')).toHaveCount(day.checkpoints.length);results.learning_days++;}
  for(const entry of [...navigation.architecture,...navigation.chapters,...navigation.days])expect((await fs.stat(path.join(internal,entry.url+'.html'))).isFile()).toBe(true);
  await page.getByLabel('Search documentation').fill('Day 4');await expect(page.locator('.search-results a').first()).toBeVisible();await page.keyboard.press('Escape');

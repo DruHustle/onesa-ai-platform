@@ -1,7 +1,7 @@
 {
   "version": "0.3.0",
   "classification": "internal",
-  "reviewed_at": "2026-10-13",
+  "reviewed_at": "2026-10-14",
   "architecture": [
     {
       "id": "system-overview",
@@ -121,6 +121,13 @@
       "diagram": "privacy-document-review",
       "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
       "summary": "Follow protected drafts, scoped owner approval, retention safeguards, processor review and bilingual notice publication."
+    },
+    {
+      "id": "onesa-design-system",
+      "title": "Onesa Design System",
+      "diagram": "onesa-design-system",
+      "url": "/docs/architecture/ONESA_DESIGN_SYSTEM",
+      "summary": "Shared semantic tokens, product shells, system appearance and versioned independent adoption."
     }
   ],
   "chapters": [

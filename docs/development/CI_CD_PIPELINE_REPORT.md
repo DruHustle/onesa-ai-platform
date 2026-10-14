@@ -1,5 +1,7 @@
 # CI/CD pipeline implementation and audit — onesa-ai-platform
 
+Current policy update: 2026-10-14 — use only dev → staging → main. Version-update PR creation is disabled through open-pull-requests-limit:0 while retained package registries continue to feed detection. Remote automatic security-fix PR creation is OFF on all three repositories after the owner's explicit approval and confirmed notification receipt. Alert readback remains enabled (HTTP204), with zero open findings. Weekly full CI retains dependency/image/security checks without needing a source change. Existing bot branches/PRs are preserved; reviewed remediation belongs on dev. Dependency-graph SBOM readback returned HTTP404 and was not verified or mutated. Owner-confirmed receipt is distinct from API observation. Historical inventory below does not establish current branch compliance.
+
 Audit date: 2026-10-11. Prepared locally on `feature/cicd-review-optimization`; no
 remote push, merge, provider setting change or live deployment occurred. The explicitly
 authorized Dependabot security-update PR setting was enabled and read back on all three
@@ -140,7 +142,7 @@ passes and local builds do not change that status.
 
 ```mermaid
 flowchart TD
-  F[feature / fix / hotfix branch] --> PR[Owner PR to main or staging]
+  F[Existing dev branch] --> PR[Owner PR to staging then qualified staging to main]
   PR --> R[Read-only Reviewdog + lint + types + security]
   R --> T[Relevant tests / contracts / browser / production builds]
   T --> S[Always-running CI summary + independent hygiene]
@@ -232,7 +234,7 @@ never automatically merge or deploy.
 
 ## Optimization and branch policy
 
-Use `feature/*`, `fix/*` and `hotfix/*` PRs targeting `main` or `staging`; preserve
+Use only the existing `dev → staging → main` promotion sequence; preserve
 existing branches, including Portal's established `audit/portal-master-acceptance`.
 Feature push CI duplication is removed: PR activity validates development changes;
 `main`, `staging`, explicit dispatch and the established Portal acceptance branch run

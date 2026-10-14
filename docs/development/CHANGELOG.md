@@ -1,4 +1,6 @@
-# Development changelog
+# Initial setup engineering history
+
+This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
 ## 2026-10-13 — Protected Portal privacy-governance engineering reference
 
