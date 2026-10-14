@@ -568,18 +568,46 @@
                             "type": "object",
                             "properties": {
                               "category": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 100
                               },
                               "author": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 100
                               },
                               "imageId": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "imageAlt": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "imageCaption": {
+                                "type": "string",
+                                "maxLength": 1000
+                              },
+                              "imageCredit": {
+                                "type": "string",
+                                "maxLength": 500
+                              },
+                              "imageRights": {
+                                "type": "string",
+                                "maxLength": 1000
+                              },
+                              "featured": {
+                                "type": "boolean"
                               },
                               "seoTitle": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 160
                               },
                               "seoDescription": {
+                                "type": "string",
+                                "maxLength": 300
+                              },
+                              "publishedAt": {
                                 "type": "string"
                               }
                             },
@@ -1045,18 +1073,46 @@
                       "type": "object",
                       "properties": {
                         "category": {
-                          "type": "string"
+                          "type": "string",
+                          "maxLength": 100
                         },
                         "author": {
-                          "type": "string"
+                          "type": "string",
+                          "maxLength": 100
                         },
                         "imageId": {
-                          "type": "string"
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "imageAlt": {
+                          "type": "string",
+                          "maxLength": 500
+                        },
+                        "imageCaption": {
+                          "type": "string",
+                          "maxLength": 1000
+                        },
+                        "imageCredit": {
+                          "type": "string",
+                          "maxLength": 500
+                        },
+                        "imageRights": {
+                          "type": "string",
+                          "maxLength": 1000
+                        },
+                        "featured": {
+                          "type": "boolean"
                         },
                         "seoTitle": {
-                          "type": "string"
+                          "type": "string",
+                          "maxLength": 160
                         },
                         "seoDescription": {
+                          "type": "string",
+                          "maxLength": 300
+                        },
+                        "publishedAt": {
                           "type": "string"
                         }
                       },
