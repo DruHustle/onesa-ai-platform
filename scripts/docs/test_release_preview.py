@@ -21,7 +21,7 @@ spec.loader.exec_module(producer)
 
 class PreviewProducerTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(dir="/private/tmp")
+        self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.folders = []
         for name, classification in [
@@ -29,7 +29,7 @@ class PreviewProducerTests(unittest.TestCase):
             ("internal", "internal"),
             ("production", "public"),
         ]:
-            folder = Path(self.tmp.name) / name
+            folder = Path(self.tmp.name).resolve() / name
             (folder / "generated").mkdir(parents=True)
             (folder / "generated/provenance.json").write_text(
                 json.dumps({"revision": SHA, "classification": classification})
