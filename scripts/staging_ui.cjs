@@ -261,6 +261,7 @@ async function main() {
   let phase = "authenticated-layouts",
     identityIcons;
   const pageErrors = [];
+  const authenticationStatuses = [];
   try {
     for (const [name, width, height] of [
       ["desktop", 1440, 900],
@@ -296,6 +297,21 @@ async function main() {
         });
         const page = await context.newPage();
         page.on("pageerror", () => pageErrors.push("pageerror"));
+        const authenticationStarted = performance.now();
+        page.on("response", (response) => {
+          const url = new URL(response.url());
+          if (
+            url.origin === origin &&
+            ["/api/v1/auth/me", "/api/v1/auth/login"].includes(url.pathname)
+          )
+            authenticationStatuses.push({
+              viewport: name,
+              mode,
+              path: url.pathname,
+              status: response.status(),
+              elapsed_ms: Math.round(performance.now() - authenticationStarted),
+            });
+        });
         await page.goto(origin, { waitUntil: "networkidle" });
         if (!identityIcons) {
           phase = "metadata-and-icons";
@@ -530,6 +546,7 @@ async function main() {
       origin,
       browser: "chromium",
       views,
+      authentication_statuses: authenticationStatuses,
       workflow_checks: workflowChecks,
       identity_icons: identityIcons,
       usability,
@@ -553,6 +570,10 @@ async function main() {
     );
   } catch {
     console.error("Hosted UI failure phase: " + phase);
+    console.error(
+      "Hosted UI authentication statuses: " +
+        JSON.stringify(authenticationStatuses),
+    );
     fs.writeFileSync(
       path.join(process.env.RUNNER_TEMP, "hosted-ui.json"),
       JSON.stringify({
@@ -561,6 +582,7 @@ async function main() {
         workflow_run_id: Number(process.env.GITHUB_RUN_ID),
         failure_phase: phase,
         views,
+        authentication_statuses: authenticationStatuses,
         workflow_checks: workflowChecks,
       }),
     );

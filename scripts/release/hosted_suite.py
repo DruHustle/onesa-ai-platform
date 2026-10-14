@@ -49,6 +49,37 @@ class HostedRequestFailure(Rejected):
         super().__init__(self.code)
 
 
+class HostedStreamFailure(Rejected):
+    def __init__(self, code):
+        self.code = (
+            code
+            if isinstance(code, str)
+            and code in {"MODEL", "TIMEOUT", "CANCELLED", "AUTH"}
+            else "UNCLASSIFIED_STREAM_ERROR"
+        )
+        super().__init__("Hosted stream emitted an error")
+
+
+def safe_suite_failure_reason(error):
+    if isinstance(error, HostedStreamFailure):
+        return "STREAM_ERROR_" + error.code
+    known = {
+        "Real streamed inference missing": "STREAM_RESPONSE_MISSING",
+        "Real streamed inference did not complete": "STREAM_TERMINAL_MISSING",
+        "Hosted inference metadata is not real": "STREAM_MODEL_METADATA",
+        "Invalid hosted stream content": "STREAM_CONTENT_TYPE",
+        "Hosted model returned empty content": "STREAM_CONTENT_EMPTY",
+        "Hosted conversation context was not retained": "CONTEXT_FACT_MISSING",
+        "Actual chat history not persisted": "HISTORY_NOT_PERSISTED",
+        "Incomplete hosted stream frame": "STREAM_FRAME_INCOMPLETE",
+        "Unsupported hosted stream event": "STREAM_EVENT_UNSUPPORTED",
+        "Hosted stream data must be an object": "STREAM_DATA_TYPE",
+        "Hosted stream exceeds bound": "STREAM_SIZE_BOUND",
+        "Hosted stream event limit reached": "STREAM_EVENT_BOUND",
+    }
+    return known.get(str(error), "UNCLASSIFIED_REQUEST_OR_CHECK")
+
+
 def safe_suite_failure_code(error):
     if isinstance(error, (FixtureError, HostedRequestFailure)):
         return error.code
@@ -206,6 +237,10 @@ def generation(client, body):
     require(isinstance(response, bytes), "Real streamed inference missing")
     frames = list(stream_events(io.BytesIO(response)))
     names = [name for name, _ in frames]
+    if "error" in names:
+        raise HostedStreamFailure(
+            next(value.get("code") for name, value in frames if name == "error")
+        )
     require(
         names
         and names[0] == "message_start"
@@ -366,7 +401,7 @@ def run_suite(origin):
             )
             checks["user_data_isolation"] = "PASS"
             active = "streaming"
-            workflow = "real_context_and_history"
+            workflow = "real_context_acknowledgement"
             memory = "RELEASE-" + secrets.token_hex(8)
             _, _start = generation(
                 clients[0],
@@ -378,6 +413,7 @@ def run_suite(origin):
                     "stream": True,
                 },
             )
+            workflow = "real_context_recall"
             remembered, _ = generation(
                 clients[0],
                 {
@@ -390,6 +426,7 @@ def run_suite(origin):
                 memory.lower() in remembered.lower(),
                 "Hosted conversation context was not retained",
             )
+            workflow = "real_history_persistence"
             history = clients[0].call("GET", "/api/v1/conversations/" + conversation)[
                 "messages"
             ]
@@ -728,6 +765,7 @@ def run_suite(origin):
         checks[active] = "FAIL"
         record["status"] = "FAIL"
         record["failure_code"] = safe_suite_failure_code(error)
+        record["failure_reason"] = safe_suite_failure_reason(error)
         record["failure_workflow"] = workflow
         record["failure_phase"] = (
             error.phase if isinstance(error, HostedRequestFailure) else active
@@ -834,6 +872,7 @@ def main():
     print("Synthetic hosted suite: " + record["status"])
     if record.get("failure_code"):
         print("Hosted check failure: " + record["failure_code"])
+        print("Hosted failure reason: " + record["failure_reason"])
         print(
             "Hosted failure phase: " + record.get("failure_phase", "workflow-request")
         )

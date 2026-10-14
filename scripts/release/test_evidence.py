@@ -354,6 +354,27 @@ class GateTests(unittest.TestCase):
         self.assertNotIn(
             marker, hosted_suite.safe_suite_failure_code(ValueError(marker))
         )
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(
+                e.Rejected("Hosted conversation context was not retained")
+            ),
+            "CONTEXT_FACT_MISSING",
+        )
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(
+                hosted_suite.HostedStreamFailure("MODEL")
+            ),
+            "STREAM_ERROR_MODEL",
+        )
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(
+                hosted_suite.HostedStreamFailure(marker)
+            ),
+            "STREAM_ERROR_UNCLASSIFIED_STREAM_ERROR",
+        )
+        self.assertNotIn(
+            marker, hosted_suite.safe_suite_failure_reason(ValueError(marker))
+        )
 
     def test_hosted_staging_exit_gate_rejects_failure_blocked_and_false_pass_records(
         self,
