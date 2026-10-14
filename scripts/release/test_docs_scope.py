@@ -2,14 +2,17 @@
 
 import copy
 import hashlib
+import importlib.util
 import io
 import json
 import os
 import stat
 import sys
+import tempfile
 import unittest
 import zipfile
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import patch
 
 import evidence as e
@@ -215,6 +218,57 @@ class DocsScopeTests(unittest.TestCase):
             "approve",
             "docs-public",
         )
+
+    def test_archive_route_siblings_match_actual_producer_order_and_reject_changed_bytes(
+        self,
+    ):
+        entries = [
+            ("guide/intro.html", b"nested documentation route", 0),
+            ("guide.html", b"documentation route index", 0),
+            ("index.html", b"public homepage", 0),
+        ]
+        spec = importlib.util.spec_from_file_location(
+            "docs_release_producer", e.ROOT / "scripts/docs/release_preview.py"
+        )
+        producer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(producer)
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary).resolve()
+            for name, content, _ in entries:
+                file = directory / name
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_bytes(content)
+            expected_build = producer.build_digest(directory)
+        text_order = hashlib.sha256()
+        for name, content, _ in sorted(entries):
+            text_order.update(name.encode() + b"\0" + hashlib.sha256(content).digest())
+        self.assertNotEqual(expected_build, text_order.hexdigest())
+        proof = {"build_sha256": expected_build}
+        for changed in [False, True]:
+            current = list(entries)
+            if changed:
+                current[0] = (current[0][0], b"altered nested documentation bytes", 0)
+            self.github.site = archive(current)
+            proof["artifact_sha256"] = hashlib.sha256(self.github.site).hexdigest()
+            self.github.metadata.update(
+                digest="sha256:" + proof["artifact_sha256"],
+                size_in_bytes=len(self.github.site),
+            )
+            if changed:
+                with self.assertRaisesRegex(
+                    e.Rejected, "Public Docs build/artifact mismatch"
+                ):
+                    f.public_docs_artifact(
+                        self.github,
+                        self.github.run(20),
+                        proof,
+                        "onesa-public-docs-staging",
+                    )
+            else:
+                result = f.public_docs_artifact(
+                    self.github, self.github.run(20), proof, "onesa-public-docs-staging"
+                )
+                self.assertEqual(result["id"], 201)
 
     def test_docs_approval_grants_only_exact_public_docs(self):
         self.prepare()

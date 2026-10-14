@@ -266,7 +266,9 @@ def public_docs_artifact(github, run, proof, name="onesa-public-docs-production"
         )
         names = [item.filename for item in files]
         e.require(len(names) == len(set(names)), "Duplicate public Docs archive paths")
-        for item in sorted(files, key=lambda entry: entry.filename):
+        for item in sorted(
+            files, key=lambda entry: PurePosixPath(entry.filename).parts
+        ):
             path = PurePosixPath(item.filename)
             e.require(
                 not path.is_absolute()
