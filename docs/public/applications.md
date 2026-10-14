@@ -1,5 +1,25 @@
 # Applications and capabilities
 
+## Application directions
+
+**Apps powered by the Onesa AI Platform** apply the same intelligence engine to
+different industries. Business and investment decision support and smart farming
+are planned applications; they do not yet have dedicated implemented workflows.
+
+- **Recommendations and decision support** — Travel planning, business feasibility
+  and investment research. Help users compare options, explore scenarios and assess
+  risks using relevant information, clearly stated assumptions and supporting sources.
+- **Smart farming** — Help farmers choose suitable crops and plan cultivation step
+  by step, from planting to harvest. Combine soil conditions, seasonal weather
+  forecasts, water availability, production costs and market demand to support
+  practical decisions.
+
+The proposed farming workflow is **choose a crop → plan cultivation → monitor
+conditions → adapt activities → evaluate selling opportunities**. These experiences
+need suitable data integrations, source freshness, explicit assumptions and validated
+domain workflows. Weather and market data integrations are not currently qualified.
+The existing Travel experience is described below.
+
 ## Chat
 Create, rename, reopen and delete owned conversations. Stream Markdown responses and stop generation. Completed messages persist; interrupted partial output does not become a successful saved answer. The badge shows the active backend; runtime model selection is configuration-driven.
 

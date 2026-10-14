@@ -27,6 +27,19 @@ No branding or specialization work delays the already working Chat MVP or M2 inf
 
 ## Current unfinished work
 
+### Applications powered by the platform
+
+Planned application directions include recommendations and decision support for
+travel, business feasibility and investment research, and smart farming for crop
+selection and step-by-step cultivation. The farming workflow connects crop choice,
+cultivation planning, condition monitoring, adapted activities and selling opportunities,
+using soil, seasonal weather, water, production-cost and market-demand information.
+Business/investment and farming workflows and their required data integrations remain
+unimplemented and unqualified. Existing Travel itinerary features retain their current
+scope. Public descriptions live in [Applications](../public/applications.md#application-directions).
+
+### Existing qualification work
+
 The prepared startup fix renders sign-in content before the session check completes,
 bounds bootstrap reads to eight seconds, retries the connection without reloading,
 and defers Markdown/highlighting until messages are displayed. Optional document

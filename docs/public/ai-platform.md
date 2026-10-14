@@ -1,5 +1,25 @@
 # AI Platform technical overview
 
+## Apps powered by the Onesa AI Platform
+
+The same intelligence engine can support different industries. Alongside the
+existing application experiences, business and investment decision support and
+smart farming are planned applications:
+
+- **Recommendations and decision support** — Travel planning, business feasibility
+  and investment research. Help users compare options, explore scenarios and assess
+  risks using relevant information, clearly stated assumptions and supporting sources.
+- **Smart farming** — Help farmers choose suitable crops and plan cultivation step
+  by step, from planting to harvest. Combine soil conditions, seasonal weather
+  forecasts, water availability, production costs and market demand to support
+  practical decisions.
+
+The farming workflow connects **choose a crop → plan cultivation → monitor
+conditions → adapt activities → evaluate selling opportunities**.
+
+See [application directions](applications.md#application-directions) for the
+implementation status and required data integrations.
+
 ## Application design
 
 The Next.js chat application exposes Chat, Knowledge, Agents, Travel and settings. Its server-side API boundary forwards to FastAPI while keeping backend credentials out of browser bundles. The FastAPI backend enforces identity, ownership, request limits, configured origins and schema compatibility. PostgreSQL stores application state separately from Portal data.
