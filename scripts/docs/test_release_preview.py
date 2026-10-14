@@ -89,6 +89,7 @@ class PreviewProducerTests(unittest.TestCase):
     def test_native_pending_requires_actual_typed_local_acceptance(self):
         for field, value in [
             ("result", "FAIL"),
+            ("environment_context", None),
             ("environment_context", "production"),
             ("accessibility", [1] * 124),
             ("navigation", []),

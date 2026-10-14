@@ -232,6 +232,34 @@ class NativeEventTests(unittest.TestCase):
             ):
                 f.public_docs_native_event(str(file), "docs-public", PRODUCER, "20")
 
+    def test_workflow_checks_the_build_environment_in_local_acceptance(self):
+        import yaml
+
+        workflow = yaml.safe_load(
+            (f.e.ROOT / ".github/workflows/docs-hosting.yml").read_text()
+        )
+        job = workflow["jobs"]["documentation"]
+        self.assertEqual(
+            job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"],
+            job["env"]["ONESA_DOCS_ENVIRONMENT"],
+        )
+        steps = job["steps"]
+        staging = next(
+            step
+            for step in steps
+            if "docs-staging-acceptance.json" in step.get("run", "")
+        )
+        self.assertNotIn("ONESA_DOCS_EXPECTED_ENVIRONMENT", staging.get("env", {}))
+        production = next(
+            step
+            for step in steps
+            if "docs-production-acceptance.json" in step.get("run", "")
+        )
+        self.assertIn(
+            "ONESA_DOCS_EXPECTED_ENVIRONMENT=production node scripts/docs/acceptance.mjs",
+            production["run"],
+        )
+
     def test_workflow_keeps_eight_inputs_read_permissions_and_no_shell_json(self):
         workflow = (f.e.ROOT / ".github/workflows/free-qualification.yml").read_text()
         import yaml
