@@ -15,6 +15,17 @@ qualify application production.
 Only the explicitly approved sources in `docs/documentation-policy.json` and approved public assets
 may be published. Internal engineering records remain private by default.
 
+Hosted navigation uses the pinned application registry. The AI destination defaults
+to `https://platform.onesa.eu` for public/static, Access, staging and production
+builds, and whenever the configured documentation origin is hosted. Hosted link
+overrides must be HTTPS origins without loopback addresses, credentials, paths,
+queries or fragments; only local development defaults to `http://localhost:3100`.
+The public applications guide links Chat, Knowledge, Agents and Travel to their
+actual AI routes. `npm --prefix onesa-ai-platform-frontend/apps/docs run test:security`
+checks unsafe URL configuration, and public browser acceptance verifies the product
+dropdown on desktop and mobile. These changes are prepared source; the existing
+live localhost links require a qualified documentation deployment to be replaced.
+
 ## Deploy from GitHub
 
 The manual **Public documentation hosting** workflow uses Node 24 and Python 3.11,

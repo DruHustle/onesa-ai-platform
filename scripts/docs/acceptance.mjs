@@ -11,6 +11,23 @@ const chatRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/
 const {default:AxeBuilder}=chatRequire('@axe-core/playwright');
 const build=path.join(root,'onesa-ai-platform-frontend/apps/docs/build-public');
 const policy=JSON.parse(await fs.readFile(path.join(root,'docs/documentation-policy.json'),'utf8'));
+const applications=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json'),'utf8'));
+function publicOrigin(value){
+ let url;try{url=new URL(value);}catch{throw new Error('Application navigation requires a valid public origin.');}
+ const host=url.hostname.toLowerCase().replace(/^\[|\]$/g,'').replace(/\.$/,'');
+ const octets=/^\d+\.\d+\.\d+\.\d+$/.test(host)?host.split('.').map(Number):null;
+ const privateAddress=octets&&(octets[0]===0||octets[0]===10||octets[0]===127||octets[0]===169&&octets[1]===254||octets[0]===172&&octets[1]>=16&&octets[1]<=31||octets[0]===192&&octets[1]===168||octets[0]===100&&octets[1]>=64&&octets[1]<=127);
+ const privateIPv6=host.includes(':')&&(host==='::'||host==='::1'||/^f[cd]|^fe[89ab]|^::ffff:/.test(host));
+ const privateHost=host==='localhost'||/\.(localhost|local|internal|lan|home)$/.test(host)||!host.includes('.')&&!host.includes(':')||privateIPv6;
+ expect(url.protocol,'Application navigation requires HTTPS').toBe('https:');
+ expect(Boolean(privateAddress||privateHost),'Application navigation must use public hosts').toBe(false);
+ expect(Boolean(url.username||url.password),'Application navigation must not contain credentials').toBe(false);
+ return url.origin;
+}
+const expectedApplications=applications.applications.map(application=>({
+ label:application.label+' ↗',
+ href:publicOrigin(application.id==='ai'?(process.env.ONESA_APPLICATION_URL||application.href):application.id==='docs'?(process.env.ONESA_PUBLIC_DOCUMENTATION_URL||application.href):application.href),
+}));
 const types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.pdf':'application/pdf','.css':'text/css','.xml':'application/xml','.txt':'text/plain','.mmd':'text/plain'};
 const server=http.createServer(async(req,res)=>{
  try{
@@ -29,10 +46,42 @@ const browser=await chromium.launch();
 const context=await browser.newContext();
 await context.addInitScript(()=>{Date.prototype.getHours=()=>12;});
 const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
-const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,accessibility:[],widths:[]};
+const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],accessibility:[],widths:[]};
+async function checkApplicationsNavigation(view){
+ let dropdown;
+ if(view==='mobile'){
+  await page.getByRole('button',{name:'Toggle navigation bar',exact:true}).click();
+  const sidebar=page.locator('.navbar-sidebar');await expect(sidebar).toBeVisible();
+  dropdown=sidebar.locator('.menu__list-item').filter({has:page.getByRole('button',{name:'Onesa applications',exact:true})});
+  await dropdown.getByRole('button',{name:'Onesa applications',exact:true}).click();
+  await expect(dropdown.getByRole('button',{name:'Collapse the dropdown',exact:true})).toHaveAttribute('aria-expanded','true');
+ }else{
+  dropdown=page.locator('.navbar__items .dropdown').filter({has:page.getByRole('button',{name:'Onesa applications',exact:true})});
+  await dropdown.getByRole('button',{name:'Onesa applications',exact:true}).press('Enter');
+  await expect(dropdown.getByRole('button',{name:'Onesa applications',exact:true})).toHaveAttribute('aria-expanded','true');
+ }
+ const menu=dropdown.locator(view==='mobile'?':scope > .menu__list':'.dropdown__menu');
+ await expect(menu).toBeVisible();const links=menu.locator('a[href]');
+ await expect(links).toHaveCount(expectedApplications.length);
+ const emitted=await links.evaluateAll(nodes=>nodes.map(link=>({label:link.textContent.trim(),href:link.getAttribute('href'),target:link.target,rel:link.rel})));
+ const actual=emitted.map(link=>{
+  const href=publicOrigin(link.href);const url=new URL(link.href);
+  expect(url.pathname,'Applications link to their public origin, not a private route').toBe('/');
+  expect(url.search+url.hash,'Application links must not contain query parameters or fragments').toBe('');
+  if(link.target==='_blank')expect(link.rel.split(/\s+/),'External links need noopener').toContain('noopener');
+  return {label:link.label,href};
+ });
+ expect(actual,`${view} applications dropdown must match the pinned product registry`).toEqual(expectedApplications);
+ for(let index=0;index<expectedApplications.length;index++)await expect(links.nth(index)).toBeVisible();
+ evidence.navigation.push({view,links:actual});
+ if(view==='mobile')await page.getByRole('button',{name:'Close navigation bar',exact:true}).click();
+ else await dropdown.getByRole('button',{name:'Onesa applications',exact:true}).press('Enter');
+}
 try{
  await context.addInitScript(()=>{localStorage.setItem('theme','dark');localStorage.setItem('onesa-unrelated-fixture','preserved');});
  await page.emulateMedia({colorScheme:'light'});await page.goto(origin+'/');await expect(page.locator('.appearance-control')).toHaveCount(0);await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ await checkApplicationsNavigation('desktop');
+ await page.setViewportSize({width:390,height:900});await page.goto(origin+'/');await checkApplicationsNavigation('mobile');await page.setViewportSize({width:1440,height:900});
  const catalog=await (await context.request.get(origin+'/generated/diagrams.json')).json();
  expect(catalog.map(d=>d.id).sort()).toEqual([...policy.public_diagrams].sort());
  for(const diagram of catalog)for(const ext of ['svg','png','mmd','pdf']){
