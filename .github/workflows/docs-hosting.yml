@@ -15,6 +15,13 @@ concurrency:
         - build
         - preview
         default: build
+      hosted_validation:
+        description: CI credential or separate owner native-session acceptance; native mode stays pending
+        type: choice
+        options:
+        - ci
+        - native-owner
+        default: ci
       create_project:
         description: Create the separate onesa-docs project if it does not exist
         type: boolean
@@ -164,7 +171,7 @@ jobs:
 
         '
     - name: Verify public documentation interactions and accessibility
-      run: node scripts/docs/acceptance.mjs
+      run: node scripts/docs/acceptance.mjs > "$RUNNER_TEMP/docs-staging-acceptance.json"
     - name: Qualify production-context public bytes before credentials and restore staging Preview
       run: 'set -eu
 
@@ -243,7 +250,7 @@ jobs:
 
         '
     - name: Read owner-managed public Docs Preview test credential without mutation
-      if: inputs.target == 'preview'
+      if: inputs.target == 'preview' && inputs.hosted_validation != 'native-owner'
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -282,7 +289,7 @@ jobs:
 
         '
     - name: Verify actual public Preview interactions and boundary
-      if: inputs.target == 'preview'
+      if: inputs.target == 'preview' && inputs.hosted_validation != 'native-owner'
       env:
         ONESA_DOCS_PREVIEW_ACCESS_FILE: ${{ runner.temp }}/docs-preview-access.json
         ONESA_DOCS_PREVIEW_IDENTITY_FILE: ${{ runner.temp }}/docs-preview-identity.json
@@ -296,6 +303,8 @@ jobs:
     - name: Record source-bound independent Docs Preview qualification
       if: inputs.target == 'preview'
       env:
+        DOCS_VALIDATION_CHANNEL: ${{ inputs.hosted_validation }}
+        DOCS_STAGING_ACCEPTANCE: ${{ runner.temp }}/docs-staging-acceptance.json
         DOCS_PUBLIC_ARTIFACT_DIGEST: ${{ steps.public-site.outputs.artifact-digest }}
         DOCS_HOSTED_ACCEPTANCE: ${{ runner.temp }}/docs-hosted-acceptance.json
         DOCS_PREVIEW_IDENTITY: ${{ runner.temp }}/docs-preview-identity.json

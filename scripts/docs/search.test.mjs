@@ -15,7 +15,20 @@ const entries = [
   {title: 'Authentication guide', url: '/docs/auth', text: 'Sessions and engineering access.'},
   {title: 'API reference', url: '/docs/api', text: 'Authentication and session examples.'},
 ];
-let browser, script, helpers;
+let browser, script, helpers, hydrationMarkup;
+const fixtureComponent = `
+  function Fixture() {
+    const [visible, setVisible] = useState(true);
+    return <main><h1>Synthetic documentation search fixture</h1>{visible && <Search/>}
+      <button type="button" onClick={() => setVisible(false)}>Remove fixture search</button></main>;
+  }`;
+const linkPlugin = {name: 'fixture-link', setup(builder) {
+  builder.onResolve({filter: /^@docusaurus\/Link$/}, () => ({path: 'link', namespace: 'fixture-link'}));
+  builder.onLoad({filter: /.*/, namespace: 'fixture-link'}, () => ({resolveDir: app, loader: 'tsx',
+    contents: `import React from 'react'; export default function Link({to, children, ...props}) {
+      return <a href={to} {...props}>{children}</a>;
+    }`}));
+}};
 
 before(async () => {
   const transformed = await transform(await readFile(path.join(app, 'src/lib/search-index.ts'), 'utf8'),
@@ -26,7 +39,7 @@ before(async () => {
     define: {'process.env.NODE_ENV': '"production"'},
     stdin: {resolveDir: app, loader: 'tsx', contents: `
       import React, {useState} from 'react';
-      import {createRoot} from 'react-dom/client';
+      import {createRoot, hydrateRoot} from 'react-dom/client';
       import Search from './src/theme/SearchBar/index';
       window.searchStats = {fetches: 0, parses: 0, aborts: 0, credentials: []};
       const nativeFetch = window.fetch.bind(window);
@@ -40,26 +53,32 @@ before(async () => {
         response.json = () => {window.searchStats.parses++; return json();};
         return response;
       };
-      function Fixture() {
-        const [visible, setVisible] = useState(true);
-        return <main><h1>Synthetic documentation search fixture</h1>{visible && <Search/>}
-          <button type="button" onClick={() => setVisible(false)}>Remove fixture search</button></main>;
-      }
-      createRoot(document.getElementById('root')).render(<Fixture/>);`},
-    plugins: [{name: 'fixture-link', setup(builder) {
-      builder.onResolve({filter: /^@docusaurus\/Link$/}, () => ({path: 'link', namespace: 'fixture-link'}));
-      builder.onLoad({filter: /.*/, namespace: 'fixture-link'}, () => ({resolveDir: app, loader: 'tsx',
-        contents: `import React from 'react'; export default function Link({to, children, ...props}) {
-          return <a href={to} {...props}>{children}</a>;
-        }`}));
-    }}],
+      ${fixtureComponent}
+      if (window.deferSearchHydration) window.hydrateSearchFixture = () =>
+        hydrateRoot(document.getElementById('root'), <Fixture/>);
+      else createRoot(document.getElementById('root')).render(<Fixture/>);`},
+    plugins: [linkPlugin],
   });
   script = bundle.outputFiles[0].text;
+  const server = await build({
+    absWorkingDir: app, bundle: true, write: false, format: 'cjs', platform: 'node',
+    external: ['react', 'react-dom/server'],
+    stdin: {resolveDir: app, loader: 'tsx', contents: `
+      import React, {useState} from 'react';
+      import {renderToString} from 'react-dom/server';
+      import Search from './src/theme/SearchBar/index';
+      ${fixtureComponent}
+      module.exports = renderToString(<Fixture/>);`},
+    plugins: [linkPlugin],
+  });
+  const exported = {exports: {}};
+  new Function('require', 'module', 'exports', server.outputFiles[0].text)(require, exported, exported.exports);
+  hydrationMarkup = exported.exports;
   browser = await chromium.launch();
 });
 after(async () => {await browser?.close();});
 
-async function fixture(t, {status = 200, contentType = 'application/json', body = JSON.stringify(entries), held = false, olderSignalApi = false} = {}) {
+async function fixture(t, {status = 200, contentType = 'application/json', body = JSON.stringify(entries), held = false, olderSignalApi = false, hydration = false} = {}) {
   const context = await browser.newContext();
   t.after(() => context.close());
   if (olderSignalApi) await context.addInitScript(() => {
@@ -79,7 +98,10 @@ async function fixture(t, {status = 200, contentType = 'application/json', body 
     } else if (url.pathname === '/fixture.js') {
       await route.fulfill({contentType: 'application/javascript', body: script});
     } else {
-      await route.fulfill({contentType: 'text/html', body: '<!doctype html><html lang="en"><title>Search fixture</title><body><div id="root"></div><script src="/fixture.js"></script></body></html>'});
+      await route.fulfill({contentType: 'text/html; charset=utf-8', body: '<!doctype html><html lang="en"><meta charset="utf-8"><title>Search fixture</title><body><div id="root">'
+        + (hydration ? hydrationMarkup : '') + '</div>'
+        + (hydration ? '<script>window.deferSearchHydration=true;</script>' : '')
+        + '<script src="/fixture.js"></script></body></html>'});
     }
   });
   const page = await context.newPage();
@@ -106,6 +128,40 @@ test('normalization reads source entries once and preserves multi-term ranking, 
   const many = helpers.prepareSearchIndex(Array.from({length: 12}, (_, i) => ({title: 'Tie', text: 'term', url: '/docs/' + i})));
   assert.deepEqual(helpers.searchDocumentation(many, 'term').map(entry => entry.url),
     Array.from({length: 8}, (_, i) => '/docs/' + i));
+});
+
+test('a focused native draft entered before React hydration is preserved and activates one deferred index without refocusing', async t => {
+  const f = await fixture(t, {hydration: true, held: true});
+  await f.input.fill('authentication');
+  assert.deepEqual(await f.stats(), {fetches: 0, parses: 0, aborts: 0, credentials: []});
+  await f.page.evaluate(() => window.hydrateSearchFixture());
+  await expect(f.input).toHaveValue('authentication');
+  await expect(f.input).toBeFocused();
+  await expect(f.page.getByRole('status')).toHaveText('Loading documentation search…');
+  assert.equal((await f.stats()).fetches, 1);
+  f.release();
+  await expect(f.page.locator('.search-results a')).toHaveCount(2);
+  await f.page.keyboard.press('Escape');
+  await f.page.keyboard.press('Control+k');
+  await expect(f.input).toHaveValue('authentication');
+  assert.deepEqual(await f.stats(), {fetches: 1, parses: 1, aborts: 0, credentials: ['same-origin']});
+  assert.deepEqual(f.errors, []);
+  assert.ok(f.methods.every(method => method === 'GET'));
+});
+
+test('an unfocused pre-hydration draft is retained while idle reading makes no index request', async t => {
+  const f = await fixture(t, {hydration: true});
+  await f.input.fill('engineering sessions');
+  await f.page.getByRole('button', {name: 'Remove fixture search'}).focus();
+  await f.page.evaluate(() => window.hydrateSearchFixture());
+  await expect(f.input).toHaveValue('engineering sessions');
+  await f.page.waitForTimeout(100);
+  assert.deepEqual(await f.stats(), {fetches: 0, parses: 0, aborts: 0, credentials: []});
+  await f.page.keyboard.press('Meta+k');
+  await expect(f.input).toBeFocused();
+  await expect(f.page.locator('.search-results a')).toHaveCount(1);
+  assert.equal((await f.stats()).fetches, 1);
+  assert.deepEqual(f.errors, []);
 });
 
 test('idle reading fetches nothing; first focus loads once and repeated activation reuses one parsed index', async t => {

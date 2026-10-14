@@ -15,7 +15,7 @@ name: Free release authorization
         type: string
         required: false
       decision:
-        description: Approve scoped owner handoff or revoke; protected Docs still requires external live validation
+        description: Approve scoped owner handoff or revoke; conditional Docs requires external live validation
         type: choice
         options:
         - revoke
@@ -23,7 +23,7 @@ name: Free release authorization
         default: revoke
         required: true
       delivery_scope:
-        description: Match qualification; internal is conditional with no production grant; Docs never authorizes Chat or API
+        description: Match qualification; native public and internal custody remain conditional; Docs never grants Chat or API
         type: choice
         options:
         - full
@@ -31,6 +31,10 @@ name: Free release authorization
         - docs-internal
         default: full
         required: true
+      metadata_producer_sha256:
+        description: Public native conditional channel only; independently reviewed producer hash
+        type: string
+        required: false
 permissions:
   contents: read
   actions: read
@@ -58,7 +62,15 @@ jobs:
         REVIEW_ISSUE: ${{ inputs.review_issue }}
         REVIEW_DECISION: ${{ inputs.decision }}
         DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
-      run: python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
+        METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
+      run: |
+        if [ "$DELIVERY_SCOPE" = docs-public ] && [ -n "$METADATA_PRODUCER_SHA256" ]; then
+          python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" \
+            --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" --output "$RUNNER_TEMP/free-release/record.json"
+        else
+          test -z "$METADATA_PRODUCER_SHA256"
+          python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
+        fi
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-production-authorization

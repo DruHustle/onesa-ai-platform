@@ -3,7 +3,7 @@ name: Free release qualification
   workflow_dispatch:
     inputs:
       staging_run:
-        description: Required for full or public Docs; internal uses owner draft metadata
+        description: Full/public registered staging run; internal uses owner draft metadata
         type: string
         required: false
       delivery_scope:
@@ -15,20 +15,32 @@ name: Free release qualification
         - docs-internal
         default: full
         required: true
+      native_custody_mode:
+        description: Explicit public native metadata custody; never a hosted PASS or production grant
+        type: choice
+        options:
+        - none
+        - actions-native
+        default: none
+        required: true
+      native_metadata:
+        description: Public count/hash-only native metadata JSON; maximum 32 KiB; validated as data
+        type: string
+        required: false
       metadata_release_id:
-        description: Internal only; owner draft release immutable ID
+        description: Conditional Docs only; owner draft release immutable ID
         type: string
         required: false
       metadata_asset_id:
-        description: Internal only; owner-uploaded sanitized JSON immutable asset ID
+        description: Conditional Docs only; owner-uploaded sanitized JSON immutable asset ID
         type: string
         required: false
       metadata_asset_digest:
-        description: Internal only; exact sha256 digest of sanitized metadata asset
+        description: Conditional Docs only; exact sha256 digest of sanitized metadata asset
         type: string
         required: false
       metadata_producer_sha256:
-        description: Internal custody proposal; external verifier must independently pin producer
+        description: Conditional custody proposal; external verifier must independently pin producer
         type: string
         required: false
   workflow_run:
@@ -62,18 +74,26 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
         DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
+        NATIVE_CUSTODY_MODE: ${{ inputs.native_custody_mode || 'none' }}
         METADATA_RELEASE_ID: ${{ inputs.metadata_release_id }}
         METADATA_ASSET_ID: ${{ inputs.metadata_asset_id }}
         METADATA_ASSET_DIGEST: ${{ inputs.metadata_asset_digest }}
         METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
       run: |
-        if [ "$DELIVERY_SCOPE" = docs-internal ]; then
-          python3 scripts/release/free_gate.py qualify --delivery-scope docs-internal \
-            --metadata-release-id "$METADATA_RELEASE_ID" --metadata-asset-id "$METADATA_ASSET_ID" \
+        if [ "$NATIVE_CUSTODY_MODE" = actions-native ]; then
+          test "$DELIVERY_SCOPE" = docs-public
+          test -z "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST"
+          python3 scripts/release/free_gate.py qualify --delivery-scope docs-public \
+            --native-metadata-event "$GITHUB_EVENT_PATH" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
+            --output "$RUNNER_TEMP/free-release/record.json"
+        elif [ "$DELIVERY_SCOPE" = docs-internal ] || { [ "$DELIVERY_SCOPE" = docs-public ] && [ -n "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST$METADATA_PRODUCER_SHA256" ]; }; then
+          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" \
+            --native-metadata-event "$GITHUB_EVENT_PATH" --metadata-release-id "$METADATA_RELEASE_ID" --metadata-asset-id "$METADATA_ASSET_ID" \
             --metadata-asset-digest "$METADATA_ASSET_DIGEST" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
             --output "$RUNNER_TEMP/free-release/record.json"
         else
-          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
+          test -z "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST$METADATA_PRODUCER_SHA256"
+          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" --native-metadata-event "$GITHUB_EVENT_PATH" --output "$RUNNER_TEMP/free-release/record.json"
         fi
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
