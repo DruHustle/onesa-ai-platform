@@ -15,6 +15,17 @@ qualify application production.
 Only the explicitly approved sources in `docs/documentation-policy.json` and approved public assets
 may be published. Internal engineering records remain private by default.
 
+Hosted navigation uses the pinned application registry. The AI destination defaults
+to `https://platform.onesa.eu` for public/static, Access, staging and production
+builds, and whenever the configured documentation origin is hosted. Hosted link
+overrides must be HTTPS origins without loopback addresses, credentials, paths,
+queries or fragments; only local development defaults to `http://localhost:3100`.
+The public applications guide links Chat, Knowledge, Agents and Travel to their
+actual AI routes. `npm --prefix onesa-ai-platform-frontend/apps/docs run test:security`
+checks unsafe URL configuration, and public browser acceptance verifies the product
+dropdown on desktop and mobile. These changes are prepared source; the existing
+live localhost links require a qualified documentation deployment to be replaced.
+
 ## Deploy from GitHub
 
 The manual **Public documentation hosting** workflow uses Node 24 and Python 3.11,
@@ -365,3 +376,17 @@ engineering hosting protects generated pages/assets, not the public Git history.
 An owner classification decision is required if implementation-reference source
 itself must be private; use a separately protected source/publishing boundary.
 Do not silently change repository visibility or publish confidential source.
+
+
+## Build context and design contract
+
+Set `ONESA_DOCS_ENVIRONMENT=staging` for an approved preview/Pages staging build and `production` only for the qualified production artifact. Values are validated as development, staging or production; absent local configuration defaults to DEVELOPMENT. The public hosting workflow selects its value from the trusted target input. Access audience and deployment context are separate from system appearance; no hostname/query parameter determines either. Browser/OS preference controls both classified builds without a manual selector or stored appearance override.
+
+From the reviewed AI repository root, generate/validate assets first, then build the actual target:
+
+```sh
+ONESA_DOCS_ENVIRONMENT=staging ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_URL=https://staging.onesa-engineering-docs.pages.dev npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
+ONESA_DOCS_ENVIRONMENT=production ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+```
+
+These commands build source; they do not upload or prove qualification. Preserve existing Access bindings, approved identity/MFA and all-path verifier when packaging internal output with `scripts/docs/prepare_cloudflare.py`. Its provenance must match the committed current source. Public upload remains the independent `docs-hosting.yml` target workflow; production requires qualified main. The observed protected reference is [Onesa Design System](https://staging.onesa-engineering-docs.pages.dev/docs/architecture/ONESA_DESIGN_SYSTEM); verify that exact candidate route after upload. The proposed engineering custom hostname is not assumed assigned.

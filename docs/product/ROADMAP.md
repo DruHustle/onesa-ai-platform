@@ -27,6 +27,14 @@ No branding or specialization work delays the already working Chat MVP or M2 inf
 
 ## Current unfinished work
 
+The prepared startup fix renders sign-in content before the session check completes,
+bounds bootstrap reads to eight seconds, retries the connection without reloading,
+and defers Markdown/highlighting until messages are displayed. Optional document
+loading does not block ordinary chat; document links still require an accessible
+owned document before sending. Synthetic browser checks live in
+`apps/chat/tests/startup.spec.ts`. Exact-source hosted staging, release qualification
+and production browser timings remain required; this fix has not been deployed.
+
 Continue M5 authorized live travel-provider acceptance, followed by M6 approved
 training experiments and M7 hosted production acceptance. No provider credentials,
 training run, GPU host or production approval is implied by delivered software.

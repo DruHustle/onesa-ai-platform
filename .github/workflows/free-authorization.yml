@@ -15,12 +15,21 @@ name: Free release authorization
         type: string
         required: false
       decision:
-        description: Authorize external owner handoff or revoke older approval
+        description: Approve scoped owner handoff or revoke; protected Docs still requires external live validation
         type: choice
         options:
         - revoke
         - approve
         default: revoke
+        required: true
+      delivery_scope:
+        description: Match qualification; internal is conditional with no production grant; Docs never authorizes Chat or API
+        type: choice
+        options:
+        - full
+        - docs-public
+        - docs-internal
+        default: full
         required: true
 permissions:
   contents: read
@@ -48,7 +57,8 @@ jobs:
         EVIDENCE_DIGEST: ${{ inputs.evidence_digest }}
         REVIEW_ISSUE: ${{ inputs.review_issue }}
         REVIEW_DECISION: ${{ inputs.decision }}
-      run: python3 scripts/release/free_gate.py authorize --output "$RUNNER_TEMP/free-release/record.json"
+        DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
+      run: python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-production-authorization

@@ -3,9 +3,34 @@ name: Free release qualification
   workflow_dispatch:
     inputs:
       staging_run:
-        description: Successful exact-commit isolated staging run
+        description: Required for full or public Docs; internal uses owner draft metadata
         type: string
+        required: false
+      delivery_scope:
+        description: Explicit independent component authority; full retains all application gates
+        type: choice
+        options:
+        - full
+        - docs-public
+        - docs-internal
+        default: full
         required: true
+      metadata_release_id:
+        description: Internal only; owner draft release immutable ID
+        type: string
+        required: false
+      metadata_asset_id:
+        description: Internal only; owner-uploaded sanitized JSON immutable asset ID
+        type: string
+        required: false
+      metadata_asset_digest:
+        description: Internal only; exact sha256 digest of sanitized metadata asset
+        type: string
+        required: false
+      metadata_producer_sha256:
+        description: Internal custody proposal; external verifier must independently pin producer
+        type: string
+        required: false
   workflow_run:
     workflows:
     - Approved staging qualification
@@ -36,7 +61,20 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
-      run: python3 scripts/release/free_gate.py qualify --output "$RUNNER_TEMP/free-release/record.json"
+        DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
+        METADATA_RELEASE_ID: ${{ inputs.metadata_release_id }}
+        METADATA_ASSET_ID: ${{ inputs.metadata_asset_id }}
+        METADATA_ASSET_DIGEST: ${{ inputs.metadata_asset_digest }}
+        METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
+      run: |
+        if [ "$DELIVERY_SCOPE" = docs-internal ]; then
+          python3 scripts/release/free_gate.py qualify --delivery-scope docs-internal \
+            --metadata-release-id "$METADATA_RELEASE_ID" --metadata-asset-id "$METADATA_ASSET_ID" \
+            --metadata-asset-digest "$METADATA_ASSET_DIGEST" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
+            --output "$RUNNER_TEMP/free-release/record.json"
+        else
+          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
+        fi
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-release-qualification

@@ -21,3 +21,13 @@ Acceptance --> Fail
 Verify --> Recovery[Stop unsafe processing and restore previous qualified artifacts]
 Recovery --> Investigate[Preserve evidence and investigate before requalification]
 Runner[Private-only local runner option - dormant] -. no private-Free protection claim .-> CI
+
+Security[Dependency alert and temporary security-fix PR] --> BotCI[Credential-free hosted PR checks and owner review]
+BotCI --> Dev
+BotCI --> Urgent[Urgent candidate from exact current production and reviewed fix only]
+Urgent --> Feasible{Existing staging can advance without unrelated work?}
+Feasible -->|yes| Isolated[Existing isolated staging qualification - no new permanent environment]
+Feasible -->|no| Blocked[Direct temporary qualification not implemented - preserve work]
+Isolated --> Gates
+Verify --> Reconcile[Reconcile reviewed security fix into dev and staging]
+Reconcile --> Cleanup[Temporary branch cleanup only after incorporation and evidence checks]

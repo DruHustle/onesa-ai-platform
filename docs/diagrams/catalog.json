@@ -4729,6 +4729,28 @@
     "reviewed_at": "2026-10-13"
   },
   {
+    "id": "onesa-design-system",
+    "title": "Onesa design system layers and independent adoption",
+    "view": "implemented architecture",
+    "status": "Source-reviewed 2026-10-14; hosted acceptance recorded separately",
+    "source": "docs/diagrams/onesa-design-system.mmd",
+    "url": "/docs/architecture/ONESA_DESIGN_SYSTEM",
+    "nodes": [],
+    "classification": "internal",
+    "explanation": "Onesa design system layers and independent adoption; source classification INTERNAL; no private endpoint IDs or credentials."
+  },
+  {
+    "id": "tailscale-administration",
+    "title": "Private PC-to-Oracle administration boundary",
+    "view": "implemented architecture",
+    "status": "Source-reviewed 2026-10-14; hosted acceptance recorded separately",
+    "source": "docs/diagrams/tailscale-administration.mmd",
+    "url": "/docs/operations/TAILSCALE_ADMINISTRATION",
+    "nodes": [],
+    "classification": "internal",
+    "explanation": "Private PC-to-Oracle administration boundary; source classification INTERNAL; no private endpoint IDs or credentials."
+  },
+  {
     "id": "privacy-document-review",
     "title": "Privacy document draft, review and approval",
     "view": "documented governance workflow",
@@ -4761,6 +4783,15 @@
     "view": "documented governance workflow",
     "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
     "source": "docs/diagrams/privacy-processor-assessment.mmd",
+    "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
+    "nodes": []
+  },
+  {
+    "id": "privacy-tailscale-administration",
+    "title": "Tailscale administration and processor boundary",
+    "view": "documented governance workflow",
+    "status": "Internal approval workspace; deletion automation and public publication remain separately gated",
+    "source": "docs/diagrams/privacy-tailscale-administration.mmd",
     "url": "/docs/ecosystem/PORTAL_PRIVACY_GOVERNANCE",
     "nodes": []
   },

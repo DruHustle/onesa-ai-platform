@@ -14,11 +14,38 @@ from pydantic import BaseModel, Field
 
 from app.config import Settings
 
+FAILURE_REASONS = frozenset(
+    {
+        "provider_stream_error",
+        "invalid_stream_json",
+        "invalid_stream_shape",
+        "invalid_stream_delta",
+        "stream_terminated_early",
+        "empty_model_response",
+        "response_size_limit",
+        "generation_lease_lost",
+    }
+)
+
 
 class InferenceError(ValueError):
-    def __init__(self, code: str = "inference_unavailable"):
+    def __init__(
+        self,
+        code: str = "inference_unavailable",
+        *,
+        reason: str | None = None,
+        provider_error_code: int | None = None,
+    ):
         super().__init__("Inference temporarily unavailable")
         self.code = code
+        # Provider messages may contain private request details. Expose only
+        # fixed categories and a bounded numeric code, never their text.
+        self.reason = reason if isinstance(reason, str) and reason in FAILURE_REASONS else None
+        self.provider_error_code = (
+            provider_error_code
+            if type(provider_error_code) is int and 0 <= provider_error_code <= 999999
+            else None
+        )
 
 
 @dataclass
@@ -146,20 +173,41 @@ class OpenAIModelClient:
                         break
                     if len(payload) > 1024 * 1024:
                         raise InferenceError("invalid_inference_response")
-                    data = json.loads(payload)
+                    try:
+                        data = json.loads(payload)
+                    except json.JSONDecodeError as exc:
+                        raise InferenceError(
+                            "generation_failed", reason="invalid_stream_json"
+                        ) from exc
                     if not isinstance(data, dict):
                         raise InferenceError("invalid_inference_response")
                     read_usage(data.get("usage"))
                     if "error" in data:
-                        raise ValueError("Inference server error")
-                    for choice in data.get("choices", []):
+                        error = data["error"]
+                        raise InferenceError(
+                            "generation_failed",
+                            reason="provider_stream_error",
+                            provider_error_code=error.get("code")
+                            if isinstance(error, dict)
+                            else None,
+                        )
+                    choices = data.get("choices", [])
+                    if not isinstance(choices, list):
+                        raise InferenceError("generation_failed", reason="invalid_stream_shape")
+                    for choice in choices:
+                        if not isinstance(choice, dict) or not isinstance(
+                            choice.get("delta", {}), dict
+                        ):
+                            raise InferenceError("generation_failed", reason="invalid_stream_shape")
                         content = choice.get("delta", {}).get("content")
                         if content is not None:
                             if not isinstance(content, str):
-                                raise ValueError("Invalid model delta")
+                                raise InferenceError(
+                                    "generation_failed", reason="invalid_stream_delta"
+                                )
                             yield content
                 if not ended:
-                    raise ValueError("Inference stream ended unexpectedly")
+                    raise InferenceError("generation_failed", reason="stream_terminated_early")
         except httpx.TimeoutException as exc:
             raise InferenceError("inference_timeout") from exc
         except httpx.HTTPError as exc:

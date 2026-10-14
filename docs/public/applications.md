@@ -3,6 +3,8 @@
 ## Chat
 Create, rename, reopen and delete owned conversations. Stream Markdown responses and stop generation. Completed messages persist; interrupted partial output does not become a successful saved answer. The badge shows the active backend; runtime model selection is configuration-driven.
 
+[Open Chat](https://platform.onesa.eu/).
+
 ## Knowledge
 Upload bounded TXT/PDF documents, search owned sources and select documents for grounded Chat. Preview extracted text and rebuild a document’s search index using the configured
 embedding service. Reindex clears the displayed search results; it does not qualify
@@ -11,11 +13,17 @@ embedding service has passed a small local EN/DE retrieval evaluation; productio
 hosting and wider language/domain quality remain unqualified. Switching requires
 controlled document reindexing.
 
+[Open Knowledge](https://platform.onesa.eu/knowledge).
+
 ## Agents
 Grant registered arithmetic or text_stats tools explicitly. Planning may use mock or the configured model; proposals cannot authorize new tools. Local tools have bounded execution and no arbitrary shell/network effects.
 
+[Open Agents](https://platform.onesa.eu/agents).
+
 ## Travel
 Generate, save and revise typed itineraries. External provider availability is explicit; no live prices, weather, bookings or maps are claimed.
+
+[Open Travel](https://platform.onesa.eu/travel).
 
 See [visual tutorials](/tutorials) and [API examples](examples.md).
 

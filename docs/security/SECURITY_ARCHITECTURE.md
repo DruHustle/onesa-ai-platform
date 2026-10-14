@@ -38,3 +38,8 @@ network namespace: stronger dedicated worker/seccomp/network confinement and hos
 PDF penetration qualification remain release blockers. No claim of a full sandbox
 or security audit is made. Tracked-source secret patterns and lockfile audits supplement
 existing tests; deployment secret injection and independent review remain required.
+
+
+## Private administration boundary
+
+The existing owner PC-to-Oracle Tailscale tunnel carries ordinary pinned OpenSSH administration. Tailnet policy, approved endpoints and OS authentication remain separate from application authorization. No public forwarding, subnet/exit routing or Tailscale SSH is implied; reverify current settings from protected operations evidence. See [Private PC-to-Oracle administration](../operations/TAILSCALE_ADMINISTRATION.md). Private node identifiers and addresses stay out of public artifacts.

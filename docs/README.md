@@ -8,6 +8,10 @@ models/features and unverified GPU/production acceptance.
 
 [Interactive architecture hub](/architecture) · [Visual diagram/source index](ecosystem/VISUAL_WORKFLOWS.md) · [Actual infrastructure](ecosystem/INFRASTRUCTURE.md).
 
+## Onesa Design System
+
+[Shared foundations, product variants and system appearance](architecture/ONESA_DESIGN_SYSTEM.md).
+
 ## Engineering Onboarding
 
 [Start Here — Onesa Engineering](onboarding/START_HERE.md) · [Four-day interactive path](/onboarding) · [First Engineering Contribution](onboarding/FIRST_CONTRIBUTION.md).

@@ -1,4 +1,5 @@
 export type SearchEntry = {title: string; url: string; text: string};
+export type IndexedSearchEntry = SearchEntry & {searchTitle: string; searchText: string};
 
 export async function readSearchIndex(response: Response): Promise<SearchEntry[]> {
   if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
@@ -9,4 +10,24 @@ export async function readSearchIndex(response: Response): Promise<SearchEntry[]
     entry && typeof entry.title === 'string' && typeof entry.url === 'string' && typeof entry.text === 'string'
   )) throw new Error('Documentation search is unavailable');
   return value;
+}
+
+export function prepareSearchIndex(entries: SearchEntry[]): IndexedSearchEntry[] {
+  return entries.map(({title, url, text}) => ({
+    title, url, text,
+    searchTitle: title.toLowerCase(),
+    searchText: (title + ' ' + text).toLowerCase(),
+  }));
+}
+
+export function searchDocumentation(entries: IndexedSearchEntry[], query: string): SearchEntry[] {
+  const terms = query.toLowerCase().trim().split(/\s+/);
+  if (!query.trim()) return [];
+  return entries
+    .filter(entry => terms.every(term => entry.searchText.includes(term)))
+    .map(entry => ({entry, score: terms.reduce((score, term) =>
+      score + (entry.searchTitle.includes(term) ? 10 : 1), 0)}))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(({entry}) => entry);
 }

@@ -70,3 +70,55 @@ def test_vllm_rejects_malformed_or_truncated_stream(response: str) -> None:
 
     with pytest.raises(ValueError):
         asyncio.run(collect())
+
+
+@pytest.mark.parametrize(
+    "response,reason,numeric_code",
+    [
+        ("data: not-json\n\n", "invalid_stream_json", None),
+        ('data: {"choices":[]}\n\n', "stream_terminated_early", None),
+        (
+            'data: {"error":{"code":3040,"message":"PRIVATE-provider-diagnostic"}}\n\n',
+            "provider_stream_error",
+            3040,
+        ),
+        (
+            'data: {"error":{"code":"PRIVATE-provider-diagnostic"}}\n\n',
+            "provider_stream_error",
+            None,
+        ),
+        ('data: {"choices":[{"delta":null}]}\n\n', "invalid_stream_shape", None),
+        ('data: {"choices":[{"delta":{"content":42}}]}\n\n', "invalid_stream_delta", None),
+    ],
+)
+def test_stream_failure_diagnostics_are_bounded_without_retry(response, reason, numeric_code):
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(200, text=response)
+
+    client = VLLMModelClient(Settings(model_backend="vllm"), httpx.MockTransport(handler))
+
+    async def collect():
+        async for _ in client.stream([ModelMessage(role="user", content="Synthetic input")]):
+            pass
+
+    with pytest.raises(InferenceError) as caught:
+        asyncio.run(collect())
+    assert caught.value.code == "generation_failed"
+    assert caught.value.reason == reason
+    assert caught.value.provider_error_code == numeric_code
+    assert "PRIVATE" not in str(caught.value)
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("code", [True, -1, 1000000, "PRIVATE", {"private": "details"}])
+def test_error_metadata_rejects_untrusted_provider_values(code):
+    error = InferenceError(reason="PRIVATE-provider-message", provider_error_code=code)
+    assert error.reason is None and error.provider_error_code is None
+
+
+@pytest.mark.parametrize("reason", [None, {"private": "details"}, ["private"], True])
+def test_error_reason_rejects_nonstring_values(reason):
+    assert InferenceError(reason=reason).reason is None

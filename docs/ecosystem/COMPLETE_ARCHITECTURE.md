@@ -23,3 +23,8 @@ Use [Architecture & Workflows](/architecture), [Engineering Onboarding](/onboard
 ## Architecture changes
 
 Keep application release authorization, scopes and rollback paths independent. A public documentation release can be qualified separately, provided no internal artifacts or application changes are promoted. Cross-project snapshots pin actual source commits and hashes; updates must be reviewed rather than silently following unrelated repository main branches.
+
+
+## Private administration boundary
+
+The existing owner PC-to-Oracle Tailscale tunnel carries ordinary pinned OpenSSH administration. Tailnet policy, approved endpoints and OS authentication remain separate from application authorization. No public forwarding, subnet/exit routing or Tailscale SSH is implied; reverify current settings from protected operations evidence. See [Private PC-to-Oracle administration](../operations/TAILSCALE_ADMINISTRATION.md). Private node identifiers and addresses stay out of public artifacts.
