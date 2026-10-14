@@ -115,6 +115,9 @@ async function main() {
           colorScheme: mode,
           reducedMotion: "reduce",
         });
+        await context.addCookies([
+          { name: "onesa_ui_locale", value: "en", url: origin },
+        ]);
         await context.addInitScript(
           (hour) => {
             Date.prototype.getHours = () => hour;
@@ -170,9 +173,9 @@ async function main() {
             ),
           ).toBe(mode);
           await expect(page.locator(".appearance-control")).toHaveCount(0);
-          await expect(
-            page.getByText("STAGING", { exact: true }),
-          ).toBeVisible();
+          await expect(page.locator(".environment-context")).toHaveText(
+            "STAGING · Onesa AI Platform",
+          );
           expect(
             await page.evaluate(
               () => document.documentElement.scrollWidth <= innerWidth + 2,
@@ -258,6 +261,9 @@ async function main() {
       viewport: { width: 1440, height: 900 },
       colorScheme: "light",
     });
+    await context.addCookies([
+      { name: "onesa_ui_locale", value: "en", url: origin },
+    ]);
     await context.route("**/*", async (route) => {
       const request = route.request();
       await route.continue({

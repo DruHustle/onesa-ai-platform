@@ -28,7 +28,7 @@ export default async function Layout({
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
   return (
-    <html lang={locale} data-onesa-product="ai">
+    <html lang={locale} data-onesa-product="ai" data-onesa-environment={process.env.VERCEL_ENV === "production" ? "production" : process.env.VERCEL_ENV === "preview" ? "staging" : undefined}>
       <body>
         {(() => {
           const environment = process.env.VERCEL_ENV === "preview" ? "STAGING" : process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "development" ? "DEVELOPMENT" : null;

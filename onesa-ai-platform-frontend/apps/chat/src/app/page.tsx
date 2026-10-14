@@ -1,5 +1,6 @@
 "use client";
 import ApplicationsNav from "../components/applications-nav";
+import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
 import DocumentationHelp from "../components/documentation-help";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -467,6 +468,7 @@ export default function Chat() {
         />
       )}
       <section lang="en" className="main" inert={menu ? true : undefined}>
+        <ProductionWorkspaceCue authenticated />
         <header className="topbar">
           <button
             ref={toggle}

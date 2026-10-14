@@ -566,13 +566,28 @@ def stage(qualification, render_receipt, origin):
                 "Unsupported hosted check",
             )
             checks[name] = result
-    critical_results, observed_model, ui_summary = {}, {}, {}
+    critical_results, observed_model, observed_embedding, ui_summary = {}, {}, {}, {}
     if PRODUCT.endswith("platform"):
         ui_path = Path(os.environ["RUNNER_TEMP"], "hosted-ui.json")
         ui = json.loads(ui_path.read_text()) if ui_path.exists() else None
         critical_results, observed_model = platform_workflow_evidence(
             suite, ui, sha, origin, int(os.environ["GITHUB_RUN_ID"])
         )
+        if suite is not None and suite.get("embedding"):
+            embedding = suite["embedding"]
+            require(
+                isinstance(embedding, dict)
+                and embedding.get("backend") in {"cloudflare", "http"}
+                and re.fullmatch(
+                    r"[a-f0-9]{64}", embedding.get("index_version_sha256", "")
+                )
+                and embedding.get("dimensions") == 256,
+                "Invalid observed embedding version",
+            )
+            observed_embedding = {
+                key: embedding[key]
+                for key in ["backend", "index_version_sha256", "dimensions"]
+            }
         if ui is not None:
             ui_summary = {
                 "browser": ui.get("browser"),
@@ -618,6 +633,7 @@ def stage(qualification, render_receipt, origin):
         "checks": checks,
         "critical_workflow_checks": critical_results,
         "observed_model": observed_model,
+        "observed_embedding": observed_embedding,
         "ui_acceptance": ui_summary,
         "verified_at": datetime.now(timezone.utc).isoformat(),
         "workflow_run_id": int(os.environ["GITHUB_RUN_ID"]),

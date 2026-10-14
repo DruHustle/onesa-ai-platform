@@ -49,6 +49,8 @@ Use `--onesa-font-body` (Arial, Helvetica, sans-serif) and `--onesa-font-code` (
 
 Set deterministic `data-onesa-product` on the root HTML element. Product names, document titles, layout and relevant imagery provide identity even without color. Non-production environment labels come from trusted deployment configuration; operational simulation/live/stale labels come from actual data. Neither follows the palette.
 
+Authenticated AI workspaces also show a quiet PRODUCTION cue only when the server receives `VERCEL_ENV=production`. Its deterministic deployment attribute is independent of appearance and authorization. Anonymous sign-in content has no production banner; capability shells confirm the existing session before displaying the cue. A hostname or `NODE_ENV=production` alone never establishes this production context.
+
 ## Appearance and accessible behavior
 
 CSS `prefers-color-scheme` controls light/dark mappings and native `color-scheme`. A readable light base applies when the feature is unavailable. The earlier application clock schedule is superseded. There is no appearance selector, preference cookie, database field or application storage override. Language and onboarding progress preferences remain separate.

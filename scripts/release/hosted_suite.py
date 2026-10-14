@@ -446,6 +446,18 @@ def run_suite(origin):
                 "Semantic retrieval did not return the newly stored synthetic document",
             )
             checks["embeddings"] = checks["storage_integrations"] = "PASS"
+            index_version = next(
+                source["embedding_version"]
+                for source in retrieved["sources"]
+                if source.get("document_id") == document
+            )
+            record["embedding"] = {
+                "backend": retrieved["backend"],
+                "index_version_sha256": hashlib.sha256(
+                    index_version.encode()
+                ).hexdigest(),
+                "dimensions": int(index_version.rsplit(":", 1)[-1]),
+            }
             answer, grounded = generation(
                 clients[0],
                 {
