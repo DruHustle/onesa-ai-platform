@@ -44,7 +44,7 @@ test.beforeEach(async ({ page, baseURL }) => {
 });
 
 for (const locale of ["en", "de"] as const) {
-  test(`${locale}: sign-in renders on the server and stays disabled until the session check completes`, async ({ page, context, baseURL }) => {
+  test(`${locale}: sign-in drafts are editable while session verification guards every submission`, async ({ page, context, baseURL }) => {
     await context.addCookies([{ name: "onesa_ui_locale", value: locale, url: baseURL ?? "http://localhost:3100" }]);
     const welcome = locale === "de" ? "Willkommen zurück" : "Welcome back";
     const email = locale === "de" ? "E-Mail" : "Email";
@@ -56,25 +56,64 @@ for (const locale of ["en", "de"] as const) {
     expect(serverMain).toContain(welcome);
     expect(serverMain).toContain('name="email"');
     expect(serverMain).toContain('name="password"');
-    expect(serverMain).toMatch(/<input(?=[^>]*name="email")(?=[^>]*disabled)[^>]*>/);
+    expect(serverMain).not.toMatch(/<input(?=[^>]*name="email")(?=[^>]*disabled)[^>]*>/);
 
     const session = await hold(page, "/auth/me", anonymous.body, anonymous.status);
+    const mutations: string[] = [];
+    page.on("request", request => {
+      const path = new URL(request.url()).pathname;
+      if (request.method() === "POST" && ["/api/v1/auth/login", "/api/v1/auth/register"].includes(path)) mutations.push(path);
+    });
     try {
       await page.goto("/");
       await session.requested;
       await expect(page.getByRole("heading", { name: welcome, exact: true })).toBeVisible();
-      await expect(page.getByLabel(email, { exact: true })).toBeDisabled();
-      await expect(page.getByLabel(password, { exact: true })).toBeDisabled();
+      await expect(page.getByLabel(email, { exact: true })).toBeEnabled();
+      await expect(page.getByLabel(password, { exact: true })).toBeEnabled();
+      await page.getByLabel(email, { exact: true }).fill("draft@example.test");
+      await page.getByLabel(password, { exact: true }).fill("synthetic-bootstrap-draft");
       await expect(page.getByRole("button", { name: signIn, exact: true })).toBeDisabled();
+      await page.getByLabel(password, { exact: true }).press("Enter");
+      await page.locator(".auth-card form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+      expect(mutations).toEqual([]);
       session.release();
       await expect(page.getByLabel(email, { exact: true })).toBeEnabled();
       await expect(page.getByRole("button", { name: signIn, exact: true })).toBeEnabled();
+      await expect(page.getByLabel(email, { exact: true })).toHaveValue("draft@example.test");
+      await expect(page.getByLabel(password, { exact: true })).toHaveValue("synthetic-bootstrap-draft");
+      await expect(page.getByLabel(password, { exact: true })).toBeFocused();
+      expect(mutations).toEqual([]);
       await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
     } finally {
       session.release();
     }
   });
 }
+
+test("a late verified session replaces the sign-in draft without replaying a login", async ({ page }) => {
+  await authenticated(page);
+  const session = await hold(page, "/auth/me", user);
+  const mutations: string[] = [];
+  page.on("request", request => {
+    const path = new URL(request.url()).pathname;
+    if (request.method() === "POST" && ["/api/v1/auth/login", "/api/v1/auth/register"].includes(path)) mutations.push(path);
+  });
+  try {
+    await page.goto("/");
+    await session.requested;
+    await page.getByLabel("Email", { exact: true }).fill("draft@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("synthetic-bootstrap-draft");
+    await page.getByLabel("Password", { exact: true }).press("Enter");
+    await page.locator(".auth-card form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+    expect(mutations).toEqual([]);
+    session.release();
+    await expect(page.getByLabel("Message Onesa AI")).toBeEnabled();
+    await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toHaveCount(0);
+    expect(mutations).toEqual([]);
+  } finally {
+    session.release();
+  }
+});
 
 test("a hung session check is cancelled within ten seconds and retry preserves entered fields without reloading", async ({ page }) => {
   test.setTimeout(25000);

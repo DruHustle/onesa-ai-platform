@@ -85,6 +85,165 @@ function fixtures() {
   return value.users;
 }
 
+async function measureUsability(browser, origin, bypass, account, pageErrors) {
+  const measurements = [];
+  for (const mode of ["normal", "slow-mobile"]) {
+    const context = await browser.newContext({
+      viewport:
+        mode === "normal"
+          ? { width: 1440, height: 900 }
+          : { width: 390, height: 844 },
+      locale: "en-US",
+      colorScheme: "light",
+    });
+    try {
+      await context.addCookies([
+        { name: "onesa_ui_locale", value: "en", url: origin },
+      ]);
+      await context.route("**/*", async (route) => {
+        const request = route.request();
+        await route.continue({
+          headers: {
+            ...request.headers(),
+            ...(new URL(request.url()).origin === origin
+              ? { "x-vercel-protection-bypass": bypass }
+              : {}),
+          },
+        });
+      });
+      const page = await context.newPage();
+      page.on("pageerror", () => pageErrors.push("pageerror"));
+      const session = await context.newCDPSession(page);
+      await session.send("Network.enable");
+      await session.send("Network.setCacheDisabled", { cacheDisabled: true });
+      if (mode === "slow-mobile") {
+        await session.send("Network.emulateNetworkConditions", {
+          offline: false,
+          latency: 150,
+          downloadThroughput: 200000,
+          uploadThroughput: 93750,
+        });
+        await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+      }
+      const started = performance.now();
+      const response = await page.goto(origin, { waitUntil: "commit" });
+      expect(response.status()).toBe(200);
+      await expect(
+        page.getByRole("heading", { name: "Welcome back", exact: true }),
+      ).toBeVisible({ timeout: 20000 });
+      await page.waitForFunction(
+        () => performance.getEntriesByName("first-contentful-paint").length > 0,
+      );
+      const signInVisible = Math.round(performance.now() - started);
+      await page.getByLabel("Email", { exact: true }).fill(account.email);
+      await page.getByLabel("Password", { exact: true }).fill(account.password);
+      const draftEditable = Math.round(performance.now() - started);
+      const submit = page.getByRole("button", { name: "Sign in", exact: true });
+      await expect(submit).toBeEnabled({ timeout: 20000 });
+      const submissionReady = Math.round(performance.now() - started);
+      const signInStarted = performance.now();
+      await submit.click();
+      await expect(page.getByLabel("Message Onesa AI")).toBeEnabled({
+        timeout: 20000,
+      });
+      const signInToComposer = Math.round(performance.now() - signInStarted);
+      const navigation = [];
+      for (const [route, label, field] of [
+        ["/knowledge", "Knowledge", "Search your documents"],
+        ["/agents", "Agents", "Text to analyze"],
+        ["/travel", "Travel", "Destination"],
+        ["/", "Chat", "Message Onesa AI"],
+      ]) {
+        if (
+          await page
+            .getByLabel("Toggle conversations", { exact: true })
+            .isVisible()
+        )
+          await page
+            .getByLabel("Toggle conversations", { exact: true })
+            .click();
+        const before = performance.now();
+        await page.getByRole("link", { name: label, exact: true }).click();
+        await expect(page).toHaveURL(origin + route);
+        const input = page.getByLabel(field, { exact: true });
+        await expect(input).toBeEnabled({ timeout: 20000 });
+        await input.fill("Unsent synthetic timing draft");
+        navigation.push({
+          route,
+          draft_usable_ms: Math.round(performance.now() - before),
+        });
+      }
+      const resources = await page.evaluate(() => {
+        const navigation = performance.getEntriesByType("navigation")[0];
+        const resources = performance.getEntriesByType("resource");
+        const scripts = resources.filter((item) =>
+          new URL(item.name).pathname.endsWith(".js"),
+        );
+        return {
+          document_ttfb_ms: Math.round(
+            navigation.responseStart - navigation.requestStart,
+          ),
+          first_contentful_paint_ms: Math.round(
+            performance.getEntriesByName("first-contentful-paint")[0]
+              ?.startTime ?? 0,
+          ),
+          script_encoded_body_bytes: scripts.reduce(
+            (total, item) => total + item.encodedBodySize,
+            0,
+          ),
+          script_decoded_body_bytes: scripts.reduce(
+            (total, item) => total + item.decodedBodySize,
+            0,
+          ),
+          api_samples: resources
+            .filter((item) =>
+              [
+                "/api/v1/auth/me",
+                "/api/v1/auth/login",
+                "/api/v1/models",
+                "/api/v1/conversations",
+                "/api/v1/knowledge/documents",
+                "/api/v1/agents/runs",
+                "/api/v1/travel/trips",
+                "/api/v1/documentation/access",
+              ].includes(new URL(item.name).pathname),
+            )
+            .slice(0, 30)
+            .map((item) => ({
+              path: new URL(item.name).pathname,
+              start_ms: Math.round(item.startTime),
+              duration_ms: Math.round(item.duration),
+            })),
+        };
+      });
+      measurements.push({
+        mode,
+        sign_in_visible_ms: signInVisible,
+        credential_draft_editable_ms: draftEditable,
+        submission_ready_ms: submissionReady,
+        sign_in_to_composer_ms: signInToComposer,
+        navigation,
+        ...resources,
+      });
+    } finally {
+      await context.close();
+    }
+  }
+  return {
+    scope: "actual protected Preview; same approved synthetic fixture lifetime",
+    trials_per_mode: 1,
+    controls: {
+      slow_mobile: {
+        latency_ms: 150,
+        download_mbps: 1.6,
+        upload_mbps: 0.75,
+        cpu_slowdown: 4,
+      },
+    },
+    measurements,
+  };
+}
+
 async function main() {
   if (
     process.env.GITHUB_REF !== "refs/heads/staging" ||
@@ -355,6 +514,14 @@ async function main() {
     workflowChecks.actual_stream_mode_change_without_resubmission = "PASS";
     workflowChecks.actual_stop_and_session_preservation = "PASS";
     await context.close();
+    phase = "bounded-usability-timing";
+    const usability = await measureUsability(
+      browser,
+      origin,
+      bypass,
+      accounts[0],
+      pageErrors,
+    );
     expect(pageErrors).toEqual([]);
     const report = {
       status: "PASS",
@@ -365,6 +532,7 @@ async function main() {
       views,
       workflow_checks: workflowChecks,
       identity_icons: identityIcons,
+      usability,
       real_hosted: true,
       synthetic_only: true,
       manual_safari_and_screen_reader: "NOT TESTED",
@@ -378,6 +546,7 @@ async function main() {
         status: report.status,
         views: views.length,
         workflow_checks: workflowChecks,
+        usability,
         real_hosted: true,
         synthetic_only: true,
       }),

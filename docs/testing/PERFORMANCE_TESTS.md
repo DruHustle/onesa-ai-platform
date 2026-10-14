@@ -13,8 +13,11 @@ failure/recovery, documenting hardware, configuration, sample sizes and bottlene
 
 ## Prepared frontend startup behavior
 
-The initial sign-in page shows its branded main content during the session check, with
-authentication controls disabled until that check completes. The browser gives session
+The initial sign-in page shows its branded main content and editable credential drafts
+during the session check. Submission and account-mode changes remain disabled until that
+check completes; the submit handler also rejects Enter or programmatic submission while
+checking. A late verified session opens its workspace without replaying a draft login.
+The browser gives session
 bootstrap eight seconds, cancels it on timeout or unmount, and exposes connection retry
 in place. Anonymous sessions, invitation restrictions and service failures retain their
 distinct responses. This deadline is a recovery bound, not a hosted latency target.
@@ -28,6 +31,13 @@ before sending. Session, CSRF, ownership, inference and streaming contracts are 
 fixtures in the normal `test:e2e` suite. Build the frontend before targeted local runs as
 described in [Build and Test](../engineering/BUILD_AND_TEST.md). Prepared source and local
 fixture results do not prove that these changes are live or establish production timings.
+
+The existing protected staging UI probe records actual cold anonymous visibility,
+draft editing, submission readiness, sign-in to composer and client navigation for
+Chat, Knowledge, Agents and Travel. It uses the same temporary synthetic identities
+as route acceptance, in normal desktop and controlled mobile conditions (150 ms
+network latency, 1.6 Mbps download and fourfold CPU slowdown). These bounded samples
+identify delays; they are neither a load test nor an approved latency SLA.
 
 ## Acceptance 005 workloads
 

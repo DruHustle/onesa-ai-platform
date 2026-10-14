@@ -348,7 +348,7 @@ export default function Chat() {
                 {copy.name}
                 <input
                   name="name"
-                  disabled={checking}
+                  disabled={busy}
                   autoComplete="name"
                   required
                   maxLength={80}
@@ -357,13 +357,13 @@ export default function Chat() {
             )}
             <label>
               {copy.email}
-              <input name="email" type="email" autoComplete="email" required disabled={checking}/>
+              <input name="email" type="email" autoComplete="email" required disabled={busy}/>
             </label>
             <label>
               {copy.password}
               <input
                 name="password"
-                disabled={checking}
+                disabled={busy}
                 type="password"
                 autoComplete={signup ? "new-password" : "current-password"}
                 required
