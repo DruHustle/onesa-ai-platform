@@ -1,18 +1,17 @@
 # Onesa AI Platform engineering and agent policies
 
 Authoritative agent/contribution/security policy for `onesa-ai-platform` and all components.
-Read README.md, CHANGELOG.md, the current roadmap/release evidence, affected code and
-procedural references before changes. Explicit user authorization and scope take
-precedence over local guidance. Preserve concurrent modifications, history, data,
-credentials and existing working functionality; stage only inspected paths.
+Read README.md, CHANGELOG.md, affected runbooks and roadmap/release
+evidence. User scope/authorization takes precedence. Preserve concurrent work, data,
+credentials, history and working functionality; stage only inspected paths.
 
-## Purpose, ownership and boundaries
+## Scope and ownership
 
-Onesa AI Platform is European-based, general-purpose and globally applicable. Chat,
-Knowledge, Agents and Travel share modular infrastructure; African languages/regions
-are optional specializations. Keep the repository name, Next.js/TypeScript,
-FastAPI/Python, PostgreSQL/pgvector and interchangeable provider architecture.
-Portal and Robot are independent repositories/databases. No workspace repository, submodules or coupled releases; no license, paid resource, training or download authority is granted here.
+Onesa AI Platform is European-based, general-purpose and international; regional
+languages/domains are optional specializations. Preserve Chat/Knowledge/Agents/Travel,
+Next.js/TypeScript, FastAPI/Python, PostgreSQL/pgvector and provider interchangeability.
+Portal/Robot remain independent. No fourth repository, coupled releases, new license,
+paid resource, training or download authority is granted here.
 
 ## Non-negotiable security, privacy and safety
 
@@ -33,7 +32,7 @@ Exposure requires verified scoped revocation/replacement and private owner notif
 Deletion is not revocation. Preserve incident evidence; no history rewriting, force-push,
 unrelated credential rotation or production deletion without specific authority.
 
-## Structure and canonical configuration
+## Structure and configuration
 
 - `onesa-ai-platform-frontend/apps/chat`: one Chat/Knowledge/Agents/Travel application.
 - `onesa-ai-platform-frontend/apps/docs`: separate public/internal Docusaurus artifacts.
@@ -68,22 +67,29 @@ verification lives in protected evidence, not permanent test counts.
 | Docs | `make docs-assets docs-public docs-internal docs-validate` / root | Docs dependencies, Python and local browser renderer | Classified ignored diagrams/PDF/site builds |
 | Hygiene | `python3 scripts/repository_hygiene.py` / root | Source checkout | Read-only heuristic scan; no proof of confidentiality |
 
-Read `docs/engineering/BUILD_AND_TEST.md` and `docs/deployment/LOCAL_DEVELOPMENT.md`
-for real prerequisites/platform differences. Report missing-DB skips. Optional hosted/GPU/
-media/training work is separate; onboarding needs no paid inference/production secrets.
-Never run destructive examples merely to validate documentation.
+Read `docs/engineering/BUILD_AND_TEST.md` and `docs/deployment/LOCAL_DEVELOPMENT.md`.
+Report DB/platform gaps. Optional hosted/GPU/media/training work is separate; onboarding
+needs no paid inference/production secrets. No destructive documentation demonstrations.
 
 ## Contributions and three branches
 
-Use only `dev → staging → main`. Work on existing dev; PR dev to staging, qualify its
-exact candidate, then promote staging to main through the current owner-controlled
-release process. No extra branches/tags, auto-merge or rewriting. Preserve existing bot branches/PRs.
-Alerts stay useful; reviewed updates belong on dev. Remote automatic security-fix PRs were disabled with owner approval/confirmed notifications;
-alerts and weekly full CI remain. Record current readback separately.
+Keep exactly three permanent branches: `dev`, `staging`, `main`. Normal work follows
+`dev → staging → main`. Temporary Dependabot security-fix PRs and reviewed security
+release candidates are permitted; ordinary version PR creation stays limit 0. Keep
+alerts, scans, notifications and weekly full CI. Never disable security fixes merely
+to enforce the permanent-branch rule. Security fixes target default main; version target-branch: dev does not redirect them.
 
-Use focused commits/PRs describing problem, behavior, validation and rollback. Inspect worktrees/status/sessions, stage reviewed paths and coordinate disjoint agent tasks. Never reset/stash/broad-clean concurrent work, kill unrelated jobs or remove unverified locks.
+Review fixes with credential-free hosted PR checks and integrate through dev/staging/main.
+If unfinished dev cannot ship urgently, qualify an isolated candidate from exact current
+production plus reviewed security changes only in existing staging; owner-controlled
+production release and reconciliation into dev/staging remain mandatory. No new permanent
+environment, blind auto-merge, deployment secrets in bot jobs or unsafe triggers.
+Delete temporary branches only after verified incorporation and evidence-dependency checks;
+preserve existing work, approvals, history and rollback.
 
-## Coding conventions and generated ownership
+Use focused commits/PRs with validation and rollback. Inspect worktrees/status/sessions, stage reviewed paths and coordinate disjoint agent tasks. Never reset/stash/broad-clean concurrent work, kill unrelated jobs or remove unverified locks.
+
+## Coding and generated ownership
 
 Follow supported TypeScript/React/Next.js and Python/FastAPI conventions: validated inputs, parameterized queries, UTC events, minimal logs, bounded cancellation/timeouts/retries and idempotency. Keep rollout compatibility; review locked dependency provenance/licenses. No forced upgrades or blanket suppression.
 
@@ -94,13 +100,10 @@ never hand-edit generated clients, schemas or ERDs to conceal drift.
 
 ## Code Review Rules
 
-Prioritize session/CSRF, role/object access, tenant retrieval, streaming/cancellation,
-private uploads/parser isolation, bounded tools, migration integrity, secrets,
-release workflow trust and observed regressions. Separate hypotheses from confirmed
-findings and avoid duplicate style commentary. Do not send source to an unapproved
-external AI reviewer. Automated review is not independent review/certification. With the verified solo-owner workflow, do not invent
-a second reviewer. Apply actual required review gates and reviewer permissions when
-an authorized reviewer exists.
+Review auth/CSRF/object ownership, retrieval/streams, uploads/parsers, tools, migrations,
+secrets and release trust before style. Separate hypotheses and confirmed regressions.
+No unapproved external reviewer uploads or fictitious independent review. Solo-owner
+review stays usable; honor actual review gates and authorized reviewer permissions.
 
 ## AI product invariants
 
@@ -133,7 +136,7 @@ are independent dimensions; color is never authorization, readiness or data fres
 ## Reporting and evidence
 
 Report vulnerabilities privately to `info@onesa.eu` or GitHub private reporting if
-verified enabled. Keep README reporting discoverable. No public sensitive details, credentials/customer
+verified enabled. Keep README reporting visible. No public sensitive details, credentials/customer
 records or invented response SLA. Support: latest reviewed main; history unresolved.
 
 Keep cookies/CSRF and engineering access separate; narrow proxy targets, no tokens in URLs/storage. Test identity replay/races and revocation. Record actual suite/source/environment/results/skips; local fixtures are not hosted acceptance. Hardware, Safari/manual accessibility gaps stay explicit.

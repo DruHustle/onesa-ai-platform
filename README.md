@@ -90,7 +90,10 @@ Real database tests require the isolated `_test` database in
 must never point at staging/production. Browser tests distinguish mock regression from
 real provider acceptance. [Engineering Onboarding](docs/onboarding/START_HERE.md)
 explains the four-day path and first contribution. Read [AGENTS.md](AGENTS.md) before
-changes, preserve concurrent work and use only `dev → staging → main`.
+changes and preserve concurrent work. Keep dev/staging/main as the three permanent
+branches. Temporary Dependabot security-fix PRs and reviewed security candidates are
+allowed; qualify fixes in existing staging, keep owner-controlled production release
+and reconcile them into dev/staging. Ordinary version PR automation stays disabled.
 
 Delivery qualifies exact source/artifacts through CI, hosted staging, scoped legal and
 operational evidence, owner-controlled promotion and production acceptance. The

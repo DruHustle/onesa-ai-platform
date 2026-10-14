@@ -13,7 +13,7 @@ Portal, AI Platform and Robot are three independent repositories and deployments
 3. [Day 3 — Understand delivery](DAY_3.md).
 4. [Day 4 — Understand operations](DAY_4.md).
 
-Then use [First Engineering Contribution](FIRST_CONTRIBUTION.md). Do not create extra branches, reset another engineer's changes, process real candidate documents in staging or bypass production qualification.
+Then use [First Engineering Contribution](FIRST_CONTRIBUTION.md). Keep three permanent branches, with only the reviewed temporary security exception; do not reset another engineer's changes, process real candidate documents in staging or bypass production qualification.
 
 ## Documentation boundaries
 

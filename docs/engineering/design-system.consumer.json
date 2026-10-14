@@ -7,7 +7,7 @@
     "onesa-ai-platform-frontend/apps/chat/src/app/onesa-foundation.css",
     "onesa-ai-platform-frontend/apps/docs/src/css/onesa-foundation.css"
   ],
-  "guide": "https://staging.onesa-engineering-docs.pages.dev/docs/architecture/ONESA_DESIGN_SYSTEM",
+  "guide": "https://onesa-engineering-docs.pages.dev/docs/architecture/ONESA_DESIGN_SYSTEM",
   "adoption": "Review the versioned owner artifact, verify SHA256, copy into this repository, test affected consumers, promote dev \u2192 staging \u2192 main. No sibling imports or mutable runtime dependency.",
   "applications": {
     "version": "1.0.0",
@@ -16,5 +16,6 @@
     "local_artifacts": [
       "onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json"
     ]
-  }
+  },
+  "guide_status": "Protected production host verified; new guide route must be verified against this release source after deployment."
 }

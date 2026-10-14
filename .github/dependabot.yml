@@ -1,10 +1,12 @@
-# Version-update PRs disabled to preserve dev → staging → main.
+# Three permanent branches: dev, staging, main; temporary security branches allowed.
+# Ordinary version-update PRs disabled; reviewed fixes follow dev → staging → main.
 # Registry, compiler compatibility and reviewed update metadata retained.
-# Security alerts/scans stay enabled; security-fix PR control is separate.
+# Security-update PRs are enabled separately and target the default main branch.
 version: 2
 updates:
 - package-ecosystem: github-actions
   directory: /
+  target-branch: dev
   schedule:
     interval: monthly
   open-pull-requests-limit: 0
@@ -20,6 +22,7 @@ updates:
     default-days: 7
 - package-ecosystem: npm
   directory: /onesa-ai-platform-frontend/apps/chat
+  target-branch: dev
   schedule:
     interval: monthly
   open-pull-requests-limit: 0
@@ -35,6 +38,7 @@ updates:
     default-days: 7
 - package-ecosystem: npm
   directory: /onesa-ai-platform-frontend/apps/docs
+  target-branch: dev
   schedule:
     interval: monthly
   open-pull-requests-limit: 0
@@ -50,6 +54,7 @@ updates:
     default-days: 7
 - package-ecosystem: npm
   directory: /scripts/contract-tools
+  target-branch: dev
   schedule:
     interval: monthly
   open-pull-requests-limit: 0
@@ -65,6 +70,7 @@ updates:
     default-days: 7
 - package-ecosystem: pip
   directory: /onesa-ai-platform-backend
+  target-branch: dev
   schedule:
     interval: monthly
   open-pull-requests-limit: 0
