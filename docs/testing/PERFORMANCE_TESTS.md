@@ -34,6 +34,14 @@ fixtures in the normal `test:e2e` suite. Build the frontend before targeted loca
 described in [Build and Test](../engineering/BUILD_AND_TEST.md). Prepared source and local
 fixture results do not prove that these changes are live or establish production timings.
 
+The existing same-origin server proxy returns the backend's negative session contract
+immediately for exact `GET /api/v1/auth/me` when its fixed `onesa_session` cookie is
+absent or empty. It validates operator configuration first and returns a no-store 401,
+never a positive identity or service-readiness result. Every nonempty session cookie,
+credential POST and other route still reaches the real backend. This avoids waking
+a sleeping API for anonymous page startup; a cold first login can still wait for
+the configured runtime. Cookie-bearing session checks retain bounded recovery.
+
 The existing protected staging UI probe records actual cold anonymous visibility,
 draft editing, submission readiness, sign-in to composer and client navigation for
 Chat, Knowledge, Agents and Travel. It uses the same temporary synthetic identities

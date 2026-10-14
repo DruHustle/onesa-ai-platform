@@ -34,6 +34,17 @@ export async function proxy(request: Request): Promise<Response> {
     if (!Number.isFinite(timeout) || timeout < 1 || timeout > 600) {
       throw new Error("Invalid proxy timeout");
     }
+    // The backend authenticates this route only with its fixed, nonempty session cookie.
+    // This negative result avoids waking a sleeping API for signed-out startup; it is not readiness.
+    const hasSession = applicationCookies.some(cookie =>
+      cookie.startsWith('onesa_session=') && cookie.slice('onesa_session='.length) !== '');
+    if (request.method === 'GET' && incoming.pathname === '/api/v1/auth/me' && !hasSession) {
+      const requestId = crypto.randomUUID();
+      return Response.json({error: {code: 'unauthorized', message: 'Sign in to continue', request_id: requestId}}, {
+        status: 401,
+        headers: {'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId},
+      });
+    }
     const upstream = await fetch(new URL(incoming.pathname + incoming.search, base), {
       method: request.method,
       headers,
