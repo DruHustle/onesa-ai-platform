@@ -360,11 +360,25 @@ class GateTests(unittest.TestCase):
             ),
             "CONTEXT_FACT_MISSING",
         )
+        for code in (
+            "inference_unavailable",
+            "inference_timeout",
+            "generation_failed",
+            "model_not_available",
+            "invalid_inference_response",
+        ):
+            with self.subTest(code=code):
+                self.assertEqual(
+                    hosted_suite.safe_suite_failure_reason(
+                        hosted_suite.HostedStreamFailure(code)
+                    ),
+                    "STREAM_ERROR_" + code.upper(),
+                )
         self.assertEqual(
             hosted_suite.safe_suite_failure_reason(
-                hosted_suite.HostedStreamFailure("MODEL")
+                hosted_suite.HostedStreamFailure({"untrusted": marker})
             ),
-            "STREAM_ERROR_MODEL",
+            "STREAM_ERROR_UNCLASSIFIED_STREAM_ERROR",
         )
         self.assertEqual(
             hosted_suite.safe_suite_failure_reason(

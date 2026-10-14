@@ -51,10 +51,16 @@ class HostedRequestFailure(Rejected):
 
 class HostedStreamFailure(Rejected):
     def __init__(self, code):
+        known = {
+            "inference_unavailable": "INFERENCE_UNAVAILABLE",
+            "inference_timeout": "INFERENCE_TIMEOUT",
+            "generation_failed": "GENERATION_FAILED",
+            "model_not_available": "MODEL_NOT_AVAILABLE",
+            "invalid_inference_response": "INVALID_INFERENCE_RESPONSE",
+        }
         self.code = (
-            code
+            known.get(code, "UNCLASSIFIED_STREAM_ERROR")
             if isinstance(code, str)
-            and code in {"MODEL", "TIMEOUT", "CANCELLED", "AUTH"}
             else "UNCLASSIFIED_STREAM_ERROR"
         )
         super().__init__("Hosted stream emitted an error")
