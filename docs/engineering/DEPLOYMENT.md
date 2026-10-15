@@ -31,6 +31,27 @@ Vercel Git owns the protected exact-source staging Preview; Actions verifies tha
 
 The existing hosted producer also requires real conversation context/history, persisted source citations, bounded uploads, model-planned permitted tools, Travel creation/revision/conflict and owner isolation, and active cancellation. Browser acceptance covers all seven protected routes at desktop/tablet/mobile in both system modes, with live draft/focus/session preservation and an actual active stream and Stop. Source/run/origin binding, real-model metadata and complete browser coverage are checked by the receipt reader; absent, partial or foreign evidence fails closed. Temporary credentials stay in private runner files and are revoked after probes. Travel live data and bookings, manual Safari and screen-reader review remain outside the demonstrated synthetic scope.
 
+For a specifically authorized context-response investigation, the same
+`release-staging.yml` dispatcher accepts `context_diagnostic=true`,
+`deployed_commit=<full already-live staging SHA>` and `fixture_mode=temporary`.
+This mode requires successful exact workflow-source CI, the owner, first attempt
+and a disposable GitHub-hosted staging runner. It verifies the still-live Render
+revision, unchanged backend/chat/client/lockfile source, protected Vercel Preview
+and its actual running origin before creating the existing two temporary fixtures.
+It makes at most two application inference requests (acknowledge, recall), retains
+structural outcomes only, and uses the existing unconditional fixture revocation.
+It does not deploy, rebind configuration, alter the model or create qualification
+evidence. Its short-lived `staging-context-diagnostic` artifact cannot replace
+`staging-verification`; ordinary full qualification remains unchanged. Reserve
+requests in the current restricted authorization/attempt register before dispatch;
+failure consumes the submitted requests and permits no automatic retry.
+
+Public Docs keyboard acceptance waits for Docusaurus's actual hydration marker
+before its single Enter/menu check. Missing hydration fails within ten seconds.
+The isolated static-build regression holds JavaScript to reproduce visible SSR
+markup without working React handlers; no repeated key presses are used to turn a
+failed interaction into acceptance.
+
 > Current private-Free release policy: [safeguards and external owner authorization](../development/PRIVATE_FREE_SAFEGUARDS.md). Legacy JSON approval is retired; native protection requirements below apply only to a verified supported configuration.
 
 Use separate versioned images from the frontend/backend Dockerfiles. Each build context

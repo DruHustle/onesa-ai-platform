@@ -2,6 +2,13 @@ name: Approved staging qualification
 'on': # zizmor: ignore[dangerous-triggers] -- Owner exact main SHA and complete CI before staging-only credentials; documented in CI_CD_PIPELINE_REPORT.md
   workflow_dispatch:
     inputs:
+      context_diagnostic:
+        description: Two-call synthetic context diagnostic on the existing deployment; no deployment or qualification
+        type: boolean
+        default: false
+      deployed_commit:
+        description: Exact already-live staging commit required for context diagnostics
+        type: string
       fixture_mode:
         type: choice
         default: temporary
@@ -10,6 +17,11 @@ name: Approved staging qualification
         - provided
   workflow_call:
     inputs:
+      context_diagnostic:
+        type: boolean
+        default: false
+      deployed_commit:
+        type: string
       fixture_mode:
         type: string
         default: temporary
@@ -53,6 +65,7 @@ jobs:
       with:
         persist-credentials: false
         ref: ${{ github.sha }}
+        fetch-depth: 0
     - name: Require successful exact-source checks before provider credentials
       env:
         GH_TOKEN: ${{ github.token }}
@@ -72,6 +85,7 @@ jobs:
       with:
         node-version: '24'
     - name: Reuse the exact-source protected native Git Preview
+      if: inputs.context_diagnostic != true
       env:
         RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
         RENDER_SERVICE_ID: ${{ secrets.STAGING_RENDER_SERVICE_ID }}
@@ -82,6 +96,7 @@ jobs:
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
       run: python3 scripts/release/hosted.py resolve-preview --url-file /tmp/vercel-url.txt
     - name: Bind only the approved staging API origin to this verified Preview
+      if: inputs.context_diagnostic != true
       run: python3 scripts/release/hosted.py bind-staging-origin
       env:
         RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
@@ -94,6 +109,7 @@ jobs:
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Deploy exact staging backend source without database migration
       id: backend
+      if: inputs.context_diagnostic != true
       run: python3 scripts/deploy_render.py
       env:
         RENDER_RECEIPT_PATH: ${{ runner.temp }}/render/record.json
@@ -118,13 +134,27 @@ jobs:
         cp /tmp/vercel-url.txt /tmp/vercel-staging-url.txt
 
         .venv/bin/python scripts/staging_acceptance.py'
-      if: env.STAGING_FIXTURES_CONFIGURED != 'true'
+      if: inputs.context_diagnostic != true && env.STAGING_FIXTURES_CONFIGURED != 'true'
     - name: Install locked staging fixture tooling
       run: make install
     - name: Install the existing locked hosted browser tooling
+      if: inputs.context_diagnostic != true
       run: |
         npm --prefix onesa-ai-platform-frontend run ci
         npm --prefix onesa-ai-platform-frontend/apps/chat exec -- playwright install --with-deps chromium
+    - name: Verify the existing deployment before diagnostic fixture creation
+      if: inputs.context_diagnostic == true
+      run: .venv/bin/python scripts/release/context_diagnostic.py verify
+      env: &diagnostic_env
+        AI_CONTEXT_DIAGNOSTIC: ${{ inputs.context_diagnostic }}
+        AI_DIAGNOSTIC_DEPLOYED_COMMIT: ${{ inputs.deployed_commit }}
+        RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
+        RENDER_SERVICE_ID: ${{ secrets.STAGING_RENDER_SERVICE_ID }}
+        VERCEL_TOKEN: ${{ secrets.STAGING_VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.STAGING_VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
+        VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
+        STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Create only temporary approved synthetic staging identities
       if: inputs.fixture_mode != 'provided'
       run: .venv/bin/python scripts/release/fixture_lifecycle.py create
@@ -137,6 +167,7 @@ jobs:
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
     - name: Verify authenticated synthetic workflows, storage and actual inference where applicable
+      if: inputs.context_diagnostic != true
       run: .venv/bin/python scripts/release/hosted_suite.py
       env:
         RENDER_API_KEY: ${{ secrets.STAGING_RENDER_API_KEY }}
@@ -147,7 +178,19 @@ jobs:
         VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.STAGING_VERCEL_AUTOMATION_BYPASS_SECRET }}
         STAGING_MIGRATION_DATABASE_URL: ${{ secrets.STAGING_MIGRATION_DATABASE_URL }}
         STAGING_FIXTURES_JSON: ${{ secrets.STAGING_FIXTURES_JSON }}
+    - name: Diagnose two actual application context calls without full qualification
+      if: inputs.context_diagnostic == true
+      run: .venv/bin/python scripts/release/context_diagnostic.py probe
+      env: *diagnostic_env
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      if: always() && inputs.context_diagnostic == true
+      with:
+        name: staging-context-diagnostic
+        path: ${{ runner.temp }}/context-diagnostic/record.json
+        retention-days: 3
+        if-no-files-found: warn
     - name: Verify actual protected interfaces, live appearance, streaming and Stop
+      if: inputs.context_diagnostic != true
       run: node scripts/staging_ui.cjs
       env:
         VERCEL_PROJECT_ID: ${{ secrets.STAGING_VERCEL_PROJECT_ID }}
@@ -174,6 +217,7 @@ jobs:
         retention-days: 7
         if-no-files-found: error
     - name: 'Release requirement: actual hosted staging acceptance'
+      if: inputs.context_diagnostic != true
       run: python3 scripts/release/hosted.py stage-result --evidence "$RUNNER_TEMP/staging/record.json"
     - name: Remove private synthetic fixture credentials
       if: always()
