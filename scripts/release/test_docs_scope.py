@@ -58,8 +58,7 @@ def acceptance(environment):
         ).read_text()
     )
     links = [
-        {"label": app["label"] + " ↗", "href": app["href"]}
-        for app in registry["applications"]
+        {"label": app["label"], "href": app["href"]} for app in registry["applications"]
     ]
     manifest = json.loads(
         (

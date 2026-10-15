@@ -380,6 +380,18 @@ Do not silently change repository visibility or publish confidential source.
 
 ## Build context and design contract
 
+Declare the browser favicon once through the typed SVG entry in `headTags`.
+Do not also configure Docusaurus `favicon`, which emits another declaration.
+The Apple touch icon serves mobile home-screen installation; the existing ICO
+asset remains available for legacy requests without adding another favicon link.
+Use plain navbar labels: Docusaurus supplies the accessible external-link icon.
+Adding a hand-typed arrow produces a second indicator beside Public docs and the
+application entries. Desktop/mobile acceptance checks the registry labels and
+allows at most one framework icon per application link.
+Hosted application menus must use the validated production application origins,
+including the protected engineering build. A corrected source does not resolve
+localhost destinations in an older deployment until that classified build ships.
+
 Set `ONESA_DOCS_ENVIRONMENT=staging` for an approved preview/Pages staging build and `production` only for the qualified production artifact. Values are validated as development, staging or production; absent local configuration defaults to DEVELOPMENT. The public hosting workflow selects its value from the trusted target input. Access audience and deployment context are separate from system appearance; no hostname/query parameter determines either. Browser/OS preference controls both classified builds without a manual selector or stored appearance override.
 
 From the reviewed AI repository root, generate/validate assets first, then build the actual target:

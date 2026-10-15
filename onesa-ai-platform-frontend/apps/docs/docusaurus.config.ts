@@ -26,8 +26,8 @@ if (apiUrl && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(apiUrl)) {
 }
 const config: Config = {
   title: internal ? 'Onesa Engineering Docs' : 'Onesa Developer Docs', tagline: 'Engineering Intelligent Possibilities',
-  url:process.env.ONESA_DOCS_URL || (staticHosting ? 'https://docs.onesa.eu' : `http://localhost:${internal ? 3201 : 3200}`), staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], favicon:'brand/icons/v1/onesa-docs.svg', baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
-  headTags:[{tagName:'link',attributes:{rel:'icon',href:'/favicon.ico',type:'image/vnd.microsoft.icon',sizes:'16x16 32x32 64x64'}},{tagName:'link',attributes:{rel:'icon',href:'/brand/icons/v1/onesa-docs.svg',type:'image/svg+xml',sizes:'any'}},{tagName:'link',attributes:{rel:'apple-touch-icon',href:'/brand/icons/v1/onesa-docs-180.png',type:'image/png',sizes:'180x180'}}],
+  url:process.env.ONESA_DOCS_URL || (staticHosting ? 'https://docs.onesa.eu' : `http://localhost:${internal ? 3201 : 3200}`), staticDirectories:['static', `.generated/${scope}/static`, `static-${scope}`], baseUrl:'/', organizationName:'Onesa AI', projectName:'onesa-ai-platform',
+  headTags:[{tagName:'link',attributes:{rel:'icon',href:'/brand/icons/v1/onesa-docs.svg',type:'image/svg+xml',sizes:'any'}},{tagName:'link',attributes:{rel:'apple-touch-icon',href:'/brand/icons/v1/onesa-docs-180.png',type:'image/png',sizes:'180x180'}}],
   onBrokenLinks:'throw', onBrokenAnchors:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
   plugins:[function onesaProductContext(){return {name:'onesa-product-context',async postBuild({outDir}:{outDir:string}){const visit=async(directory:string):Promise<void>=>{for(const entry of await readdir(directory,{withFileTypes:true})){const file=join(directory,entry.name);if(entry.isDirectory())await visit(file);else if(entry.name.endsWith('.html')){const html=await readFile(file,'utf8');await writeFile(file,html.replace(/<html\b/,'<html data-onesa-product="docs"'));}}};await visit(outDir);}};}],
@@ -39,8 +39,8 @@ const config: Config = {
       {to:'/architecture',label:'Architecture & Workflows',position:'left'},
       ...(internal ? [{to:'/onboarding',label:'Engineering Onboarding',position:'left' as const},{to:'/docs/architecture/ONESA_DESIGN_SYSTEM',label:'Onesa Design System',position:'left' as const}] : []),
       {label:'Reference',position:'left',items:[{to:internal?'/docs':'/docs/public/introduction',label:'Documentation index'},{to:'/api-explorer',label:'API'},...(internal?[{to:'/database',label:'Database'}]:[]),{to:'/tutorials',label:'Guides'},{to:'/downloads',label:'Downloads'},{to:'/assistant',label:'Ask Onesa'}]},
-      {label:'Onesa applications',position:'right',items:applications.applications.map(application=>({href:application.id==='ai'?appUrl:application.id==='docs'?publicDocsUrl:application.href,label:application.label+' ↗'}))},
-      ...(internal?[{href:publicDocsUrl,label:'Public docs ↗',position:'right' as const}]:[]),{type:'search',position:'right'}]},
+      {label:'Onesa applications',position:'right',items:applications.applications.map(application=>({href:application.id==='ai'?appUrl:application.id==='docs'?publicDocsUrl:application.href,label:application.label}))},
+      ...(internal?[{href:publicDocsUrl,label:'Public docs',position:'right' as const}]:[]),{type:'search',position:'right'}]},
     footer:{style:'dark', copyright:'Onesa UG · Engineering Intelligent Possibilities · Documentation v0.3.0'},
     prism:{theme:lightCodeTheme,additionalLanguages:['python','bash','json','sql','yaml','typescript']},
   } satisfies ThemeConfig,
