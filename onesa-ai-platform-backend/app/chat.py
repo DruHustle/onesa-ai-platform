@@ -29,6 +29,14 @@ from app.schemas import ChatRequest
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
+CONVERSATION_INSTRUCTION = (
+    "You are Onesa, a conversational AI assistant. Use the conversation messages supplied in "
+    "this request as your available context, including facts the user stated earlier. "
+    "When asked to recall a fact, answer from those messages; if the fact is absent, say so. "
+    "Do not claim that supplied earlier messages are inaccessible. Do not claim access to "
+    "other conversations, private accounts, external systems or tools that were not supplied."
+)
+
 
 def event(name: str, data: dict[str, Any]) -> str:
     return f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
@@ -126,7 +134,10 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     )
     history.reverse()
     # Bound context rather than growing requests without limit.
-    messages = [ModelMessage(role=m.role, content=m.content["text"]) for m in history[-30:]]
+    messages = [
+        ModelMessage(role="system", content=CONVERSATION_INSTRUCTION),
+        *[ModelMessage(role=m.role, content=m.content["text"]) for m in history[-30:]],
+    ]
     if sum(len(m.content) for m in messages) + len(body.content) > 96000:
         fail(422, "context_limit", "Start a new conversation to continue")
     if sources:

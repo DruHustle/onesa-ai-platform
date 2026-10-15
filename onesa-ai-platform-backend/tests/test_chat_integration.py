@@ -7,6 +7,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.chat import CONVERSATION_INSTRUCTION
 from app.inference import InferenceError, MockModelClient
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from tests.conftest import signup
@@ -190,13 +191,46 @@ def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
     finally:
         event.remove(api.app.state.engine, "before_cursor_execute", observe)
     assert [message.content for message in context] == [
+        CONVERSATION_INSTRUCTION,
         *[f"turn-{sequence}" for sequence in range(46, 76)],
         "Next",
     ]
+    assert context[0].role == "system"
     assert len(bounded_queries) == 1 and "LIMIT" in bounded_queries[0][0]
     assert 30 in bounded_queries[0][1].values()
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert [item["sequence"] for item in history] == list(range(1, 78))
+
+
+def test_each_turn_receives_supplied_context_without_persisting_system_instruction(api):
+    signup(api)
+    identifier = new(api)
+    requests = []
+
+    class Capture(MockModelClient):
+        async def stream(self, messages):
+            requests.append([(message.role, message.content) for message in messages])
+            yield "Acknowledged."
+
+    api.app.state.model_client = Capture()
+    for content in ["Remember the orchard name: Alder.", "Which orchard did I name?"]:
+        response = api.post(
+            "/api/v1/chat/completions",
+            json={"conversation_id": identifier, "content": content, "stream": False},
+        )
+        assert response.status_code == 200
+    assert requests == [
+        [("system", CONVERSATION_INSTRUCTION), ("user", "Remember the orchard name: Alder.")],
+        [
+            ("system", CONVERSATION_INSTRUCTION),
+            ("user", "Remember the orchard name: Alder."),
+            ("assistant", "Acknowledged."),
+            ("user", "Which orchard did I name?"),
+        ],
+    ]
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert [item["role"] for item in history] == ["user", "assistant", "user", "assistant"]
+    assert all(item["content"]["text"] != CONVERSATION_INSTRUCTION for item in history)
 
 
 def test_busy_and_expired_lease_recovery(api: TestClient, pg: Engine) -> None:
