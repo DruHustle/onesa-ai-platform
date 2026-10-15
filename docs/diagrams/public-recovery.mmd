@@ -7,6 +7,6 @@ Core --> Alert
 Model --> Alert
 DB[Separate PostgreSQL databases] --> Backups[Private encrypted backups]
 Files[Private object storage] --> Backups
-Robot[SQLite online WAL-aware snapshot] --> Backups
+Robot[Robot development history recovery] --> Backups
 Backups --> Restore[Isolated integrity authorization and schema restore test]
 Restore --> Rollback[Reviewed recovery and rollback acceptance]

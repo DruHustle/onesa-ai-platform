@@ -201,13 +201,7 @@ jobs:
 
         '
     - name: Verify emitted favicon link and bundled icon
-      run: "python3 - <<'PYTHON'\nfrom html.parser import HTMLParser\nfrom pathlib import Path\nclass Icons(HTMLParser):\n\
-        \    found = False\n    def handle_starttag(self, tag, attrs):\n        attrs = dict(attrs)\n        if tag ==\
-        \ 'link' and attrs.get('rel') == 'icon' and attrs.get('href') == '/favicon.ico':\n            self.found = True\n\
-        app = Path('onesa-ai-platform-frontend/apps/docs')\nparser = Icons()\nparser.feed((app / 'build-public/index.html').read_text())\n\
-        assert parser.found, 'Public index is missing the favicon link'\nicon = (app / 'build-public/favicon.ico').read_bytes()\n\
-        assert icon == (app / 'static/favicon.ico').read_bytes()\nassert icon[:4] == b'\\x00\\x00\\x01\\x00', 'Invalid\
-        \ ICO header'\nprint('Public index favicon link and bundled image verified.')\nPYTHON\n"
+      run: python3 scripts/docs/check_identity.py
     - name: Stop isolated screenshot fixture
       if: always()
       run: docker compose down
