@@ -66,6 +66,18 @@ snapshots and owner prerequisites; historical production findings remain separat
 This is an AI-only configuration review, not a new architecture or release approval.
 Portal, Robot, private environment files, local Ollama and user data are unchanged.
 
+## Conversation context instructions
+
+Chat supplies a trusted system instruction before the bounded conversation history.
+It tells the configured model to use facts in the supplied turns, acknowledge missing
+facts, and avoid claiming access to other conversations or external systems. This
+instruction is request context; it is not stored as a user message. Existing source
+instructions still treat retrieved material as evidence rather than authority.
+The model, provider, native streaming endpoint and output limits remain configured
+independently. The instruction does not guarantee model correctness; exact-source
+hosted recall and isolation checks still qualify a release. See Cloudflare's
+[scoped prompting contract](https://developers.cloudflare.com/workers-ai/features/prompting/).
+
 ## A. Complete redacted configuration matrix
 
 Authenticated read-only workflow [38065741091](https://github.com/DruHustle/onesa-ai-platform/actions/runs/38065741091),
