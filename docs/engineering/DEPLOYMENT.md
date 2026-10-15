@@ -31,6 +31,17 @@ Vercel Git owns the protected exact-source staging Preview; Actions verifies tha
 
 The existing hosted producer also requires real conversation context/history, persisted source citations, bounded uploads, model-planned permitted tools, Travel creation/revision/conflict and owner isolation, and active cancellation. Browser acceptance covers all seven protected routes at desktop/tablet/mobile in both system modes, with live draft/focus/session preservation and an actual active stream and Stop. Source/run/origin binding, real-model metadata and complete browser coverage are checked by the receipt reader; absent, partial or foreign evidence fails closed. Temporary credentials stay in private runner files and are revoked after probes. Travel live data and bookings, manual Safari and screen-reader review remain outside the demonstrated synthetic scope.
 
+The Cloudflare generation adapter uses the configured model's native
+`/ai/run/<model>` endpoint and reads only string `choices[].delta.content`.
+The compatible endpoint emitted numeric content deltas during a synthetic
+context-recall investigation; converting those values to strings loses leading
+zeroes. Native responses can also contain a duplicate `response` field, which is
+ignored. Malformed choices still fail, reasoning is not exposed as answer text,
+and no provider/model fallback or automatic inference retry is introduced.
+See [Cloudflare's model interface](https://developers.cloudflare.com/ai/models/%40cf/qwen/qwen3-30b-a3b-fp8/).
+Protocol regressions and one bounded real strict-parser diagnostic passed; only
+the complete exact-source hosted workflows can qualify the application release.
+
 For a specifically authorized context-response investigation, the same
 `release-staging.yml` dispatcher accepts `context_diagnostic=true`,
 `deployed_commit=<full already-live staging SHA>` and `fixture_mode=temporary`.

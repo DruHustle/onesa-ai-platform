@@ -11,7 +11,14 @@ from pydantic import ValidationError
 
 from app.cloudflare import embeddings
 from app.config import Settings
-from app.inference import CloudflareModelClient, InferenceError, ModelMessage, build_model_client
+from app.inference import (
+    CloudflareModelClient,
+    GenerationStats,
+    InferenceError,
+    ModelMessage,
+    build_model_client,
+    observe_generation,
+)
 from app.knowledge import version
 
 
@@ -31,7 +38,7 @@ def settings(**changes):
     return Settings(**(values | changes))
 
 
-def test_cloudflare_selection_catalog_and_openai_stream():
+def test_cloudflare_selection_catalog_and_native_stream():
     config = settings()
     assert isinstance(build_model_client(config), CloudflareModelClient)
 
@@ -42,7 +49,9 @@ def test_cloudflare_selection_catalog_and_openai_stream():
             return httpx.Response(
                 200, json={"success": True, "result": [{"name": config.model_name}]}
             )
-        assert request.url.path.endswith("/ai/v1/chat/completions")
+        assert request.url.path.endswith("/ai/run/" + config.model_name)
+        assert not request.url.query
+        assert config.model_api_key not in str(request.url)
         body = json.loads(request.content)
         assert body["model"] == config.model_name and body["stream"] is True
         assert body["max_tokens"] == 1024
@@ -61,6 +70,52 @@ def test_cloudflare_selection_catalog_and_openai_stream():
             "".join([x async for x in client.stream([ModelMessage(role="user", content="Hi")])])
             == "Synthetic protocol response"
         )
+
+    asyncio.run(run())
+
+
+def test_native_text_choices_preserve_numeric_tokens_and_ignore_duplicate_response():
+    frames = [
+        {"response": "Reasoning is private", "choices": [{"delta": {"reasoning": "private"}}]},
+        {"response": "RELEASE-", "choices": [{"delta": {"content": "RELEASE-"}}]},
+        {"response": 123, "choices": [{"delta": {"content": "000123"}}]},
+        {"response": "a456", "choices": [{"delta": {"content": "a456"}}]},
+        {"choices": [], "usage": {"prompt_tokens": 82, "completion_tokens": 165}},
+    ]
+    wire = "".join("data: " + json.dumps(frame) + "\n\n" for frame in frames)
+
+    async def run():
+        client = CloudflareModelClient(
+            settings(),
+            httpx.MockTransport(
+                lambda request: httpx.Response(200, text=wire + "data: [DONE]\n\n")
+            ),
+        )
+        stats = GenerationStats()
+        with observe_generation(stats):
+            chunks = [x async for x in client.stream([ModelMessage(role="user", content="Recall")])]
+        assert chunks == ["RELEASE-", "000123", "a456"]
+        assert stats.input_tokens == 82 and stats.output_tokens == 165
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("content", [123, False, {"text": "000123"}, ["000123"]])
+def test_native_nontext_choice_still_fails_without_response_fallback(content):
+    frame = {"response": "000123", "choices": [{"delta": {"content": content}}]}
+
+    async def run():
+        client = CloudflareModelClient(
+            settings(),
+            httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200, text="data: " + json.dumps(frame) + "\n\ndata: [DONE]\n\n"
+                )
+            ),
+        )
+        with pytest.raises(InferenceError) as error:
+            _ = [x async for x in client.stream([ModelMessage(role="user", content="Recall")])]
+        assert error.value.reason == "invalid_stream_delta"
 
     asyncio.run(run())
 
