@@ -410,3 +410,14 @@ inventories belong in protected engineering sources. Regenerate public PDFs and 
 the same publication allowlist after content changes. The single typed SVG favicon is checked
 by `scripts/docs/check_identity.py`; retained ICO/Apple bytes remain provenance-verified.
 General application footer contact routes to the Company's localized enquiry form.
+
+Protected Docs may use explicit `actions-native` count/hash-only metadata custody,
+reusing the public Docs owner-dispatch/artifact channel. This addresses draft release
+visibility for read-only Actions tokens without granting repository write permissions.
+The scope must be `docs-internal`, with no application staging run or draft IDs;
+unknown/mixed inputs fail closed. Exact-main CI, owner/run/artifact provenance,
+metadata digest and independently pinned producer remain mandatory. Metadata still
+claims no hosted PASS or production grant. The external owner verifier must establish
+actual private bytes, all-path Access/MFA, source/provider identity and retained
+application/backend state before one protected production publication. Old draft
+custody and its failure evidence remain preserved. No private site assets enter Actions.

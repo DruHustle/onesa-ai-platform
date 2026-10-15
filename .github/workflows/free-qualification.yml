@@ -3,7 +3,7 @@ name: Free release qualification
   workflow_dispatch:
     inputs:
       staging_run:
-        description: Full/public registered staging run; internal uses owner draft metadata
+        description: Full/public staging run; internal metadata uses no application staging run
         type: string
         required: false
       delivery_scope:
@@ -16,7 +16,7 @@ name: Free release qualification
         default: full
         required: true
       native_custody_mode:
-        description: Explicit public native metadata custody; never a hosted PASS or production grant
+        description: Explicit scoped native metadata custody; never a hosted PASS or production grant
         type: choice
         options:
         - none
@@ -24,7 +24,7 @@ name: Free release qualification
         default: none
         required: true
       native_metadata:
-        description: Public count/hash-only native metadata JSON; maximum 32 KiB; validated as data
+        description: Count/hash-only scoped native metadata JSON; maximum 32 KiB; validated as data
         type: string
         required: false
       metadata_release_id:
@@ -81,9 +81,9 @@ jobs:
         METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
       run: |
         if [ "$NATIVE_CUSTODY_MODE" = actions-native ]; then
-          test "$DELIVERY_SCOPE" = docs-public
+          case "$DELIVERY_SCOPE" in docs-public|docs-internal) ;; *) exit 1 ;; esac
           test -z "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST"
-          python3 scripts/release/free_gate.py qualify --delivery-scope docs-public \
+          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" \
             --native-metadata-event "$GITHUB_EVENT_PATH" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
             --output "$RUNNER_TEMP/free-release/record.json"
         elif [ "$DELIVERY_SCOPE" = docs-internal ] || { [ "$DELIVERY_SCOPE" = docs-public ] && [ -n "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST$METADATA_PRODUCER_SHA256" ]; }; then
