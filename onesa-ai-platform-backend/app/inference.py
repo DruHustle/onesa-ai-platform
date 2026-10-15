@@ -143,13 +143,16 @@ class OpenAIModelClient:
             response.raise_for_status()
             return any(row.get("id") == self.settings.model_name for row in response.json()["data"])
 
+    def completion_url(self) -> str:
+        return "chat/completions"
+
     async def stream(self, messages: Sequence[ModelMessage]) -> AsyncIterator[str]:
         try:
             async with (
                 self.connection() as client,
                 client.stream(
                     "POST",
-                    "chat/completions",
+                    self.completion_url(),
                     json={
                         "model": self.settings.model_name,
                         "messages": [m.model_dump() for m in messages],
@@ -219,7 +222,18 @@ class VLLMModelClient(OpenAIModelClient):
 
 
 class CloudflareModelClient(OpenAIModelClient):
-    """Workers AI OpenAI transport; catalog checks do not qualify actual inference."""
+    """Workers AI native endpoint with strict text choices; no response coercion."""
+
+    def completion_url(self) -> str:
+        # The compatible endpoint has emitted numeric content deltas for this
+        # model. The native route preserves its text choices, including leading
+        # zeroes. Keep the shared strict parser; the duplicate `response` field
+        # is not a second output channel or a fallback.
+        return (
+            self.settings.model_base_url.rstrip("/").removesuffix("/v1")
+            + "/run/"
+            + self.settings.model_name
+        )
 
     async def healthy(self) -> bool:
         async with self.connection() as client:
