@@ -419,6 +419,124 @@ def _internal_docs_fresh(timestamp, now):
         raise e.Rejected("Fresh metadata timestamps required") from None
 
 
+def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
+    """Same strict no-grant metadata contract for draft or Actions custody."""
+    expected_ci = [item for item in ci if item["workflow"] == e.POLICY["ci"]]
+    e.require(len(expected_ci) == 1, "One exact main CI producer required")
+    keys = {
+        "schema_version",
+        "kind",
+        "repository",
+        "candidate_commit",
+        "source_sha256",
+        "producer_sha256",
+        "ci_run_id",
+        "verified_at",
+        "delivery_scope",
+        "staging",
+        "private_artifacts",
+        "access_configuration_sha256",
+        "counts",
+        "application_deployment_authorized",
+        "backend_deployment_authorized",
+        "production_deployment_authorized",
+    }
+    e.require(
+        isinstance(record, dict) and record.keys() == keys,
+        "Exact sanitized metadata schema required",
+    )
+    e.require(
+        type(record["schema_version"]) is int
+        and record["schema_version"] == 1
+        and record["kind"] == "protected-docs-preview-qualification"
+        and record["repository"] == e.REPOSITORY
+        and record["candidate_commit"] == sha
+        and record["source_sha256"] == fingerprint
+        and record["producer_sha256"] == producer_sha256
+        and type(record["ci_run_id"]) is int
+        and record["ci_run_id"] == expected_ci[0]["run_id"]
+        and record["delivery_scope"] == "docs-internal"
+        and all(
+            record[key] is False
+            for key in [
+                "application_deployment_authorized",
+                "backend_deployment_authorized",
+                "production_deployment_authorized",
+            ]
+        ),
+        "Metadata candidate, producer, CI, scope or no-grant mismatch",
+    )
+    _internal_docs_fresh(record["verified_at"], now)
+    stage = record["staging"]
+    e.require(
+        isinstance(stage, dict)
+        and stage.keys()
+        == {"project", "environment", "deployment_id", "source_commit", "origin"}
+        and stage["project"] == "onesa-engineering-docs"
+        and stage["environment"] == "preview"
+        and isinstance(stage["deployment_id"], str)
+        and re.fullmatch(
+            r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}",
+            stage["deployment_id"],
+        )
+        and stage["source_commit"] == sha
+        and isinstance(stage["origin"], str)
+        and re.fullmatch(
+            r"https://[a-f0-9]{8}\.onesa-engineering-docs\.pages\.dev", stage["origin"]
+        )
+        and stage["origin"].split("//", 1)[1].split(".", 1)[0]
+        == stage["deployment_id"][:8],
+        "Exact protected Pages deployment Preview required",
+    )
+    artifacts = record["private_artifacts"]
+    e.require(
+        isinstance(artifacts, dict)
+        and artifacts.keys()
+        == {
+            "staging_tree_sha256",
+            "staging_archive_sha256",
+            "production_tree_sha256",
+            "production_archive_sha256",
+        }
+        and all(
+            isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value)
+            for value in artifacts.values()
+        )
+        and isinstance(record["access_configuration_sha256"], str)
+        and re.fullmatch(r"[a-f0-9]{64}", record["access_configuration_sha256"]),
+        "Private artifact and Access hashes only required",
+    )
+    counts = record["counts"]
+    exact_counts = {
+        "source_provenance_checks": 1,
+        "accessibility_views": 18,
+        "layout_views": 18,
+        "architecture_topics": 18,
+        "engineering_chapters": 17,
+        "onboarding_days": 4,
+        "application_navigation_views": 2,
+        "identity_icons": 3,
+        "pdfs": 22,
+        "diagrams": 83,
+        "mfa_checks": 1,
+        "blocking_accessibility": 0,
+        "unexpected_browser_errors": 0,
+    }
+    e.require(
+        isinstance(counts, dict)
+        and counts.keys()
+        == exact_counts.keys() | {"unauthenticated_denials", "verified_asset_responses"}
+        and all(type(value) is int for value in counts.values())
+        and all(counts[key] == value for key, value in exact_counts.items())
+        and all(
+            1 <= counts[key] <= 20000
+            for key in ["unauthenticated_denials", "verified_asset_responses"]
+        ),
+        "Exact bounded sanitized count schema required",
+    )
+    return record
+
+
 def internal_docs_preview_metadata(
     github,
     sha,
@@ -556,117 +674,7 @@ def internal_docs_preview_metadata(
         "Downloaded metadata size or digest mismatch",
     )
     record = _internal_docs_json(content)
-    keys = {
-        "schema_version",
-        "kind",
-        "repository",
-        "candidate_commit",
-        "source_sha256",
-        "producer_sha256",
-        "ci_run_id",
-        "verified_at",
-        "delivery_scope",
-        "staging",
-        "private_artifacts",
-        "access_configuration_sha256",
-        "counts",
-        "application_deployment_authorized",
-        "backend_deployment_authorized",
-        "production_deployment_authorized",
-    }
-    e.require(
-        isinstance(record, dict) and record.keys() == keys,
-        "Exact sanitized metadata schema required",
-    )
-    e.require(
-        type(record["schema_version"]) is int
-        and record["schema_version"] == 1
-        and record["kind"] == "protected-docs-preview-qualification"
-        and record["repository"] == e.REPOSITORY
-        and record["candidate_commit"] == sha
-        and record["source_sha256"] == fingerprint
-        and record["producer_sha256"] == producer_sha256
-        and type(record["ci_run_id"]) is int
-        and record["ci_run_id"] == expected_ci[0]["run_id"]
-        and record["delivery_scope"] == "docs-internal"
-        and all(
-            record[key] is False
-            for key in [
-                "application_deployment_authorized",
-                "backend_deployment_authorized",
-                "production_deployment_authorized",
-            ]
-        ),
-        "Metadata candidate, producer, CI, scope or no-grant mismatch",
-    )
-    _internal_docs_fresh(record["verified_at"], now)
-    stage = record["staging"]
-    e.require(
-        isinstance(stage, dict)
-        and stage.keys()
-        == {"project", "environment", "deployment_id", "source_commit", "origin"}
-        and stage["project"] == "onesa-engineering-docs"
-        and stage["environment"] == "preview"
-        and isinstance(stage["deployment_id"], str)
-        and re.fullmatch(
-            r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}",
-            stage["deployment_id"],
-        )
-        and stage["source_commit"] == sha
-        and isinstance(stage["origin"], str)
-        and re.fullmatch(
-            r"https://[a-f0-9]{8}\.onesa-engineering-docs\.pages\.dev", stage["origin"]
-        )
-        and stage["origin"].split("//", 1)[1].split(".", 1)[0]
-        == stage["deployment_id"][:8],
-        "Exact protected Pages deployment Preview required",
-    )
-    artifacts = record["private_artifacts"]
-    e.require(
-        isinstance(artifacts, dict)
-        and artifacts.keys()
-        == {
-            "staging_tree_sha256",
-            "staging_archive_sha256",
-            "production_tree_sha256",
-            "production_archive_sha256",
-        }
-        and all(
-            isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value)
-            for value in artifacts.values()
-        )
-        and isinstance(record["access_configuration_sha256"], str)
-        and re.fullmatch(r"[a-f0-9]{64}", record["access_configuration_sha256"]),
-        "Private artifact and Access hashes only required",
-    )
-    counts = record["counts"]
-    exact_counts = {
-        "source_provenance_checks": 1,
-        "accessibility_views": 18,
-        "layout_views": 18,
-        "architecture_topics": 18,
-        "engineering_chapters": 17,
-        "onboarding_days": 4,
-        "application_navigation_views": 2,
-        "identity_icons": 3,
-        "pdfs": 22,
-        "diagrams": 83,
-        "mfa_checks": 1,
-        "blocking_accessibility": 0,
-        "unexpected_browser_errors": 0,
-    }
-    e.require(
-        isinstance(counts, dict)
-        and counts.keys()
-        == exact_counts.keys() | {"unauthenticated_denials", "verified_asset_responses"}
-        and all(type(value) is int for value in counts.values())
-        and all(counts[key] == value for key, value in exact_counts.items())
-        and all(
-            1 <= counts[key] <= 20000
-            for key in ["unauthenticated_denials", "verified_asset_responses"]
-        ),
-        "Exact bounded sanitized count schema required",
-    )
+    _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now)
     e.require(custody() == before, "Draft metadata custody changed during read")
     current_main(github, sha)
     refreshed_code, refreshed_ci = e.checked_ci(github, sha)
@@ -1163,9 +1171,13 @@ def public_docs_native_event(path, delivery_scope, producer, staging_run):
         return None
     e.require(
         os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch"
-        and delivery_scope == "docs-public"
-        and inputs.get("delivery_scope") == "docs-public"
-        and inputs.get("staging_run") == str(staging_run)
+        and delivery_scope in {"docs-public", "docs-internal"}
+        and inputs.get("delivery_scope") == delivery_scope
+        and (
+            inputs.get("staging_run") == str(staging_run)
+            if delivery_scope == "docs-public"
+            else not inputs.get("staging_run") and not staging_run
+        )
         and inputs.get("metadata_producer_sha256") == producer
         and isinstance(producer, str)
         and re.fullmatch(r"[a-f0-9]{64}", producer)
@@ -1178,7 +1190,7 @@ def public_docs_native_event(path, delivery_scope, producer, staging_run):
             ]
         )
         and 0 < len(content.encode("utf8")) <= 32768,
-        "Exact public native artifact inputs required; mixed custody is forbidden",
+        "Exact scoped native artifact inputs required; mixed custody is forbidden",
     )
     return {
         "channel": "actions-native",
@@ -1360,12 +1372,6 @@ def current_main(github, sha):
 def internal_docs_conditional_qualification(github, sha, run, custody):
     """Owner metadata permits only an external live review, never hosted PASS."""
     e.require(e.PRODUCT == "onesa-ai-platform", "Protected Docs is Platform-only")
-    e.require(
-        isinstance(custody, dict)
-        and custody.keys()
-        == {"release_id", "asset_id", "asset_digest", "producer_sha256"},
-        "Exact owner draft metadata references required",
-    )
     e.trusted_run(run, QUALIFICATION, sha, {"main"}, completed=False)
     pr = current_main(github, sha)
     code, references = e.checked_ci(github, sha)
@@ -1379,14 +1385,67 @@ def internal_docs_conditional_qualification(github, sha, run, custody):
             event="push",
         )
     builds = e.artifacts_for_ci(github, references)
-    metadata = internal_docs_preview_metadata(
-        github,
-        sha,
-        custody["release_id"],
-        custody["asset_id"],
-        custody["asset_digest"],
-        custody["producer_sha256"],
-    )
+    if isinstance(custody, dict) and custody.get("channel") == "actions-native":
+        e.require(
+            custody.keys() == {"channel", "metadata", "producer_sha256"}
+            and isinstance(custody["producer_sha256"], str)
+            and re.fullmatch(r"[a-f0-9]{64}", custody["producer_sha256"]),
+            "Exact native internal metadata custody required",
+        )
+        fingerprint = _internal_docs_local_source(sha)
+        record = _internal_docs_metadata(
+            custody["metadata"],
+            sha,
+            custody["producer_sha256"],
+            references,
+            fingerprint,
+            datetime.now(timezone.utc),
+        )
+        metadata = {
+            "status": "REQUIRES_EXTERNAL_LIVE_VALIDATION",
+            "STAGING_VERIFIED": "BLOCKED",
+            "PRODUCTION_AUTHORIZED": False,
+            "delivery_scope": "docs-internal",
+            "application_deployment_authorized": False,
+            "backend_deployment_authorized": False,
+            "production_deployment_authorized": False,
+            "metadata": record,
+            "custody": {
+                "channel": "actions-native",
+                "workflow_run_id": run["id"],
+                "metadata_sha256": e.digest(record),
+            },
+            "required_external_checks": [
+                "actual_provider_preview_and_source",
+                "all_paths_protected",
+                "approved_engineering_session_and_mfa",
+                "exact_private_artifact_bytes",
+                "retained_application_and_api_and_no_auto_production",
+            ],
+        }
+        current_main(github, sha)
+        refreshed_code, refreshed_ci = e.checked_ci(github, sha)
+        e.require(
+            refreshed_code == "PASS"
+            and e.digest(refreshed_ci) == e.digest(references)
+            and _internal_docs_local_source(sha) == fingerprint,
+            "Internal native source or CI changed",
+        )
+    else:
+        e.require(
+            isinstance(custody, dict)
+            and custody.keys()
+            == {"release_id", "asset_id", "asset_digest", "producer_sha256"},
+            "Exact owner draft metadata references required",
+        )
+        metadata = internal_docs_preview_metadata(
+            github,
+            sha,
+            custody["release_id"],
+            custody["asset_id"],
+            custody["asset_digest"],
+            custody["producer_sha256"],
+        )
     return {
         "schema_version": 1,
         "repository": e.REPOSITORY,
@@ -1436,10 +1495,26 @@ def internal_docs_live_qualification(github, sha, identifier):
         and isinstance(stage.get("metadata"), dict),
         "Pinned owner draft custody required",
     )
-    custody = {
-        **stage["custody"],
-        "producer_sha256": stage["metadata"].get("producer_sha256"),
-    }
+    if stage["custody"].get("channel") == "actions-native":
+        e.require(
+            stage["custody"]
+            == {
+                "channel": "actions-native",
+                "workflow_run_id": run["id"],
+                "metadata_sha256": e.digest(stage["metadata"]),
+            },
+            "Exact immutable internal Actions custody required",
+        )
+        custody = {
+            "channel": "actions-native",
+            "metadata": stage["metadata"],
+            "producer_sha256": stage["metadata"].get("producer_sha256"),
+        }
+    else:
+        custody = {
+            **stage["custody"],
+            "producer_sha256": stage["metadata"].get("producer_sha256"),
+        }
     refreshed = internal_docs_conditional_qualification(github, sha, run, custody)
     e.require(refreshed == record, "Internal custody, CI or qualification changed")
     return record, origin

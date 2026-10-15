@@ -165,3 +165,9 @@ cloud/secret cleanup from absent text matches. Review `git diff --check`, exact 
 paths, hygiene and affected tests before each commit.
 
 Complete authorized independent implementation/qualification/deployment scopes and hosted verification. Record precise genuine blockers in the protected evidence index and continue unblocked work. Permanent instructions grant no future blanket credential, deletion, release or actuation authority.
+
+Protected Docs supports the existing explicit Actions-native count/hash metadata
+custody with `docs-internal`, read-only disposable CI and no deployment secrets.
+It remains conditional: only the independently pinned external verifier can establish
+private hosted acceptance and consume current owner release authority. Preserve
+Access/MFA, private artifacts outside Actions, old failed runs and source binding.
