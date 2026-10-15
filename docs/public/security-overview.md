@@ -16,4 +16,4 @@ Models cannot override registered tool permissions or independent robot safety c
 
 The public site is an allowlisted static build. Internal pages, indexes, schema metadata, operational manuals and assets require the server-side engineering access gate for every request. Identity failure denies access; hidden links and client-side login screens are not an access boundary. The internal host is not claimed deployed until its authentication, session revocation, asset access and cache isolation have been tested.
 
-Security tests and dependency scans do not establish a certification, legal compliance or completed independent penetration test. Report vulnerabilities using the repository's private reporting policy, without posting credentials or personal data.
+Security tests and dependency scans do not establish a certification, legal compliance or completed independent penetration test. Report security concerns through the [Company contact page](https://onesa.eu/en/contact), without including credentials or personal data in public messages.

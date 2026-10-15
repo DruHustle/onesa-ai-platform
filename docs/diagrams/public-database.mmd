@@ -1,7 +1,7 @@
 flowchart TB
 Portal[Company Portal API] --> PDB[Dedicated PostgreSQL Portal schema]
 AI[AI Platform API] --> ADB[Separate PostgreSQL and pgvector]
-Robot[Robot simulator API] --> SQLite[Private single-process SQLite]
+Robot[Robot development service] --> SQLite[Private Robot history]
 Portal --> PFiles[Private object files]
 AI --> AFiles[Private document persistence required]
 Migration[Separate scoped migration identities] --> PDB

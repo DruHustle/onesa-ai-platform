@@ -1,8 +1,8 @@
 flowchart TB
 Definitions[Implemented simulation message definitions] --> Telemetry[SimulationTelemetry message]
 Definitions --> Proposal[SimulationProposal message]
-Sim[Current FastAPI software simulation] -. future bridge only .-> Bridge[ROS bridge proposed]
+Sim[Current software simulation] -. future bridge only .-> Bridge[ROS bridge proposed]
 Bridge -. nodes not implemented .-> ROS[ROS 2 nodes topics actions proposed]
-ROS -. safety approval required .-> Hardware[Hardware unavailable]
+ROS -. safety approval required .-> Hardware[Hardware under development]
 Audio[STT TTS unavailable] -. proposed .-> ROS
 Vision[VLM VLA unavailable] -. proposed .-> ROS
