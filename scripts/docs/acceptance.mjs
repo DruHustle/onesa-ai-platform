@@ -27,7 +27,7 @@ function publicOrigin(value){
  return url.origin;
 }
 const expectedApplications=applications.applications.map(application=>({
- label:application.label+' ↗',
+ label:application.label,
  href:publicOrigin(application.id==='ai'?(process.env.ONESA_APPLICATION_URL||application.href):application.id==='docs'?(process.env.ONESA_PUBLIC_DOCUMENTATION_URL||application.href):application.href),
 }));
 const types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.pdf':'application/pdf','.css':'text/css','.xml':'application/xml','.txt':'text/plain','.mmd':'text/plain'};
@@ -48,6 +48,7 @@ if(expectedRevision)expect(provenance.revision).toBe(expectedRevision);
 evidence.provenance={revision:provenance.revision,classification:provenance.classification};
 async function checkIdentityIcons(){
  const source=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json'),'utf8'));
+ await expect(page.locator('link[rel="icon"]'),'Declare the browser favicon once').toHaveCount(1);
  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('href','/brand/icons/v1/onesa-docs.svg');
  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('sizes','any');
  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('sizes','180x180');
@@ -87,7 +88,10 @@ async function checkApplicationsNavigation(view){
   return {label:link.label,href};
  });
  expect(actual,`${view} applications dropdown must match the pinned product registry`).toEqual(expectedApplications);
- for(let index=0;index<expectedApplications.length;index++)await expect(links.nth(index)).toBeVisible();
+ for(let index=0;index<expectedApplications.length;index++){
+  await expect(links.nth(index)).toBeVisible();
+  expect(await links.nth(index).locator('svg').count(),'External destinations use one framework icon').toBeLessThanOrEqual(1);
+ }
  evidence.navigation.push({view,links:actual});
  if(view==='mobile')await page.getByRole('button',{name:'Close navigation bar',exact:true}).click();
  else await dropdown.getByRole('button',{name:'Onesa applications',exact:true}).press('Enter');

@@ -102,7 +102,7 @@ def docs_acceptance_schema(acceptance):
         ).read_text()
     )
     expected_links = [
-        {"label": app["label"] + " ↗", "href": app["href"].rstrip("/")}
+        {"label": app["label"], "href": app["href"].rstrip("/")}
         for app in registry["applications"]
     ]
     e.require(

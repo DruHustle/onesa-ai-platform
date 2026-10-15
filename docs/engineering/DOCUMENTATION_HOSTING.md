@@ -384,6 +384,10 @@ Declare the browser favicon once through the typed SVG entry in `headTags`.
 Do not also configure Docusaurus `favicon`, which emits another declaration.
 The Apple touch icon serves mobile home-screen installation; the existing ICO
 asset remains available for legacy requests without adding another favicon link.
+Use plain navbar labels: Docusaurus supplies the accessible external-link icon.
+Adding a hand-typed arrow produces a second indicator beside Public docs and the
+application entries. Desktop/mobile acceptance checks the registry labels and
+allows at most one framework icon per application link.
 Hosted application menus must use the validated production application origins,
 including the protected engineering build. A corrected source does not resolve
 localhost destinations in an older deployment until that classified build ships.
