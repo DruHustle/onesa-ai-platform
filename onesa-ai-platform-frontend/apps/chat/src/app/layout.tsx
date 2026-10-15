@@ -35,7 +35,7 @@ export default async function Layout({
           return environment ? <div className="environment-context" role="note">{environment} · Onesa AI Platform</div> : null;
         })()}
         <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
-        <footer className="company-footer"><span>{company.legalName}</span><a href={company.mailHref}>{company.email}</a><a href={company.telephoneHref}>{company.telephone}</a><a href={`https://onesa.eu/${locale}/impressum`}>{locale === "de" ? "Impressum" : "Legal Notice"}</a><a href={`https://onesa.eu/${locale}/privacy`}>{locale === "de" ? "Datenschutz" : "Privacy"}</a></footer>
+        <footer className="company-footer"><span>{company.legalName}</span><a href={`https://onesa.eu/${locale}/contact`}>{locale === "de" ? "Kontakt" : "Contact"}</a><a href={`https://onesa.eu/${locale}/impressum`}>{locale === "de" ? "Impressum" : "Legal Notice"}</a><a href={`https://onesa.eu/${locale}/privacy`}>{locale === "de" ? "Datenschutz" : "Privacy"}</a></footer>
       </body>
     </html>
   );

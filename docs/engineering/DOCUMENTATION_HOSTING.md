@@ -402,3 +402,22 @@ ONESA_DOCS_ENVIRONMENT=production ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=
 ```
 
 These commands build source; they do not upload or prove qualification. Preserve existing Access bindings, approved identity/MFA and all-path verifier when packaging internal output with `scripts/docs/prepare_cloudflare.py`. Its provenance must match the committed current source. Public upload remains the independent `docs-hosting.yml` target workflow; production requires qualified main. The observed protected reference is [Onesa Design System](https://staging.onesa-engineering-docs.pages.dev/docs/architecture/ONESA_DESIGN_SYSTEM); verify that exact candidate route after upload. The proposed engineering custom hostname is not assumed assigned.
+
+
+Public Robot guides describe the product, development scope and protected user workflows.
+Repository layouts, database/runtime mechanics, provider project names and environment-key
+inventories belong in protected engineering sources. Regenerate public PDFs and search from
+the same publication allowlist after content changes. The single typed SVG favicon is checked
+by `scripts/docs/check_identity.py`; retained ICO/Apple bytes remain provenance-verified.
+General application footer contact routes to the Company's localized enquiry form.
+
+Protected Docs may use explicit `actions-native` count/hash-only metadata custody,
+reusing the public Docs owner-dispatch/artifact channel. This addresses draft release
+visibility for read-only Actions tokens without granting repository write permissions.
+The scope must be `docs-internal`, with no application staging run or draft IDs;
+unknown/mixed inputs fail closed. Exact-main CI, owner/run/artifact provenance,
+metadata digest and independently pinned producer remain mandatory. Metadata still
+claims no hosted PASS or production grant. The external owner verifier must establish
+actual private bytes, all-path Access/MFA, source/provider identity and retained
+application/backend state before one protected production publication. Old draft
+custody and its failure evidence remain preserved. No private site assets enter Actions.
