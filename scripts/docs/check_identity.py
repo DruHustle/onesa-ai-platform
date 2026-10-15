@@ -1,4 +1,5 @@
 """Validate the single approved Docs browser icon and retained compatibility assets."""
+
 import hashlib
 import json
 from html.parser import HTMLParser
@@ -25,9 +26,11 @@ def verify(app: Path):
     assert icon.get("type") == "image/svg+xml" and icon.get("sizes") == "any"
     manifest = json.loads((app / "static/brand/icons/v1/sources.json").read_text())
     expected = {item["name"]: item for item in manifest["products"][0]["files"]}
-    for name, relative in [("onesa-docs.svg", "brand/icons/v1/onesa-docs.svg"),
-                           ("onesa-docs.ico", "favicon.ico"),
-                           ("onesa-docs-180.png", "brand/icons/v1/onesa-docs-180.png")]:
+    for name, relative in [
+        ("onesa-docs.svg", "brand/icons/v1/onesa-docs.svg"),
+        ("onesa-docs.ico", "favicon.ico"),
+        ("onesa-docs-180.png", "brand/icons/v1/onesa-docs-180.png"),
+    ]:
         data = (app / "build-public" / relative).read_bytes()
         assert hashlib.sha256(data).hexdigest() == expected[name]["sha256"], relative
         assert data == (app / "static" / relative).read_bytes(), relative
