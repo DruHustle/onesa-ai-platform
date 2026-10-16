@@ -57,6 +57,19 @@ Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers
 `tls-acceptance`. Add `publication-hygiene` to required checks. CI runs relevant main/staging PR checks and full release-source push checks, with fail-closed summaries. No remote
 CI success is implied by local build/test results.
 
+## API contracts
+
+From the repository root, install the separate locked contract tools before generating
+or checking contracts. The Chat dependency installation does not install these tools.
+
+```sh
+npm ci --ignore-scripts --prefix scripts/contract-tools
+make openapi api-client contract-check
+```
+
+Use the local backend environment; generation never requires a production API or
+database credential.
+
 ## Identity worker lifecycle
 
 Run `python -m app.identity_worker` from the backend environment with the same

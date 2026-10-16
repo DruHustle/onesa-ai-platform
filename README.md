@@ -85,6 +85,7 @@ change the smallest local path.
 make install check
 npm --prefix onesa-ai-platform-frontend run ci
 make frontend-check
+npm ci --ignore-scripts --prefix scripts/contract-tools
 make openapi api-client contract-check
 node scripts/test_system_appearance.mjs
 python3 scripts/repository_hygiene.py
