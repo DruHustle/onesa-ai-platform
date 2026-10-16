@@ -116,6 +116,11 @@ agent_outcomes = Counter("onesa_agent_runs_total", "Registered local agent outco
 agent_planning_failures = Counter(
     "onesa_agent_planning_failures_total", "Rejected or failed agent planning"
 )
+agent_planning_failure_reasons = Counter(
+    "onesa_agent_planning_failure_reasons_total",
+    "Agent planning failure categories without request or generated content",
+    ["reason"],
+)
 mail_jobs = Gauge(
     "onesa_identity_mail_jobs", "Identity mail states; acceptance is not delivery", ["state"]
 )
