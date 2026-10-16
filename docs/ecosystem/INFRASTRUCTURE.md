@@ -2,6 +2,25 @@
 
 > Purpose: explain implemented trust boundaries and qualification. Audience: engineers and reviewers. Classification: internal engineering design. Owner: Onesa repository maintainers. Verified: 2026-10-13 against source and cited staging evidence; production acceptance remains incomplete. Applicable revisions are identified below and in generated provenance.
 
+## Current Oracle layout — 2026-10-16
+
+The API hosting migration supersedes the dated Render/worker-only layout below.
+The existing Oracle ARM64 VM now runs separate Portal, AI and Robot staging/production
+APIs, two Portal workers and one private shared scanner. Two environment-specific
+outbound Cloudflare tunnels reach loopback-only APIs. Vercel frontends, external
+PostgreSQL/Turso data, private Portal objects and configured AI providers remain
+separate. Owner PC administration uses Tailscale and pinned ordinary OpenSSH.
+
+Use [Oracle VM architecture and troubleshooting](../engineering/ORACLE_VM_OPERATIONS.md)
+for the service/port map, resource limits, protected file layout, read-only commands,
+failure diagnosis, monitoring, backups and recovery boundaries. The
+[interactive infrastructure layout](/architecture?diagram=infrastructure-current)
+shows the migrated host. Hosting acceptance does not imply every later source release
+or ongoing dependency health; current incidents remain in restricted evidence.
+
+The following sections preserve their 2026-10-13 review context; Render references
+are historical and are not deployment instructions for the migrated Oracle APIs.
+
 ## Authorized targets
 
 Frontend, API, worker, database, private files and model endpoints have distinct configuration scopes. Vercel hosts frontend/static artifacts; Render APIs read only their own runtime settings. Neon application credentials differ from privileged direct migration credentials. Robot SQLite needs a persistent private disk/approved host. Model hosting does not arrive with a Render CPU service.

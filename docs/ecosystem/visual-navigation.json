@@ -19,10 +19,10 @@
     },
     {
       "id": "infrastructure-architecture",
-      "title": "Infrastructure Architecture",
+      "title": "Oracle VM & Infrastructure",
       "diagram": "infrastructure-current",
-      "url": "/docs/ecosystem/INFRASTRUCTURE",
-      "summary": "Separate provider responsibilities and staging from production."
+      "url": "/docs/engineering/ORACLE_VM_OPERATIONS",
+      "summary": "Trace the shared Oracle host, isolated APIs, private administration and incident response."
     },
     {
       "id": "company-portal-architecture",
