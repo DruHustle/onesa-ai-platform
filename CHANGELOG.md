@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Record allowlisted hosted draft-check steps and failure categories without exception
+  messages, assertion values, cookies or fixture credentials; acceptance checks are unchanged.
 - Bind protected Docs metadata to a current authentication-policy check with schema 2;
   metadata still grants no hosted acceptance or deployment authority.
 - Document owner-managed engineering Docs onboarding/offboarding for approved Onesa
