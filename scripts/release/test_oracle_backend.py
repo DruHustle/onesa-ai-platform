@@ -4,7 +4,6 @@ import json
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = {
     "onesa-company-portal": ("portal", 18301, 18300, 8300),
