@@ -14,7 +14,7 @@ test.beforeEach(async ({ page, baseURL }) => {
 });
 
 for (const colorScheme of ["light", "dark"] as const) {
-  test(`${colorScheme}: unavailable history preserves drafts and retries without replaying a run`, async ({ page }) => {
+  test(`${colorScheme}: unavailable history preserves drafts and retries without replaying a run`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme });
     let reads = 0;
@@ -35,7 +35,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(reads).toBe(2);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-    await page.screenshot({ path: `/private/tmp/onesa-agents-${colorScheme}.png`, fullPage: true });
+    await page.screenshot({ path: testInfo.outputPath(`agents-${colorScheme}.png`), fullPage: true });
   });
 }
 
@@ -75,7 +75,7 @@ test("uncertain submission keeps the draft and never automatically retries", asy
   expect(writes).toBe(1);
 });
 
-test("a late history response cannot erase a newly confirmed run", async ({ page }) => {
+test("a late history response cannot erase a newly confirmed run", async ({ page }, testInfo) => {
   let release!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
   await page.route("**/api/v1/agents/runs", async route => {
@@ -96,6 +96,6 @@ test("a late history response cannot erase a newly confirmed run", async ({ page
     release();
     await expect(page.getByRole("status")).toHaveCount(0);
     await expect(page.locator(".tool-results")).toContainText("Words2");
-    await page.screenshot({ path: "/private/tmp/onesa-agents-results.png", fullPage: true });
+    await page.screenshot({ path: testInfo.outputPath("agents-results.png"), fullPage: true });
   } finally { release(); }
 });

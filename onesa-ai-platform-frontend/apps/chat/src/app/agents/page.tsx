@@ -96,7 +96,7 @@ export default function Agents() {
         {runs.map((run) => (
           <article className="feature-card" key={run.id}>
             <h3>{run.goal}</h3>
-            <p>Status: {run.status}</p>
+            <p>Status: <span>{run.status}</span></p>
             {run.steps.map((step, index) => <div key={index}>
               {step.status === "completed" && step.tool === "text_stats" ? <dl className="tool-results">
                 <div><dt>Words</dt><dd>{String(step.result.words ?? "—")}</dd></div>
