@@ -1,6 +1,62 @@
 # Onesa UG documentation hosting
 
-> Current readback — 2026-10-13: the existing `onesa-engineering-docs` Direct Upload project has protected origin and wildcard-preview Access applications requiring approved identities and TOTP/security-key MFA. Both Pages environments have verified audiences, approved identities and allowed-host bindings. Owner authentication now reaches the qualified staging build (`9b21e5debbd4a86aae95d7d3db429bf0e01ef703`, deployment `bd016bea`). Hosted acceptance passed all 16 architecture sections, four learning days, 292 diagram exports, search and pan/zoom/enlargement, 18 desktop/mobile automatic day/night layouts, and 15 anonymous origin/preview/page/index/download probes. No blocking automated accessibility findings were observed. All authenticated resources remain private/no-store/noindex, and anonymous probes redirect to Access. Public Preview workflow `38327330427` passed at the same revision. Production publication and the proposed custom internal hostname remain unverified; no DNS cutover occurred. Earlier installation and authentication failures below are historical, not current missing-resource findings.
+## Engineering sign-in and membership — owner direction, 2026-10-16
+
+Use https://onesa-engineering-docs.pages.dev/ for protected engineering Docs.
+The owner selected an emailed sign-in code, without a separate Docs password or
+additional Docs MFA enrollment. This supersedes the earlier Docs-specific MFA
+direction recorded below; it does not change Cloudflare Dashboard or other service
+authentication. The existing email-code identity provider and two approved owner
+addresses are verified. Both canonical and preview policies now disable the extra
+independent MFA step. Readback confirms unchanged membership, eight-hour sessions,
+all four site bindings and organization settings. The current authenticated Docs
+source remains accessible; anonymous page, search-index and PDF requests remain
+denied. This is configuration/access verification, not an independently witnessed
+new email-code challenge. Never treat an emailed code as independent MFA.
+
+### Onboard an approved Onesa engineer
+
+An owner can add new `@onesa.eu` engineering identities without creating another
+password database, repository or public documentation deployment. An email domain
+alone is not an engineering role: approve each engineer before adding membership.
+
+1. Confirm the engineer controls their Onesa mailbox and record their exact approved
+   address in the existing restricted membership/change record. Preserve the two
+   existing owner identities, including the approved external recovery address.
+2. Read both Access applications: the canonical `onesa-engineering-docs.pages.dev`
+   origin and `*.onesa-engineering-docs.pages.dev` previews. Preserve their domains,
+   audiences, sessions and other rules. Add the approved address as a direct **Emails**
+   selector in each existing Allow policy. Do not use Everyone or a domain-wide rule.
+3. Add the same normalized address to `CF_ACCESS_ENGINEERING_EMAILS` in **both**
+   Production and Preview of the existing `onesa-engineering-docs` Pages project.
+   Keep both JSON arrays and both Access policy memberships equal. Preserve the
+   team domain, application audiences and allowed-host bindings.
+4. Read back all four membership locations. Review the exact delta and preserve the
+   preceding configuration for rollback. Publish the qualified private Docs artifact
+   through the existing controlled delivery process so the new bindings are effective
+   on the serving deployment; saved Pages project settings alone do not establish
+   runtime membership. Reuse unchanged valid artifact evidence where permitted.
+   The external release verifier must bind to
+   that newly approved membership; a historical fixed member count is not authority
+   to reject an approved engineer or widen the allowlist silently.
+5. Give the engineer the protected Docs URL. Cloudflare sends the code when they
+   request sign-in. They enter the code themselves; never collect their mailbox
+   password or code. Docs access does not grant Cloudflare Dashboard administration.
+6. Verify the new identity can read the intended protected pages, search and downloads,
+   while an anonymous client and a nonmember still cannot. Record the actual effective
+   sign-in policy and results; configuration alone is not a completed login test.
+
+### Offboard or roll back membership
+
+Remove only the departing identity from both Access policies and both Pages email
+bindings, revoke their existing Access sessions, publish the qualified binding update,
+and verify denial against the serving deployment. Preserve the
+remaining engineers and owner recovery identity. Record the exact change and
+readback privately. On a partial update, stop, reconcile all four locations and
+restore only the affected run-owned membership delta; never remove private-file
+checks, expose the site or overwrite concurrent membership changes to finish.
+
+> Historical readback — 2026-10-13: the existing `onesa-engineering-docs` Direct Upload project has protected origin and wildcard-preview Access applications requiring approved identities and TOTP/security-key MFA. Both Pages environments have verified audiences, approved identities and allowed-host bindings. Owner authentication now reaches the qualified staging build (`9b21e5debbd4a86aae95d7d3db429bf0e01ef703`, deployment `bd016bea`). Hosted acceptance passed all 16 architecture sections, four learning days, 292 diagram exports, search and pan/zoom/enlargement, 18 desktop/mobile automatic day/night layouts, and 15 anonymous origin/preview/page/index/download probes. No blocking automated accessibility findings were observed. All authenticated resources remain private/no-store/noindex, and anonymous probes redirect to Access. Public Preview workflow `38327330427` passed at the same revision. Production publication and the proposed custom internal hostname remain unverified; no DNS cutover occurred. Earlier installation and authentication failures below are historical, not current missing-resource findings.
 
 [Visual diagrams and onboarding](../ecosystem/VISUAL_WORKFLOWS.md) are prepared in the classified builds. Public production still follows the existing `docs-hosting.yml` main-source qualification; private publication requires Access and source qualification first. [Cloudflare MFA policy reference](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/mfa-requirements/).
 
