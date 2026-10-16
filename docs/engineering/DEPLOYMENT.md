@@ -1,5 +1,35 @@
 # Independent application deployment
 
+## Oracle application releases — owner authorized 2026-10-16
+
+The owner has lifted the application-artifact hold for the latest qualified main
+revisions on Oracle/Vercel. Render remains held; do not invoke its deploy or
+staging producers for Oracle. Existing attempt limits, source/CI, preservation,
+authentication, staging acceptance and owner-controlled production custody remain.
+
+The existing API/UI probes support an explicit private Oracle staging context:
+`hosted_suite.run_suite(origin, oracle_context=path)` and
+`ONESA_ORACLE_QUALIFICATION_CONTEXT=path node scripts/staging_ui.cjs`.
+The context binds the exact main commit, actual CI run, one qualification UUID,
+project, exact protected Preview, run-owned fixture file and private output directory.
+Both harnesses reject production/foreign origins and mismatched or non-private
+fixtures. Oracle records explicitly identify local owner execution, use
+`workflow_run_id: 0`, and retain the actual CI reference separately. Do not fabricate
+GitHub execution variables, upload local PASS as a trusted Actions artifact, or
+send production credentials to Actions. Native Render entrypoints retain their
+existing guards.
+
+This context only parameterizes probes; it grants no deployment or database authority.
+The separately pinned owner adapter must read GitHub's current exact-main first-attempt
+CI/security evidence, immutable image/source labels and root runtime-file identity;
+verify staging and production databases differ, preserve existing records, and bind
+actual Vercel project/deployment/protection before creating only the two temporary
+synthetic users. Reserve the existing one unused AI context before its first full
+hosted request. Stop on failure, disable only its owned identities, preserve evidence,
+and permit production only after every required API/UI result passes. Never consume
+another context merely to test adapter state handling. Offline regression:
+`python3 -m unittest discover -s scripts/release -p test_oracle_context.py`.
+
 ## Oracle backend migration — owner authorized 2026-10-16
 
 ### Verified production hosting cutover — 2026-10-16

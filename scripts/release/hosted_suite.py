@@ -324,7 +324,19 @@ def upload_quota(client, other):
             )
 
 
-def run_suite(origin):
+def run_suite(origin, *, oracle_context=None):
+    if oracle_context is not None:
+        from oracle_context import load_context, record_identity
+
+        oracle = load_context(oracle_context)
+        require(origin == oracle["frontend_origin"], "Oracle Preview context mismatch")
+        identity = record_identity(oracle)
+    else:
+        oracle = None
+        identity = {
+            "candidate_commit": os.environ["GITHUB_SHA"],
+            "workflow_run_id": int(os.environ.get("GITHUB_RUN_ID", "0")),
+        }
     checks = {
         name: "BLOCKED"
         for name in [
@@ -341,8 +353,7 @@ def run_suite(origin):
     record = {
         "schema_version": 1,
         "repository": REPOSITORY,
-        "candidate_commit": os.environ["GITHUB_SHA"],
-        "workflow_run_id": int(os.environ.get("GITHUB_RUN_ID", "0")),
+        **identity,
         "frontend_origin": origin,
         "verified_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
@@ -350,8 +361,12 @@ def run_suite(origin):
         "synthetic_fixture_ids": [],
         "status": "BLOCKED",
     }
-    raw = os.environ.get("STAGING_FIXTURES_JSON")
-    if os.environ.get("STAGING_FIXTURE_MODE") == "temporary":
+    raw = (
+        Path(oracle["fixture_file"]).read_text()
+        if oracle is not None
+        else os.environ.get("STAGING_FIXTURES_JSON")
+    )
+    if oracle is None and os.environ.get("STAGING_FIXTURE_MODE") == "temporary":
         from fixture_lifecycle import file_path, validate_owned
 
         path = file_path()
@@ -364,7 +379,11 @@ def run_suite(origin):
     if not raw:
         return record
     try:
-        config = parse_fixtures(raw, os.environ["VERCEL_PROJECT_ID"], PRODUCT)
+        config = parse_fixtures(
+            raw,
+            oracle["project_id"] if oracle else os.environ["VERCEL_PROJECT_ID"],
+            PRODUCT,
+        )
     except FixtureError as error:
         if error.code == "FIXTURE_BINDING":
             raise Rejected("Synthetic fixture scope mismatch") from None
