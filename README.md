@@ -1,5 +1,10 @@
 # Onesa AI Platform
 
+Production API hosting moved to the existing Oracle Free VM on 2026-10-16; the
+Vercel frontend and existing data services remain. See the
+[verified hosting cutover](docs/engineering/DEPLOYMENT.md#verified-production-hosting-cutover--2026-10-16)
+for source identities, protected ingress, acceptance and rollback.
+
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional
 language/domain adaptation is an additional specialization. Existing open-weight

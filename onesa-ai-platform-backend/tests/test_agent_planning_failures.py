@@ -59,6 +59,7 @@ def test_valid_chunked_plan_remains_strict_and_authorization_stays_separate():
     [
         (TimeoutError("private timeout details"), "planning_timeout"),
         (InferenceError(reason="invalid_stream_delta"), "invalid_stream_delta"),
+        (InferenceError("inference_timeout"), "planning_timeout"),
         (InferenceError(), "inference_unavailable"),
         (ValueError("private provider text"), "planning_internal_error"),
         (PlanningError("untrusted arbitrary category"), "planning_internal_error"),
