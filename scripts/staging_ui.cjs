@@ -8,6 +8,20 @@ const requireChat = createRequire(
 );
 const { chromium, expect } = requireChat("@playwright/test");
 const { default: AxeBuilder } = requireChat("@axe-core/playwright");
+const oracle = process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT
+  ? require("./oracle_context.cjs").loadContext(process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT)
+  : null;
+const sourceIdentity = () => oracle ? {
+  candidate_commit: oracle.candidate_commit,
+  workflow_run_id: 0,
+  ci_run_id: oracle.ci_run_id,
+  qualification_id: oracle.qualification_id,
+  execution_context: oracle.execution_context,
+} : {
+  candidate_commit: process.env.GITHUB_SHA,
+  workflow_run_id: Number(process.env.GITHUB_RUN_ID),
+};
+const outputDirectory = () => oracle ? oracle.output_dir : process.env.RUNNER_TEMP;
 
 async function verifyIcons(page, origin, bypass) {
   const root = "onesa-ai-platform-frontend/apps/chat/public/brand/icons/v1";
@@ -51,10 +65,10 @@ async function verifyIcons(page, origin, bypass) {
 }
 
 function fixtures() {
-  const modern = process.env.STAGING_FIXTURE_MODE === "temporary";
+  const modern = oracle || process.env.STAGING_FIXTURE_MODE === "temporary";
   let value;
   if (modern) {
-    const file = path.join(
+    const file = oracle ? oracle.fixture_file : path.join(
       process.env.RUNNER_TEMP,
       "onesa-private-staging-fixtures.json",
     );
@@ -62,15 +76,15 @@ function fixtures() {
       throw new Error("Private fixture permissions required");
     value = JSON.parse(fs.readFileSync(file, "utf8"));
     if (
-      value.candidate_commit !== process.env.GITHUB_SHA ||
-      String(value.run_id) !== String(process.env.GITHUB_RUN_ID)
+      value.candidate_commit !== (oracle ? oracle.candidate_commit : process.env.GITHUB_SHA) ||
+      String(value.run_id) !== String(oracle ? oracle.ci_run_id : process.env.GITHUB_RUN_ID)
     )
       throw new Error("Fixture source mismatch");
   } else value = JSON.parse(process.env.STAGING_FIXTURES_JSON || "null");
   if (
     !value ||
     value.scope !== "approved-synthetic-staging" ||
-    value.project_id !== process.env.VERCEL_PROJECT_ID ||
+    value.project_id !== (oracle ? oracle.project_id : process.env.VERCEL_PROJECT_ID) ||
     !Array.isArray(value.users) ||
     value.users.length !== 2
   )
@@ -246,11 +260,11 @@ async function measureUsability(browser, origin, bypass, account, pageErrors) {
 
 async function main() {
   if (
-    process.env.GITHUB_REF !== "refs/heads/staging" ||
-    process.env.GITHUB_REPOSITORY !== "DruHustle/onesa-ai-platform"
+    !oracle && (process.env.GITHUB_REF !== "refs/heads/staging" ||
+    process.env.GITHUB_REPOSITORY !== "DruHustle/onesa-ai-platform")
   )
     throw new Error("Only AI staging is authorized");
-  const origin = fs.readFileSync("/tmp/vercel-url.txt", "utf8").trim();
+  const origin = oracle ? oracle.frontend_origin : fs.readFileSync("/tmp/vercel-url.txt", "utf8").trim();
   const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
   if (!bypass || !/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin))
     throw new Error("Verified protected Preview required");
@@ -541,8 +555,7 @@ async function main() {
     expect(pageErrors).toEqual([]);
     const report = {
       status: "PASS",
-      candidate_commit: process.env.GITHUB_SHA,
-      workflow_run_id: Number(process.env.GITHUB_RUN_ID),
+      ...sourceIdentity(),
       origin,
       browser: "chromium",
       views,
@@ -555,7 +568,7 @@ async function main() {
       manual_safari_and_screen_reader: "NOT TESTED",
     };
     fs.writeFileSync(
-      path.join(process.env.RUNNER_TEMP, "hosted-ui.json"),
+      path.join(outputDirectory(), "hosted-ui.json"),
       JSON.stringify(report, null, 2),
     );
     console.log(
@@ -575,11 +588,10 @@ async function main() {
         JSON.stringify(authenticationStatuses),
     );
     fs.writeFileSync(
-      path.join(process.env.RUNNER_TEMP, "hosted-ui.json"),
+      path.join(outputDirectory(), "hosted-ui.json"),
       JSON.stringify({
         status: "FAIL",
-        candidate_commit: process.env.GITHUB_SHA,
-        workflow_run_id: Number(process.env.GITHUB_RUN_ID),
+        ...sourceIdentity(),
         failure_phase: phase,
         views,
         authentication_statuses: authenticationStatuses,
