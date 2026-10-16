@@ -85,6 +85,11 @@ class HostedStreamFailure(Rejected):
 
 
 def safe_suite_failure_reason(error):
+    transport = error.reason if isinstance(error, urllib.error.URLError) else error
+    if isinstance(transport, TimeoutError):
+        return "REQUEST_TIMEOUT"
+    if isinstance(error, urllib.error.URLError):
+        return "REQUEST_TRANSPORT_ERROR"
     if isinstance(error, HostedStreamFailure):
         if error.reason:
             return "STREAM_DETAIL_" + error.reason.upper()
@@ -99,6 +104,8 @@ def safe_suite_failure_reason(error):
         "Actual chat history not persisted": "HISTORY_NOT_PERSISTED",
         "Incomplete hosted stream frame": "STREAM_FRAME_INCOMPLETE",
         "Unsupported hosted stream event": "STREAM_EVENT_UNSUPPORTED",
+        "Actual explicit tool execution failed": "EXPLICIT_TOOL_OUTCOME",
+        "Real model tool planning did not complete": "MODEL_TOOL_PLAN_OUTCOME",
         "Hosted stream data must be an object": "STREAM_DATA_TYPE",
         "Hosted stream exceeds bound": "STREAM_SIZE_BOUND",
         "Hosted stream event limit reached": "STREAM_EVENT_BOUND",
@@ -107,6 +114,13 @@ def safe_suite_failure_reason(error):
 
 
 def safe_suite_failure_code(error):
+    transport = error.reason if isinstance(error, urllib.error.URLError) else error
+    if isinstance(transport, TimeoutError):
+        return "REQUEST_TIMEOUT"
+    if isinstance(error, urllib.error.URLError) and not isinstance(
+        error, urllib.error.HTTPError
+    ):
+        return "REQUEST_TRANSPORT"
     if isinstance(error, (FixtureError, HostedRequestFailure)):
         return error.code
     match = re.fullmatch(
@@ -396,6 +410,7 @@ def run_suite(origin, *, oracle_context=None):
     clients = [Session(origin), Session(origin)]
     active = "authentication"
     workflow = "authentication"
+    step = None
     try:
         for client, user in zip(clients, users, strict=True):
             client.login(user)
@@ -604,6 +619,7 @@ def run_suite(origin, *, oracle_context=None):
             )
             detail["actual_upload_quota_and_input_bound"] = "PASS"
             workflow = "real_agent_planning_permissions_and_isolation"
+            step = "explicit-tool-execution"
             explicit = clients[0].model_call(
                 "POST",
                 "/api/v1/agents/runs",
@@ -624,9 +640,11 @@ def run_suite(origin, *, oracle_context=None):
                 and explicit["steps"][0]["result"]["result"] == 5,
                 "Actual explicit tool execution failed",
             )
+            step = "explicit-run-isolation"
             clients[1].call(
                 "GET", "/api/v1/agents/runs/" + explicit["id"], expected=404
             )
+            step = "tool-permission-denial"
             clients[0].model_call(
                 "POST",
                 "/api/v1/agents/runs",
@@ -642,6 +660,7 @@ def run_suite(origin, *, oracle_context=None):
                 },
                 expected=403,
             )
+            step = "model-tool-planning"
             planned = clients[0].model_call(
                 "POST",
                 "/api/v1/agents/runs",
@@ -659,10 +678,12 @@ def run_suite(origin, *, oracle_context=None):
                 ),
                 "Real model tool planning did not complete",
             )
+            step = "planned-run-isolation"
             clients[1].call("GET", "/api/v1/agents/runs/" + planned["id"], expected=404)
             record["synthetic_fixture_ids"].extend([explicit["id"], planned["id"]])
             detail["real_agent_planning_permissions_and_isolation"] = "PASS"
             workflow = "real_travel_planning_revision_isolation_and_boundary"
+            step = None
             preference = {
                 "destination": "Heidelberg",
                 "duration": 1,
@@ -820,6 +841,8 @@ def run_suite(origin, *, oracle_context=None):
         ):
             record["failure_provider_error_code"] = error.provider_error_code
         record["failure_workflow"] = workflow
+        if step is not None:
+            record["failure_step"] = step
         record["failure_phase"] = (
             error.phase if isinstance(error, HostedRequestFailure) else active
         )

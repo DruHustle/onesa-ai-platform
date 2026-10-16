@@ -333,7 +333,42 @@ class GateTests(unittest.TestCase):
     def test_hosted_suite_failure_code_preserves_status_without_request_or_secret_data(
         self,
     ):
+        import urllib.error
+
         import hosted_suite
+
+        for error, code, reason in [
+            (
+                TimeoutError("private-value-never-log"),
+                "REQUEST_TIMEOUT",
+                "REQUEST_TIMEOUT",
+            ),
+            (
+                urllib.error.URLError(TimeoutError("private-value-never-log")),
+                "REQUEST_TIMEOUT",
+                "REQUEST_TIMEOUT",
+            ),
+            (
+                urllib.error.URLError("private-value-never-log"),
+                "REQUEST_TRANSPORT",
+                "REQUEST_TRANSPORT_ERROR",
+            ),
+        ]:
+            self.assertEqual(hosted_suite.safe_suite_failure_code(error), code)
+            self.assertEqual(hosted_suite.safe_suite_failure_reason(error), reason)
+
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(
+                e.Rejected("Actual explicit tool execution failed")
+            ),
+            "EXPLICIT_TOOL_OUTCOME",
+        )
+        self.assertEqual(
+            hosted_suite.safe_suite_failure_reason(
+                e.Rejected("Real model tool planning did not complete")
+            ),
+            "MODEL_TOOL_PLAN_OUTCOME",
+        )
 
         self.assertEqual(
             hosted_suite.safe_suite_failure_code(

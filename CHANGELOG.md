@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Distinguish hosted request timeouts, transport failures and explicit/model tool
+  outcomes using fixed safe categories; retain the exact failing agent substep.
+  This improves diagnosis without relaxing any acceptance assertion or retry limit.
 - Record allowlisted hosted draft-check steps and failure categories without exception
   messages, assertion values, cookies or fixture credentials; acceptance checks are unchanged.
 - Bind protected Docs metadata to a current authentication-policy check with schema 2;
