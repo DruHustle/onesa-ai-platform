@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bind protected Docs metadata to a current authentication-policy check with schema 2;
+  metadata still grants no hosted acceptance or deployment authority.
 - Document owner-managed engineering Docs onboarding/offboarding for approved Onesa
   email identities, synchronized across canonical/preview policies and both site bindings.
 - Document the selected email-code sign-in direction and the scope of its verified
