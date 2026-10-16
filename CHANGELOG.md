@@ -7,6 +7,8 @@
 - Linked read-only troubleshooting, monitoring, backup and recovery procedures from
   maintained deployment references; private runtime values and evidence remain excluded.
 - Documentation changes do not deploy, restart or qualify an application.
+- Horizontally overflowing reference tables now enter the keyboard focus order;
+  non-scrolling tables retain their usual behavior and native table semantics.
 
 ## 2026-10-16 — AI Platform production API moved to Oracle
 
