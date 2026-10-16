@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Record allowlisted hosted draft-check steps and failure categories without exception
+  messages, assertion values, cookies or fixture credentials; acceptance checks are unchanged.
+- Bind protected Docs metadata to a current authentication-policy check with schema 2;
+  metadata still grants no hosted acceptance or deployment authority.
+- Document owner-managed engineering Docs onboarding/offboarding for approved Onesa
+  email identities, synchronized across canonical/preview policies and both site bindings.
+- Document the selected email-code sign-in direction and the scope of its verified
+  provider-policy change; deployment evidence remains in the restricted audit store.
 - Keep the Agents input's explicit label stable after typing, including during
   system appearance changes; retain drafts and focus without appearance requests.
 - Correct the protected Oracle guide's Portal health and readiness paths, preserve

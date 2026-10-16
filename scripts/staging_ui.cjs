@@ -3,6 +3,7 @@ const fs = require("node:fs"),
   path = require("node:path");
 const { createRequire } = require("node:module");
 const { createHash } = require("node:crypto");
+const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
 const requireChat = createRequire(
   path.resolve("onesa-ai-platform-frontend/apps/chat/package.json"),
 );
@@ -274,6 +275,8 @@ async function main() {
     workflowChecks = {};
   let phase = "authenticated-layouts",
     identityIcons;
+  let draftCheck = { phase: "", check: "not-recorded" };
+  const observeDraftCheck = (check) => { draftCheck = { phase, check }; };
   const pageErrors = [];
   const authenticationStatuses = [];
   try {
@@ -393,11 +396,16 @@ async function main() {
           ["/travel", "Destination"],
         ]) {
           phase = "live-draft:" + name + ":" + route + ":" + mode;
+          observeDraftCheck("navigate");
           await page.goto(origin + route, { waitUntil: "networkidle" });
           const field = page.getByLabel(label, { exact: true });
+          observeDraftCheck("field_visible");
           await expect(field).toBeVisible();
+          observeDraftCheck("fill_draft");
           await field.fill("Unsent synthetic draft");
+          observeDraftCheck("focus_draft");
           await field.focus();
+          observeDraftCheck("session_before");
           const before = (await context.cookies(origin)).find(
             (cookie) => cookie.name === "onesa_session",
           )?.value;
@@ -408,23 +416,30 @@ async function main() {
               apiRequests++;
           };
           page.on("request", observe);
+          observeDraftCheck("change_system_preference");
           await page.emulateMedia({
             colorScheme: mode === "light" ? "dark" : "light",
           });
+          observeDraftCheck("observe_system_preference");
           expect(
             await page.evaluate(
               () => getComputedStyle(document.documentElement).colorScheme,
             ),
           ).toBe(mode === "light" ? "dark" : "light");
+          observeDraftCheck("draft_preserved");
           await expect(field).toHaveValue("Unsent synthetic draft");
+          observeDraftCheck("focus_preserved");
           await expect(field).toBeFocused();
+          observeDraftCheck("session_preserved");
           expect(
             (await context.cookies(origin)).find(
               (cookie) => cookie.name === "onesa_session",
             )?.value,
           ).toBe(before);
+          observeDraftCheck("no_appearance_api_requests");
           expect(apiRequests).toBe(0);
           page.off("request", observe);
+          observeDraftCheck("no_stored_appearance");
           expect(
             await page.evaluate(() =>
               Object.keys(localStorage).filter((key) =>
@@ -432,6 +447,7 @@ async function main() {
               ),
             ),
           ).toEqual([]);
+          observeDraftCheck("restore_system_preference");
           await page.emulateMedia({ colorScheme: mode });
         }
         expect(
@@ -581,7 +597,7 @@ async function main() {
         synthetic_only: true,
       }),
     );
-  } catch {
+  } catch (error) {
     console.error("Hosted UI failure phase: " + phase);
     console.error(
       "Hosted UI authentication statuses: " +
@@ -593,6 +609,9 @@ async function main() {
         status: "FAIL",
         ...sourceIdentity(),
         failure_phase: phase,
+        failure_diagnostics: safeFailureDiagnostics(
+          error, draftCheck.phase === phase ? draftCheck.check : null,
+        ),
         views,
         authentication_statuses: authenticationStatuses,
         workflow_checks: workflowChecks,

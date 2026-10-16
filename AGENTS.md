@@ -170,4 +170,9 @@ Protected Docs supports the existing explicit Actions-native count/hash metadata
 custody with `docs-internal`, read-only disposable CI and no deployment secrets.
 It remains conditional: only the independently pinned external verifier can establish
 private hosted acceptance and consume current owner release authority. Preserve
-Access/MFA, private artifacts outside Actions, old failed runs and source binding.
+Access, the exact approved engineering membership, private artifacts outside Actions,
+old failed runs and source binding. The owner's 2026-10-16 Docs direction selects
+emailed codes without a separate Docs password or additional Docs MFA enrollment.
+Follow the membership procedure in DOCUMENTATION_HOSTING.md; record actual effective
+settings and do not restore historical MFA requirements or widen membership silently.
+This changes no other service's authentication or MFA requirements.

@@ -23,7 +23,7 @@ class DraftGitHub(GitHub):
         super().__init__()
         stamp = datetime.now(timezone.utc).isoformat()
         self.metadata = {
-            "schema_version": 1,
+            "schema_version": 2,
             "kind": "protected-docs-preview-qualification",
             "repository": e.REPOSITORY,
             "candidate_commit": SHA,
@@ -62,7 +62,7 @@ class DraftGitHub(GitHub):
                 "identity_icons": 3,
                 "pdfs": 22,
                 "diagrams": 83,
-                "mfa_checks": 1,
+                "authentication_policy_checks": 1,
                 "blocking_accessibility": 0,
                 "unexpected_browser_errors": 0,
             },
@@ -165,6 +165,8 @@ class InternalDocsMetadataTests(unittest.TestCase):
             ("repository", "other/repo"),
             ("delivery_scope", "full"),
             ("schema_version", True),
+            ("schema_version", 1),
+            ("schema_version", 3),
             ("application_deployment_authorized", True),
             ("backend_deployment_authorized", True),
             ("production_deployment_authorized", True),
@@ -227,8 +229,8 @@ class InternalDocsMetadataTests(unittest.TestCase):
         for section, key, value in [
             ("private_artifacts", "staging_tree_sha256", "private/path.pdf"),
             ("private_artifacts", "production_archive_sha256", "A" * 64),
-            ("counts", "mfa_checks", True),
-            ("counts", "mfa_checks", 0),
+            ("counts", "authentication_policy_checks", True),
+            ("counts", "authentication_policy_checks", 0),
             ("counts", "unauthenticated_denials", 0),
             ("counts", "verified_asset_responses", 20001),
             ("counts", "blocking_accessibility", 1),
