@@ -30,7 +30,7 @@ flowchart LR
 - Knowledge validates text/PDF uploads, extracts and indexes content, restricts retrieval
   by owner, exposes citations and supports deletion/reindexing.
 - Agents run registered bounded tools with explicit permission and an execution record.
-  The current tool is text statistics; arbitrary external actions are unavailable.
+  Registered tools include arithmetic and text statistics; arbitrary external actions are unavailable.
 - Travel persists editable itinerary suggestions. Unconfigured live providers do not
   supply prices, availability, bookings or reservations.
 - Identity includes sessions/CSRF, invitation/recovery workflows, rate limits and ownership.
@@ -55,7 +55,7 @@ are implemented; other workspace copy remains English and is not claimed fully t
 | `docs` | Classified engineering references and approved public sources |
 | `scripts`, `infra`, `.github/workflows` | Verified build, operations and delivery tooling |
 
-This is an independent Git repository in the three-product `onesa-ug` workspace.
+This is an independent Git repository in the `onesa-ug` workspace.
 Frontend/backend builds use their own contexts; builds do not import sibling source.
 
 ## Local quickstart
@@ -68,7 +68,7 @@ make up
 ```
 
 The generated private `.env` supplies development secrets. Open the configured loopback
-Chat origin (default `http://localhost:3000`). If changing the port, update both
+Chat origin (default `http://localhost:3100`). If changing the port, update both
 `ONESA_CHAT_PORT` and `ONESA_PUBLIC_ORIGIN`. `make down` stops the stack while preserving
 volumes. Never use production credentials/data for local setup. Environment examples
 are placeholders, and provider tokens remain server-only.
