@@ -447,7 +447,7 @@ def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
     )
     e.require(
         type(record["schema_version"]) is int
-        and record["schema_version"] == 1
+        and record["schema_version"] == 2
         and record["kind"] == "protected-docs-preview-qualification"
         and record["repository"] == e.REPOSITORY
         and record["candidate_commit"] == sha
@@ -518,7 +518,7 @@ def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
         "identity_icons": 3,
         "pdfs": 22,
         "diagrams": 83,
-        "mfa_checks": 1,
+        "authentication_policy_checks": 1,
         "blocking_accessibility": 0,
         "unexpected_browser_errors": 0,
     }
@@ -552,8 +552,8 @@ def internal_docs_preview_metadata(
     reviewed owner-held executor, not from a caller's PASS record. This reader is
     used by conditional qualification, authorization and CLI only for metadata
     custody. It establishes neither hosted PASS nor production authority. Actual
-    provider, all-path access, approved engineering session/MFA, private artifact
-    bytes and source binding still require external live validation.
+    provider, all-path access, approved engineering session/current sign-in policy,
+    private artifact bytes and source binding still require external live validation.
     """
     e.require(
         e.PRODUCT == "onesa-ai-platform" and delivery_scope == "docs-internal",
@@ -701,7 +701,7 @@ def internal_docs_preview_metadata(
         "required_external_checks": [
             "actual_provider_preview_and_source",
             "all_paths_protected",
-            "approved_engineering_session_and_mfa",
+            "approved_engineering_session_and_current_authentication_policy",
             "exact_private_artifact_bytes",
             "retained_application_and_api_and_no_auto_production",
         ],
@@ -1418,7 +1418,7 @@ def internal_docs_conditional_qualification(github, sha, run, custody):
             "required_external_checks": [
                 "actual_provider_preview_and_source",
                 "all_paths_protected",
-                "approved_engineering_session_and_mfa",
+                "approved_engineering_session_and_current_authentication_policy",
                 "exact_private_artifact_bytes",
                 "retained_application_and_api_and_no_auto_production",
             ],

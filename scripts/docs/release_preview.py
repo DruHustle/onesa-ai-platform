@@ -179,7 +179,7 @@ def preview_record(
                     "hosted_preview_identity": "BLOCKED",
                     "hosted_preview_acceptance": "BLOCKED",
                 },
-                "reason": "Actual protected Preview/approved engineering identity/MFA evidence required; local fixture is insufficient.",
+                "reason": "Actual protected Preview, approved engineering identity and current sign-in-policy evidence required; local fixture is insufficient.",
             },
         },
     }

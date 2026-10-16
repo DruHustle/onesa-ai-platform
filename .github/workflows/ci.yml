@@ -141,6 +141,7 @@ jobs:
 
         npm run build'
     - run: node scripts/test_backend_proxy.cjs
+    - run: node --test scripts/test_ui_failure_diagnostics.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
     if: ${{ needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true' }}
     timeout-minutes: 45
