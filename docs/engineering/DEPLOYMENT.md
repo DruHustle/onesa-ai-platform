@@ -1,5 +1,8 @@
 # Independent application deployment
 
+Read the protected [Oracle VM architecture and troubleshooting](ORACLE_VM_OPERATIONS.md) for the current shared host layout, exact health routes,
+resource boundaries and safe incident response.
+
 ## Oracle application releases — owner authorized 2026-10-16
 
 The owner has lifted the application-artifact hold for the latest qualified main

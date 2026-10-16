@@ -65,11 +65,9 @@ export default function Agents() {
       </p>
       {error && <div className="error" role="alert">{error}</div>}
       <form onSubmit={run} className="feature-card" aria-busy={busy}>
-        <label>
-          Text to analyze
-          <textarea name="goal" required maxLength={4000} value={goal}
-            onChange={(event) => setGoal(event.target.value)} />
-        </label>
+        <label htmlFor="agent-goal">Text to analyze</label>
+        <textarea id="agent-goal" name="goal" required maxLength={4000} value={goal}
+          onChange={(event) => setGoal(event.target.value)} />
         <label className="checkbox">
           <input type="checkbox" name="permission" required checked={permission}
             onChange={(event) => setPermission(event.target.checked)} />

@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Keep the Agents input's explicit label stable after typing, including during
+  system appearance changes; retain drafts and focus without appearance requests.
+- Correct the protected Oracle guide's Portal health and readiness paths, preserve
+  table columns in exports, and use the current Oracle layout in its PDF.
+- Link engineering PDF references to the protected production documentation host.
+
+## 2026-10-16 — Protected Oracle VM operations documentation
+
+- Added the shared VM layout, exact API routes/loopback ports, environment isolation,
+  worker/scanner boundaries, Tailscale administration and resource limits.
+- Linked read-only troubleshooting, monitoring, backup and recovery procedures from
+  maintained deployment references; private runtime values and evidence remain excluded.
+- Documentation changes do not deploy, restart or qualify an application.
+- Horizontally overflowing reference tables now enter the keyboard focus order;
+  non-scrolling tables retain their usual behavior and native table semantics.
+
 ## 2026-10-16 — AI Platform production API moved to Oracle
 
 - Moved the existing qualified backend to an immutable, scanned ARM64 image on

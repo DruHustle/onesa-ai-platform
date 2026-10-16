@@ -1,5 +1,8 @@
 # Monitoring
 
+Read the protected [Oracle VM architecture and troubleshooting](../engineering/ORACLE_VM_OPERATIONS.md) for the current shared host layout, exact health routes,
+resource boundaries and safe incident response.
+
 `/health` is process liveness. `/ready` checks configured model health and required Alembic
 revision, returning sanitized 503 when unavailable/incompatible. Compose uses DB readiness,
 one-shot migration completion and API readiness before web startup. Embedding/provider

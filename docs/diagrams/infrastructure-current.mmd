@@ -1,34 +1,31 @@
 flowchart TB
-Repos[Portal AI Robot repositories] --> Hosted[GitHub-hosted Actions]
-Local[Local isolated runner - dormant private-only option] -. not required for untrusted PRs .-> Hosted
-Hosted --> Vercel[Vercel separate product frontends and public docs]
-Hosted --> Render[Render separate product APIs]
-Package[Qualified ARM64 source packaging] --> Oracle[Oracle VM scanner and worker]
-subgraph Staging[STAGING - synthetic data only]
-PST[Portal restricted role - distinct Neon project]
-AST[AI restricted role - distinct Neon project in US region]
-RST[Robot separate Turso database]
-Bucket[Portal private staging bucket]
-CF[Workers AI staging-scoped configured credential]
+Browser["Product browsers"] --> Vercel["Vercel product frontends"]
+Vercel --> Edge["Exact API hosts and existing protections"]
+PC["Approved owner PC"] --> Tail["Tailscale and pinned OpenSSH"]
+CI["Hosted CI and owner-controlled release"]
+subgraph VM["Onesa UG Backend - Oracle ARM64 - 1 OCPU - 6 GB RAM"]
+  direction TB
+  subgraph Ingress["Outbound HTTPS connectors"]
+    TS["Staging tunnel"]
+    TP["Production tunnel"]
+  end
+  subgraph APIs["Independent loopback API containers"]
+    Stage["Staging: Portal / AI / Robot"]
+    Prod["Production: Portal / AI / Robot"]
+  end
+  subgraph Jobs["Private background processing"]
+    WS["Staging worker"] --> Scan["Shared ClamAV Unix socket"]
+    WP["Production worker"] --> Scan
+  end
+  Ops["Existing monitor and encrypted-backup timers"]
+  TS --> Stage
+  TP --> Prod
+  Ops -. observe and alert .-> APIs
 end
-Render --> PST
-Render --> AST
-Render --> RST
-Render --> CF
-Oracle --> PST
-Oracle --> Bucket
-subgraph Production[PRODUCTION - independent qualification required]
-PPR[Portal existing production Neon and bucket]
-APR[AI existing production Neon]
-RPR[Robot durable production host unresolved]
-Legacy[Existing Render Portal worker retained until replacement qualifies]
-end
-Render --> PPR
-Render --> APR
-Legacy --> PPR
-Pages[Separate engineering Pages output] -. fail-closed worker and Access policies .-> Guard[Protection and owner-login acceptance pending]
-
-OwnerPC[Approved owner PC] -->|Encrypted Tailscale tailnet| PrivateVM[Oracle private management endpoint]
-PrivateVM -->|Pinned ordinary OpenSSH| Oracle
-Tailnet[Scoped tailnet membership and policy] -. administration only .-> OwnerPC
-Tailnet -. application authorization remains separate .-> PrivateVM
+Edge --> TS
+Edge --> TP
+Tail -. administration only .-> VM
+CI -. qualified immutable images .-> VM
+Stage --> SData["Separate staging databases and private objects"]
+Prod --> PData["Separate production databases and private objects"]
+APIs --> Providers["Configured external inference and mail"]
