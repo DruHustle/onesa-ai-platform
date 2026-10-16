@@ -7,9 +7,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from app.inference import ModelClient, ModelMessage
+from app.inference import InferenceError, ModelClient, ModelMessage
 
 
 class ToolCall(BaseModel):
@@ -92,6 +92,33 @@ class BasicPlanner:
         return [ToolCall(tool="text_stats", arguments={"text": goal})]
 
 
+class PlanningError(ValueError):
+    """Fixed diagnostic categories only; never retain generated text."""
+
+
+def planning_failure_reason(error: Exception) -> str:
+    if isinstance(error, PlanningError):
+        return (
+            str(error)
+            if str(error)
+            in {
+                "plan_size_limit",
+                "plan_empty",
+                "plan_invalid_json",
+                "plan_invalid_shape",
+                "plan_invalid_schema",
+            }
+            else "planning_internal_error"
+        )
+    if isinstance(error, TimeoutError):
+        return "planning_timeout"
+    if isinstance(error, InferenceError):
+        if error.code == "inference_timeout":
+            return "planning_timeout"
+        return error.reason or "inference_unavailable"
+    return "planning_internal_error"
+
+
 class ModelToolPlanner:
     def __init__(self, client: ModelClient, registry: ToolRegistry, allowed: set[str]):
         self.client, self.registry, self.allowed = client, registry, allowed
@@ -114,8 +141,16 @@ class ModelToolPlanner:
         async for chunk in self.client.stream(messages):
             text += chunk
             if len(text) > 16000:
-                raise ValueError("Plan exceeds size limit")
-        data = json.loads(text)
+                raise PlanningError("plan_size_limit")
+        if not text.strip():
+            raise PlanningError("plan_empty")
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            raise PlanningError("plan_invalid_json") from None
         if not isinstance(data, list) or not 1 <= len(data) <= 8:
-            raise ValueError("Invalid plan")
-        return [ToolCall.model_validate(item) for item in data]
+            raise PlanningError("plan_invalid_shape")
+        try:
+            return [ToolCall.model_validate(item) for item in data]
+        except ValidationError:
+            raise PlanningError("plan_invalid_schema") from None

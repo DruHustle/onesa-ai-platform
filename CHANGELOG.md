@@ -1,10 +1,21 @@
 # Changelog
 
-This project is undergoing initial setup and production qualification.
+## 2026-10-16 — AI Platform production API moved to Oracle
 
-Pre-launch implementation work is recorded in Git history and maintained
-internal engineering records. Post-launch release changes will be recorded
-here after the first verified production go-live.
+- Moved the existing qualified backend to an immutable, scanned ARM64 image on
+  the existing Oracle Free VM, behind a dedicated HTTPS tunnel and loopback bind.
+- Republished the identical accepted frontend artifact with its server-side API
+  origin changed. Existing authenticated access, protected reads, logout/revocation
+  and anonymous denial pass through the production website.
+- Preserved accounts, credentials, external data and existing worker/scanner services.
+  No Render build, paid resource, schema migration or physical actuation occurred.
+- Prior full application qualification is reused for unchanged source; new target
+  checks establish access and readiness, not a new feature or inference release.
+  Staging Preview acceptance remains independently recorded in restricted evidence.
+
+
+The platform remains under development. These entries record verified hosting
+and pre-launch releases; broader launch qualification remains separate.
 
 Current qualification work defers Docs search-index loading until search is
 opened and qualifies public Docs independently with exact production-context

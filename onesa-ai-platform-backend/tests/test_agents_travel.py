@@ -142,3 +142,75 @@ def test_invalid_model_itinerary_is_not_saved(api: TestClient) -> None:
     )
     assert result.status_code == 503
     assert api.get("/api/v1/travel/trips").json()["items"] == []
+
+
+def test_explicit_text_stats_needs_no_model_but_still_requires_permission(api: TestClient) -> None:
+    from unittest.mock import Mock
+
+    signup(api)
+    api.app.state.settings.model_backend = "vllm"
+    model = Mock()
+    model.stream.side_effect = AssertionError("Explicit tools must not request inference")
+    api.app.state.model_client = model
+    body = {
+        "goal": "Count these words",
+        "steps": [{"tool": "text_stats", "arguments": {"text": "Count these words"}}],
+        "allowed_tools": ["text_stats"],
+    }
+    response = api.post("/api/v1/agents/runs", json=body)
+    assert response.status_code == 201
+    assert response.json()["steps"][0]["result"] == {"words": 3, "characters": 17}
+    body["allowed_tools"] = []
+    assert api.post("/api/v1/agents/runs", json=body).status_code == 403
+    model.stream.assert_not_called()
+    assert len(api.get("/api/v1/agents/runs").json()["items"]) == 1
+
+
+def test_planning_failure_metric_does_not_expose_generated_text(api: TestClient) -> None:
+    from app.inference import MockModelClient
+    from app.observability import agent_planning_failure_reasons
+
+    class Invalid(MockModelClient):
+        async def stream(self, messages):
+            yield "synthetic private generated text"
+
+    signup(api)
+    api.app.state.settings.model_backend = "vllm"
+    api.app.state.model_client = Invalid()
+    metric = agent_planning_failure_reasons.labels("plan_invalid_json")
+    before = metric._value.get()
+    response = api.post(
+        "/api/v1/agents/runs",
+        json={
+            "goal": "synthetic private goal",
+            "allowed_tools": ["text_stats"],
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "planning_failed"
+    assert "private" not in response.text
+    assert metric._value.get() == before + 1
+    assert api.get("/api/v1/agents/runs").json()["items"] == []
+
+
+@pytest.mark.parametrize("allowed_tools", [[], ["unregistered_tool"]])
+def test_missing_tool_permission_is_denied_before_model_planning(
+    api: TestClient, allowed_tools: list[str]
+) -> None:
+    from unittest.mock import Mock
+
+    signup(api)
+    api.app.state.settings.model_backend = "vllm"
+    model = Mock()
+    model.stream.side_effect = AssertionError("No permitted tool: do not request inference")
+    api.app.state.model_client = model
+
+    response = api.post(
+        "/api/v1/agents/runs",
+        json={"goal": "Synthetic goal", "allowed_tools": allowed_tools},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "tool_not_allowed"
+    model.stream.assert_not_called()
+    assert api.get("/api/v1/agents/runs").json()["items"] == []
