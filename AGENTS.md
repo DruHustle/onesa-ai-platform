@@ -61,7 +61,7 @@ verification lives in protected evidence, not permanent test counts.
 | Frontend install | `npm --prefix onesa-ai-platform-frontend run ci` | Node 24; npm lockfile | Local dependency installation |
 | Frontend lint/type/build | `make frontend-check` / root | Locked Chat dependencies | Generated local build; no provider deployment |
 | Database integration | `make integration` / root | Isolated PostgreSQL/pgvector `_test` target | Resets synthetic fixtures; never staging/production |
-| Contracts | `make openapi api-client contract-check` / root | Backend local dependencies | Regenerates/checks versioned OpenAPI/types |
+| Contracts | `npm ci --ignore-scripts --prefix scripts/contract-tools`, then `make openapi api-client contract-check` / root | Backend local dependencies; Node 24 and locked contract tools | Regenerates/checks versioned OpenAPI/types |
 | Browser | `npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e` | Approved isolated loopback fixture/stack, installed browsers | Synthetic test mutations/screenshots; no hosted claim |
 | Appearance | `node scripts/test_system_appearance.mjs` / root | Pinned artifact manifest | Offline hash, policy, contrast and classification checks |
 | Docs | `make docs-assets docs-public docs-internal docs-validate` / root | Docs dependencies, Python and local browser renderer | Classified ignored diagrams/PDF/site builds |
