@@ -61,6 +61,8 @@ def tools(auth: Auth) -> dict[str, Any]:
 @router.post("/runs", status_code=201, response_model=AgentRunOut)
 async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     allowed = set(body.allowed_tools) & set(registry.tools)
+    if not allowed:
+        fail(403, "tool_not_allowed", "Grant permission for each requested tool")
     try:
         async with asyncio.timeout(request.app.state.settings.generation_timeout):
             planner = (

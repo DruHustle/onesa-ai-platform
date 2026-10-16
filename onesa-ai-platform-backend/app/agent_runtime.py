@@ -113,6 +113,8 @@ def planning_failure_reason(error: Exception) -> str:
     if isinstance(error, TimeoutError):
         return "planning_timeout"
     if isinstance(error, InferenceError):
+        if error.code == "inference_timeout":
+            return "planning_timeout"
         return error.reason or "inference_unavailable"
     return "planning_internal_error"
 

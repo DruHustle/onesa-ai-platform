@@ -96,10 +96,24 @@ Credential-free qualification and owner authorization are implemented locally. R
 
 ## Local maintenance during Render credit hold — prepared 2026-10-16
 
-The owner confirms exhausted Render credits; backend deployment and backend-deploying
-qualification are paused. No new inference diagnostic or full hosted attempt is used.
-The existing hosted model-planned agent HTTP503 remains unresolved: the saved run
-contains no provider/parse/timeout detail, so its cause cannot be asserted offline.
+The existing production baseline has since moved to Oracle; the Render hold remains.
+The model-planned addition case produced a valid expected plan in one of the two
+previously authorized synthetic diagnostics on 2026-10-16. No generated text was
+retained and no application data changed. This does not establish the cause of the
+historical hosted503 or replace the remaining source-bound hosted qualification.
+
+Repository review reproduced a separate permission-path defect: with no registered
+tool permission, model-backed requests could invoke inference and return503. The
+development correction returns403 before planning, without saving an agent run.
+Transport-level inference timeouts now retain the fixed `planning_timeout` diagnostic
+category. Both permission cases and the timeout case failed before correction;
+26 isolated agent/travel/planning tests pass afterward. These source corrections
+are not yet deployed; production continues using its accepted migration baseline.
+
+Render credits remain exhausted; Render deployment and Render-deploying qualification
+are paused. The separate Oracle migration is authorized and accepted for the existing
+production baseline. The historical hosted model-planned agent HTTP503 has no saved
+provider/parse/timeout detail, so its cause cannot be asserted from that run.
 
 Prepared changes distinguish fixed empty/oversize/JSON/shape/schema/provider/timeout
 planning categories in protected metrics. Client errors stay generic, no prompt or
@@ -116,6 +130,6 @@ model-planning acceptance workflow remains required; this UI change does not rep
 Release scripts reject suspended/unverified Render metadata before deployment and
 again before success; the staging producer checks before runtime configuration reads.
 Offline checks and synthetic browser coverage are recorded in the existing restricted
-release evidence. New-source hosted qualification/release remain pending provider recovery;
-no local result establishes a production fix. Revert the focused maintenance commit
+release evidence. New-source hosted qualification/release remain pending source-bound
+Oracle qualification; no local result establishes a production fix. Revert the focused maintenance commit
 for source rollback, preserving the provider hold and historical evidence.
