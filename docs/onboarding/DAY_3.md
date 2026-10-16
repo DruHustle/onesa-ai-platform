@@ -1,5 +1,8 @@
 # Day 3 — Understand delivery
 
+Read the protected [Oracle VM architecture and troubleshooting](../engineering/ORACLE_VM_OPERATIONS.md) for the current shared host layout, exact health routes,
+resource boundaries and safe incident response.
+
 Open the [interactive Day 3 workflow](/onboarding#day-3). Source: `docs/diagrams/day-three.mmd`; SVG/PNG/PDF exports are available from the diagram viewer. Reviewed 2026-10-13; distinguish implementation from hosted acceptance.
 
 ## Learning objectives

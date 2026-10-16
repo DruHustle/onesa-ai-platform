@@ -99,3 +99,27 @@ test("a late history response cannot erase a newly confirmed run", async ({ page
     await page.screenshot({ path: testInfo.outputPath("agents-results.png"), fullPage: true });
   } finally { release(); }
 });
+
+test("the exact input label remains stable while typing and changing system appearance", async ({ page }) => {
+  await page.route("**/api/v1/agents/runs", route => reply(route, { items: [] }));
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/agents", { waitUntil: "networkidle" });
+  const draft = page.getByLabel("Text to analyze", { exact: true });
+  await draft.fill("Unsent synthetic draft");
+  // Resolve the same exact label again after React updates the controlled value.
+  await expect(draft).toHaveCount(1);
+  await draft.focus();
+  const requests: string[] = [];
+  page.on("request", request => {
+    if (new URL(request.url()).pathname.startsWith("/api/")) requests.push(request.url());
+  });
+  for (const mode of ["dark", "light"] as const) {
+    await page.emulateMedia({ colorScheme: mode });
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).toBe(mode);
+    await expect(draft).toHaveValue("Unsent synthetic draft");
+    await expect(draft).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Text to analyze", exact: true })).toHaveCount(1);
+  }
+  expect(requests).toEqual([]);
+  expect(await page.evaluate(() => Object.keys(localStorage).filter(key => /theme|appearance/i.test(key)))).toEqual([]);
+});

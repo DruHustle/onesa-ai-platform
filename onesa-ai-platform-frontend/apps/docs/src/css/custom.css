@@ -51,6 +51,7 @@ html [class*="skipToContent_"] { left: 0 !important; transform: translateY(-200%
 .api-page .swagger-ui .opblock-summary.opblock-summary-patch .opblock-summary-method { color: #fff; background: #7a4a08; }
 .api-page .swagger-ui .opblock-summary.opblock-summary-delete .opblock-summary-method { color: #fff; background: #a51818; }
 .diagram-canvas:focus-visible { outline: 3px solid var(--onesa-focus); outline-offset: 3px; }
+.theme-doc-markdown table[tabindex="0"]:focus-visible { outline: 3px solid var(--onesa-focus); outline-offset: 3px; }
 .api-page .swagger-ui .json-schema-2020-12-expand-deep-button { color: #16528c; background: #fff; }
 
 /* Inline documentation links remain identifiable without relying on colour. */

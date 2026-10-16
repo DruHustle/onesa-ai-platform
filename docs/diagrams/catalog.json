@@ -3017,135 +3017,117 @@
   },
   {
     "id": "infrastructure-current",
-    "title": "Infrastructure and environment boundaries",
+    "title": "Oracle VM and environment boundaries",
     "view": "deployment",
-    "status": "Provider roles verified; corrected staging database bindings require new hosted acceptance",
+    "status": "Oracle hosting cutover verified 2026-10-16; application release and current readiness are separately verified",
     "source": "docs/diagrams/infrastructure-current.mmd",
-    "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
+    "url": "/docs/engineering/ORACLE_VM_OPERATIONS",
     "nodes": [
       {
-        "id": "Repos",
-        "label": "Portal AI Robot repositories",
-        "responsibility": "Portal AI Robot repositories. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
-      },
-      {
-        "id": "Hosted",
-        "label": "GitHub-hosted Actions",
-        "responsibility": "GitHub-hosted Actions. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
-      },
-      {
-        "id": "Local",
-        "label": "Local isolated runner - dormant private-only option",
-        "responsibility": "Local isolated runner - dormant private-only option. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Browser",
+        "label": "Product browsers",
+        "responsibility": "Product browsers. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
         "id": "Vercel",
-        "label": "Vercel separate product frontends and public docs",
-        "responsibility": "Vercel separate product frontends and public docs. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "label": "Vercel product frontends",
+        "responsibility": "Vercel product frontends. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Render",
-        "label": "Render separate product APIs",
-        "responsibility": "Render separate product APIs. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Edge",
+        "label": "Exact API hosts and existing protections",
+        "responsibility": "Exact API hosts and existing protections. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Package",
-        "label": "Qualified ARM64 source packaging",
-        "responsibility": "Qualified ARM64 source packaging. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "PC",
+        "label": "Approved owner PC",
+        "responsibility": "Approved owner PC. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Oracle",
-        "label": "Oracle VM scanner and worker",
-        "responsibility": "Oracle VM scanner and worker. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Tail",
+        "label": "Tailscale and pinned OpenSSH",
+        "responsibility": "Tailscale and pinned OpenSSH. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Staging",
-        "label": "STAGING - synthetic data only",
-        "responsibility": "STAGING - synthetic data only. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "CI",
+        "label": "Hosted CI and owner-controlled release",
+        "responsibility": "Hosted CI and owner-controlled release. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "PST",
-        "label": "Portal restricted role - distinct Neon project",
-        "responsibility": "Portal restricted role - distinct Neon project. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "TS",
+        "label": "Staging tunnel",
+        "responsibility": "Staging tunnel. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "AST",
-        "label": "AI restricted role - distinct Neon project in US region",
-        "responsibility": "AI restricted role - distinct Neon project in US region. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "TP",
+        "label": "Production tunnel",
+        "responsibility": "Production tunnel. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "RST",
-        "label": "Robot separate Turso database",
-        "responsibility": "Robot separate Turso database. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Stage",
+        "label": "Staging: Portal / AI / Robot",
+        "responsibility": "Staging: Portal / AI / Robot. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Bucket",
-        "label": "Portal private staging bucket",
-        "responsibility": "Portal private staging bucket. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Prod",
+        "label": "Production: Portal / AI / Robot",
+        "responsibility": "Production: Portal / AI / Robot. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "CF",
-        "label": "Workers AI staging-scoped configured credential",
-        "responsibility": "Workers AI staging-scoped configured credential. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "WS",
+        "label": "Staging worker",
+        "responsibility": "Staging worker. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Production",
-        "label": "PRODUCTION - independent qualification required",
-        "responsibility": "PRODUCTION - independent qualification required. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "WP",
+        "label": "Production worker",
+        "responsibility": "Production worker. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "PPR",
-        "label": "Portal existing production Neon and bucket",
-        "responsibility": "Portal existing production Neon and bucket. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Scan",
+        "label": "Shared ClamAV Unix socket",
+        "responsibility": "Shared ClamAV Unix socket. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "APR",
-        "label": "AI existing production Neon",
-        "responsibility": "AI existing production Neon. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Ops",
+        "label": "Existing monitor and encrypted-backup timers",
+        "responsibility": "Existing monitor and encrypted-backup timers. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "RPR",
-        "label": "Robot durable production host unresolved",
-        "responsibility": "Robot durable production host unresolved. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "SData",
+        "label": "Separate staging databases and private objects",
+        "responsibility": "Separate staging databases and private objects. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Legacy",
-        "label": "Existing Render Portal worker retained until replacement qualifies",
-        "responsibility": "Existing Render Portal worker retained until replacement qualifies. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "PData",
+        "label": "Separate production databases and private objects",
+        "responsibility": "Separate production databases and private objects. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       },
       {
-        "id": "Pages",
-        "label": "Separate engineering Pages output",
-        "responsibility": "Separate engineering Pages output. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
-      },
-      {
-        "id": "Guard",
-        "label": "Protection and owner-login acceptance pending",
-        "responsibility": "Protection and owner-login acceptance pending. Provider roles verified; corrected staging database bindings require new hosted acceptance",
-        "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+        "id": "Providers",
+        "label": "Configured external inference and mail",
+        "responsibility": "Configured external inference and mail. The protected service map gives individual ports, identity and ownership boundaries.",
+        "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       }
     ],
-    "explanation": "Provider roles verified; corrected staging database bindings require new hosted acceptance. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "explanation": "Vercel proxies use exact environment-specific Cloudflare tunnels into independent loopback API containers on the existing Oracle VM. Tailscale is administration only. External data, shared private scanning and owner-controlled releases retain separate boundaries.",
+    "reviewed_at": "2026-10-16"
   },
   {
     "id": "delivery-current",

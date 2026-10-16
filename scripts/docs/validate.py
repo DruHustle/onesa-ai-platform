@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from pdf_links import validate_manual_source_links
 from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -175,19 +176,14 @@ def validate(staged=False, assets_only=False):
             text = "\n".join(page.extract_text() for page in document.pages)
             assert policy["version"] in text and scope in text.lower()
             assert document.outline, f"Missing PDF bookmarks: {path}"
+            links = {
+                str(action["/URI"])
+                for page in document.pages
+                for ref in page.get("/Annots", [])
+                if (action := ref.get_object().get("/A")) and action.get("/URI")
+            }
+            validate_manual_source_links(links, manual.get("source_hashes", {}), scope)
             if scope == "public":
-                links = {
-                    str(action["/URI"])
-                    for page in document.pages
-                    for ref in page.get("/Annots", [])
-                    if (action := ref.get_object().get("/A")) and action.get("/URI")
-                }
-                for source in manual.get("source_hashes", {}):
-                    assert (
-                        "https://docs.onesa.eu/" + source.removesuffix(".md") in links
-                    ), (
-                        f"Public PDF source link does not target the public documentation: {source}"
-                    )
                 assert not any(
                     word in text
                     for word in [
