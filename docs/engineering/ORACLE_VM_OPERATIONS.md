@@ -41,7 +41,7 @@ They are not public ports and must not be opened in OCI, the firewall or Tailsca
 
 | Product | Production API / host port | Staging API / host port | Liveness | Readiness |
 | --- | --- | --- | --- | --- |
-| Company Portal | `portal-api.onesa.eu` / 18300 | `portal-api-staging.onesa.eu` / 18301 | `/health` | `/ready` |
+| Company Portal | `portal-api.onesa.eu` / 18300 | `portal-api-staging.onesa.eu` / 18301 | `/api/v1/health` | `/api/v1/ready` |
 | AI Platform | `platform-api.onesa.eu` / 18000 | `platform-api-staging.onesa.eu` / 18001 | `/health` | `/core-ready`, `/ready` |
 | AI Robot | `robot-api.onesa.eu` / 18431 | `robot-api-staging.onesa.eu` / 18432 | `/api/v1/health` | `/api/v1/ready` |
 
@@ -55,7 +55,7 @@ environment and Robot simulation/physical-controller state remain independent.
 
 | Protected VM location | Purpose |
 | --- | --- |
-| `/opt/onesa/backends/<portal|ai|robot>.yaml` | Installed Compose definitions. Compare to the owning repository's `compose.oracle-backend.yaml` and restricted installation receipt. |
+| `/opt/onesa/backends/<product>.yaml` | Installed Compose definitions, where product is `portal`, `ai` or `robot`. Compare to the owning repository's `compose.oracle-backend.yaml` and restricted installation receipt. |
 | `/etc/onesa/backends/<product>-<environment>.env` | Existing environment-specific application configuration; root-owned mode 0600. Never print or copy into Docs/Actions. |
 | `/etc/onesa/backends/<product>.images.env` | Immutable image IDs and actual source commits per environment. A desired tag is not deployed-source proof. |
 | `/etc/onesa/backends/tunnel-<environment>.token` | Separate connector credential, root-only; systemd `LoadCredential` supplies it to the dynamic service user. |

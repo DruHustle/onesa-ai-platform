@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Keep the Agents input's explicit label stable after typing, including during
+  system appearance changes; retain drafts and focus without appearance requests.
+- Correct the protected Oracle guide's Portal health and readiness paths, preserve
+  table columns in exports, and use the current Oracle layout in its PDF.
+- Link engineering PDF references to the protected production documentation host.
+
 ## 2026-10-16 — Protected Oracle VM operations documentation
 
 - Added the shared VM layout, exact API routes/loopback ports, environment isolation,

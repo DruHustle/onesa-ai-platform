@@ -70,7 +70,7 @@ for(const scope of ['public','internal']){
   const defaultFence=md.renderer.rules.fence;
   md.renderer.rules.fence=(tokens,i,opts,env,self)=>tokens[i].info.trim()==='mermaid'?'<p class="caption">Editable source diagram; see the rendered architecture figures and portal.</p>':defaultFence(tokens,i,opts,env,self);
   let currentDoc='';
-  const base=scope==='public'?'https://docs.onesa.eu':process.env.ONESA_INTERNAL_DOCUMENTATION_URL||'http://localhost:3201';
+  const base=scope==='public'?'https://docs.onesa.eu':process.env.ONESA_INTERNAL_DOCUMENTATION_URL||'https://onesa-engineering-docs.pages.dev';
   const defaultLink=md.renderer.rules.link_open||((tokens,i,opts,env,self)=>self.renderToken(tokens,i,opts));
   md.renderer.rules.link_open=(tokens,i,opts,env,self)=>{
    const token=tokens[i], target=token.attrGet('href')||'';
@@ -83,7 +83,7 @@ for(const scope of ['public','internal']){
    return defaultLink(tokens,i,opts,env,self);
   };
   let body='';
-  for(const doc of documents){currentDoc=doc;const raw=await fs.readFile(path.join(root,'docs',doc),'utf8');body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="${scope==='public'?'https://docs.onesa.eu':'http://localhost:3201'}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
+  for(const doc of documents){currentDoc=doc;const raw=await fs.readFile(path.join(root,'docs',doc),'utf8');body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="${base}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
   if(name==='api-reference'||name==='ecosystem-api-reference'){
    const schemas=await Promise.all(['openapi.json',...(name==='ecosystem-api-reference'?['openapi-portal.json','openapi-robot.json']:[])].map(async file=>[file,JSON.parse(await fs.readFile(path.join(staticDir,file),'utf8'))]));
    for(const [contract,schema] of schemas){
@@ -103,7 +103,7 @@ for(const scope of ['public','internal']){
    }
   }
   const ecosystemFigures={'complete-system-architecture':['public-ecosystem','public-portal','public-ai-platform','public-robot'],'company-portal-design':['public-portal','portal-database-identity','portal-database-content','portal-database-business','portal-database-documents','portal-database-operations'],'ai-platform-design':['public-ai-platform','public-routing','public-rag','public-agents','public-travel'],'robot-design':['public-robot','public-ros2','public-safety','robot-database'],'ecosystem-api-reference':['public-auth'],'ecosystem-database-design':['database-auth','database-chat','database-knowledge','portal-database-identity','portal-database-content','portal-database-business','portal-database-documents','portal-database-operations','robot-database'],'infrastructure-deployment':['public-deployment','public-model-host','public-release'],'model-serving-training':['inference','lifecycle','registry'],'security-architecture':['authentication','public-auth','public-safety'],'operations-recovery':['public-recovery','monitoring']};
-  const diagramIds=ecosystemFigures[name]||(scope==='public'?['public-system',...(name==='knowledge-rag'?['public-rag']:name==='agent-framework'?['public-agent']:['public-inference'])]:name==='database-design'?['database-auth','database-chat','database-knowledge','database-agents','database-travel','registry']:name==='deployment-operations'?['apple-silicon','compose','nvidia','distributed']:name==='training-fine-tuning'?['lifecycle','registry']:name==='agent-framework'?['agents']:name==='knowledge-rag'?['rag']:name==='model-serving'?['inference','apple-silicon']:name==='security-data-protection'?['authentication']:['system','components']);
+  const diagramIds=scope==='internal'&&name==='infrastructure-deployment'?['infrastructure-current']:ecosystemFigures[name]||(scope==='public'?['public-system',...(name==='knowledge-rag'?['public-rag']:name==='agent-framework'?['public-agent']:['public-inference'])]:name==='database-design'?['database-auth','database-chat','database-knowledge','database-agents','database-travel','registry']:name==='deployment-operations'?['apple-silicon','compose','nvidia','distributed']:name==='training-fine-tuning'?['lifecycle','registry']:name==='agent-framework'?['agents']:name==='knowledge-rag'?['rag']:name==='model-serving'?['inference','apple-silicon']:name==='security-data-protection'?['authentication']:['system','components']);
   let figures='<section class="section"><h1>Architecture illustrations</h1>';
   for(const id of diagramIds){if(!svgById[id])continue;const d=catalog.find(d=>d.id===id);figures+=`<figure class="figure">${svgById[id]}<figcaption class="caption">${escape(d.title)} · ${escape(d.status)}</figcaption></figure>`;}figures+='</section>';
   const now=process.env.SOURCE_DATE_EPOCH?new Date(Number(process.env.SOURCE_DATE_EPOCH)*1000):new Date();const date=now.toISOString().slice(0,10);
