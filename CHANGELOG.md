@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased
+## 2026-10-16 — Qualified AI and documentation releases live
+
+- Released frontend `ee9c442db4932b77ad3f4713631a2421c179c04f`, deployment
+  `dpl_28GCkGxzuzARBVz7WnDMCaJAFid2`, with qualified Oracle backend source
+  `6a1cce484be39d175b374f3ab571e6dcc154c930`. Full exact-main CI, all 23 real
+  workflow checks and 42 hosted UI views passed. Strict component-byte equivalence
+  preserves the actual backend identity rather than relabelling its source.
+- Production acceptance passed real streaming/context persistence, embeddings and
+  retrieval, protected routes, anonymous/CSRF denials and logout revocation. Both
+  owned synthetic fixtures were removed; accounts and credentials were preserved.
+- Published public and protected Engineering Docs from `6a1cce4`, including the
+  Oracle VM guide and email-code onboarding. Public and protected website builds
+  retain separate classification and access controls; repository visibility is separate.
 
 - Distinguish hosted request timeouts, transport failures and explicit/model tool
   outcomes using fixed safe categories; retain the exact failing agent substep.
