@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Extend restored-copy lockdown with explicit isolated erasure replay, complete
+  event/hold categories, source-snapshot binding, atomic cascades and idempotency.
+  Live/networked targets and hold conflicts are rejected before mutation; replay
+  never grants activation or enables draft retention policies.
+
 ## 2026-10-16 — Qualified AI and documentation releases live
 
 - Released frontend `ee9c442db4932b77ad3f4713631a2421c179c04f`, deployment
