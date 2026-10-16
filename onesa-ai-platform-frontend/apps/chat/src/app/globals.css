@@ -584,3 +584,13 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .applications-menu summary { min-height: var(--onesa-control-size); padding-block: .65rem; cursor: pointer; }
 .applications-menu nav { position: absolute; top: 100%; left: 0; z-index: 12; display: flex; flex-direction: column; gap: .3rem; min-width: 13rem; padding: .5rem; background: var(--onesa-surface); color: var(--ink); border: 1px solid var(--onesa-border); border-radius: var(--onesa-radius); box-shadow: 0 8px 24px #0002; }
 .applications-menu nav a { min-height: var(--onesa-control-size); padding: .6rem; }
+
+.tool-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.tool-results div { padding: 16px; border: 1px solid var(--line); border-radius: var(--onesa-radius); }
+.tool-results dt { color: var(--muted); font-size: 14px; }
+.tool-results dd { margin: 8px 0 0; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }

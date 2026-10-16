@@ -92,3 +92,30 @@ The migration switch stays off and the original secret gate is retained.
 ## Private-Free release controls — 2026-10-11
 
 Credential-free qualification and owner authorization are implemented locally. Remote installation, billing/visibility confirmation, production secret removal/rotation and independent provider auto-deploy verification remain pending owner actions. Direct pushes remain possible. See [the enforcement report](../development/PRIVATE_FREE_SAFEGUARDS.md).
+
+
+## Local maintenance during Render credit hold — prepared 2026-10-16
+
+The owner confirms exhausted Render credits; backend deployment and backend-deploying
+qualification are paused. No new inference diagnostic or full hosted attempt is used.
+The existing hosted model-planned agent HTTP503 remains unresolved: the saved run
+contains no provider/parse/timeout detail, so its cause cannot be asserted offline.
+
+Prepared changes distinguish fixed empty/oversize/JSON/shape/schema/provider/timeout
+planning categories in protected metrics. Client errors stay generic, no prompt or
+model output is logged, strict plan validation and tool authorization remain intact,
+and no parsing fallback, model change or automatic retry is added.
+
+The text-statistics screen sends its explicit permitted tool operation instead of
+requesting model selection. It bounds initial history and run waits, preserves input,
+separates unavailable history from an empty list, offers a read-only history retry,
+keeps newly confirmed results through a late history response, and shows word/character
+counts. A failed/uncertain submission is never automatically replayed. The standalone
+model-planning acceptance workflow remains required; this UI change does not replace it.
+
+Release scripts reject suspended/unverified Render metadata before deployment and
+again before success; the staging producer checks before runtime configuration reads.
+Offline checks and synthetic browser coverage are recorded in the existing restricted
+release evidence. New-source hosted qualification/release remain pending provider recovery;
+no local result establishes a production fix. Revert the focused maintenance commit
+for source rollback, preserving the provider hold and historical evidence.

@@ -9,11 +9,21 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.agent_runtime import BasicPlanner, ModelToolPlanner, ToolCall, default_registry
+from app.agent_runtime import (
+    BasicPlanner,
+    ModelToolPlanner,
+    ToolCall,
+    default_registry,
+    planning_failure_reason,
+)
 from app.auth import DB, Auth
 from app.errors import fail
 from app.models import AgentRun, now
-from app.observability import agent_outcomes, agent_planning_failures
+from app.observability import (
+    agent_outcomes,
+    agent_planning_failure_reasons,
+    agent_planning_failures,
+)
 from app.responses import AgentRunList, AgentRunOut, ToolList
 from app.schemas import Strict
 
@@ -59,8 +69,9 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
                 else ModelToolPlanner(request.app.state.model_client, registry, allowed)
             )
             calls = body.steps or await planner.plan(body.goal)
-    except Exception:
+    except Exception as error:
         agent_planning_failures.inc()
+        agent_planning_failure_reasons.labels(planning_failure_reason(error)).inc()
         fail(503, "planning_failed", "Unable to produce a valid tool plan")
     if any(call.tool not in allowed for call in calls):
         agent_planning_failures.inc()
