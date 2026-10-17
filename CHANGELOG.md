@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Reconcile protected recovery instructions with the activated hourly AI/Robot
+  off-instance backups, current timer readback and independent restores. Keep
+  retention, storage caps, live-restore authority and recovery objectives distinct.
+  Separate actual Portal migration/runtime activation from source-only diagrams.
+
 - Correct the Engineering Docs access diagram to distinguish deployed email-code
   protection from the pending Portal identity cutover. Retain bounded, sanitized
   hydration-failure observations without changing acceptance assertions or deadlines.
@@ -14,7 +19,7 @@
 - Refresh committed cross-product schema/contracts and include the protected Portal
   engineering identity runbook. Distinguish prepared migration 010 and default-off
   Portal sign-in from current production migration 009 and effective Access login.
-  Verify all 31 source-defined Portal tables (including migration tracking) against
+  Verify all source-defined Portal tables (including migration tracking) against
   an isolated catalog, split private schema diagrams by purpose and reject stale
   schema fingerprints, omitted tables and invented entities in CI.
 

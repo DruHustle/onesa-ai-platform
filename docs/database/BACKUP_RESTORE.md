@@ -2,12 +2,39 @@
 
 ## Current Oracle scope and restored-copy erasure replay
 
-The 2026-10-16 production AI snapshot restored all 18 tables and the current
-migration revision in an owner-authorized network-isolated local drill, with
-authenticated encryption/tamper rejection and cleanup. This was one snapshot,
-not proof of an active recurring AI backup schedule. Oracle backup coverage is
-prepared through the existing Company operations mechanism; consult the protected
-Oracle guide and actual restricted execution receipts before claiming it enabled.
+Recurring encrypted AI and Robot production backups are enabled on the existing
+Oracle operations system. Their hourly timers were activated on 2026-10-17 after
+one authorized off-instance snapshot and independent isolated restore per product.
+The current timer readback, verified on 2026-10-18 (Europe/Berlin), shows both
+timers active/enabled and both services completing successfully. The AI restore
+covered 18 PostgreSQL tables; the Robot restore covered its task and lease tables.
+Existing Portal backup and monitoring timers remain separate and active.
+
+Each product uses its own prefix in the existing private storage and a 64 MiB
+ciphertext-prefix budget. Automatic archive deletion remains disabled pending the
+owner's retention decision. A full budget must produce a monitored failure, not
+silent pruning or a false successful backup. Use the existing restricted activation,
+timer and restore receipts for exact objects, digests, key identity and measured times;
+none of those private identifiers belongs in a website export.
+
+Safe metadata checks on the approved VM are:
+
+```sh
+systemctl list-timers onesa-database-backup-ai.timer onesa-database-backup-robot.timer
+systemctl show onesa-database-backup-ai.service onesa-database-backup-robot.service \
+  --property=Result --property=ExecMainStatus --property=ExecMainExitTimestamp
+```
+
+These reads do not start a backup. Correlate successful service exit with the existing
+operations success receipt and off-instance verification; a timer file alone is not
+backup acceptance. If runtime configuration changes, the profile's identity/hash
+guard stops the backup. Review the actual target and approved binding rather than
+bypassing that guard or copying credentials into a runbook.
+
+The earlier 2026-10-16 one-time AI snapshot remains historical recovery evidence.
+Scheduled copies, independent key recovery, isolated restoration and permission to
+activate a restored application are separate decisions. No live restore is authorized
+by the backup schedule, and an observed hourly interval is not an approved RPO/RTO.
 
 Before activating any restored copy, reconcile erasures after its snapshot and
 invalidate restored sessions, invitations, grants, queued mail, upload/model leases
