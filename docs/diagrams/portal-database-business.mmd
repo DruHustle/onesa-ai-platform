@@ -1,65 +1,44 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
 erDiagram
-  users {
-    uuid id PK
-    text email
-    text password_hash
-    text role
-    text mfa_secret
-    bigint mfa_last_step
-    boolean disabled
-    timestamptz created_at
-    text mfa_pending
-    text enroll_hash
-    timestamptz enroll_expires
+  applications {
+    uuid id PK "NOT NULL"
+    uuid job_id FK "NOT NULL"
+    text name "NOT NULL"
+    text email "NOT NULL"
+    text message "NOT NULL"
+    uuid file_id FK "NOT NULL"
+    text status "NOT NULL"
+    text notes "NOT NULL"
+    timestamptz consent_at "NOT NULL"
+    timestamptz delete_after "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    timestamptz rejected_at "nullable"
+  }
+  content {
+    uuid id PK "NOT NULL"
   }
   enquiries {
-    uuid id PK
-    text category
-    text name
-    text email
-    text organization
-    text message
-    text locale
-    text status
-    uuid owner_id FK
-    text notes
-    timestamptz follow_up_at
-    timestamptz consent_at
-    timestamptz created_at
+    uuid id PK "NOT NULL"
+    text category "NOT NULL"
+    text name "NOT NULL"
+    text email "NOT NULL"
+    text organization "NOT NULL"
+    text message "NOT NULL"
+    text locale "NOT NULL"
+    text status "NOT NULL"
+    uuid owner_id FK "nullable"
+    text notes "NOT NULL"
+    timestamptz follow_up_at "nullable"
+    timestamptz consent_at "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    timestamptz closed_at "nullable"
   }
   files {
-    uuid id PK
-    text filename
-    text mime
-    integer size
-    text storage_key
-    text sha256
-    text classification
-    text scan_status
-    text approval
-    integer version
-    text title
-    uuid owner_id FK
-    timestamptz review_at
-    text association
-    timestamptz created_at
-    uuid parent_id
-    boolean archived
+    uuid id PK "NOT NULL"
   }
-  applications {
-    uuid id PK
-    uuid job_id FK
-    text name
-    text email
-    text message
-    uuid file_id FK
-    text status
-    text notes
-    timestamptz consent_at
-    timestamptz delete_after
-    timestamptz created_at
+  users {
+    uuid id PK "NOT NULL"
   }
-  users ||--o{ enquiries : "declared foreign key"
-  users ||--o{ files : "declared foreign key"
-  files ||--o{ applications : "declared foreign key"
-  files ||--o{ files : "declared foreign key"
+  files ||--o| applications : "file_id to id / NO ACTION"
+  content ||--o{ applications : "job_id to id / NO ACTION"
+  users o|--o{ enquiries : "owner_id to id / NO ACTION"

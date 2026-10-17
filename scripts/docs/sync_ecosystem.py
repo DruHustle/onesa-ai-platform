@@ -42,6 +42,8 @@ for name in manifest:
             if path.endswith(".sql"):
                 r["sources"][path] = ""
         r["sources"]["docs/engineering/PRIVACY_GOVERNANCE.md"] = ""
+        r["sources"]["docs/engineering/ENGINEERING_DOCS_IDENTITY.md"] = ""
+        r["sources"]["onesa-company-portal-backend/src/services/migration-plan.ts"] = ""
     if name == "onesa-ai-robot":
         for p in [
             "onesa-ai-robot-backend/robot_api/turso.py",
@@ -72,11 +74,31 @@ for name in manifest:
             )
             + "\n"
         )
+        runner = subprocess.check_output(
+            [
+                "git",
+                "show",
+                sha + ":onesa-company-portal-backend/src/services/migration-plan.ts",
+            ],
+            cwd=repo,
+            text=True,
+        )
+        tracker = re.findall(
+            r"connection\.query\('([^']*CREATE TABLE IF NOT EXISTS schema_migrations[^']*)'\)",
+            runner,
+        )
+        assert len(tracker) == 1
+        sql = (
+            "-- Migration-runner metadata; application tables follow.\n"
+            + tracker[0]
+            + ";\n\n"
+            + sql
+        )
         (folder / "portal-schema.sql").write_text(sql)
         (folder / "PORTAL_DATABASE.md").write_text(
             "# Portal database schema\n\nGenerated from "
             + str(len(migrations))
-            + " pinned PostgreSQL migrations, including internal governance. Schema definitions only; no live records or credentials. Preserve constraints, immutable approval triggers and migration checksums.\n\n```sql\n"
+            + " pinned PostgreSQL migrations plus source-defined migration tracking, including internal governance. Schema definitions only; no live records or credentials. Production currently applies migration009; migration010 remains prepared. Preserve constraints, immutable approval triggers and migration checksums. Use the migration runner rather than applying this reference as a replacement migration plan.\n\n```sql\n"
             + sql
             + "```\n"
         )
@@ -86,6 +108,17 @@ for name in manifest:
             text=True,
         )
         (folder / "PORTAL_PRIVACY_GOVERNANCE.md").write_text(governance)
+        identity = subprocess.check_output(
+            ["git", "show", sha + ":docs/engineering/ENGINEERING_DOCS_IDENTITY.md"],
+            cwd=repo,
+            text=True,
+        )
+        (folder / "PORTAL_ENGINEERING_DOCS_IDENTITY.md").write_text(identity)
+        identity_graphs = re.findall(r"```mermaid\n(.*?)```", identity, re.DOTALL)
+        assert len(identity_graphs) == 1
+        (root / "docs/diagrams/engineering-docs-identity.mmd").write_text(
+            identity_graphs[0].strip() + "\n"
+        )
         diagram_names = [
             "privacy-document-review",
             "privacy-retention-lifecycle",
@@ -240,12 +273,24 @@ for name in manifest:
 (folder / "source-revisions.json").write_text(json.dumps(manifest, indent=2) + "\n")
 hashes = json.loads((folder / "snapshot-hashes.json").read_text())
 hashes["PORTAL_PRIVACY_GOVERNANCE.md"] = ""
+hashes["PORTAL_ENGINEERING_DOCS_IDENTITY.md"] = ""
 hashes["PORTAL_DATABASE.md"] = ""
 for p in hashes:
     hashes[p] = hashlib.sha256((folder / p).read_bytes()).hexdigest()
 (folder / "snapshot-hashes.json").write_text(json.dumps(hashes, indent=2) + "\n")
 catpath = root / "docs/diagrams/catalog.json"
 cat = json.loads(catpath.read_text())
+identity_diagram = {
+    "id": "engineering-docs-identity",
+    "title": "Engineering Docs sign-in through Onesa Portal",
+    "view": "prepared identity and authorization flow",
+    "status": "Prepared/default-off; hosted qualification and owner sign-in pending",
+    "source": "docs/diagrams/engineering-docs-identity.mmd",
+    "url": "/docs/ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY",
+    "nodes": [],
+}
+cat = [item for item in cat if item["id"] != identity_diagram["id"]]
+cat.append(identity_diagram)
 privacy_titles = [
     "Privacy document draft, review and approval",
     "Retention lifecycle and activation safeguards",

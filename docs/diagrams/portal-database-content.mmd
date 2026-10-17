@@ -1,52 +1,51 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
 erDiagram
-  users {
-    uuid id PK
-    text email
-    text password_hash
-    text role
-    text mfa_secret
-    bigint mfa_last_step
-    boolean disabled
-    timestamptz created_at
-    text mfa_pending
-    text enroll_hash
-    timestamptz enroll_expires
-  }
   content {
-    uuid id PK
-    text kind
-    text slug
-    text locale
-    text title
-    text summary
-    text body
-    jsonb metadata
-    text state
-    timestamptz publish_at
-    uuid author_id FK
-    integer revision
-    timestamptz updated_at
-  }
-  revisions {
-    bigserial id PK
-    uuid content_id FK
-    jsonb snapshot
-    uuid actor_id FK
-    timestamptz created_at
+    uuid id PK "NOT NULL"
+    text kind "NOT NULL"
+    text slug "NOT NULL"
+    text locale "NOT NULL"
+    text title "NOT NULL"
+    text summary "NOT NULL"
+    text body "NOT NULL"
+    jsonb metadata "NOT NULL"
+    text state "NOT NULL"
+    timestamptz publish_at "nullable"
+    uuid author_id FK "nullable"
+    integer revision "NOT NULL"
+    timestamptz updated_at "NOT NULL"
   }
   facts {
-    text key PK
-    text value
-    text status
-    text source
-    uuid verified_by FK
-    timestamptz verified_at
+    text key PK "NOT NULL"
+    text value "nullable"
+    text status "NOT NULL"
+    text source "NOT NULL"
+    uuid verified_by FK "nullable"
+    timestamptz verified_at "nullable"
+  }
+  revisions {
+    bigint id PK "NOT NULL"
+    uuid content_id FK "nullable"
+    jsonb snapshot "NOT NULL"
+    uuid actor_id FK "nullable"
+    timestamptz created_at "NOT NULL"
   }
   settings {
-    text key PK
-    jsonb value
+    text key PK "NOT NULL"
+    jsonb value "NOT NULL"
   }
-  users ||--o{ content : "declared foreign key"
-  content ||--o{ revisions : "declared foreign key"
-  users ||--o{ revisions : "declared foreign key"
-  users ||--o{ facts : "declared foreign key"
+  templates {
+    text key PK "NOT NULL"
+    text title "NOT NULL"
+    text locale "NOT NULL"
+    text body "NOT NULL"
+    text status "NOT NULL"
+    integer version "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  users o|--o{ content : "author_id to id / NO ACTION"
+  users o|--o{ facts : "verified_by to id / NO ACTION"
+  users o|--o{ revisions : "actor_id to id / NO ACTION"
+  content o|--o{ revisions : "content_id to id / CASCADE"

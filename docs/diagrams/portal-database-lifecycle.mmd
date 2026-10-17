@@ -1,0 +1,78 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
+erDiagram
+  governance_versions {
+    text record_id PK,FK "NOT NULL"
+    integer revision PK "NOT NULL"
+  }
+  privacy_erasure_journal {
+    bigint id PK "NOT NULL"
+    text target_kind "NOT NULL"
+    uuid target_id "NOT NULL"
+    timestamptz erased_at "NOT NULL"
+  }
+  privacy_holds {
+    uuid id PK "NOT NULL"
+    text target_kind "NOT NULL"
+    uuid target_id "NOT NULL"
+    text reason "NOT NULL"
+    text[] evidence_refs "NOT NULL"
+    uuid created_by FK "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    uuid released_by FK "nullable"
+    timestamptz released_at "nullable"
+    text release_reason "nullable"
+    integer version "NOT NULL"
+    text intent_sha256 "NOT NULL"
+  }
+  privacy_lifecycle_events {
+    bigint id PK "NOT NULL"
+    uuid lifecycle_request_id FK "nullable"
+    uuid hold_id FK "nullable"
+    uuid actor_id FK "NOT NULL"
+    text action "NOT NULL"
+    text note "NOT NULL"
+    text[] evidence_refs "NOT NULL"
+    text http_request_id "nullable"
+    timestamptz created_at "NOT NULL"
+  }
+  privacy_lifecycle_requests {
+    uuid id PK "NOT NULL"
+    text request_kind "NOT NULL"
+    text case_reference "NOT NULL"
+    text[] identity_evidence_refs "NOT NULL"
+    uuid created_by FK "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    text state "NOT NULL"
+    text policy_id FK "nullable"
+    integer policy_revision FK "nullable"
+    text plan_sha256 "NOT NULL"
+    jsonb plan "NOT NULL"
+    text intent_sha256 "NOT NULL"
+    uuid reviewed_by FK "nullable"
+    timestamptz reviewed_at "nullable"
+    timestamptz cancelled_at "nullable"
+    timestamptz completed_at "nullable"
+    integer version "NOT NULL"
+  }
+  privacy_lifecycle_targets {
+    uuid request_id PK,FK "NOT NULL"
+    text target_kind PK "NOT NULL"
+    uuid target_id PK "NOT NULL"
+    text record_sha256 "nullable"
+    text result "NOT NULL"
+    text result_code "NOT NULL"
+    text storage_key "nullable"
+    timestamptz updated_at "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  users ||--o{ privacy_holds : "created_by to id / RESTRICT"
+  users o|--o{ privacy_holds : "released_by to id / RESTRICT"
+  users ||--o{ privacy_lifecycle_events : "actor_id to id / RESTRICT"
+  privacy_holds o|--o{ privacy_lifecycle_events : "hold_id to id / RESTRICT"
+  privacy_lifecycle_requests o|--o{ privacy_lifecycle_events : "lifecycle_request_id to id / RESTRICT"
+  users ||--o{ privacy_lifecycle_requests : "created_by to id / RESTRICT"
+  governance_versions o|--o{ privacy_lifecycle_requests : "policy_id,policy_revision to record_id,revision / RESTRICT"
+  users o|--o{ privacy_lifecycle_requests : "reviewed_by to id / RESTRICT"
+  privacy_lifecycle_requests ||--o{ privacy_lifecycle_targets : "request_id to id / RESTRICT"
