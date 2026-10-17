@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Remove arrow-in-square link icons throughout public and engineering Docs while
+  retaining screen-reader notice for links that open another tab.
+
 - Refresh protected registration/approval and Portal sign-in references, with source-verified access-schema diagrams and preserved public/private publication boundaries.
 
 - Refresh committed cross-product schema/contracts and include the protected Portal
