@@ -3,8 +3,11 @@
 ## Engineering sign-in and membership — owner direction, 2026-10-16
 
 Use https://onesa-engineering-docs.pages.dev/ for protected engineering Docs.
-The owner selected an emailed sign-in code, without a separate Docs password or
-additional Docs MFA enrollment. This supersedes the earlier Docs-specific MFA
+The 2026-10-17 owner direction supersedes the earlier code-only selection: new
+users register for owner approval, with emailed sign-in links or email/password.
+Existing exact-email approvals remain valid; admin MFA remains intact and Docs
+adds no separate MFA enrollment. The currently serving provider still uses email codes
+until the qualified Portal identity cutover. This supersedes the earlier Docs-specific MFA
 direction recorded below; it does not change Cloudflare Dashboard or other service
 authentication. The existing email-code identity provider and two approved owner
 addresses are verified. Both canonical and preview policies now disable the extra
@@ -17,19 +20,19 @@ new email-code challenge. Never treat an emailed code as independent MFA.
 ### Portal sign-in implementation prepared — 2026-10-17
 
 The Portal now has a reviewed, default-off implementation for Onesa-branded emailed
-codes and individually approved engineering membership. Its versioned
+sign-in links or registered email/password and individually approved membership. Its versioned
 [identity and onboarding runbook](../ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY.md)
 records deployment order, independent Access checks, offboarding and rollback.
 This source preparation has not switched the serving Docs login method. Continue
 using the current effective process below until exact-source hosted qualification
-and the owner's actual Portal email-code sign-in establish the cutover.
-Migration 010 is a prepared schema definition; production currently has migration
-009. Source-derived schema snapshots are not evidence of an applied migration.
+and the owner's actual Portal link/password sign-in establish the cutover.
+Migrations 010/011 define the prepared identity and registration schema; production
+currently has migration 009. Source-derived schema snapshots are not evidence of an applied migration.
 
 ### Onboard an approved Onesa engineer
 
-An owner can add new `@onesa.eu` engineering identities without creating another
-password database, repository or public documentation deployment. An email domain
+An owner can add new `@onesa.eu` engineering identities through the existing Portal membership/registration tables, without another
+repository or public documentation deployment. An email domain
 alone is not an engineering role: approve each engineer before adding membership.
 
 1. Confirm the engineer controls their Onesa mailbox and record their exact approved

@@ -2529,7 +2529,7 @@
     "id": "portal-database",
     "title": "Portal schema map",
     "view": "schema group navigation; detailed ERDs contain declared relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4433,7 +4433,7 @@
     "id": "portal-database-identity",
     "title": "Portal identity schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-identity.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4442,7 +4442,7 @@
     "id": "portal-database-content",
     "title": "Portal content schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-content.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4451,7 +4451,7 @@
     "id": "portal-database-business",
     "title": "Portal business schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-business.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4460,8 +4460,17 @@
     "id": "portal-database-documents",
     "title": "Portal documents schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-documents.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-access",
+    "title": "Portal access schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-access.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
   },
@@ -4469,7 +4478,7 @@
     "id": "portal-database-operations",
     "title": "Portal operations schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-operations.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4478,7 +4487,7 @@
     "id": "portal-database-governance",
     "title": "Portal governance schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-governance.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4487,7 +4496,7 @@
     "id": "portal-database-lifecycle",
     "title": "Portal lifecycle schema",
     "view": "source-verified PostgreSQL entity relationships",
-    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "status": "Source-defined schema through migration011; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database-lifecycle.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []

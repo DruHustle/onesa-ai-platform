@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refresh protected registration/approval and Portal sign-in references, with source-verified access-schema diagrams and preserved public/private publication boundaries.
+
 - Refresh committed cross-product schema/contracts and include the protected Portal
   engineering identity runbook. Distinguish prepared migration 010 and default-off
   Portal sign-in from current production migration 009 and effective Access login.

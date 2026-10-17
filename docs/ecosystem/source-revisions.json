@@ -1,12 +1,12 @@
 {
   "onesa-company-portal": {
     "repository": "https://github.com/DruHustle/onesa-company-portal",
-    "commit": "75ccb13ba2867b4711f01ef2cdb09b70a83f2506",
+    "commit": "0020291e1d379a0fb2b09f8f6ab32513aacf1adf",
     "sources": {
-      "README.md": "870fcddde74abb9ada1c25f1ea6d6b98cd339ceeeb58f8c01ea2b601a1a2828c",
+      "README.md": "b44ca7df7d9f7cdcafb9702dbce8cc28ad86f1e13c1b1c58824c532e3b58f098",
       "docs/api/API.md": "17a993662d4d30f5c8f4ca7985e080172e4b00ef25c8f26394ba14bf1709cd3d",
-      "onesa-company-portal-backend/src/api/export.ts": "fac7f3654e6a74203b8fd6096543fb410f94c320ff5eb9cf50f4ba68c7be3ad5",
-      "onesa-company-portal-backend/openapi/openapi.json": "901a0ee961a76e9780cdc6b815ee53735e6b862ba5a32e7359e40bad8019c391",
+      "onesa-company-portal-backend/src/api/export.ts": "00033438bb8afbe61d95909c66ae6a3314fa8117cbd11f31fd462f768272c0a5",
+      "onesa-company-portal-backend/openapi/openapi.json": "524f6b850aaa9a574eaa6ac4b4e11cd95162ecfafc57dd28ea4c005887955235",
       "onesa-company-portal-backend/migrations/001_initial.sql": "7d9b7ee898859ec4cd858f9cba4e43bc7c62a866323ca6786d2d7571cf4e26e9",
       "onesa-company-portal-backend/migrations/002_security_workflows.sql": "f4900254857995fd7da68ad51f2f5728ad2376213aad4d943a1ffc5ee8ab8fec",
       "onesa-company-portal-backend/migrations/003_document_versions.sql": "f6e0bf91cb2f547754d7eaafbe38e28edc563b25101e3d7878beb9f901e42b15",
@@ -18,8 +18,9 @@
       "docs/engineering/PRIVACY_GOVERNANCE.md": "30585f4b1bba56bc6f30ec8733d297a3f884357ca77e71462e981eac48f151dc",
       "onesa-company-portal-backend/migrations/009_privacy_lifecycle.sql": "8d066d911d17dd5aec1cc89915037bfb5f158afa069e381e4fb42976348877a5",
       "onesa-company-portal-backend/migrations/010_engineering_identity.sql": "11f4cb0d0fb2de052c31583a35d72b68f4ed288b155196e6cee9cf56010f5c86",
-      "docs/engineering/ENGINEERING_DOCS_IDENTITY.md": "724fb8bce0e45394aa618f08de37db0c60b4e18b54ee8a75703a66e691d3abb8",
-      "onesa-company-portal-backend/src/services/migration-plan.ts": "4a7b2a9acb62a87e1e023a2873a5c38438400ad694e218370de9639a819b3a43"
+      "docs/engineering/ENGINEERING_DOCS_IDENTITY.md": "ca9d32a090d3b926ad3c7f47efda6d1a9ffb888a1bce7e12df1721862d520d77",
+      "onesa-company-portal-backend/src/services/migration-plan.ts": "4a7b2a9acb62a87e1e023a2873a5c38438400ad694e218370de9639a819b3a43",
+      "onesa-company-portal-backend/migrations/011_access_registration.sql": "11ee7bd502a78ee876f1634edf34dc626d3a3b9c7417646427abe03607e0e297"
     }
   },
   "onesa-ai-robot": {
