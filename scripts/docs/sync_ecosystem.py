@@ -283,8 +283,8 @@ cat = json.loads(catpath.read_text())
 identity_diagram = {
     "id": "engineering-docs-identity",
     "title": "Engineering Docs sign-in through Onesa Portal",
-    "view": "prepared identity and authorization flow",
-    "status": "Prepared/default-off; hosted qualification and owner sign-in pending",
+    "view": "documented identity and authorization flow",
+    "status": "Protocol reference; actual activation is recorded in Documentation Hosting.",
     "source": "docs/diagrams/engineering-docs-identity.mmd",
     "url": "/docs/ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY",
     "nodes": [],

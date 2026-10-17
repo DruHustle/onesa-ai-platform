@@ -2,14 +2,19 @@
 
 ## Current Oracle recovery scope
 
-The owner-authorized 2026-10-16 AI production snapshot restored all 18 tables and
-the current migration revision into an isolated local target, with encryption,
-tamper rejection and cleanup verified. It provides one owner-held off-VM recovery
-copy. Recurring AI/Robot off-instance coverage is prepared through the existing
-Oracle operations system; check actual execution receipts before treating it as live.
-Production recovery objectives and complete post-snapshot reconciliation remain
-separate requirements. The [backup and replay procedure](../database/BACKUP_RESTORE.md)
-defines the restored-copy erasure and capability controls.
+Hourly encrypted AI/Robot off-instance backups are active through the existing
+Oracle operations system, alongside the retained Portal backup/monitor timers.
+Activation and actual timer execution were verified on 2026-10-17; a current
+2026-10-18 (Europe/Berlin) metadata read confirms enabled timers and successful
+service exits. Initial AI/Robot snapshots passed independently keyed, network-isolated
+restores with exact temporary-target cleanup. The earlier one-time AI snapshot
+is retained historical evidence, not the current coverage limit.
+
+Read the [backup and replay procedure](../database/BACKUP_RESTORE.md) for safe
+metadata checks, the per-product storage cap and disabled automatic archive deletion.
+Live restore, complete post-snapshot reconciliation and production RPO/RTO decisions
+remain separate from schedule activation. Do not trigger another production-data
+copy simply to demonstrate that a timer exists.
 
 The Compose acceptance described below is historical synthetic evidence, rather
 than proof that its services or timers run on the current Oracle VM.
