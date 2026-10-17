@@ -1,7 +1,8 @@
-"""Offline-first lockdown for this task's disposable restored databases only.
+"""Offline-first lockdown for disposable restored databases only.
 
-This does not reconcile erased records or approve hosted restoration. It invalidates
-restored capabilities before any approved synthetic acceptance service can start.
+Legacy mode only invalidates restored capabilities. The explicit isolated-replay
+mode also consumes an erasure ledger; neither mode approves hosted activation or
+establishes the completeness/currentness of that ledger.
 """
 
 import argparse
@@ -15,7 +16,24 @@ def main():
     parser.add_argument("--container", required=True)
     parser.add_argument("--database", required=True)
     parser.add_argument("--apply-synthetic-lockdown", action="store_true")
+    parser.add_argument("--replay-ledger")
+    parser.add_argument("--apply-isolated-replay", action="store_true")
     args = parser.parse_args()
+    if args.replay_ledger:
+        import restore_replay
+
+        print(
+            json.dumps(
+                restore_replay.run(
+                    args.container,
+                    args.database,
+                    args.replay_ledger,
+                    args.apply_isolated_replay,
+                    SQL,
+                )
+            )
+        )
+        return
     expected = CONTAINER
     if args.container != expected or not re.fullmatch(
         r"onesa_audit_[0-9]+_restore", args.database

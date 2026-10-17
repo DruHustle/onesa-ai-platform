@@ -1,5 +1,19 @@
 # Recovery
 
+## Current Oracle recovery scope
+
+The owner-authorized 2026-10-16 AI production snapshot restored all 18 tables and
+the current migration revision into an isolated local target, with encryption,
+tamper rejection and cleanup verified. It provides one owner-held off-VM recovery
+copy. Recurring AI/Robot off-instance coverage is prepared through the existing
+Oracle operations system; check actual execution receipts before treating it as live.
+Production recovery objectives and complete post-snapshot reconciliation remain
+separate requirements. The [backup and replay procedure](../database/BACKUP_RESTORE.md)
+defines the restored-copy erasure and capability controls.
+
+The Compose acceptance described below is historical synthetic evidence, rather
+than proof that its services or timers run on the current Oracle VM.
+
 Conversation/run state survives API restart in PostgreSQL. Active generation leases expire
 after the configured deadline+10 seconds; next request marks the prior run failed and starts
 a new owned run. Partial assistant output is never saved as successful completion. Agent runs
@@ -7,8 +21,8 @@ are bounded and stale unfinished runs fail on inspection; there is no restart-re
 
 Backups use pg_dump and restoration into a new `_restore` database. Verify migration revision,
 counts and representative content/ownership before manual promotion. The local restoration
-of users/messages/documents/trips/agent records was exercised; production disaster recovery,
-off-host copies, encryption and RPO/RTO remain unconfigured.
+of users/messages/documents/trips/agent records was exercised. Current Oracle
+coverage is stated above; production RPO/RTO decisions remain unrecorded.
 
 Recover serving by selecting a previously evaluated model/adapter and compatible platform
 revision. Multi-host routing/failover and automatic deployment rollback are future capabilities.
@@ -57,9 +71,10 @@ new staging images. Schema `608f3f79f76e` is unchanged. Migration upgrade/downgr
 are tested in the isolated test DB; rollback across a future incompatible schema requires a
 reviewed migration/restore plan and cannot be assumed safe.
 
-Local same-host volumes do not survive total host loss. Independent encrypted off-host copies,
-separate recoverable key custody, operator access/recovery drill, production-scale retention,
-RPO and RTO decisions are BLOCKED. Record the measured snapshot/restore time and point-in-time
+These historical same-host volumes do not survive total host loss. A successful
+synthetic restore does not establish current recurring off-instance copies, independent
+key recovery, a full disaster drill or approved production retention/RPO/RTO. Record
+the actual current receipts and measured snapshot/restore time and point-in-time
 integrity separately from any business recovery objective; zero loss within a matched snapshot
 is not a zero production RPO claim. Configure object/disk encryption and disaster recovery on
 the actual host before public promotion.
