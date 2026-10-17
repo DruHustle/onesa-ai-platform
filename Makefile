@@ -73,6 +73,7 @@ docs-validate:
 
 docs-check:
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_source_policy.py
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_portal_diagram_provenance.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_visual_policy.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_pdf_source_links.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_prepare_cloudflare.py

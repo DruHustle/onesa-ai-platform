@@ -1,43 +1,57 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
 erDiagram
-  users {
-    uuid id PK
-    text email
-    text password_hash
-    text role
-    text mfa_secret
-    bigint mfa_last_step
-    boolean disabled
-    timestamptz created_at
-    text mfa_pending
-    text enroll_hash
-    timestamptz enroll_expires
+  bounded_transfer_chunks {
+    uuid transfer_id PK,FK "NOT NULL"
+    integer sequence PK "NOT NULL"
+    text encrypted_payload "NOT NULL"
+    text checksum "NOT NULL"
+  }
+  bounded_transfers {
+    uuid id PK "NOT NULL"
+    uuid owner_id FK "nullable"
+    text peer_hash "NOT NULL"
+    text capability_hash "NOT NULL"
+    text scope "NOT NULL"
+    integer expected_bytes "NOT NULL"
+    text checksum "NOT NULL"
+    integer cursor "NOT NULL"
+    timestamptz expires_at "NOT NULL"
+    jsonb result "nullable"
+    integer result_status "nullable"
   }
   files {
-    uuid id PK
-    text filename
-    text mime
-    integer size
-    text storage_key
-    text sha256
-    text classification
-    text scan_status
-    text approval
-    integer version
-    text title
-    uuid owner_id FK
-    timestamptz review_at
-    text association
-    timestamptz created_at
-    uuid parent_id
-    boolean archived
+    uuid id PK "NOT NULL"
+    text filename "NOT NULL"
+    text mime "NOT NULL"
+    integer size "NOT NULL"
+    text storage_key "NOT NULL"
+    text sha256 "NOT NULL"
+    text classification "NOT NULL"
+    text scan_status "NOT NULL"
+    text approval "NOT NULL"
+    integer version "NOT NULL"
+    text title "NOT NULL"
+    uuid owner_id FK "nullable"
+    timestamptz review_at "nullable"
+    text association "nullable"
+    timestamptz created_at "NOT NULL"
+    uuid parent_id FK "nullable"
+    boolean archived "NOT NULL"
+    timestamptz purpose_end_at "nullable"
   }
-  templates {
-    text key PK
-    text title
-    text locale
-    text body
-    text status
-    integer version
+  storage_deletions {
+    text storage_key PK "NOT NULL"
+    text status "NOT NULL"
+    integer attempts "NOT NULL"
+    timestamptz run_at "NOT NULL"
+    timestamptz locked_at "nullable"
+    text last_error "nullable"
+    timestamptz created_at "NOT NULL"
   }
-  users ||--o{ files : "declared foreign key"
-  files ||--o{ files : "declared foreign key"
+  users {
+    uuid id PK "NOT NULL"
+  }
+  bounded_transfers ||--o{ bounded_transfer_chunks : "transfer_id to id / CASCADE"
+  users o|--o{ bounded_transfers : "owner_id to id / CASCADE"
+  users o|--o{ files : "owner_id to id / NO ACTION"
+  files o|--o{ files : "parent_id to id / NO ACTION"

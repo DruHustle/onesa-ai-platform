@@ -14,6 +14,18 @@ source remains accessible; anonymous page, search-index and PDF requests remain
 denied. This is configuration/access verification, not an independently witnessed
 new email-code challenge. Never treat an emailed code as independent MFA.
 
+### Portal sign-in implementation prepared — 2026-10-17
+
+The Portal now has a reviewed, default-off implementation for Onesa-branded emailed
+codes and individually approved engineering membership. Its versioned
+[identity and onboarding runbook](../ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY.md)
+records deployment order, independent Access checks, offboarding and rollback.
+This source preparation has not switched the serving Docs login method. Continue
+using the current effective process below until exact-source hosted qualification
+and the owner's actual Portal email-code sign-in establish the cutover.
+Migration 010 is a prepared schema definition; production currently has migration
+009. Source-derived schema snapshots are not evidence of an applied migration.
+
 ### Onboard an approved Onesa engineer
 
 An owner can add new `@onesa.eu` engineering identities without creating another

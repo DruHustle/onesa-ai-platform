@@ -1,0 +1,16 @@
+sequenceDiagram
+ participant E as Approved engineer
+ participant A as Engineering Docs Access
+ participant P as Onesa Portal sign-in
+ participant M as Existing mail worker
+ E->>A: Open protected documentation
+ A->>P: Fixed OIDC client, callback and PKCE
+ P->>P: Verify interaction cookie and explicit membership
+ P->>M: Enqueue encrypted one-time code message
+ M-->>E: Email code
+ E->>P: Submit code with same-origin proof
+ P-->>A: Short-lived single-use authorization code
+ A->>P: Confidential client and PKCE code exchange
+ P-->>A: Signed verified-email identity
+ A->>A: Enforce exact-email policy and session boundary
+ A-->>E: Protected documentation

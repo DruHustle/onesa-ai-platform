@@ -3,10 +3,33 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOTS = ROOT / "docs/ecosystem"
+
+
+def validate_portal_diagrams(schema, diagrams):
+    """Reject stale schema provenance, omitted tables and invented table entities."""
+    digest = hashlib.sha256(schema.encode()).hexdigest()
+    expected = set(
+        re.findall(
+            r"CREATE TABLE(?: IF NOT EXISTS)?\s+([a-z_]+)", schema, re.IGNORECASE
+        )
+    )
+    covered = set()
+    files = list(diagrams.glob("portal-database-*.mmd"))
+    assert files and expected, "Portal schema/diagram sources missing"
+    for file in files:
+        text = file.read_text()
+        assert text.startswith("%% Portal source schema SHA256: " + digest + "\n"), (
+            "Portal ERD schema provenance is stale: " + file.name
+        )
+        covered.update(re.findall(r"^\s+([a-z_]+) \{$", text, re.MULTILINE))
+    assert covered == expected, (
+        "Portal ERD table coverage differs from pinned migrations"
+    )
 
 
 def validate(portal=None, robot=None):
@@ -32,6 +55,9 @@ def validate(portal=None, robot=None):
     )
     assert not public.get("servers")
     assert not any(p.startswith("/api/v1/admin/") for p in public["paths"])
+    validate_portal_diagrams(
+        (SNAPSHOTS / "portal-schema.sql").read_text(), ROOT / "docs/diagrams"
+    )
     print(
         "Pinned cross-project schemas, source identities and public Portal API boundary verified."
     )
