@@ -94,8 +94,9 @@ queries or fragments; only local development defaults to `http://localhost:3100`
 The public applications guide links Chat, Knowledge, Agents and Travel to their
 actual AI routes. `npm --prefix onesa-ai-platform-frontend/apps/docs run test:security`
 checks unsafe URL configuration, and public browser acceptance verifies the product
-dropdown on desktop and mobile. These changes are prepared source; the existing
-live localhost links require a qualified documentation deployment to be replaced.
+dropdown on desktop and mobile. The source6a public and protected Docs releases
+verified the corrected hosted navigation; those earlier localhost links are resolved.
+The current registration/recovery documentation update is a separate pending release.
 
 ## Deploy from GitHub
 
