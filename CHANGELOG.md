@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Refresh committed cross-product schema/contracts and include the protected Portal
+  engineering identity runbook. Distinguish prepared migration 010 and default-off
+  Portal sign-in from current production migration 009 and effective Access login.
+  Verify all 31 source-defined Portal tables (including migration tracking) against
+  an isolated catalog, split private schema diagrams by purpose and reject stale
+  schema fingerprints, omitted tables and invented entities in CI.
+
 - Correct the protected migration guide's virtual-environment path, document all six
   revisions and the current head, and distinguish forward-only recovery from supported
   downgrade tests. This documentation change performs no migration or application deployment.

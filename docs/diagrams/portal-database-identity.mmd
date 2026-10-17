@@ -1,33 +1,64 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
 erDiagram
-  users {
-    uuid id PK
-    text email
-    text password_hash
-    text role
-    text mfa_secret
-    bigint mfa_last_step
-    boolean disabled
-    timestamptz created_at
-    text mfa_pending
-    text enroll_hash
-    timestamptz enroll_expires
+  engineering_email_challenges {
+    text interaction_uid PK "NOT NULL"
+    uuid membership_id FK "nullable"
+    text code_hash "NOT NULL"
+    integer attempts "NOT NULL"
+    timestamptz expires_at "NOT NULL"
+    timestamptz consumed_at "nullable"
+    timestamptz created_at "NOT NULL"
   }
-  sessions {
-    text token_hash PK
-    uuid user_id FK
-    text csrf
-    timestamptz expires_at
-    timestamptz created_at
+  engineering_identity_records {
+    text model PK "NOT NULL"
+    text id PK "NOT NULL"
+    text encrypted_payload "NOT NULL"
+    text uid "nullable"
+    text grant_id "nullable"
+    text account_id "nullable"
+    timestamptz expires_at "NOT NULL"
+    bigint consumed_at "nullable"
   }
-  recovery_tokens {
-    text token_hash PK
-    uuid user_id FK
-    timestamptz expires_at
+  engineering_memberships {
+    uuid id PK "NOT NULL"
+    text email "NOT NULL"
+    boolean enabled "NOT NULL"
+    text access_policy_evidence "NOT NULL"
+    uuid approved_by FK "NOT NULL"
+    timestamptz approved_at "NOT NULL"
+    integer revision "NOT NULL"
   }
   mfa_recovery {
-    uuid user_id FK
-    text code_hash
+    uuid user_id PK,FK "NOT NULL"
+    text code_hash PK "NOT NULL"
   }
-  users ||--o{ sessions : "declared foreign key"
-  users ||--o{ recovery_tokens : "declared foreign key"
-  users ||--o{ mfa_recovery : "declared foreign key"
+  recovery_tokens {
+    text token_hash PK "NOT NULL"
+    uuid user_id FK "nullable"
+    timestamptz expires_at "NOT NULL"
+  }
+  sessions {
+    text token_hash PK "NOT NULL"
+    uuid user_id FK "NOT NULL"
+    text csrf "NOT NULL"
+    timestamptz expires_at "NOT NULL"
+    timestamptz created_at "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+    text email "NOT NULL"
+    text password_hash "NOT NULL"
+    text role "NOT NULL"
+    text mfa_secret "nullable"
+    bigint mfa_last_step "NOT NULL"
+    boolean disabled "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    text mfa_pending "nullable"
+    text enroll_hash "nullable"
+    timestamptz enroll_expires "nullable"
+  }
+  engineering_memberships o|--o{ engineering_email_challenges : "membership_id to id / CASCADE"
+  users ||--o{ engineering_memberships : "approved_by to id / RESTRICT"
+  users ||--o{ mfa_recovery : "user_id to id / CASCADE"
+  users o|--o{ recovery_tokens : "user_id to id / CASCADE"
+  users ||--o{ sessions : "user_id to id / CASCADE"

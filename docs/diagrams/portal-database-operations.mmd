@@ -1,65 +1,40 @@
+%% Portal source schema SHA256: 7fe751ef30a47ee8fa6d9f23416eb48dea97e0e90c6c5fdcc97cd0c656fd0d86
 erDiagram
-  users {
-    uuid id PK
-    text email
-    text password_hash
-    text role
-    text mfa_secret
-    bigint mfa_last_step
-    boolean disabled
-    timestamptz created_at
-    text mfa_pending
-    text enroll_hash
-    timestamptz enroll_expires
+  audit {
+    bigint id PK "NOT NULL"
+    uuid actor_id FK "nullable"
+    text action "NOT NULL"
+    text record_id "nullable"
+    text request_id "nullable"
+    timestamptz created_at "NOT NULL"
   }
   jobs {
-    uuid id PK
-    text kind
-    text dedupe_key
-    jsonb payload
-    text status
-    integer attempts
-    timestamptz run_at
-    timestamptz locked_at
-    text last_error
-    timestamptz created_at
-  }
-  rate_limits {
-    text key PK
-    integer hits
-    timestamptz expires_at
-  }
-  storage_deletions {
-    text storage_key PK
-    text status
-    integer attempts
-    timestamptz run_at
-    timestamptz locked_at
-    text last_error
-    timestamptz created_at
-  }
-  bounded_transfers {
-    uuid id PK
-    uuid owner_id FK
-    text peer_hash
-    text capability_hash
-    text scope
-    integer expected_bytes
-    text checksum
-    integer cursor
-    timestamptz expires_at
-    jsonb result
-    integer result_status
-  }
-  bounded_transfer_chunks {
-    uuid transfer_id FK
-    integer sequence
-    text encrypted_payload
-    text checksum
+    uuid id PK "NOT NULL"
+    text kind "NOT NULL"
+    text dedupe_key "NOT NULL"
+    jsonb payload "NOT NULL"
+    text status "NOT NULL"
+    integer attempts "NOT NULL"
+    timestamptz run_at "NOT NULL"
+    timestamptz locked_at "nullable"
+    text last_error "nullable"
+    timestamptz created_at "NOT NULL"
   }
   operational_state {
-    text key PK
-    timestamptz updated_at
+    text key PK "NOT NULL"
+    timestamptz updated_at "NOT NULL"
   }
-  users ||--o{ bounded_transfers : "declared foreign key"
-  bounded_transfers ||--o{ bounded_transfer_chunks : "declared foreign key"
+  rate_limits {
+    text key PK "NOT NULL"
+    integer hits "NOT NULL"
+    timestamptz expires_at "NOT NULL"
+  }
+  schema_migrations {
+    text name PK "NOT NULL"
+    text checksum "NOT NULL"
+    timestamptz applied_at "nullable"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  users o|--o{ audit : "actor_id to id / NO ACTION"

@@ -2527,127 +2527,12 @@
   },
   {
     "id": "portal-database",
-    "title": "Portal implemented schema relationships",
-    "view": "implemented schema",
-    "status": "Derived from pinned actual SQL sources; full columns constraints and migrations in linked reference; no live data",
+    "title": "Portal schema map",
+    "view": "schema group navigation; detailed ERDs contain declared relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "sessions",
-        "label": "sessions",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "recovery_tokens",
-        "label": "recovery_tokens",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "content",
-        "label": "content",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "revisions",
-        "label": "revisions",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "enquiries",
-        "label": "enquiries",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "files",
-        "label": "files",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "applications",
-        "label": "applications",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "audit",
-        "label": "audit",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "jobs",
-        "label": "jobs",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "rate_limits",
-        "label": "rate_limits",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "facts",
-        "label": "facts",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "settings",
-        "label": "settings",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "templates",
-        "label": "templates",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "mfa_recovery",
-        "label": "mfa_recovery",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "storage_deletions",
-        "label": "storage_deletions",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "bounded_transfers",
-        "label": "bounded_transfers",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "bounded_transfer_chunks",
-        "label": "bounded_transfer_chunks",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "operational_state",
-        "label": "operational_state",
-        "responsibility": "Implemented table. Complete DDL in the protected source reference.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      }
-    ]
+    "nodes": []
   },
   {
     "id": "robot-database",
@@ -2674,194 +2559,6 @@
         "label": "safety",
         "responsibility": "Implemented table. Complete DDL in the protected source reference.",
         "url": "/docs/ecosystem/ROBOT_DATABASE"
-      }
-    ]
-  },
-  {
-    "id": "portal-database-identity",
-    "title": "Portal identity schema relationships",
-    "view": "implemented schema",
-    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
-    "source": "docs/diagrams/portal-database-identity.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "mfa_recovery",
-        "label": "mfa_recovery",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "recovery_tokens",
-        "label": "recovery_tokens",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "sessions",
-        "label": "sessions",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      }
-    ]
-  },
-  {
-    "id": "portal-database-content",
-    "title": "Portal content schema relationships",
-    "view": "implemented schema",
-    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
-    "source": "docs/diagrams/portal-database-content.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "content",
-        "label": "content",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "facts",
-        "label": "facts",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "revisions",
-        "label": "revisions",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "settings",
-        "label": "settings",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      }
-    ]
-  },
-  {
-    "id": "portal-database-business",
-    "title": "Portal business schema relationships",
-    "view": "implemented schema",
-    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
-    "source": "docs/diagrams/portal-database-business.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "applications",
-        "label": "applications",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "enquiries",
-        "label": "enquiries",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "files",
-        "label": "files",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      }
-    ]
-  },
-  {
-    "id": "portal-database-documents",
-    "title": "Portal documents schema relationships",
-    "view": "implemented schema",
-    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
-    "source": "docs/diagrams/portal-database-documents.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "files",
-        "label": "files",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "templates",
-        "label": "templates",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      }
-    ]
-  },
-  {
-    "id": "portal-database-operations",
-    "title": "Portal operations schema relationships",
-    "view": "implemented schema",
-    "status": "Pinned implemented migration DDL, grouped for readable A4 export; no live rows",
-    "source": "docs/diagrams/portal-database-operations.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": [
-      {
-        "id": "bounded_transfer_chunks",
-        "label": "bounded_transfer_chunks",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "bounded_transfers",
-        "label": "bounded_transfers",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "jobs",
-        "label": "jobs",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "operational_state",
-        "label": "operational_state",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "rate_limits",
-        "label": "rate_limits",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "storage_deletions",
-        "label": "storage_deletions",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
-      },
-      {
-        "id": "users",
-        "label": "users",
-        "responsibility": "Implemented table; see complete SQL reference for constraints and columns.",
-        "url": "/docs/ecosystem/PORTAL_DATABASE"
       }
     ]
   },
@@ -4731,6 +4428,78 @@
     "nodes": [],
     "classification": "internal",
     "explanation": "Private PC-to-Oracle administration boundary; source classification INTERNAL; no private endpoint IDs or credentials."
+  },
+  {
+    "id": "portal-database-identity",
+    "title": "Portal identity schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-identity.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-content",
+    "title": "Portal content schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-content.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-business",
+    "title": "Portal business schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-business.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-documents",
+    "title": "Portal documents schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-documents.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-operations",
+    "title": "Portal operations schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-operations.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-governance",
+    "title": "Portal governance schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-governance.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-lifecycle",
+    "title": "Portal lifecycle schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Source-defined schema through migration010; current production009; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-lifecycle.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "engineering-docs-identity",
+    "title": "Engineering Docs sign-in through Onesa Portal",
+    "view": "prepared identity and authorization flow",
+    "status": "Prepared/default-off; hosted qualification and owner sign-in pending",
+    "source": "docs/diagrams/engineering-docs-identity.mmd",
+    "url": "/docs/ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY",
+    "nodes": []
   },
   {
     "id": "privacy-document-review",
