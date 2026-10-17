@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Correct the Engineering Docs access diagram to distinguish deployed email-code
+  protection from the pending Portal identity cutover. Retain bounded, sanitized
+  hydration-failure observations without changing acceptance assertions or deadlines.
+
 - Remove arrow-in-square link icons throughout public and engineering Docs while
   retaining screen-reader notice for links that open another tab.
 
