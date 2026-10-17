@@ -17,17 +17,21 @@ source remains accessible; anonymous page, search-index and PDF requests remain
 denied. This is configuration/access verification, not an independently witnessed
 new email-code challenge. Never treat an emailed code as independent MFA.
 
-### Portal sign-in implementation prepared — 2026-10-17
+### Portal identity activation and remaining cutover — verified 2026-10-18
 
-The Portal now has a reviewed, default-off implementation for Onesa-branded emailed
-sign-in links or registered email/password and individually approved membership. Its versioned
-[identity and onboarding runbook](../ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY.md)
-records deployment order, independent Access checks, offboarding and rollback.
-This source preparation has not switched the serving Docs login method. Continue
-using the current effective process below until exact-source hosted qualification
-and the owner's actual Portal link/password sign-in establish the cutover.
-Migrations 010/011 define the prepared identity and registration schema; production
-currently has migration 009. Source-derived schema snapshots are not evidence of an applied migration.
+The qualified production Portal API and worker now enable identity and registration.
+Additive migrations 010/011 were applied with existing records, roles and credentials
+preserved: production has 11 recorded migrations and 34 public tables. Isolated
+recovery and hosted qualification evidence are retained in the restricted release
+index; the source-defined schema diagrams are not used as proof of deployment.
+
+The serving Docs login method still uses its approved-email code provider. The
+matching Portal frontend publication and actual provider connection/sign-in must
+complete before selecting the replacement for the two Docs Access applications.
+The [versioned identity and onboarding runbook](../ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY.md)
+describes the protocol, registration and separate authorization boundaries. A pinned
+source snapshot can describe default-off code without claiming the current runtime
+flag is off; use this deployment note and its receipts for activation state.
 
 ### Onboard an approved Onesa engineer
 

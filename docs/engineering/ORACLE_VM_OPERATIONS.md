@@ -155,11 +155,14 @@ The existing Portal backup/monitor timers remain in service. Follow the owning
 [backup reference](../database/BACKUP_RESTORE.md) and
 [monitoring reference](../operations/MONITORING.md); retain existing encryption,
 retention, keys and approved alert destination. Do not rerun an initial empty-database
-restore fixture on populated production. AI's owner-approved 2026-10-16 snapshot
-passed authenticated encryption/tamper checks and restore into one network-isolated
-local container; the owned container and scratch volume were removed. That one-time
-snapshot does not establish a new recurring AI backup service or an agreed RPO/RTO.
-Production-data copies and destructive restores require their own scoped authority.
+restore fixture on populated production. The separate hourly AI and Robot backup
+timers are also active: each product passed its approved off-instance encrypted
+snapshot and independently keyed isolated restore before activation on 2026-10-17.
+Current 2026-10-18 (Europe/Berlin) timer metadata confirms successful execution.
+Their 64 MiB per-product prefix caps do not authorize automatic archive deletion;
+retention decisions remain owner-deferred. The earlier one-time AI snapshot is
+historical evidence, not the current recurring-coverage limit. Production RPO/RTO,
+new production-data copies and any live restore require their own established scope.
 
 If Tailscale access fails, check local and VM device connectivity, approved peer
 policy, `tailscaled`, pinned SSH and existing firewall rules. Use the retained
