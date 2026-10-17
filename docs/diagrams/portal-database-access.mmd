@@ -1,0 +1,45 @@
+%% Portal source schema SHA256: a24b83603dcc14456f61e5b037b98b821c13c9badd6d479ad08d346030f34c2f
+erDiagram
+  access_links {
+    text token_hash PK "NOT NULL"
+    text purpose "NOT NULL"
+    uuid registration_id FK "nullable"
+    uuid user_id FK "nullable"
+    uuid membership_id FK "nullable"
+    text interaction_uid "nullable"
+    text identity_hash "nullable"
+    timestamptz expires_at "NOT NULL"
+    timestamptz consumed_at "nullable"
+    integer attempts "NOT NULL"
+    timestamptz created_at "NOT NULL"
+  }
+  access_registrations {
+    uuid id PK "NOT NULL"
+    text email "NOT NULL"
+    text audience "NOT NULL"
+    text display_name "NOT NULL"
+    text password_hash "nullable"
+    text state "NOT NULL"
+    timestamptz email_verified_at "nullable"
+    uuid reviewed_by FK "nullable"
+    text review_note "NOT NULL"
+    integer revision "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    timestamptz updated_at "NOT NULL"
+  }
+  engineering_credentials {
+    uuid membership_id PK,FK "NOT NULL"
+    text password_hash "NOT NULL"
+    timestamptz created_at "NOT NULL"
+  }
+  engineering_memberships {
+    uuid id PK "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  engineering_memberships o|--o{ access_links : "membership_id to id / CASCADE"
+  access_registrations o|--o{ access_links : "registration_id to id / CASCADE"
+  users o|--o{ access_links : "user_id to id / CASCADE"
+  users o|--o{ access_registrations : "reviewed_by to id / RESTRICT"
+  engineering_memberships ||--o| engineering_credentials : "membership_id to id / CASCADE"
