@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Correct the protected migration guide's virtual-environment path, document all six
+  revisions and the current head, and distinguish forward-only recovery from supported
+  downgrade tests. This documentation change performs no migration or application deployment.
 - Extend restored-copy lockdown with explicit isolated erasure replay, complete
   event/hold categories, source-snapshot binding, atomic cascades and idempotency.
   Live/networked targets and hold conflicts are rejected before mutation; replay
