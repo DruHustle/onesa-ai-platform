@@ -90,7 +90,7 @@ async function checkApplicationsNavigation(view){
  expect(actual,`${view} applications dropdown must match the pinned product registry`).toEqual(expectedApplications);
  for(let index=0;index<expectedApplications.length;index++){
   await expect(links.nth(index)).toBeVisible();
-  expect(await links.nth(index).locator('svg').count(),'External destinations use one framework icon').toBeLessThanOrEqual(1);
+  expect(await links.nth(index).locator('svg').count(),'Application links have no decorative external-link icons').toBe(0);
  }
  evidence.navigation.push({view,links:actual});
  if(view==='mobile')await page.getByRole('button',{name:'Close navigation bar',exact:true}).click();
