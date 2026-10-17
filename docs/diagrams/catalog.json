@@ -3543,97 +3543,103 @@
     "id": "docs-access-current",
     "title": "Public and protected engineering documentation",
     "view": "deployment",
-    "status": "Origin and preview Access MFA policies and bindings verified; 15 anonymous redirects passed, authorized-user and content acceptance pending",
+    "status": "Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
     "source": "docs/diagrams/docs-access-current.mmd",
     "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
     "nodes": [
       {
         "id": "Reader",
         "label": "Documentation reader",
-        "responsibility": "Documentation reader. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Documentation reader. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Public",
         "label": "Vercel docs.onesa.eu",
-        "responsibility": "Vercel docs.onesa.eu. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Vercel docs.onesa.eu. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Allow",
         "label": "Allowlisted public build diagrams search and downloads",
-        "responsibility": "Allowlisted public build diagrams search and downloads. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Allowlisted public build diagrams search and downloads. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Engineer",
         "label": "Approved engineer",
-        "responsibility": "Approved engineer. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Approved engineer. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Policy",
-        "label": "Access application identity and MFA gate - pending hosted acceptance",
-        "responsibility": "Access application identity and MFA gate - pending hosted acceptance. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "label": "Exact approved email membership - current email-code sign-in",
+        "responsibility": "Exact approved email membership - current email-code sign-in. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Token",
         "label": "Signed Access assertion",
-        "responsibility": "Signed Access assertion. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Signed Access assertion. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Worker",
-        "label": "Pages fail-closed JWT verifier implemented",
-        "responsibility": "Pages fail-closed JWT verifier implemented. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "label": "Deployed Pages fail-closed JWT verifier",
+        "responsibility": "Deployed Pages fail-closed JWT verifier. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Private",
         "label": "Separate internal pages diagrams assets indexes and PDFs",
-        "responsibility": "Separate internal pages diagrams assets indexes and PDFs. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Separate internal pages diagrams assets indexes and PDFs. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Anonymous",
         "label": "Anonymous wrong audience forged token or disallowed host",
-        "responsibility": "Anonymous wrong audience forged token or disallowed host. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Anonymous wrong audience forged token or disallowed host. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Denied",
         "label": "Deny before accessing assets",
-        "responsibility": "Deny before accessing assets. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Deny before accessing assets. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Origin",
         "label": "pages.dev direct domains preview aliases and custom host",
-        "responsibility": "pages.dev direct domains preview aliases and custom host. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "pages.dev direct domains preview aliases and custom host. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Missing",
         "label": "Missing server bindings or unavailable identity",
-        "responsibility": "Missing server bindings or unavailable identity. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Missing server bindings or unavailable identity. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Source",
         "label": "Public Git repositories",
-        "responsibility": "Public Git repositories. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Public Git repositories. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Boundary",
         "label": "Hosted access protection does not make committed source confidential",
-        "responsibility": "Hosted access protection does not make committed source confidential. Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified",
+        "responsibility": "Hosted access protection does not make committed source confidential. Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
+      },
+      {
+        "id": "Planned",
+        "label": "Onesa emailed link or email and password - no additional Docs MFA",
+        "responsibility": "Prepared Portal identity replacement; requires qualified API/worker/frontend activation and independent Access provider verification. Existing administrator MFA is unchanged.",
+        "url": "/docs/ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY"
       }
     ],
-    "explanation": "Public live; Pages placeholder exists, engineering Access app MFA and owner-login acceptance not verified. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "explanation": "Public and protected source 6a1cce4 accepted in production; exact approved-email access uses email codes. Portal identity replacement is prepared, not activated. Solid arrows show the current protected publication; the dashed path shows the pending identity cutover. Hosted protection does not make public Git source confidential.",
+    "reviewed_at": "2026-10-17"
   },
   {
     "id": "data-current",
