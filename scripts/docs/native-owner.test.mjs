@@ -4,9 +4,35 @@ import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
 import {createRequire} from 'node:module';
 import {nativeGet,exactPreviewOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
+import {waitForInteractiveDocumentation} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
 const PREVIEW='https://onesa-docs-synthetic-druhustles-projects.vercel.app';
+
+test('hydration failure retains bounded state and phase without weakening the assertion',async t=>{
+ const browser=await chromium.launch();t.after(()=>browser.close());
+ const page=await browser.newPage();
+ await page.setContent('<!doctype html><title>Private synthetic title</title><main>Not hydrated</main>');
+ await assert.rejects(waitForInteractiveDocumentation(page,50,'mobile'),error=>{
+  assert.equal(error.matcherResult?.name,'toHaveAttribute');
+  assert.deepEqual(error.documentationObservation,{phase:'mobile',state:{readyState:'complete',hydrated:false,visible:true,scripts:0}});
+  assert.ok(!JSON.stringify(error.documentationObservation).includes('Private synthetic title'));
+  return true;
+ });
+ await page.locator('html').evaluate(node=>node.setAttribute('data-has-hydrated','true'));
+ await waitForInteractiveDocumentation(page,50,'desktop');
+});
+
+test('failed hydration observation preserves the original failure and rejects arbitrary phase text',async t=>{
+ const browser=await chromium.launch();t.after(()=>browser.close());
+ const page=await browser.newPage();await page.setContent('<!doctype html><title>Synthetic</title>');
+ const facade=new Proxy(page,{get(target,key){if(key==='evaluate')return async()=>{throw Error('Synthetic observation failure');};const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
+ await assert.rejects(waitForInteractiveDocumentation(facade,50,'https://private.invalid/?token=synthetic'),error=>{
+  assert.equal(error.matcherResult?.name,'toHaveAttribute');
+  assert.deepEqual(error.documentationObservation,{phase:'unspecified',state:null});
+  return true;
+ });
+});
 
 test('only exact public Preview origin is accepted',()=>{
  assert.equal(exactPreviewOrigin(PREVIEW+'/'),PREVIEW);
