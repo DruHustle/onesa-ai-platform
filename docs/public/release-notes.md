@@ -1,5 +1,17 @@
 # Release notes and supported versions
 
+## Reading and navigation in this documentation
+
+Follow Start here → Product guides → Tutorials → API → Architecture → Troubleshooting
+and releases. The quickstart distinguishes host port 3100 from container port 3000,
+uses locked setup steps and waits for local readiness. Search previews show readable
+prose while retaining code terms for ranking.
+
+The generated site provenance identifies this artifact's source and documentation
+version. AI, Portal and Robot applications have independent deployment identities;
+a documentation release is not proof that every application change is live.
+
+
 <!-- documentation-version:start -->
 Documentation: 0.3.0. API contract: /api/v1. Application and model revisions are independent.
 <!-- documentation-version:end -->
