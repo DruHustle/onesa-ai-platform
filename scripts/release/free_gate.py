@@ -419,6 +419,32 @@ def _internal_docs_fresh(timestamp, now):
         raise e.Rejected("Fresh metadata timestamps required") from None
 
 
+def _internal_docs_diagram_count():
+    """Bind coverage to this reviewed source, preserving the established floor."""
+    try:
+        raw = (e.ROOT / "docs/diagrams/catalog.json").read_text()
+        e.require(len(raw) <= 2 * 1024 * 1024, "Bounded diagram catalog required")
+        catalog = json.loads(raw)
+    except (OSError, ValueError, UnicodeError):
+        raise e.Rejected("Reviewed diagram catalog required") from None
+    e.require(
+        isinstance(catalog, list)
+        and 83 <= len(catalog) <= 20000
+        and all(
+            isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", item["id"])
+            for item in catalog
+        ),
+        "Complete reviewed diagram catalog required",
+    )
+    e.require(
+        len({item["id"] for item in catalog}) == len(catalog),
+        "Unique reviewed diagram identifiers required",
+    )
+    return len(catalog)
+
+
 def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
     """Same strict no-grant metadata contract for draft or Actions custody."""
     expected_ci = [item for item in ci if item["workflow"] == e.POLICY["ci"]]
@@ -517,7 +543,7 @@ def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
         "application_navigation_views": 2,
         "identity_icons": 3,
         "pdfs": 22,
-        "diagrams": 83,
+        "diagrams": _internal_docs_diagram_count(),
         "authentication_policy_checks": 1,
         "blocking_accessibility": 0,
         "unexpected_browser_errors": 0,

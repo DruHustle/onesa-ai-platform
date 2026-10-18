@@ -308,6 +308,11 @@ Use the supported Node 24/Python 3.11 environment and locked dependencies from
 [BUILD_AND_TEST](BUILD_AND_TEST.md). Regenerate assets from reviewed source and set the
 deployed origins before building:
 
+The release metadata must count every diagram in the reviewed catalog, rather than
+reuse a previous release's fixed count. Preserve native receipts before validating
+their counters; a rejected handoff must not discard the browser evidence needed to
+diagnose it. Counts alone never grant production authority.
+
 ```sh
 make docs-assets
 ONESA_DOCS_HOSTING=cloudflare-access \
