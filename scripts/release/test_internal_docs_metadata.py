@@ -7,6 +7,8 @@ import subprocess
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -61,7 +63,9 @@ class DraftGitHub(GitHub):
                 "application_navigation_views": 2,
                 "identity_icons": 3,
                 "pdfs": 22,
-                "diagrams": 83,
+                "diagrams": len(
+                    json.loads((e.ROOT / "docs/diagrams/catalog.json").read_text())
+                ),
                 "authentication_policy_checks": 1,
                 "blocking_accessibility": 0,
                 "unexpected_browser_errors": 0,
@@ -125,6 +129,48 @@ class InternalDocsMetadataTests(unittest.TestCase):
         return f.internal_docs_preview_metadata(
             self.github, SHA, 100, 200, self.github.asset["digest"], PRODUCER, **kwargs
         )
+
+    def test_current_source_diagram_coverage_cannot_be_omitted(self):
+        self.read()
+        self.github.metadata["counts"]["diagrams"] -= 1
+        self.github.refresh()
+        with self.assertRaises(e.Rejected):
+            self.read()
+
+    def test_catalog_growth_requires_matching_verified_count(self):
+        catalog = json.loads((e.ROOT / "docs/diagrams/catalog.json").read_text())
+        catalog.append({"id": "synthetic-additional-architecture"})
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "docs/diagrams/catalog.json"
+            target.parent.mkdir(parents=True)
+            target.write_text(json.dumps(catalog))
+            with patch.object(e, "ROOT", root):
+                with self.assertRaises(e.Rejected):
+                    self.read()
+                self.github.metadata["counts"]["diagrams"] = len(catalog)
+                self.github.refresh()
+                self.read()
+
+    def test_incomplete_duplicate_or_malformed_catalog_fails_closed(self):
+        cases = [
+            [],
+            [{"id": "duplicate"}] * 83,
+            [{"id": "invalid/id"}] * 83,
+            {"diagrams": 87},
+        ]
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "docs/diagrams/catalog.json"
+            target.parent.mkdir(parents=True)
+            with patch.object(e, "ROOT", root):
+                for catalog in cases:
+                    target.write_text(json.dumps(catalog))
+                    with self.subTest(catalog=catalog), self.assertRaises(e.Rejected):
+                        f._internal_docs_diagram_count()
+                target.write_text("not JSON")
+                with self.assertRaises(e.Rejected):
+                    f._internal_docs_diagram_count()
 
     def test_actual_api_custody_still_cannot_authorize_or_establish_hosted_pass(self):
         result = self.read()
