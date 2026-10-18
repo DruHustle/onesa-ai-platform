@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Record the verified production Onesa Portal sign-in connection for protected
+  Engineering Docs, preserve scoped Access membership and rollback, and refresh
+  the pinned email-only registration runbook. Keep schema-generation output free
+  of stale claims about deployed migrations.
+
 - Bind protected Docs release metadata to the reviewed diagram catalog, so newly
   documented architecture is counted without accepting omitted or duplicate diagrams.
 

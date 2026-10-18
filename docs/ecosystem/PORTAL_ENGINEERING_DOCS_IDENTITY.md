@@ -42,6 +42,12 @@ sequenceDiagram
 ## Registration and owner approval
 
 First-time users select Company administration or Engineering Docs at `/access/register`.
+The form asks only for their email and requested access. The full normalized email
+identifies the request and is shown to the owner; no personal name is collected.
+For compatibility with the deployed API, the frontend derives its required display
+label from the email, bounded to 120 characters. This label is never an identity or
+authorization key; the complete email remains unchanged even when it is longer.
+Existing records, account names, credentials and approval decisions are preserved.
 A one-use verification link opens `/access/confirm`; its token stays in the URL fragment
 until the page removes it into memory. GET requests and mail scanners do not redeem it.
 The user explicitly confirms and chooses a password of at least 14 characters. New
@@ -125,6 +131,12 @@ bind the interaction and membership revision. Global admin session revocation al
 removes outstanding admin links. Missing/expired/wrong-cookie interactions,
 wrong Origin/CSRF, expired/replayed links, excessive attempts and invalid callbacks
 fail closed. Do not send a code, session or Access bypass token to a crawler.
+An emailed link also works when its sign-in page is already open: hash navigation
+updates the in-memory proof and removes the fragment, without submitting it. An
+explicit confirmation remains necessary; an admin link still requires its MFA factor.
+The Portal mail worker uses the existing Onesa sender configuration. Cloudflare's
+interim email-code sender remains separate until the qualified Portal identity cutover;
+do not claim the new sender experience is live from source or local tests alone.
 A delivery failure stays visible in existing worker monitoring; provider acceptance
 is not inbox receipt. Codes are never logged or stored as plaintext job text.
 
