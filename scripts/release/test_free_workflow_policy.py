@@ -304,7 +304,10 @@ for(const privateRepo of [false,true]) for(const allowance of ['', 'false', 'tru
 }
 """
         result = subprocess.run(
-            ["node", "-e", program, condition], capture_output=True, text=True
+            ["node", "-e", program, condition],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -331,5 +334,6 @@ for(const condition of JSON.parse(process.argv[1])) {
             ["node", "-e", program, json.dumps(conditions)],
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
