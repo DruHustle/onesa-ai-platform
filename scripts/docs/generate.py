@@ -28,6 +28,9 @@ def write(name, value):
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
 
+from documentation_identity import documentation_version, sync_release_summary
+from search_content import api_entry
+from search_content import entry as search_entry
 from source_policy import sources as documentation_sources
 
 
@@ -35,6 +38,7 @@ def generate():
     from ecosystem import validate as validate_ecosystem
 
     validate_ecosystem()
+    sync_release_summary()
     schema = create_app(Settings()).openapi()
     # Public application contracts only; operational/private endpoints are excluded.
     schema["paths"] = {
@@ -263,26 +267,13 @@ def generate():
         rel = doc.relative_to(ROOT / "docs").with_suffix("").as_posix()
         raw = doc.read_text()
         title = next(iter(re.findall(r"^# (.+)$", raw, re.MULTILINE)), doc.stem)
-        text = re.sub(r"[`#*|>]", "", raw)
         search.append(
-            {
-                "title": title,
-                "url": "/docs" if rel == "README" else "/docs/" + rel,
-                "text": text,
-            }
+            search_entry(title, "/docs" if rel == "README" else "/docs/" + rel, raw)
         )
     for path, operations in schema["paths"].items():
         for method, operation in operations.items():
             if method in ["get", "post", "put", "patch", "delete"]:
-                search.append(
-                    {
-                        "title": method.upper() + " " + path,
-                        "url": "/api-explorer",
-                        "text": operation.get("summary", "")
-                        + " "
-                        + json.dumps(operation),
-                    }
-                )
+                search.append(api_entry(path, method, operation))
     write("search.json", search)
     sources = {
         str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -297,7 +288,7 @@ def generate():
     write(
         "provenance.json",
         {
-            "documentation_version": "0.2.0",
+            "documentation_version": documentation_version(),
             "schema_head": REQUIRED_SCHEMA_REVISION,
             "sources": sources,
             "openapi_sha256": hashlib.sha256(
@@ -401,7 +392,7 @@ def split(schema, tables):
                 if relative.as_posix() == "README.md"
                 else "/docs/" + relative.with_suffix("").as_posix()
             )
-            search.append({"title": title, "url": url, "text": raw})
+            search.append(search_entry(title, url, raw))
             for start in range(0, len(raw), 1000):
                 text = raw[start : start + 1200]
                 if re.search(r"\w", text):
@@ -447,24 +438,18 @@ def split(schema, tables):
         for path, operations in doc_schema["paths"].items():
             for method, operation in operations.items():
                 if method in ["get", "post", "patch", "delete", "put"]:
-                    search.append(
-                        {
-                            "title": method.upper() + " " + path,
-                            "url": "/api-explorer",
-                            "text": operation.get("summary", "")
-                            + " "
-                            + json.dumps(operation),
-                        }
-                    )
+                    search.append(api_entry(path, method, operation))
         if scope == "internal":
             shutil.copyfile(OUTPUT / "database.json", static / "database.json")
             for table in tables:
                 search.append(
-                    {
-                        "title": "Table: " + table["name"],
-                        "url": "/database",
-                        "text": json.dumps(table),
-                    }
+                    search_entry(
+                        "Table: " + table["name"],
+                        "/database",
+                        json.dumps(table),
+                        preview="Schema fields: "
+                        + ", ".join(c["name"] for c in table["columns"]),
+                    )
                 )
         diagrams = [
             d.copy()
@@ -497,11 +482,12 @@ def split(schema, tables):
                 )
             ]
             search.append(
-                {
-                    "title": d["title"],
-                    "url": "/architecture",
-                    "text": source + " " + d["status"],
-                }
+                search_entry(
+                    d["title"],
+                    "/architecture",
+                    source + " " + d["status"],
+                    preview=d["title"] + ". " + d["status"],
+                )
             )
         # Product contracts are source snapshots pinned to independently reviewed revisions.
         cross = ROOT / "docs/ecosystem/contracts"
@@ -526,6 +512,7 @@ def split(schema, tables):
             },
             "provenance.json": {
                 "version": policy["version"],
+                "documentation_version": documentation_version(),
                 "classification": scope,
                 "revision": os.environ.get("GITHUB_SHA")
                 or subprocess.check_output(

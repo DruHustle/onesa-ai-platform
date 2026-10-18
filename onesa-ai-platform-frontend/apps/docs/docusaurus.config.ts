@@ -3,6 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 import {readdir, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {version as documentationVersion} from './package.json';
 import applications from '../../packages/onesa-design/onesa-applications.json';
 import {resolveApplicationOrigin} from './src/lib/application-origin.mjs';
 const lightCodeColors:Record<string,string>={'#999988':'#586069','#e3116c':'#a31545','#36acaa':'#006a67','#00a4db':'#005f86','#d73a49':'#982f3b'};
@@ -31,7 +32,7 @@ const config: Config = {
   onBrokenLinks:'throw', onBrokenAnchors:'throw', trailingSlash:false,
   markdown:{format:'md', mermaid:true}, themes:['@docusaurus/theme-mermaid'],
   plugins:[function onesaProductContext(){return {name:'onesa-product-context',async postBuild({outDir}:{outDir:string}){const visit=async(directory:string):Promise<void>=>{for(const entry of await readdir(directory,{withFileTypes:true})){const file=join(directory,entry.name);if(entry.isDirectory())await visit(file);else if(entry.name.endsWith('.html')){const html=await readFile(file,'utf8');await writeFile(file,html.replace(/<html\b/,'<html data-onesa-product="docs"'));}}};await visit(outDir);}};}],
-  customFields:{documentationVersion:'0.3.0', apiUrl, scope, appUrl, environment, staticHosting:staticHosting || accessHosting},
+  customFields:{documentationVersion, apiUrl, scope, appUrl, environment, staticHosting:staticHosting || accessHosting},
   presets:[['classic', {docs:{numberPrefixParser:false,path:`.generated/${scope}/docs`, sidebarPath:'./sidebars.ts', showLastUpdateTime:false}, pages:{path:`.generated/${scope}/pages`}, blog:false, theme:{customCss:'./src/css/custom.css'}} satisfies Options]],
   themeConfig:{
     colorMode:{defaultMode:'light', respectPrefersColorScheme:true,disableSwitch:true},
@@ -41,7 +42,7 @@ const config: Config = {
       {label:'Reference',position:'left',items:[{to:internal?'/docs':'/docs/public/introduction',label:'Documentation index'},{to:'/api-explorer',label:'API'},...(internal?[{to:'/database',label:'Database'}]:[]),{to:'/tutorials',label:'Guides'},{to:'/downloads',label:'Downloads'},{to:'/assistant',label:'Ask Onesa'}]},
       {label:'Onesa applications',position:'right',items:applications.applications.map(application=>({href:application.id==='ai'?appUrl:application.id==='docs'?publicDocsUrl:application.href,label:application.label}))},
       ...(internal?[{href:publicDocsUrl,label:'Public docs',position:'right' as const}]:[]),{type:'search',position:'right'}]},
-    footer:{style:'dark', copyright:'Onesa UG · Engineering Intelligent Possibilities · Documentation v0.3.0'},
+    footer:{style:'dark', copyright:`Onesa UG · Engineering Intelligent Possibilities · Documentation v${documentationVersion}`},
     prism:{theme:lightCodeTheme,additionalLanguages:['python','bash','json','sql','yaml','typescript']},
   } satisfies ThemeConfig,
 };

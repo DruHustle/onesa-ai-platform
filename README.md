@@ -104,7 +104,7 @@ and reconcile them into dev/staging. Ordinary version PR automation stays disabl
 Delivery qualifies exact source/artifacts through CI, hosted staging, scoped legal and
 operational evidence, owner-controlled promotion and production acceptance. The
 [deployment guide](docs/engineering/DEPLOYMENT.md) records commands and restrictions.
-GitHub Free limitations mean a written convention is not enforced branch protection.
+Current public repositories enforce main PR/check, force-push and deletion protection; see the branch-protection report.
 No local check or prior staging result alone establishes a new production release.
 
 ## Documentation, reporting and status

@@ -15,6 +15,9 @@ def validate(staged=False, assets_only=False):
     from ecosystem import validate as validate_ecosystem
 
     validate_ecosystem()
+    from documentation_identity import validate_identity
+
+    documentation_version = validate_identity()
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
     from visual_policy import validate_navigation
 
@@ -170,8 +173,12 @@ def validate(staged=False, assets_only=False):
                 assert (
                     hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest
                 ), f"PDF source drift: {source}"
-            assert manual["version"] == policy["version"], "PDF version drift"
+            assert manual["version"] == documentation_version, "PDF version drift"
             document = PdfReader(path)
+            cover = " ".join((document.pages[0].extract_text() or "").split())
+            assert "Version " + documentation_version in cover, (
+                "PDF cover version drift"
+            )
             assert len(document.pages) >= 3
             text = "\n".join(page.extract_text() for page in document.pages)
             assert policy["version"] in text and scope in text.lower()

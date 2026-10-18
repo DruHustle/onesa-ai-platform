@@ -260,3 +260,21 @@ test('without newer AbortSignal helpers, a stalled index reaches a bounded error
   f.release();
   assert.deepEqual(f.errors, []);
 });
+
+test('readable previews hide diagram/Markdown syntax while retaining code terms, ranking and keyboard links', async t => {
+  const data=[
+    {title:'Authentication guide',url:'/docs/auth',text:'Authentication uses a protected session.',preview:'Authentication uses a protected session.',keywords:'Authentication session flowchart LR SessionNode --> LoginNode'},
+    {title:'POST /api/v1/auth/login',url:'/api-explorer',text:'Create a session. 200 Session created',preview:'Create a session. 200 Session created',keywords:'authentication password'},
+  ];
+  const index=helpers.prepareSearchIndex(data);
+  assert.equal(helpers.searchDocumentation(index,'SessionNode')[0].url,'/docs/auth');
+  assert.deepEqual(helpers.searchDocumentation(index,'authentication').map(x=>x.url),['/docs/auth','/api-explorer']);
+  const f=await fixture(t,{body:JSON.stringify(data)});
+  await f.input.fill('authentication');
+  await expect(f.page.locator('.search-results small')).toHaveText(data.map(x=>x.preview));
+  await expect(f.page.locator('.search-results')).not.toContainText('flowchart');
+  await expect(f.page.locator('.search-results a').first()).toHaveAttribute('href','/docs/auth');
+  await f.page.keyboard.press('Escape');await expect(f.input).toBeFocused();
+  await f.page.keyboard.press('Control+k');await expect(f.page.locator('.search-results a')).toHaveCount(2);
+  await f.page.keyboard.press('Enter');await expect(f.page).toHaveURL(origin+'/docs/auth');
+});
