@@ -9,7 +9,7 @@ class ManualSourceLinksTests(unittest.TestCase):
     def test_public_and_protected_sources_use_their_own_canonical_host(self):
         for scope, origin in [
             ("public", "https://docs.onesa.eu"),
-            ("internal", "https://onesa-engineering-docs.pages.dev"),
+            ("internal", "https://docs.engineering.onesa.eu"),
         ]:
             validate_manual_source_links(
                 {origin + "/docs/engineering/EXAMPLE"},

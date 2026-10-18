@@ -18,7 +18,7 @@ function configuration(env) {
   const hosts=JSON.parse(env.CF_ACCESS_ALLOWED_HOSTS || 'null');
   if (!Array.isArray(audiences) || !audiences.length || audiences.length>8 || audiences.some(x=>typeof x!=='string'||!/^[a-f0-9]{64}$/.test(x))) throw new Error('Access audience missing');
   if (!Array.isArray(emails)||!emails.length||emails.length>50||emails.some(x=>typeof x!=='string'||!/^\S+@\S+\.\S+$/.test(x))) throw new Error('Engineering identities missing');
-  if (!Array.isArray(hosts)||!hosts.length||hosts.length>8||hosts.some(x=>typeof x!=='string'||!(/^[a-z0-9-]+\.pages\.dev$/.test(x)||/^\*\.[a-z0-9-]+\.pages\.dev$/.test(x)||x==='engineering.docs.onesa.eu'))) throw new Error('Approved hosts missing');
+  if (!Array.isArray(hosts)||!hosts.length||hosts.length>8||hosts.some(x=>typeof x!=='string'||!(/^[a-z0-9-]+\.pages\.dev$/.test(x)||/^\*\.[a-z0-9-]+\.pages\.dev$/.test(x)||x==='docs.engineering.onesa.eu'))) throw new Error('Approved hosts missing');
   return {issuer:'https://'+env.CF_ACCESS_TEAM_DOMAIN,audiences,emails:emails.map(x=>x.toLowerCase()),hosts};
 }
 

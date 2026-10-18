@@ -185,7 +185,7 @@ jobs:
 
         '
     - name: Build and verify classified protected Docs before provider credentials
-      run: 'ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_STATIC_HOSTING=false ONESA_DOCS_URL=https://onesa-engineering-docs.pages.dev
+      run: 'ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_STATIC_HOSTING=false ONESA_DOCS_URL=https://docs.engineering.onesa.eu
         npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
 
         .venv/bin/python scripts/docs/validate.py
