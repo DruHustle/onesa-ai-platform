@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reject invalid agent tool permissions before reserving model capacity. Valid runs
+  retain shared admission, final session/lease verification and unconditional cleanup.
+
 - Prepare clearer sign-in/registration orientation and first-use knowledge/documentation
   links without changing conversations, access policy or model behavior. Give footer
   links comfortable touch targets and verify the new Docs learning sequence.

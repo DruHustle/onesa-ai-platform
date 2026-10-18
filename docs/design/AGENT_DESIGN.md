@@ -6,6 +6,13 @@ Explicit caller-supplied steps bypass planning. Plans are capped at 8 calls/16k 
 characters and the configured generation deadline; permissions remain caller/server
 allowlist intersection, independent of model text.
 
+Authentication, request validation and explicit tool-permission checks precede
+shared model admission. Invalid permissions return 403 without reserving generation
+capacity. Valid explicit and model-planned runs use the same concurrency, rate,
+token-reservation and expiry limits. Their route releases admission in `finally`,
+including planning/execution failure or cancellation, and rechecks session/lease
+authority before returning a result. A lost session or lease cannot expose tool output.
+
 ToolRegistry validates arguments with each tool's Pydantic model, then runs a coroutine
 with a two-second deadline. Current tools are arithmetic (finite bounded numbers; no
 expression eval) and text statistics. There are zero automatic retries. Execution has a
