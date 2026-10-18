@@ -55,6 +55,10 @@ try{
  for(const day of navigation.days){await expect(page.locator('#day-'+day.id)).toContainText(day.title);await expect(page.locator('#day-'+day.id+' .learning-checkpoints input')).toHaveCount(day.checkpoints.length);results.learning_days++;}
  for(const entry of [...navigation.architecture,...navigation.chapters,...navigation.days])expect((await fs.stat(path.join(internal,entry.url+'.html'))).isFile()).toBe(true);
  await page.getByLabel('Search documentation').fill('Day 4');await expect(page.locator('.search-results a').first()).toBeVisible();await page.keyboard.press('Escape');
- await page.goto(fixture+'/docs/onboarding/START_HERE');await expect(page.locator('.theme-doc-sidebar-container')).toContainText('Architecture & Workflows');await expect(page.locator('.theme-doc-sidebar-container')).toContainText('Engineering Onboarding');
+ await page.goto(fixture+'/docs/onboarding/START_HERE');
+ const sidebar=page.locator('.theme-doc-sidebar-container');
+ for(const label of ['Start here','Product guides','Tutorials','API','Architecture','Troubleshooting and releases'])await expect(sidebar).toContainText(label);
+ expect(await sidebar.locator('.menu__list').first().evaluate(list=>[...list.children].map(item=>item.querySelector('.menu__link')?.textContent?.trim()).slice(0,6))).toEqual(['Start here','Product guides','Tutorials','API','Architecture','Troubleshooting and releases']);
+ await expect(sidebar.getByRole('link',{name:'Engineering onboarding',exact:true})).toHaveAttribute('href','/onboarding');
  expect(errors).toEqual([]);console.log(JSON.stringify({result:'PASS',...results},null,2));
 }finally{await browser.close();}

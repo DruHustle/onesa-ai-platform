@@ -576,7 +576,7 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .error { overflow-wrap: anywhere; }
 .environment-context { padding: .4rem 1rem; font-size: .75rem; font-weight: 700; background: var(--onesa-info-surface); color: var(--onesa-info); border-bottom: 1px solid var(--onesa-divider); }
 .company-footer { display:flex; flex-wrap:wrap; justify-content:center; gap:.75rem; padding:1rem; font-size:.875rem; line-height:1.6; overflow-wrap:anywhere; }
-.company-footer a { text-decoration:underline; text-underline-offset:.2em; }
+.company-footer a { display:inline-flex; align-items:center; min-height:44px; padding-inline:.25rem; text-decoration:underline; text-underline-offset:.2em; }
 .search-form { flex-wrap: wrap; }
 @media (max-width: 390px) { .search-form { flex-direction: column; align-items: stretch; } .form-row { grid-template-columns: 1fr; } .feature-shell { padding: 1rem; } }
 @media print { .sidebar, .composer, .environment-context { display: none; } .workspace { display: block; height: auto; } .messages { overflow: visible; } }

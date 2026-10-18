@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Prepare clearer sign-in/registration orientation and first-use knowledge/documentation
-  links without changing conversations, access policy or model behavior.
+  links without changing conversations, access policy or model behavior. Give footer
+  links comfortable touch targets and verify the new Docs learning sequence.
 - Organize documentation around Start here, Product guides, Tutorials, API, Architecture
   and Troubleshooting/releases; preserve classified builds and primary source identities.
 - Remove the second Chat dependency install from the same browser CI job; retain the
