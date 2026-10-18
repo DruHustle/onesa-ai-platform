@@ -2,19 +2,19 @@ flowchart TB
 Dev[dev source changes] --> Review[Reviewdog static review and publication hygiene]
 Review --> CI[Unit integration browser builds and security scanning]
 CI --> Stage[Reviewed PR to staging]
-Stage --> Bridge[Portal and AI deploy.yml staging bridge]
-Stage --> Robot[Robot release-candidate.yml staging bridge]
-Bridge --> VS[Vercel protected Preview and Render staging APIs]
+Stage --> Bridge[Owner-controlled Portal and AI staging release]
+Stage --> Robot[Protected Robot staging qualification]
+Bridge --> VS[Vercel protected Preview and existing Oracle staging APIs]
 Robot --> VS
-Stage --> ARM[scripts/oracle_worker.py qualified ARM64 rollout]
+Stage --> ARM[Qualified Oracle ARM64 worker and scanner rollout]
 ARM --> Oracle[Oracle synthetic staging worker and ClamAV]
 VS --> Acceptance[Hosted E2E identity ownership persistence]
 Oracle --> Acceptance
 CF[Actual Cloudflare generation and embedding tests] --> Acceptance
-Acceptance --> Gates[CODE_VERIFIED STAGING_VERIFIED OPERATIONS_VERIFIED CONTENT_LEGAL_APPROVED]
+Acceptance --> Gates[Exact-source CI staging operations and scoped owner publication]
 Gates --> Owner[Single authorized owner decision - accepted]
 Owner --> Main[Qualified PR staging to main]
-Main --> Prod[Vercel Render qualified Oracle and separate docs deploys]
+Main --> Prod[Vercel Oracle and separately qualified documentation releases]
 Prod --> Verify[Exact revision readiness hosted tests and monitoring]
 CI --> Fail[FAIL - fix on dev and re-run]
 Acceptance --> Fail
