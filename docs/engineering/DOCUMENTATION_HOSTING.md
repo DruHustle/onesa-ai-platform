@@ -6,18 +6,21 @@ Use https://onesa-engineering-docs.pages.dev/ for protected engineering Docs.
 The 2026-10-17 owner direction supersedes the earlier code-only selection: new
 users register for owner approval, with emailed sign-in links or email/password.
 Existing exact-email approvals remain valid; admin MFA remains intact and Docs
-adds no separate MFA enrollment. The currently serving provider still uses email codes
-until the qualified Portal identity cutover. This supersedes the earlier Docs-specific MFA
-direction recorded below; it does not change Cloudflare Dashboard or other service
-authentication. The existing email-code identity provider and two approved owner
-addresses are verified. Both canonical and preview policies now disable the extra
-independent MFA step. Readback confirms unchanged membership, eight-hour sessions,
-all four site bindings and organization settings. The current authenticated Docs
-source remains accessible; anonymous page, search-index and PDF requests remain
-denied. This is configuration/access verification, not an independently witnessed
-new email-code challenge. Never treat an emailed code as independent MFA.
+adds no separate MFA enrollment. The production Docs applications now use Onesa
+Portal as their explicitly selected identity provider. Engineers choose an Onesa
+email sign-in link or their registered email/password; the normal sign-in flow opens
+Engineering Docs rather than the identity-provider connection-test page.
 
-### Portal identity activation and remaining cutover — verified 2026-10-18
+The owner completed the actual supported provider connection test on 18 October
+2026. Fresh anonymous canonical and preview sessions then reached the two-method
+Onesa Portal sign-in page. The existing owner session opened the engineering
+homepage. These observations remain distinct: an existing session is not claimed
+as a second independently witnessed login challenge. Exact-email membership,
+eight-hour sessions and all four private Worker bindings remain unchanged. Portal
+administration retains its separate MFA and roles; Docs membership grants no
+Dashboard or Portal administrator access.
+
+### Portal identity activation and release verification — verified 2026-10-18
 
 The qualified production Portal API and worker now enable identity and registration.
 Additive migrations 010/011 were applied with existing records, roles and credentials
@@ -25,13 +28,18 @@ preserved: production has 11 recorded migrations and 34 public tables. Isolated
 recovery and hosted qualification evidence are retained in the restricted release
 index; the source-defined schema diagrams are not used as proof of deployment.
 
-The serving Docs login method still uses its approved-email code provider. The
-matching Portal frontend publication and actual provider connection/sign-in must
-complete before selecting the replacement for the two Docs Access applications.
+The production Portal frontend, API and worker are active. The dedicated Portal
+OIDC provider is selected only for the canonical and wildcard Engineering Docs
+Access applications, with automatic identity redirection. The previous code
+provider remains available for scoped rollback but is not selected for these Docs
+applications. Other applications and their login choices remain unchanged.
+
 The [versioned identity and onboarding runbook](../ecosystem/PORTAL_ENGINEERING_DOCS_IDENTITY.md)
-describes the protocol, registration and separate authorization boundaries. A pinned
-source snapshot can describe default-off code without claiming the current runtime
-flag is off; use this deployment note and its receipts for activation state.
+describes registration, one-use links, password sign-in and separate authorization
+boundaries. Registration uses the full normalized email as the identifier and does
+not request a personal name. A pinned source snapshot can describe default-off
+configuration without claiming the deployed runtime is off; use the deployment
+receipts for actual activation state.
 
 ### Onboard an approved Onesa engineer
 
@@ -58,9 +66,10 @@ alone is not an engineering role: approve each engineer before adding membership
    The external release verifier must bind to
    that newly approved membership; a historical fixed member count is not authority
    to reject an approved engineer or widen the allowlist silently.
-5. Give the engineer the protected Docs URL. Cloudflare sends the code when they
-   request sign-in. They enter the code themselves; never collect their mailbox
-   password or code. Docs access does not grant Cloudflare Dashboard administration.
+5. Give the engineer the protected Docs URL. It opens Onesa Portal sign-in, where
+   they choose an emailed Onesa sign-in link or their registered Portal password.
+   They complete email verification themselves; never collect mailbox passwords,
+   sign-in links or codes. Docs access grants no Dashboard administration.
 6. Verify the new identity can read the intended protected pages, search and downloads,
    while an anonymous client and a nonmember still cannot. Record the actual effective
    sign-in policy and results; configuration alone is not a completed login test.

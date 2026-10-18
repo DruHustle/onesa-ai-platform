@@ -1,6 +1,6 @@
 # Portal database schema
 
-Generated from 11 pinned PostgreSQL migrations plus source-defined migration tracking, including internal governance. Schema definitions only; no live records or credentials. Production currently applies migration009; migrations010/011 remain prepared. Preserve constraints, immutable approval triggers and migration checksums. Use the migration runner rather than applying this reference as a replacement migration plan.
+Generated from 11 pinned PostgreSQL migrations plus source-defined migration tracking, including internal governance. Schema definitions only; no live records or credentials. This is a source reference, not evidence of applied production migrations; consult the current deployment receipts and documentation-hosting guide. Preserve constraints, immutable approval triggers and migration checksums. Use the migration runner rather than applying this reference as a replacement migration plan.
 
 ```sql
 -- Migration-runner metadata; application tables follow.
