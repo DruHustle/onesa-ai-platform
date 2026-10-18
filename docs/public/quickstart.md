@@ -20,13 +20,14 @@ is not needed for this path. Start Docker before running:
 ```bash
 python3 scripts/bootstrap_env.py
 make up
+docker compose up --wait --wait-timeout 120
 docker compose ps
 curl --fail "${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}/health"
 ```
 
 Bootstrap creates a mode-600 local `.env` and refuses to overwrite an existing file.
 On an existing checkout, keep that file and skip bootstrap. Never replace working
-configuration or reuse production credentials. Wait for `api` and `chat` to become
+configuration or reuse production credentials. The bounded `--wait` command waits for `api` and `chat` to become
 healthy; inspect `docker compose logs --tail=80 migrate api chat` if readiness fails.
 
 Open **http://localhost:3100**. This is the host default in `bootstrap_env.py` and
@@ -41,6 +42,7 @@ an unused loopback port before `make up`, for example:
 export ONESA_CHAT_PORT=18197
 export ONESA_PUBLIC_ORIGIN=http://localhost:18197
 make up
+docker compose up --wait --wait-timeout 120
 curl --fail "${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}/health"
 ```
 
