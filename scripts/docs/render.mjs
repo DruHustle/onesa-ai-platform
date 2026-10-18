@@ -71,7 +71,7 @@ for(const scope of ['public','internal']){
   const defaultFence=md.renderer.rules.fence;
   md.renderer.rules.fence=(tokens,i,opts,env,self)=>tokens[i].info.trim()==='mermaid'?'<p class="caption">Editable source diagram; see the rendered architecture figures and portal.</p>':defaultFence(tokens,i,opts,env,self);
   let currentDoc='';
-  const base=scope==='public'?'https://docs.onesa.eu':process.env.ONESA_INTERNAL_DOCUMENTATION_URL||'https://onesa-engineering-docs.pages.dev';
+  const base=scope==='public'?'https://docs.onesa.eu':process.env.ONESA_INTERNAL_DOCUMENTATION_URL||'https://docs.engineering.onesa.eu';
   const defaultLink=md.renderer.rules.link_open||((tokens,i,opts,env,self)=>self.renderToken(tokens,i,opts));
   md.renderer.rules.link_open=(tokens,i,opts,env,self)=>{
    const token=tokens[i], target=token.attrGet('href')||'';

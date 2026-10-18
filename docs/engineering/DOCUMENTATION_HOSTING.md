@@ -2,7 +2,12 @@
 
 ## Engineering sign-in and membership — owner direction, 2026-10-16
 
-Use https://onesa-engineering-docs.pages.dev/ for protected engineering Docs.
+The owner-selected production address is **https://docs.engineering.onesa.eu/**.
+`onesa-engineering-docs.pages.dev` is the provider origin for the same production
+project, not a development environment. Branch/commit subdomains are Previews.
+The provider origin and Previews remain protected; changing the canonical address
+does not grant access or change the deployment environment. See the scoped hostname
+cutover and rollback procedure below; source configuration alone is not live acceptance.
 The 2026-10-17 owner direction supersedes the earlier code-only selection: new
 users register for owner approval, with emailed sign-in links or email/password.
 Existing exact-email approvals remain valid; admin MFA remains intact and Docs
@@ -50,8 +55,8 @@ alone is not an engineering role: approve each engineer before adding membership
 1. Confirm the engineer controls their Onesa mailbox and record their exact approved
    address in the existing restricted membership/change record. Preserve the two
    existing owner identities, including the approved external recovery address.
-2. Read both Access applications: the canonical `onesa-engineering-docs.pages.dev`
-   origin and `*.onesa-engineering-docs.pages.dev` previews. Preserve their domains,
+2. Read both Access applications: the canonical app covering `docs.engineering.onesa.eu`
+   and the provider origin, plus `*.onesa-engineering-docs.pages.dev` previews. Preserve their domains,
    audiences, sessions and other rules. Add the approved address as a direct **Emails**
    selector in each existing Allow policy. Do not use Everyone or a domain-wide rule.
 3. Add the same normalized address to `CF_ACCESS_ENGINEERING_EMAILS` in **both**
@@ -511,3 +516,37 @@ claims no hosted PASS or production grant. The external owner verifier must esta
 actual private bytes, all-path Access/MFA, source/provider identity and retained
 application/backend state before one protected production publication. Old draft
 custody and its failure evidence remain preserved. No private site assets enter Actions.
+
+
+## Engineering production hostname cutover — 2026-10-18
+
+Use `docs.engineering.onesa.eu` for people-facing production links, internal PDF
+source links and production build origins. The approved custom hostname replaces
+the earlier unused `engineering.docs.onesa.eu` proposal. Keep the provider origin
+and wildcard Preview protection; a `.pages.dev` suffix does not identify dev.
+
+1. Read the exact existing Pages project, canonical deployment, Access apps/policies,
+   identity provider, four authorization bindings and exact-host DNS record. Preserve
+   the prior values and configuration hashes in restricted release evidence.
+2. Add only `docs.engineering.onesa.eu` as a public destination of the existing
+   canonical Access app before making the custom hostname routable. Preserve the
+   app ID/audience, approved emails, Portal provider, sessions and policy contents.
+   Do not create a bypass or a domain-wide membership rule.
+3. Associate the exact hostname with the existing Pages project and verify its CNAME
+   targets the existing provider origin. Use existing free TLS provisioning; report
+   certificate limitations without buying a plan or weakening HTTPS.
+4. Add the exact hostname to the production/Preview Worker host bindings. Deploy only
+   qualified source/artifacts through the normal release path. The all-path Worker
+   must validate signed Access claims and fail closed for missing configuration,
+   anonymous requests, nonmembers, wrong audiences and lookalike hosts. Saved
+   project bindings alone do not prove serving-deployment configuration.
+5. Verify custom-host HTTPS, Onesa Portal sign-in, authenticated pages/search/diagrams/
+   PDFs and anonymous denial. Record actual source/deployment and component reuse.
+   Do not relabel historical site content as a newly rebuilt documentation release.
+6. After acceptance, publish the updated Portal entry links and generated canonical
+   references. Keep the previous protected origin usable during transition.
+
+Rollback changes only this run's custom-host association/DNS/destination and host
+binding delta, after checking for concurrent changes. Restore the retained qualified
+Pages artifact if required; preserve existing origin/Preview protection and all
+identity policies. Do not remove the project or unrelated DNS, identities or sessions.
