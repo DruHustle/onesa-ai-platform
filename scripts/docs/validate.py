@@ -181,7 +181,7 @@ def validate(staged=False, assets_only=False):
             )
             assert len(document.pages) >= 3
             text = "\n".join(page.extract_text() for page in document.pages)
-            assert policy["version"] in text and scope in text.lower()
+            assert documentation_version in text and scope in text.lower()
             assert document.outline, f"Missing PDF bookmarks: {path}"
             links = {
                 str(action["/URI"])

@@ -511,7 +511,8 @@ def split(schema, tables):
                 "chunks": chunks,
             },
             "provenance.json": {
-                "version": policy["version"],
+                "version": documentation_version(),
+                "policy_schema_version": policy["schema_version"],
                 "documentation_version": documentation_version(),
                 "classification": scope,
                 "revision": os.environ.get("GITHUB_SHA")
