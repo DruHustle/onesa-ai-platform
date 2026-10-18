@@ -90,14 +90,13 @@ jobs:
     - run: python3 -m unittest discover -s scripts -p test_production_defaults.py
     - run: python3 -m unittest discover -s scripts -p test_production_startup.py
     - run: python3 -m unittest discover -s scripts -p test_configuration_inventory.py
-    - run: python3 -m unittest discover -s scripts/runner -p 'test_*.py'
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging.py
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
     - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.backend == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.backend == 'true') }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -143,7 +142,7 @@ jobs:
     - run: node scripts/test_backend_proxy.cjs
     - run: node --test scripts/test_ui_failure_diagnostics.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
     env:
       REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -217,7 +216,7 @@ jobs:
         '
     - if: always()
       run: docker compose down
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.browser == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.browser == 'true') }}
     timeout-minutes: 45
     needs:
     - changes
@@ -311,7 +310,7 @@ jobs:
     - run: make docs-release-check
     - if: always()
       run: docker compose down
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.documentation == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.documentation == 'true') }}
     timeout-minutes: 45
     env:
       REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -350,7 +349,7 @@ jobs:
         compose.staging.yaml up --wait --wait-timeout 180
     - run: curl --fail http://localhost:3120/ready
     - run: docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.containers == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.containers == 'true') }}
     timeout-minutes: 45
     needs:
     - changes
@@ -428,7 +427,7 @@ jobs:
     - if: always() && hashFiles('data/acceptance-005/staging.env') != ''
       run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
         -f compose.acceptance.yaml down
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.tls == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.tls == 'true') }}
     timeout-minutes: 45
     needs:
     - changes
@@ -488,7 +487,7 @@ jobs:
         path: ${{ runner.temp }}/runtime/record.json
         retention-days: 7
         if-no-files-found: error
-    if: ${{ needs.changes.result == 'success' && needs.changes.outputs.containers == 'true' }}
+    if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.containers == 'true') }}
     needs:
     - changes
   pipeline-security:
@@ -496,6 +495,7 @@ jobs:
     permissions:
       contents: read
   changes:
+    if: (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (success())
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -528,7 +528,7 @@ jobs:
     - containers
     - tls-acceptance
     - image-security
-    if: always()
+    if: always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (always())
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

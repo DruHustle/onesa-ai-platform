@@ -45,7 +45,7 @@ AI staging now has a separate Neon project with a restricted role and schema/vec
 
 Robot uses its separate Turso journal only in staging. Remote tasks and an exclusive owner lease persist; process-local sessions/safety never become retained authority. The rolling-deployment handoff ordering fix and redacted diagnostics passed CI. Hosted login currently returns HTTP401 for the configured test credential, before journal changes; operator credential reconciliation is required. The local SQLite production profile requires qualified persistent storage; an ephemeral Free Render filesystem is insufficient.
 
-GitHub-hosted Actions run current checks. The retained isolated local runner is a dormant private-only option, not a prerequisite for PR validation. Private GitHub Free protections cannot be described as enforced. Owner authorization is accepted; technical and privacy gates remain mandatory. [Visual pipeline](/architecture?diagram=delivery-current).
+GitHub-hosted Actions run current checks. Local runners are removed. Standard hosted validation requires included capacity after a private transition. Private GitHub Free protections cannot be described as enforced. Owner authorization is accepted; technical and privacy gates remain mandatory. [Visual pipeline](/architecture?diagram=delivery-current).
 
 
 ## Private administration boundary

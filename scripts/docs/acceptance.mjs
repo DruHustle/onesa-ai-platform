@@ -12,6 +12,7 @@ const {chromium,expect}=docsRequire('@playwright/test');
 const chatRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/chat/package.json'));
 const {default:AxeBuilder}=chatRequire('@axe-core/playwright');
 const build=path.join(root,'onesa-ai-platform-frontend/apps/docs/build-public');
+const {version:documentationVersion}=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'),'utf8'));
 const policy=JSON.parse(await fs.readFile(path.join(root,'docs/documentation-policy.json'),'utf8'));
 const applications=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json'),'utf8'));
 function publicOrigin(value){
@@ -54,7 +55,7 @@ export async function waitForInteractiveDocumentation(page,timeout=10000,phase='
 }
 export async function validatePublicDocumentation({page,requestGet,origin,expectedRevision,expectedEnvironment,storageFixture=false}){
 const errors=[];const onError=e=>errors.push(e.name);page.on('pageerror',onError);
-const evidence={origin,version:policy.version,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
+const evidence={origin,version:documentationVersion,diagrams:0,pdfs:0,links:0,navigation:[],icons:[],accessibility:[],widths:[]};
 const provenanceResponse=await requestGet(origin+'/generated/provenance.json');
 expect(provenanceResponse.status()).toBe(200);
 expect(provenanceResponse.headers()['content-type'],'Public Docs provenance must be JSON, not a provider sign-in page').toContain('application/json');
@@ -124,7 +125,7 @@ try{
  }
  const manifest=await (await requestGet(origin+'/generated/manuals.json')).json();
  expect(manifest.map(m=>m.category).sort()).toEqual([...policy.public_pdfs].sort());
- for(const manual of manifest){const response=await requestGet(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(policy.version);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
+ for(const manual of manifest){const response=await requestGet(origin+'/generated/manuals/'+encodeURIComponent(manual.file));expect(response.status()).toBe(200);expect(response.headers()['content-type']).toContain('application/pdf');expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');expect(manual.classification).toBe('public');expect(manual.version).toBe(documentationVersion);expect(manual.pages).toBeGreaterThanOrEqual(3);evidence.pdfs++;}
  for(const url of ['/docs/architecture/ONESA_DESIGN_SYSTEM','/docs/operations/TAILSCALE_ADMINISTRATION','/generated/diagrams/onesa-design-system.svg','/generated/diagrams/tailscale-administration.pdf','/onboarding','/generated/engineering-navigation.json','/docs/onboarding/START_HERE','/generated/diagrams/ecosystem-current.svg','/database','/generated/database.json','/docs/ecosystem/PORTAL_DATABASE','/docs/security/SECURITY_ARCHITECTURE','/generated/diagrams/portal-database.svg','/generated/diagrams/robot-database.png','/generated/manuals/private.pdf'])expect((await requestGet(origin+url)).status()).toBe(404);
  const portal=await (await requestGet(origin+'/generated/openapi-portal.json')).json();expect(Object.keys(portal.paths).every(p=>p.startsWith('/api/v1/public/'))).toBe(true);
  const robots=await (await requestGet(origin+'/robots.txt')).text();expect(robots).toContain('Allow: /');expect(robots).toContain('Sitemap: https://docs.onesa.eu/sitemap.xml');

@@ -1,6 +1,14 @@
 # Release notes and supported versions
 
-Platform software: development 0.1. API contract: /api/v1. Documentation: 0.2.0. Updated 2026-10-09. Current local software is a development baseline, not a certified production release.
+<!-- documentation-version:start -->
+Documentation: 0.3.0. API contract: /api/v1. Application and model revisions are independent.
+<!-- documentation-version:end -->
+
+The documentation identity above is current. Public and protected
+production publications have separate source and deployment receipts. This version
+number is not a claim of certification or a new application/model release.
+
+Earlier development notes below are historical observations, not current deployment status.
 
 ## Documentation 0.2
 Separate public/internal builds, interactive references, rendered assets and reproducible generation are being qualified. No stable-release snapshots are created for every development change.

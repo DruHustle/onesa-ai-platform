@@ -35,16 +35,9 @@ concurrency:
         default: https://platform.onesa.eu
         required: true
 jobs:
-  local-validation:
-    if: ${{ github.event.repository.private == true && github.repository == 'DruHustle/onesa-ai-platform' && github.actor
-      == 'DruHustle' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository
-      && github.event.pull_request.user.login == 'DruHustle')) }}
-    uses: ./.github/workflows/_local-validation.yml
   documentation:
     name: docs-hosting
-    if: ${{ always() && github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform'
-      && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && (inputs.target == 'build' || (inputs.target
-      == 'preview' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'))) }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (always() && github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && (inputs.target == 'build' || (inputs.target == 'preview' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main')))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -315,5 +308,3 @@ jobs:
         path: ${{ runner.temp }}/docs-qualification/record.json
         retention-days: 7
         if-no-files-found: error
-    needs:
-    - local-validation

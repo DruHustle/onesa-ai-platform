@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- Remove local-runner workflows, provisioning, hooks, configuration and CI consumers.
+  Keep standard hosted validation and prepare the owner-managed private GitHub Free
+  transition; exhausted included allowance blocks validation instead of paid fallback.
+
+- Consume recovery/invitation fragments on same-document navigation, isolate stale
+  requests and preserve explicit submission and server-side one-use validation.
+- Correct the public clean-checkout quickstart, derive documentation identity from
+  its package version and generate readable search previews with separate ranking terms.
+
+- Activate public-repository main PR/check protection using actual successful check
+  identities, including the fail-closed summary and all applicable image scans.
+  Preserve solo-owner review, administrator enforcement and external release authority.
+
+
+
+## 2026-10-18 — Verified public and protected documentation releases
+
+- Protected Engineering Docs source `0936f1867f934d7c740603be1ed78bd96c4f4d39`
+  is live at deployment `50d94448-d0fe-4d65-a3ac-31a87114ce62`: 741 asset checks,
+  741 anonymous denials and 18 layout/accessibility views passed. Onesa Portal
+  identity is active on the canonical and Preview Access applications.
+- Public Docs remains independently deployed from `78d2ad058e9aa762035a5f7cdf0b41977c434114`,
+  deployment `dpl_3JbqZNGVRrdGKm5u4hJQhLL2yb4Q`; current AI frontend/backend
+  `ee9c442`/`6a1cce4` were not redeployed by this Docs publication.
+- Preparation-stage pending/off language below is historical. Current activation
+  is recorded in DOCUMENTATION_HOSTING.md and restricted release receipts.
+
 - Record the verified production Onesa Portal sign-in connection for protected
   Engineering Docs, preserve scoped Access membership and rollback, and refresh
   the pinned email-only registration runbook. Keep schema-generation output free
@@ -15,8 +42,8 @@
   retention, storage caps, live-restore authority and recovery objectives distinct.
   Separate actual Portal migration/runtime activation from source-only diagrams.
 
-- Correct the Engineering Docs access diagram to distinguish deployed email-code
-  protection from the pending Portal identity cutover. Retain bounded, sanitized
+- Correct the Engineering Docs access diagram to distinguish historical email-code
+  protection from the now-activated Portal identity cutover. Retain bounded, sanitized
   hydration-failure observations without changing acceptance assertions or deadlines.
 
 - Remove arrow-in-square link icons throughout public and engineering Docs while
@@ -25,8 +52,8 @@
 - Refresh protected registration/approval and Portal sign-in references, with source-verified access-schema diagrams and preserved public/private publication boundaries.
 
 - Refresh committed cross-product schema/contracts and include the protected Portal
-  engineering identity runbook. Distinguish prepared migration 010 and default-off
-  Portal sign-in from current production migration 009 and effective Access login.
+  engineering identity runbook. Distinguish source-default Portal sign-in configuration and historical migration
+  snapshots from the separately verified production identity activation.
   Verify all source-defined Portal tables (including migration tracking) against
   an isolated catalog, split private schema diagrams by purpose and reject stale
   schema fingerprints, omitted tables and invented entities in CI.

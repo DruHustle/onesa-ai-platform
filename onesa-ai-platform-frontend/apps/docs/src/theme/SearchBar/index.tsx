@@ -85,7 +85,7 @@ export default function Search() {
       {state === 'unavailable' && <p role="alert">Documentation search is unavailable. Sign in again or reload.</p>}
       {state === 'ready' && matches.map(entry => <Link key={entry.title + entry.url} to={entry.url}
         onClick={() => setOpen(false)}><strong>{entry.title}</strong>
-        <small>{entry.text.replace(/\s+/g, ' ').slice(0, 150)}…</small></Link>)}
+        <small>{entry.preview ?? entry.text.replace(/\s+/g, ' ').slice(0, 150) + '…'}</small></Link>)}
       {state === 'ready' && !matches.length && <p>{query.trim() ? 'No matching documents.' : 'Type to search documentation.'}</p>}
     </div>}
   </div>;
