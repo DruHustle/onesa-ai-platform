@@ -20,7 +20,7 @@ eight-hour sessions and all four private Worker bindings remain unchanged. Porta
 administration retains its separate MFA and roles; Docs membership grants no
 Dashboard or Portal administrator access.
 
-### Portal identity activation and remaining cutover — verified 2026-10-18
+### Portal identity activation and release verification — verified 2026-10-18
 
 The qualified production Portal API and worker now enable identity and registration.
 Additive migrations 010/011 were applied with existing records, roles and credentials
