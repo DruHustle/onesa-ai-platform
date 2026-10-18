@@ -98,7 +98,7 @@ for name in manifest:
         (folder / "PORTAL_DATABASE.md").write_text(
             "# Portal database schema\n\nGenerated from "
             + str(len(migrations))
-            + " pinned PostgreSQL migrations plus source-defined migration tracking, including internal governance. Schema definitions only; no live records or credentials. Production currently applies migration009; migrations010/011 remain prepared. Preserve constraints, immutable approval triggers and migration checksums. Use the migration runner rather than applying this reference as a replacement migration plan.\n\n```sql\n"
+            + " pinned PostgreSQL migrations plus source-defined migration tracking, including internal governance. Schema definitions only; no live records or credentials. This is a source reference, not evidence of applied production migrations; consult the current deployment receipts and documentation-hosting guide. Preserve constraints, immutable approval triggers and migration checksums. Use the migration runner rather than applying this reference as a replacement migration plan.\n\n```sql\n"
             + sql
             + "```\n"
         )
