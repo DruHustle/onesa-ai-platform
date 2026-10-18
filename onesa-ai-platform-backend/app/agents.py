@@ -8,7 +8,9 @@ from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
+from app import capacity
 from app.agent_runtime import (
     BasicPlanner,
     ModelToolPlanner,
@@ -63,6 +65,23 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
     allowed = set(body.allowed_tools) & set(registry.tools)
     if not allowed:
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
+    if any(call.tool not in allowed for call in body.steps):
+        fail(403, "tool_not_allowed", "Grant permission for each requested tool")
+    # Invalid permissions must not reserve model capacity or enter response-stream
+    # lease checks. Valid runs retain the same shared admission and expiry limits.
+    lease = await run_in_threadpool(capacity.begin, request)
+    try:
+        result = await execute_admitted(body, request, db, auth[0].id, allowed)
+        if not await run_in_threadpool(capacity.active, request, lease):
+            fail(503, "generation_lease_lost", "Unable to verify active request authority")
+        return result
+    finally:
+        await run_in_threadpool(capacity.end, request, lease)
+
+
+async def execute_admitted(
+    body: RunRequest, request: Request, db: Session, user_id: UUID, allowed: set[str]
+) -> dict[str, Any]:
     try:
         async with asyncio.timeout(request.app.state.settings.generation_timeout):
             planner = (
@@ -78,7 +97,7 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
     if any(call.tool not in allowed for call in calls):
         agent_planning_failures.inc()
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
-    row = AgentRun(id=body.id, user_id=auth[0].id, goal=body.goal)
+    row = AgentRun(id=body.id, user_id=user_id, goal=body.goal)
     db.add(row)
     try:
         db.commit()
