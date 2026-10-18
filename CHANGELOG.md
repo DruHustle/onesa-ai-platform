@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bind protected Docs release metadata to the reviewed diagram catalog, so newly
+  documented architecture is counted without accepting omitted or duplicate diagrams.
+
 - Reconcile protected recovery instructions with the activated hourly AI/Robot
   off-instance backups, current timer readback and independent restores. Keep
   retention, storage caps, live-restore authority and recovery objectives distinct.
