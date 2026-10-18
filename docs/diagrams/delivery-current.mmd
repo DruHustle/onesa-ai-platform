@@ -20,7 +20,7 @@ CI --> Fail[FAIL - fix on dev and re-run]
 Acceptance --> Fail
 Verify --> Recovery[Stop unsafe processing and restore previous qualified artifacts]
 Recovery --> Investigate[Preserve evidence and investigate before requalification]
-Runner[Private-only local runner option - dormant] -. no private-Free protection claim .-> CI
+Runner[Standard GitHub-hosted validation - included private allowance only] --> CI
 
 Security[Dependency alert and temporary security-fix PR] --> BotCI[Credential-free hosted PR checks and owner review]
 BotCI --> Dev

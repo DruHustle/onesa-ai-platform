@@ -147,8 +147,8 @@ Use current `docs/development/PRIVATE_FREE_SAFEGUARDS.md`,
 `docs/development/CI_CD_PIPELINE_REPORT.md` and `docs/engineering/DEPLOYMENT.md`.
 GitHub Free/private limitations mean written PR discipline is not enforced remote
 protection. Reverify actual visibility, plans, checks and provider auto-deploy paths.
-Credential-free untrusted PR checks use disposable hosted runners. The retained local
-runner is dormant/private-only unless isolated and authorized; no production secrets
+Credential-free untrusted PR checks use disposable hosted runners. Local/self-hosted runners are removed. Private validation uses included hosted
+allowance only; quota exhaustion blocks release. No production secrets belong
 on editable/untrusted jobs. External owner-controlled custody holds production credentials.
 
 Exact-source CI/security, trusted run/artifact evidence, hosted staging, model/schema and scoped privacy/content/operations approval remain mandatory. Missing/stale/mismatched qualification fails closed. Use one deployment authority per service; preserve rollback/fallback/backup.
@@ -177,3 +177,11 @@ the earlier Docs email-code-only choice; Docs adds no separate MFA requirement.
 Follow the membership procedure in DOCUMENTATION_HOSTING.md; record actual effective
 settings and do not restore historical MFA requirements or widen membership silently.
 This changes no other service's authentication or MFA requirements.
+
+GitHub Free is the permanent budget; repositories stay public until the owner changes
+visibility. All hosted jobs require public visibility or the explicit private-hosted
+validation allowance flag, default off. Never enable paid overages or recreate local
+runners. On private Free, unavailable PR/environment enforcement is procedural; exact
+source, passing CI and external owner production gates remain mandatory. Follow the
+visibility-transition procedure in docs/development/FREE_GITHUB_PLAN.md and read back
+actual provider/security eligibility after any owner visibility change.

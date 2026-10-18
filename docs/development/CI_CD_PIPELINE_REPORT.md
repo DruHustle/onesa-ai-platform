@@ -1,3 +1,9 @@
+> Owner update — 2026-10-18: GitHub Free is permanent; public visibility is temporary.
+> Local-runner implementation has now been removed, superseding earlier private-first
+> runner plans below. Use standard hosted runners while public and included hosted
+> allowance after a future owner visibility change. No local executor is a fallback.
+> Historical runner/plan observations are retained as history, not current instructions.
+
 # CI/CD pipeline implementation and audit — onesa-ai-platform
 
 Current policy update: 2026-10-14 — dev, staging and main remain the three permanent branches. Temporary Dependabot security-fix PRs and reviewed security release candidates are explicitly permitted. Ordinary version-update PR creation stays at open-pull-requests-limit:0; alerts, scans, notifications and weekly full CI remain. The earlier security-fix OFF setting is superseded: current owner-authorized API readback verifies all three repositories enabled:true and paused:false, alerts enabled and zero open alerts. Owner notifications are separately owner-confirmed. Dependency-graph SBOM readback returned 404 and remains unverified; unrelated settings were preserved. Protected coordinator evidence records the scoped receipt. Reviewed security fixes normally flow through dev → staging → main. An urgent candidate may start from exact current production plus reviewed fixes, excluding unfinished dev, qualify in existing isolated staging, receive the owner-controlled release decision and reconcile into dev/staging. There is no new permanent environment, blind auto-merge, production credential exposure to bot PRs or relaxed trigger trust. Temporary cleanup requires verified incorporation and evidence-dependency checks. Historical inventory below does not establish current provider state.
@@ -38,7 +44,6 @@ billed runner minutes. Empty entries are not proof a workflow is broken or unuse
 
 | Workflow | Final triggers | Runner | Before sample: completed / failed / mean seconds | Purpose / usefulness |
 | --- | --- | --- | --- | --- |
-| `_local-validation.yml` | workflow_call | ['self-hosted', 'Linux', 'ARM64', 'onesa-platform-local'] | No runs in sample | Dormant private-only local runner; no active CI caller; retain until hosted replacement is verified remotely |
 | `_pipeline-review.yml` | workflow_call | ubuntu-latest | No runs in sample | Reusable blocking offline workflow/secret scan, local annotations and pipeline regressions |
 | `ci.yml` | push, pull_request, workflow_dispatch | reusable, ubuntu-latest | 37 / 5 / 412.6 | Product CI, relevant PR selection and mandatory summary; full checks on release-source pushes |
 | `deploy.yml` | workflow_dispatch | ubuntu-latest | No runs in sample | Retained manual native-protection deployment; private production jobs excluded; no push trigger |
@@ -163,7 +168,6 @@ commit IDs are reported in the task response; the commits also include the prece
 private-Free safeguards through their branch ancestry. No branch was pushed or PR opened.
 
 - `.github/dependabot.yml`
-- `.github/workflows/_local-validation.yml`
 - `.github/workflows/_pipeline-review.yml`
 - `.github/workflows/ci.yml`
 - `.github/workflows/deploy.yml`

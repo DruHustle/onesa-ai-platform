@@ -28,7 +28,7 @@ Open the [interactive Day 3 workflow](/onboarding#day-3). Source: `docs/diagrams
 
 Portal and AI use the registered `deploy.yml` staging bridge with `target=staging`, `fixture_mode=temporary` and `application=both`. Robot uses `release-candidate.yml` with `target=staging` and `application=frontend`. Trusted jobs validate actor, source and exact targets before loading secrets. Oracle uses Portal `scripts/oracle_worker.py` with exact qualified staging SHA and separately verified synthetic data. Documentation uses `docs-hosting.yml` and classified public output; engineering Pages needs separate protection qualification.
 
-The retained local runner is a private-only, isolated option and is dormant. GitHub-hosted review and mandatory checks do not depend on it. Private GitHub Free does not provide paid branch/environment protections. Current public repository environment secret availability is separately verified; repository-level fallback is not environment isolation.
+Local runners are removed; private validation uses included hosted capacity only. GitHub-hosted review and mandatory checks do not depend on it. Private GitHub Free does not provide paid branch/environment protections. Current public repository environment secret availability is separately verified; repository-level fallback is not environment isolation.
 
 
 ## Security update exception

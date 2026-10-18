@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Remove local-runner workflows, provisioning, hooks, configuration and CI consumers.
+  Keep standard hosted validation and prepare the owner-managed private GitHub Free
+  transition; exhausted included allowance blocks validation instead of paid fallback.
+
 - Consume recovery/invitation fragments on same-document navigation, isolate stale
   requests and preserve explicit submission and server-side one-use validation.
 - Correct the public clean-checkout quickstart, derive documentation identity from
