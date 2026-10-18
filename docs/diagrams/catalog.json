@@ -2529,7 +2529,7 @@
     "id": "portal-database",
     "title": "Portal schema map",
     "view": "schema group navigation; detailed ERDs contain declared relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
     "source": "docs/diagrams/portal-database.mmd",
     "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
@@ -4436,78 +4436,6 @@
     "explanation": "Private PC-to-Oracle administration boundary; source classification INTERNAL; no private endpoint IDs or credentials."
   },
   {
-    "id": "portal-database-identity",
-    "title": "Portal identity schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-identity.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-content",
-    "title": "Portal content schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-content.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-business",
-    "title": "Portal business schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-business.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-documents",
-    "title": "Portal documents schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-documents.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-access",
-    "title": "Portal access schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-access.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-operations",
-    "title": "Portal operations schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-operations.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-governance",
-    "title": "Portal governance schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-governance.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
-    "id": "portal-database-lifecycle",
-    "title": "Portal lifecycle schema",
-    "view": "source-verified PostgreSQL entity relationships",
-    "status": "Schema through migration011; deployed state: Documentation Hosting. No live records; external tables show referenced keys only.",
-    "source": "docs/diagrams/portal-database-lifecycle.mmd",
-    "url": "/docs/ecosystem/PORTAL_DATABASE",
-    "nodes": []
-  },
-  {
     "id": "engineering-docs-identity",
     "title": "Engineering Docs sign-in through Onesa Portal",
     "view": "documented identity and authorization flow",
@@ -4595,6 +4523,78 @@
     "status": "Generated from actual pinned Turso DDL; independent task history and exclusive lease, no invented foreign keys",
     "source": "docs/diagrams/robot-journal-database.mmd",
     "url": "/docs/ecosystem/ROBOT_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-identity",
+    "title": "Portal identity schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-identity.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-content",
+    "title": "Portal content schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-content.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-business",
+    "title": "Portal business schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-business.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-documents",
+    "title": "Portal documents schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-documents.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-access",
+    "title": "Portal access schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-access.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-operations",
+    "title": "Portal operations schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-operations.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-governance",
+    "title": "Portal governance schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-governance.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
+    "nodes": []
+  },
+  {
+    "id": "portal-database-lifecycle",
+    "title": "Portal lifecycle schema",
+    "view": "source-verified PostgreSQL entity relationships",
+    "status": "Prepared source schema through migration012; applied production requires its deployment receipt; no live data. External tables show referenced keys only.",
+    "source": "docs/diagrams/portal-database-lifecycle.mmd",
+    "url": "/docs/ecosystem/PORTAL_DATABASE",
     "nodes": []
   }
 ]

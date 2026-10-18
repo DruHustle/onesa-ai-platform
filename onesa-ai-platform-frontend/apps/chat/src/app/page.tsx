@@ -3,6 +3,7 @@ import ApplicationsNav from "../components/applications-nav";
 import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
 import DocumentationHelp from "../components/documentation-help";
+import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 const MessageContent = lazy(() => import("../components/message-content"));
@@ -334,7 +335,9 @@ export default function Chat() {
             Onesa <span>AI Platform</span>
           </div>
           <h1>{signup ? copy.createTitle : copy.welcome}</h1>
-          <p>{copy.description}</p>
+          <p>{locale==='de'?'Gespräche führen, eigenes Wissen nutzen und Aufgaben mit geführten Werkzeugen bearbeiten. Onesa AI Platform ist unser geschützter KI-Arbeitsbereich.':'Talk through ideas, use your own knowledge and work with guided tools. Onesa AI Platform is our protected AI workspace.'}</p>
+          <p>{signup?(locale==='de'?'Die Registrierung hängt von der Freigabe dieser Umgebung ab. Wenn eine Einladung erforderlich ist, verwenden Sie Ihren privaten Einladungslink.':'Registration depends on this environment’s access policy. If an invitation is required, use your private invitation link.'):(locale==='de'?'Mit Ihrem bestehenden Plattformkonto anmelden. Ein Plattformkonto gewährt keinen Administrator-, Engineering- oder Robot-Zugriff.':'Sign in with your existing platform account. A platform account does not grant administrator, engineering or Robot access.')}</p>
+          <nav className="auth-orientation" aria-label={locale==='de'?'Plattform kennenlernen':'Learn about the platform'}><a href={documentationUrls.public+'/docs/public/ai-platform'}>{locale==='de'?'Produkt und Funktionen':'Product and capabilities'}</a><a href={documentationUrls.public+'/docs/public/quickstart'}>{locale==='de'?'Entwickler-Schnellstart':'Developer quickstart'}</a></nav>
           {checking && <p role="status">{copy.opening}</p>}
           <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
           {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => {
@@ -520,8 +523,9 @@ export default function Chat() {
                 to explore?
               </h2>
               <p>
-                Ask a question, work through an idea, or start something new.
+                {locale==='de'?'Beginnen Sie mit einer Frage. Für Antworten aus eigenen Dokumenten fügen Sie zunächst unter Knowledge eine Quelle hinzu.':'Start with a question. For answers based on your documents, add a source in Knowledge first.'}
               </p>
+              <p><Link href="/knowledge">{locale==='de'?'Eigene Wissensquelle hinzufügen':'Add your first knowledge source'}</Link>{' · '}<a href={documentationUrls.public+'/docs/public/applications'}>{locale==='de'?'Anwendungsleitfaden lesen':'Read the application guide'}</a></p>
               <div className="suggestions">
                 {[
                   "Explain a complex idea simply",

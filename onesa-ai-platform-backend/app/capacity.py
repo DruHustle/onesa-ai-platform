@@ -20,11 +20,14 @@ def applies(request: Request) -> bool:
         and path
         in {
             "/api/v1/chat/completions",
-            "/api/v1/agents/runs",
             "/api/v1/travel/trips",
             "/api/v1/documentation/answer",
         }
     ) or (method == "PUT" and path.startswith("/api/v1/travel/trips/"))
+
+
+# Agent runs acquire the same admission in their route, after authentication,
+# request validation and explicit tool-permission checks, and release it in finally.
 
 
 def begin(request: Request) -> UUID:

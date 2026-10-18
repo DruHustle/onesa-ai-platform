@@ -1,4 +1,4 @@
-%% Portal source schema SHA256: a24b83603dcc14456f61e5b037b98b821c13c9badd6d479ad08d346030f34c2f
+%% Portal source schema SHA256: df7e3baafeaccdf70d1b409cf3788ba1cc777238c68e45f1679b8047decbaa93
 erDiagram
   content {
     uuid id PK "NOT NULL"
@@ -14,6 +14,7 @@ erDiagram
     uuid author_id FK "nullable"
     integer revision "NOT NULL"
     timestamptz updated_at "NOT NULL"
+    jsonb published_snapshot "nullable"
   }
   facts {
     text key PK "NOT NULL"
