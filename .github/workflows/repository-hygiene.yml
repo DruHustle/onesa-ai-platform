@@ -39,5 +39,5 @@ jobs:
       with:
         python-version: '3.11'
     - run: python scripts/repository_hygiene.py --history
-    if: ${{ always() && true }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (always() && true) }}
     timeout-minutes: 45

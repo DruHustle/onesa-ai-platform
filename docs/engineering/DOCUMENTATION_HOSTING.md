@@ -109,7 +109,7 @@ actual AI routes. `npm --prefix onesa-ai-platform-frontend/apps/docs run test:se
 checks unsafe URL configuration, and public browser acceptance verifies the product
 dropdown on desktop and mobile. The source6a public and protected Docs releases
 verified the corrected hosted navigation; those earlier localhost links are resolved.
-The current registration/recovery documentation update is a separate pending release.
+The registration/recovery guide update was published in protected source `0936f186` on 2026-10-18; public Docs remains independently pinned to `78d2ad0`. New remediation changes require their own qualification.
 
 ## Deploy from GitHub
 

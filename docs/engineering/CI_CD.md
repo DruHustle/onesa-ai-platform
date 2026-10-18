@@ -103,8 +103,8 @@ jobs or failing required steps invalidate qualification. Runtime records bind te
 image digests; mock/local-model tests do not qualify actual hosted inference.
 
 Untrusted PR checks run on disposable GitHub-hosted runners with read-only tokens and
-no provider credentials. The local runner remains dormant/private-only until isolation
-is verified. Cache only dependency downloads keyed by lockfiles, never credentials,
+no provider credentials. The local runner implementation is removed; hosted validation retains isolated
+execution and the included private allowance is checked before enabling jobs. Cache only dependency downloads keyed by lockfiles, never credentials,
 private data or deployment artifacts. Cancel superseded PR checks, preserve release
 runs and deployment receipts, and measure actual account usage before claiming savings.
 

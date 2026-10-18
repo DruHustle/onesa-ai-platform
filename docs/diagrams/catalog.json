@@ -2860,26 +2860,26 @@
       },
       {
         "id": "Bridge",
-        "label": "Portal and AI deploy.yml staging bridge",
-        "responsibility": "Portal and AI deploy.yml staging bridge. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Owner-controlled Portal and AI staging release",
+        "responsibility": "Owner-controlled Portal and AI staging release. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Robot",
-        "label": "Robot release-candidate.yml staging bridge",
-        "responsibility": "Robot release-candidate.yml staging bridge. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Protected Robot staging qualification",
+        "responsibility": "Protected Robot staging qualification. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "VS",
-        "label": "Vercel protected Preview and Render staging APIs",
-        "responsibility": "Vercel protected Preview and Render staging APIs. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Vercel protected Preview and existing Oracle staging APIs",
+        "responsibility": "Vercel protected Preview and existing Oracle staging APIs. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "ARM",
-        "label": "scripts/oracle_worker.py qualified ARM64 rollout",
-        "responsibility": "scripts/oracle_worker.py qualified ARM64 rollout. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Qualified Oracle ARM64 worker and scanner rollout",
+        "responsibility": "Qualified Oracle ARM64 worker and scanner rollout. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
@@ -2902,8 +2902,8 @@
       },
       {
         "id": "Gates",
-        "label": "CODE_VERIFIED STAGING_VERIFIED OPERATIONS_VERIFIED CONTENT_LEGAL_APPROVED",
-        "responsibility": "CODE_VERIFIED STAGING_VERIFIED OPERATIONS_VERIFIED CONTENT_LEGAL_APPROVED. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Exact-source CI staging operations and scoped owner publication",
+        "responsibility": "Exact-source CI staging operations and scoped owner publication. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
@@ -2920,8 +2920,8 @@
       },
       {
         "id": "Prod",
-        "label": "Vercel Render qualified Oracle and separate docs deploys",
-        "responsibility": "Vercel Render qualified Oracle and separate docs deploys. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Vercel Oracle and separately qualified documentation releases",
+        "responsibility": "Vercel Oracle and separately qualified documentation releases. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
@@ -2950,8 +2950,8 @@
       },
       {
         "id": "Runner",
-        "label": "Private-only local runner option - dormant",
-        "responsibility": "Private-only local runner option - dormant. Actual workflows and mandatory gates; owner authorization accepted, technical qualification still required",
+        "label": "Standard GitHub-hosted validation - included private allowance only",
+        "responsibility": "Standard GitHub-hosted validation - included private allowance only. Actual source-bound evidence and external owner release controls remain required; legal records are owner-deferred and unapproved.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       }
     ],

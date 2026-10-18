@@ -94,17 +94,14 @@ jobs:
           \ event: 'push', per_page: 20});\n  const run = runs.data.workflow_runs[0];\n  if (!run || run.status !== 'completed'\
           \ || run.conclusion !== 'success') {\n    throw new Error(`${workflow_id} must pass on ${context.sha} before deployment`);\n\
           \  }\n}\n"
-    if: ${{ github.event.repository.private == false && ((always() && true) && github.repository == 'DruHustle/onesa-ai-platform'
-      && github.actor == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production') }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (github.event.repository.private == false && ((always() && true) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production')) }}
     timeout-minutes: 45
   frontend:
     name: deploy-frontend
     needs:
     - verify
     - backend
-    if: ${{ github.event.repository.private == false && ((always() && true && (always() && needs.verify.result == 'success'
-      && (inputs.application == 'frontend' || (inputs.application == 'both' && needs.backend.result == 'success')))) && github.repository
-      == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production') }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (github.event.repository.private == false && ((always() && true && (always() && needs.verify.result == 'success' && (inputs.application == 'frontend' || (inputs.application == 'both' && needs.backend.result == 'success')))) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -179,9 +176,7 @@ jobs:
     name: deploy-backend
     needs:
     - verify
-    if: ${{ github.event.repository.private == false && ((always() && true && (inputs.application == 'backend' || inputs.application
-      == 'both') && needs.verify.result == 'success') && github.repository == 'DruHustle/onesa-ai-platform' && github.actor
-      == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production') }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (github.event.repository.private == false && ((always() && true && (inputs.application == 'backend' || inputs.application == 'both') && needs.verify.result == 'success') && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main' && inputs.target == 'production')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -231,11 +226,7 @@ jobs:
         if-no-files-found: error
     environment: Production
   post-deployment:
-    if: ${{ github.event.repository.private == false && ((always() && (inputs.approval_run != '' && needs.verify.result ==
-      'success' && (inputs.application == 'frontend' && needs.frontend.result == 'success' || inputs.application == 'backend'
-      && needs.backend.result == 'success' || inputs.application == 'both' && needs.frontend.result == 'success' && needs.backend.result
-      == 'success'))) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref ==
-      'refs/heads/main') }}
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (github.event.repository.private == false && ((always() && (inputs.approval_run != '' && needs.verify.result == 'success' && (inputs.application == 'frontend' && needs.frontend.result == 'success' || inputs.application == 'backend' && needs.backend.result == 'success' || inputs.application == 'both' && needs.frontend.result == 'success' && needs.backend.result == 'success'))) && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.ref == 'refs/heads/main') && inputs.target == 'production') }}
     needs:
     - verify
     - frontend
