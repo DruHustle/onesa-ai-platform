@@ -2,8 +2,13 @@
 
 ## Unreleased
 
-- Prepare `docs.engineering.onesa.eu` as the protected Engineering Docs production
-  address; keep provider-origin and Preview access private and preserve Onesa Portal sign-in.
+- Prepare clearer sign-in/registration orientation and first-use knowledge/documentation
+  links without changing conversations, access policy or model behavior. Give footer
+  links comfortable touch targets and verify the new Docs learning sequence.
+- Organize documentation around Start here, Product guides, Tutorials, API, Architecture
+  and Troubleshooting/releases; preserve classified builds and primary source identities.
+- Remove the second Chat dependency install from the same browser CI job; retain the
+  first install, separate-job isolation, security scans, TLS and all required release checks.
 
 - Remove local-runner workflows, provisioning, hooks, configuration and CI consumers.
   Keep standard hosted validation and prepare the owner-managed private GitHub Free
@@ -19,6 +24,21 @@
   Preserve solo-owner review, administrator enforcement and external release authority.
 
 
+
+
+## 2026-10-18 — Protected Engineering Docs production hostname verified
+
+- Engineering Docs is accepted at `https://docs.engineering.onesa.eu/`, source
+  `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages deployment
+  `2daea640-3c73-40da-8b01-397bec2ca3ea`. All 741 asset/hash checks, 741 anonymous
+  denials and 18 layout/accessibility views passed. The provider origin remains
+  protected; it was a production provider address, not a development environment.
+- Portal navigation source `40cbdcbb5460b2cea2078fe22005d8d6c60c6e6a`, Vercel
+  deployment `dpl_TZfvysWGbjASje3bcw2WCoostdLG`, redirects `/engineering` to that
+  exact protected hostname. Existing Onesa sign-in, audience and approved membership
+  boundaries are retained. Other application/backend identities were not relabelled.
+- Later second-review changes above remain unreleased until their own exact-source
+  CI, qualification and canonical-host acceptance are recorded.
 
 ## 2026-10-18 — Verified public and protected documentation releases
 

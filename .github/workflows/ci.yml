@@ -198,7 +198,6 @@ jobs:
           onesa-ai-platform-backend/requirements.lock'
     - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
-    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets
