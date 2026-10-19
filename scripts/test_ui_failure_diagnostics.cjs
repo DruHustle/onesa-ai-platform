@@ -1,6 +1,14 @@
 const test = require("node:test"), assert = require("node:assert/strict");
 const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
 
+test("usability URL and enabled checks retain only fixed diagnostic labels", () => {
+  for (const [check, matcher] of [["usability_navigation_url", "toHaveURL"], ["usability_field_editable", "toBeEnabled"]]) {
+    const value = safeFailureDiagnostics({matcherResult:{name:matcher, actual:"PRIVATE_SENTINEL"}}, check);
+    assert.deepEqual(value, {check, category:"assertion", matcher});
+    assert(!JSON.stringify(value).includes("PRIVATE_SENTINEL"));
+  }
+});
+
 test("identifies the failed interaction without exception messages or assertion values", () => {
   const error = { name: "Error", message: "PRIVATE_SENTINEL", matcherResult: {
     name: "toBeFocused", expected: "PRIVATE_SENTINEL", actual: "PRIVATE_SENTINEL",

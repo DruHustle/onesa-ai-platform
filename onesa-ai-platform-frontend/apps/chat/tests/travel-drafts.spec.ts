@@ -303,3 +303,34 @@ test("late optional Docs membership denial cannot expire a newly authenticated w
     .fill("Current session remains usable");
   await expect(page.getByLabel("Destination", { exact: true })).toBeVisible();
 });
+
+test("a temporary usability draft restores the baseline without bypassing navigation protection", async ({page}) => {
+  const {createRequire} = await import("node:module");
+  const {withTemporaryDraft} = createRequire(process.cwd() + "/package.json")("../../../scripts/usability-draft.cjs");
+  await page.goto("/travel");
+  const destination = page.getByLabel("Destination", {exact:true});
+  await expect(destination).toBeEnabled();
+  const baseline = await destination.inputValue();
+  let observedEditable = false, dialogs = 0;
+  page.on("dialog", async dialog => { dialogs++; await dialog.dismiss(); });
+  await withTemporaryDraft(destination, async () => {
+    await expect(destination).toHaveValue("Unsent synthetic timing draft");
+    observedEditable = true;
+  });
+  expect(observedEditable).toBe(true);
+  await expect(destination).toHaveValue(baseline);
+  await expect(withTemporaryDraft(destination, () => {
+    throw new Error("Synthetic timing failure");
+  })).rejects.toThrow("Synthetic timing failure");
+  await expect(destination).toHaveValue(baseline);
+  await page.getByRole("navigation", {name:"AI workspace"}).getByRole("link", {name:"Knowledge", exact:true}).click();
+  await expect(page).toHaveURL(/\/knowledge$/);
+  expect(dialogs).toBe(0);
+  await page.getByRole("navigation", {name:"AI workspace"}).getByRole("link", {name:"Travel", exact:true}).click();
+  await expect(destination).toBeEnabled();
+  await destination.fill("An actual unsaved draft");
+  await page.getByRole("navigation", {name:"AI workspace"}).getByRole("link", {name:"Knowledge", exact:true}).click();
+  await expect(page).toHaveURL(/\/travel$/);
+  expect(dialogs).toBe(1);
+  await expect(destination).toHaveValue("An actual unsaved draft");
+});
