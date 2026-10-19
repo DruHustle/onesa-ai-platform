@@ -2,12 +2,10 @@
 
 ## Unreleased
 
-- Third review: require sign-in before Travel/Knowledge work, retain the requested
-  task and protect Travel drafts, selection and pending saves. Same-account session
-  renewal preserves in-memory work without replay; another account starts separately.
-- Align public and protected Docs homepage learning order, remove card numbers and
-  move secondary status guidance below the starting path. Component publication and
-  hosted identity acceptance remain separate from source/local verification.
+- Align protected Engineering Docs homepage learning order, remove card numbers
+  and move secondary status guidance below the starting path. Its classified build
+  and local checks pass; updated protected publication and current approved-identity
+  acceptance remain pending. Public Docs has its own accepted record below.
 
 - Organize documentation around Start here, Product guides, Tutorials, API, Architecture
   and Troubleshooting/releases; preserve classified builds and primary source identities.
@@ -18,8 +16,6 @@
   Keep standard hosted validation and prepare the owner-managed private GitHub Free
   transition; exhausted included allowance blocks validation instead of paid fallback.
 
-- Consume recovery/invitation fragments on same-document navigation, isolate stale
-  requests and preserve explicit submission and server-side one-use validation.
 - Correct the public clean-checkout quickstart, derive documentation identity from
   its package version and generate readable search previews with separate ranking terms.
 
@@ -29,6 +25,31 @@
 
 
 
+
+## 2026-10-19 — AI workflows and public Docs accepted
+
+- Require sign-in before Travel/Knowledge work, retain the requested task and protect
+  Travel drafts, selection and pending saves. Same-account session renewal preserves
+  in-memory work without replay; another account starts separately. The frontend also
+  retains recovery/invitation fragment handling, explicit submission and one-use
+  server validation.
+- Frontend source `3b38acd862f8db177035adec49c920470217894d`, Vercel deployment
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, is accepted at `platform.onesa.eu`.
+  All 23 required staging checks, 42 views and the approved normal/slow-mobile timing
+  tail passed. Canonical acceptance passed 20 anonymous views, 12 private-route
+  denials and five readiness samples. Authenticated production editing is not claimed.
+- The API remains source `6011890047dc16267147241ea68b94f494c89827`, image
+  `sha256:b3599a8582b621a5b23d665e614255f92f51322695a0ded263b41c7ed3446d9b`.
+  Its exact live image, configuration and health were independently verified; no
+  backend restart occurred. Public and protected Docs retain separate release records.
+
+- Public Docs independently uses source `3b38acd862f8db177035adec49c920470217894d`, deployment
+  `dpl_94epioyn7QQv1BpL1qPNYdNqY3Eh`, at `docs.onesa.eu`. The homepage offers an
+  unnumbered starting path before secondary status guidance, aligned with the sidebar.
+  Native Preview acceptance passed 124 accessibility views, 20 layouts, navigation
+  and all 279 approved public files. Canonical acceptance verified all 279 files,
+  six private-path denials and 12 mobile/desktop views with search and navigation.
+  Protected Docs is a separate artifact and is not included in this release.
 
 ## 2026-10-18 — AI application and public Docs accepted
 
@@ -44,8 +65,7 @@
   `dpl_87x6fg7VVBZxDdrCq14TZVBCbYis`, is independently accepted at `docs.onesa.eu`.
   The protected counterpart was uploaded as a Preview and was not published under
   that source. Its last accepted production identity is recorded separately below.
-- Third-review authentication/draft protection and homepage card changes remain
-  unreleased until their own exact-source checks and hosted acceptance pass.
+- Subsequent third-review changes have their own dated component acceptance records.
 
 ## 2026-10-18 — Protected Engineering Docs production hostname verified
 
