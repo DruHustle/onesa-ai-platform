@@ -33,6 +33,11 @@ These fixture checks qualify prepared source behavior; they do not measure hoste
 startup latency or establish a production deployment. See
 [Performance checks](../testing/PERFORMANCE_TESTS.md) for the startup boundaries.
 
+The Chat image install uses a BuildKit npm download cache, locked integrity checks,
+and explicit bounded fetch retries/timeouts. It omits installation-time audit/funding
+requests; the separate mandatory CI npm audit and final-image vulnerability/secret gates
+remain required. A failed install remains a failed build; no whole-job retry is implied.
+
 ## Backend (backend directory)
 
 ```sh
