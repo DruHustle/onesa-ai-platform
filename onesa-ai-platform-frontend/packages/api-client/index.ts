@@ -20,6 +20,7 @@ export async function call(path: string, method = "GET", body?: unknown, signal?
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith("/auth/") && path !== "/documentation/access" && typeof window !== "undefined") window.dispatchEvent(new Event("onesa-session-expired"));
     const data = await response.json().catch(() => ({}));
     throw new ApiError(data.error?.message || "Request failed", response.status, data.error?.code || "request_failed");
   }

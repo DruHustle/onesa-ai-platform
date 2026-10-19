@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-- Reject invalid agent tool permissions before reserving model capacity. Valid runs
-  retain shared admission, final session/lease verification and unconditional cleanup.
+- Third review: require sign-in before Travel/Knowledge work, retain the requested
+  task and protect Travel drafts, selection and pending saves. Same-account session
+  renewal preserves in-memory work without replay; another account starts separately.
+- Align public and protected Docs homepage learning order, remove card numbers and
+  move secondary status guidance below the starting path. Component publication and
+  hosted identity acceptance remain separate from source/local verification.
 
-- Prepare clearer sign-in/registration orientation and first-use knowledge/documentation
-  links without changing conversations, access policy or model behavior. Give footer
-  links comfortable touch targets and verify the new Docs learning sequence.
 - Organize documentation around Start here, Product guides, Tutorials, API, Architecture
   and Troubleshooting/releases; preserve classified builds and primary source identities.
 - Remove the second Chat dependency install from the same browser CI job; retain the
@@ -29,6 +30,23 @@
 
 
 
+## 2026-10-18 — AI application and public Docs accepted
+
+- AI frontend source `3ca4bc6556515debf4ce2ccfe90b3cbb8d327655`, Vercel
+  `dpl_EQiYQpsDdGdXMRhbcXtR2jZSS5Rf`, passed canonical acceptance. Sign-in and
+  first-use orientation, knowledge/documentation entry points and footer targets are
+  released. The retained API source is `6011890047dc16267147241ea68b94f494c89827`,
+  image `sha256:b3599a8582b621a5b23d665e614255f92f51322695a0ded263b41c7ed3446d9b`.
+  It rejects invalid tool permissions before model admission; no backend rebuild is
+  implied by the later frontend source identity. Production acceptance was anonymous;
+  authenticated workflow evidence belongs to staging.
+- Public Docs source `3ca4bc6556515debf4ce2ccfe90b3cbb8d327655`, deployment
+  `dpl_87x6fg7VVBZxDdrCq14TZVBCbYis`, is independently accepted at `docs.onesa.eu`.
+  The protected counterpart was uploaded as a Preview and was not published under
+  that source. Its last accepted production identity is recorded separately below.
+- Third-review authentication/draft protection and homepage card changes remain
+  unreleased until their own exact-source checks and hosted acceptance pass.
+
 ## 2026-10-18 — Protected Engineering Docs production hostname verified
 
 - Engineering Docs is accepted at `https://docs.engineering.onesa.eu/`, source
@@ -40,8 +58,9 @@
   deployment `dpl_TZfvysWGbjASje3bcw2WCoostdLG`, redirects `/engineering` to that
   exact protected hostname. Existing Onesa sign-in, audience and approved membership
   boundaries are retained. Other application/backend identities were not relabelled.
-- Later second-review changes above remain unreleased until their own exact-source
-  CI, qualification and canonical-host acceptance are recorded.
+- The later second-review protected Docs artifact remains unpublished until its
+  own exact-source CI and private hosted acceptance; AI/public Docs releases above
+  have separate acceptance records.
 
 ## 2026-10-18 — Verified public and protected documentation releases
 

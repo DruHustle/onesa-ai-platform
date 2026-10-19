@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import RequireSession from "../../components/require-session";
 import FeatureShell from "../../components/feature-shell";
 import { uploadDocument } from "../../lib/uploads";
 import {
@@ -9,7 +10,8 @@ import {
   type DocumentDetail,
   type KnowledgeSource as Source,
 } from "../../lib/api";
-export default function Knowledge() {
+export default function Knowledge() {return <RequireSession destination="/knowledge" title="Your knowledge"><KnowledgeWorkspace /></RequireSession>;}
+function KnowledgeWorkspace() {
   const [documents, setDocuments] = useState<Document[]>([]),
     [sources, setSources] = useState<Source[]>([]),
     [error, setError] = useState(""),

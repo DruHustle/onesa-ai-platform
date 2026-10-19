@@ -4,9 +4,12 @@ const checks = new Set([
   "change_system_preference", "observe_system_preference", "draft_preserved",
   "focus_preserved", "session_preserved", "no_appearance_api_requests",
   "no_stored_appearance", "restore_system_preference",
+  "usability_sign_in_visible", "usability_submission_ready",
+  "usability_sign_in_complete", "usability_navigation_url", "usability_field_editable",
 ]);
 const matchers = new Set([
   "toBe", "toEqual", "toHaveValue", "toBeFocused", "toBeVisible", "toHaveCount",
+  "toHaveURL", "toBeEnabled",
 ]);
 function safeFailureDiagnostics(error, check) {
   let category = "unavailable", matcher = "not-recorded";
