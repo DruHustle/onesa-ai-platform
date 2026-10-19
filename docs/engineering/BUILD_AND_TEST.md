@@ -93,3 +93,18 @@ against the final backend security candidate image; it does not qualify inferenc
 From the AI repository, run `python3 scripts/release/review_package.py --workspace .. --output docs/internal/release-audit/external-review/<new-review-id>`. Optionally supply the approved `--public-build` and protected `--internal-build` directories. The collector reads independent repository identities, source routes, API operations and workflow hashes; it never contacts providers, reads environment values or authorizes release. The resulting mode-600 manifest and SHA256SUMS preserve source/build classifications, dirty-source limits and unmatched route-test status. Give the external reviewer this restricted index together with the existing deployment/security/recovery evidence, exact Actions run links and read-only reproduction commands. `READY_FOR_INDEPENDENT_REVIEW` describes package availability; the reviewer verdict remains pending.
 
 The compatibility `qualify.py decision` command rejects all retired editable approval JSON. Actual release decisions use the existing trusted qualification and owner-controlled promotion workflows.
+
+## Travel authentication and draft protection
+
+`apps/chat/tests/travel-drafts.spec.ts` requires a loopback frontend and intercepts
+API transport with synthetic fixtures. It verifies authentication before inviting work,
+trip/app/history navigation, pending-save locking, failed saves, same-account session
+renewal, different-account isolation and late optional Docs membership responses. It
+performs no model inference and must not run against hosted data. Use the existing
+Playwright command with this filename and the required browser projects.
+
+The draft registry is mounted in the application layout; it keeps editable values in
+component memory. History state stores only a position. Refresh/exit protection uses
+the browser's supported beforeunload prompt; explicit discard and completed saves
+clear the guard. Authentication returns to the original task; an expired submission
+is not replayed. Real synthetic backend/staging qualification remains a separate gate.

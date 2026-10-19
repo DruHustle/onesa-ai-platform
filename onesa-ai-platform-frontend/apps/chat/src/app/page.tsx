@@ -58,6 +58,8 @@ export default function Chat() {
   const acceptUser = useCallback((current: User) => {
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
+    const intended = new URLSearchParams(window.location.search).get("next");
+    if (intended === "/travel" || intended === "/knowledge") {window.location.replace(intended); return;}
     setUser(current);
   }, []);
   useEffect(() => {

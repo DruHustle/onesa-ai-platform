@@ -117,3 +117,15 @@ button, select { min-height: var(--onesa-control-size); }
 .theme-doc-markdown :not(pre) > code { overflow-wrap: anywhere; white-space: normal; }
 .docs-audience { padding: .35rem 1rem; font-size: .75rem; font-weight: 700; border-bottom: 1px solid var(--onesa-divider); background: var(--onesa-info-surface); color: var(--onesa-info); }
 @media print { .navbar, .footer, .reading-progress, .docs-audience, .diagram-toolbar, .asset-links { display: none; } .diagram-canvas { height: auto; } .diagram-panel { break-inside: avoid; } }
+
+/* Status terminology follows the starting path rather than competing with it. */
+.status-guide{margin:36px 0 20px}.status-guide summary{min-height:44px;padding:10px 0;cursor:pointer;font-weight:600}.status-guide p{max-width:75ch}.status-guide .evidence-strip{margin-top:12px}
+
+/* Home learning paths reflow when browser text is enlarged. */
+.portal-home{min-width:0;overflow-wrap:anywhere}
+.topic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.topic-card{min-width:0}
+.hero-actions{flex-wrap:wrap}
+.hero-actions .button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:996px){.topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.navbar__brand{min-width:0;flex:1}.navbar__title{min-width:0}}
+@media(max-width:600px){.topic-grid{grid-template-columns:minmax(0,1fr)}}

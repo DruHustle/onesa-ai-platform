@@ -596,3 +596,6 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .tool-results dd { margin: 8px 0 0; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .auth-orientation{display:flex;flex-wrap:wrap;gap:12px 20px;margin:20px 0}.auth-orientation a{overflow-wrap:anywhere}.auth-card p{line-height:1.6}.auth-card{max-width:34rem}.welcome>p{max-width:48ch;margin-inline:auto}
+
+.session-workspace{border:0;margin:0;padding:0;min-inline-size:0}
+.session-signin>fieldset,.travel-fields{border:0;margin:0;padding:0;min-inline-size:0;display:grid;gap:1rem}
