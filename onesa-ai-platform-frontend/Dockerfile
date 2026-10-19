@@ -1,7 +1,9 @@
 FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS build
 WORKDIR /frontend/apps/chat
 COPY apps/chat/package*.json ./
-RUN npm ci
+RUN --mount=type=cache,id=onesa-ai-platform-npm,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --no-fund --fetch-retries=2 \
+    --fetch-retry-mintimeout=2000 --fetch-retry-maxtimeout=10000 --fetch-timeout=60000
 COPY apps/chat ./
 COPY packages /frontend/packages
 ENV NEXT_TELEMETRY_DISABLED=1

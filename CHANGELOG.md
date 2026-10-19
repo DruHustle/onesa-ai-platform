@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Bound Chat image dependency downloads and reuse the npm download cache after
+  a confirmed CI registry connection reset; retain locked installation, independent
+  dependency audit and full runtime vulnerability/secret gates.
+
 - Align protected Engineering Docs homepage learning order, remove card numbers
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
