@@ -108,3 +108,15 @@ component memory. History state stores only a position. Refresh/exit protection 
 the browser's supported beforeunload prompt; explicit discard and completed saves
 clear the guard. Authentication returns to the original task; an expired submission
 is not replayed. Real synthetic backend/staging qualification remains a separate gate.
+
+## Usability probes and unsaved work
+
+The hosted timing probe restores each input's original value after proving it is
+editable, including when its observation callback fails. It must not leave a
+synthetic Travel draft and then accidentally test the discard guard as a navigation
+benchmark. `scripts/usability-draft.cjs` owns that cleanup; it does not bypass dialogs,
+authentication, draft protection or timing limits. The local Travel regression checks
+both clean-baseline navigation and continued protection of a genuine unsaved edit.
+Only fixed step/matcher labels enter failure diagnostics; never log input values,
+credentials or raw assertion messages. Passing local controls does not authorize a
+hosted retry or establish production performance.

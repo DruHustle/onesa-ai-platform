@@ -4,6 +4,7 @@ const fs = require("node:fs"),
 const { createRequire } = require("node:module");
 const { createHash } = require("node:crypto");
 const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
+const { withTemporaryDraft } = require("./usability-draft.cjs");
 const requireChat = createRequire(
   path.resolve("onesa-ai-platform-frontend/apps/chat/package.json"),
 );
@@ -100,7 +101,7 @@ function fixtures() {
   return value.users;
 }
 
-async function measureUsability(browser, origin, bypass, account, pageErrors) {
+async function measureUsability(browser, origin, bypass, account, pageErrors, observeCheck) {
   const measurements = [];
   for (const mode of ["normal", "slow-mobile"]) {
     const context = await browser.newContext({
@@ -141,6 +142,7 @@ async function measureUsability(browser, origin, bypass, account, pageErrors) {
         await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
       }
       const started = performance.now();
+      observeCheck("usability_sign_in_visible");
       const response = await page.goto(origin, { waitUntil: "commit" });
       expect(response.status()).toBe(200);
       await expect(
@@ -154,9 +156,11 @@ async function measureUsability(browser, origin, bypass, account, pageErrors) {
       await page.getByLabel("Password", { exact: true }).fill(account.password);
       const draftEditable = Math.round(performance.now() - started);
       const submit = page.getByRole("button", { name: "Sign in", exact: true });
+      observeCheck("usability_submission_ready");
       await expect(submit).toBeEnabled({ timeout: 20000 });
       const submissionReady = Math.round(performance.now() - started);
       const signInStarted = performance.now();
+      observeCheck("usability_sign_in_complete");
       await submit.click();
       await expect(page.getByLabel("Message Onesa AI")).toBeEnabled({
         timeout: 20000,
@@ -178,14 +182,17 @@ async function measureUsability(browser, origin, bypass, account, pageErrors) {
             .getByLabel("Toggle conversations", { exact: true })
             .click();
         const before = performance.now();
+        observeCheck("usability_navigation_url");
         await page.getByRole("link", { name: label, exact: true }).click();
         await expect(page).toHaveURL(origin + route);
         const input = page.getByLabel(field, { exact: true });
+        observeCheck("usability_field_editable");
         await expect(input).toBeEnabled({ timeout: 20000 });
-        await input.fill("Unsent synthetic timing draft");
-        navigation.push({
-          route,
-          draft_usable_ms: Math.round(performance.now() - before),
+        await withTemporaryDraft(input, () => {
+          navigation.push({
+            route,
+            draft_usable_ms: Math.round(performance.now() - before),
+          });
         });
       }
       const resources = await page.evaluate(() => {
@@ -567,6 +574,7 @@ async function main() {
       bypass,
       accounts[0],
       pageErrors,
+      observeDraftCheck,
     );
     expect(pageErrors).toEqual([]);
     const report = {
