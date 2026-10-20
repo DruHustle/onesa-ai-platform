@@ -754,8 +754,16 @@ def public_docs_native_preview(github, sha, staging_run):
     now = datetime.now(timezone.utc)
     for reference in references:
         ci_run = github.run(reference["run_id"])
+        e.require(
+            ci_run["event"] in {"push", "workflow_dispatch"},
+            "Actual checked CI event required",
+        )
         e.trusted_run(
-            ci_run, reference["workflow"], sha, {"staging", "main"}, event="push"
+            ci_run,
+            reference["workflow"],
+            sha,
+            {"staging", "main"},
+            event=ci_run["event"],
         )
         _internal_docs_fresh(ci_run.get("updated_at"), now)
     run = github.run(staging_run)
