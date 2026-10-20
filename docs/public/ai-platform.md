@@ -1,4 +1,20 @@
-# AI Platform technical overview
+# Onesa AI Platform
+
+The platform brings together **Applications** and **Industrial AI**. Applications
+include the existing protected Chat, Knowledge, Agents and Travel workspace.
+Industrial AI is a planned development track for source-backed operational
+investigation and human-reviewed work drafts, not a live factory integration.
+Robotics / Physical AI is Onesa’s separate robotics development line.
+
+## Industrial AI — planned
+
+The first proposed workflow investigates repeated stops for one authorized machine
+and time window, using permitted event data and versioned manuals. It would show
+observed facts separately from hypotheses, cite supporting sources and identify
+missing information before preparing an editable internal work draft. A person
+reviews the outcome. No PLC, actuator or CMMS write integration is currently claimed.
+
+[Discuss a pilot scope](https://onesa.eu/en/contact?topic=industrial).
 
 ## Apps powered by the Onesa AI Platform
 
@@ -13,9 +29,6 @@ smart farming are planned applications:
   by step, from planting to harvest. Combine soil conditions, seasonal weather
   forecasts, water availability, production costs and market demand to support
   practical decisions.
-
-The farming workflow connects **choose a crop → plan cultivation → monitor
-conditions → adapt activities → evaluate selling opportunities**.
 
 See [application directions](applications.md#application-directions) for the
 implementation status and required data integrations.

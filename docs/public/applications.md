@@ -14,10 +14,8 @@ are planned applications; they do not yet have dedicated implemented workflows.
   forecasts, water availability, production costs and market demand to support
   practical decisions.
 
-The proposed farming workflow is **choose a crop → plan cultivation → monitor
-conditions → adapt activities → evaluate selling opportunities**. These experiences
-need suitable data integrations, source freshness, explicit assumptions and validated
-domain workflows. Weather and market data integrations are not currently qualified.
+These planned experiences need suitable data integrations, source freshness,
+explicit assumptions and validated domain workflows. Weather and market data integrations are not currently qualified.
 The existing Travel experience is described below.
 
 ## Chat

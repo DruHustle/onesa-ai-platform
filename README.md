@@ -24,6 +24,15 @@ flowchart LR
   Docs[Public developer guides] --- Browser
 ```
 
+## Product tracks
+
+**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** is a
+planned track for evidence-backed operational investigation and human-reviewed
+internal work drafts. The focused milestone and evaluation contract are in the
+[existing product requirements](docs/product/PRD.md#current-product-hierarchy-and-industrial-milestone--2026-10-20).
+No live machine/PLC/MES/ERP/CMMS connection or autonomous industrial control is claimed.
+Onesa Robotics / Physical AI remains a separate product development line.
+
 ## Capabilities and boundaries
 
 - Chat streams responses with context, history, rename/delete, Stop and explicit failures.

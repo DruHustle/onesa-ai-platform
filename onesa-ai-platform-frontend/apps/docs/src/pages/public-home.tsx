@@ -3,7 +3,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 const topics=[
  ['Getting started','Authenticate and make your first request.','/docs/public/quickstart'],
- ['Onesa AI Platform','Understand the platform’s available software capabilities.','/docs/public/ai-platform'],
+ ['Onesa AI Platform','Applications today and the planned Industrial AI track.','/docs/public/ai-platform'],
  ['Applications','Chat, Knowledge, Agents and Travel workflows.','/docs/public/applications'],
  ['Company Portal','Public information and protected business workflows.','/docs/public/company-portal'],
  ['Robot simulation','Protected software simulation and future hardware boundaries.','/docs/public/robot'],
