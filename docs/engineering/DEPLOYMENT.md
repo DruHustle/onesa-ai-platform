@@ -1,5 +1,22 @@
 # Independent application deployment
 
+## Current AI backend security release — 2026-10-21
+
+Actual Oracle backend source is `776362dcbd994ecde3ca253cbc558faf2c279a56`, qualified
+through main `204e666c40943af2dc1f53359f360feaffbaa126` with full CI `39510142001`.
+Installed certifi 2026.10.19 and its reviewed TLS bundle are verified. All 23 real
+staging workflows/42 views, six production private denials and three readiness
+samples pass. The remaining main differences were independently checked as five
+Docs-only paths; backend/Chat/release-verifier bytes are unchanged. This does not
+relabel the actual image. The retained frontend is `3b38acd862f8db177035adec49c920470217894d`
+/ `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`; Docs retain their separate records. Production
+acceptance used no migration, new identity, inference call or other-service restart.
+Restricted package, configuration-preservation, source/CI, encrypted-restore and
+read-only acceptance receipts retain the original failed observer and its tested
+standard-library correction. Historical hosting/deployment sections below are not
+instructions to restore an obsolete Render target or vulnerable previous image.
+
+
 ## Primary release path
 
 Start a normal release from the reviewed `dev → staging → main` candidate in the
