@@ -685,6 +685,80 @@ class GateTests(unittest.TestCase):
         status, _ = e.checked_ci(Missing(), SHA)
         self.assertEqual(status, "BLOCKED")
 
+    def test_missing_push_can_use_full_exact_owner_dispatched_ci(self):
+        class API:
+            def runs(self, workflow, sha):
+                return [run(10, workflow, event="workflow_dispatch")]
+
+            def jobs(self, workflow):
+                names = (
+                    e.POLICY["jobs"]
+                    if workflow["path"].endswith(e.POLICY["ci"])
+                    else ["publication-hygiene"]
+                )
+                return [
+                    {
+                        "name": name,
+                        "conclusion": "success",
+                        "html_url": "https://github.com/synthetic",
+                        "steps": [
+                            {
+                                "name": "Release requirement: full tests",
+                                "conclusion": "success",
+                            }
+                        ],
+                    }
+                    for name in names
+                ]
+
+        status, references = e.checked_ci(API(), SHA)
+        self.assertEqual(status, "PASS")
+        self.assertTrue(
+            all(r["source_event"] == "workflow_dispatch" for r in references)
+        )
+        for changes in [
+            {"actor": {"login": "other"}},
+            {"triggering_actor": {"login": "other"}},
+            {"head_sha": "b" * 40},
+            {"head_repository": {"full_name": "other/repository"}},
+            {"run_attempt": 2},
+            {"path": ".github/workflows/other.yml"},
+        ]:
+
+            class Untrusted(API):
+                def runs(self, workflow, sha, changes=changes):
+                    return [{**run(10, workflow), **changes}]
+
+            with self.subTest(changes=changes), self.assertRaises(e.Rejected):
+                e.checked_ci(Untrusted(), SHA)
+
+        class Incomplete(API):
+            def jobs(self, workflow):
+                return []
+
+        self.assertEqual(e.checked_ci(Incomplete(), SHA)[0], "BLOCKED")
+
+        class SkippedRequirement(API):
+            def jobs(self, workflow):
+                result = super().jobs(workflow)
+                result[0]["steps"][0]["conclusion"] = "skipped"
+                return result
+
+        with self.assertRaises(e.Rejected):
+            e.checked_ci(SkippedRequirement(), SHA)
+
+        for conclusion in ["failure", "cancelled", None]:
+
+            class ExistingPush(API):
+                def runs(self, workflow, sha, conclusion=conclusion):
+                    return [
+                        run(11, workflow),
+                        {**run(10, workflow, event="push"), "conclusion": conclusion},
+                    ]
+
+            with self.subTest(push_conclusion=conclusion):
+                self.assertNotEqual(e.checked_ci(ExistingPush(), SHA)[0], "PASS")
+
     def test_source_hash_is_legacy_algorithm(self):
         if e.PRODUCT == "onesa-ai-robot":
             return

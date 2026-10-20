@@ -127,10 +127,10 @@ It uploads **build-public only**. No live database, model or user account is use
 - `target=build`: creates a reviewable public artifact without provider changes.
 - `target=preview`: uploads the same static application to a temporary Vercel URL,
   with crawl-blocking headers. It does not attach production DNS.
-- `target=production`: requires `main`, publishes public docs and verifies the existing
-  `docs.onesa.eu` assignment on the independent Vercel project. Application production release
-  guards are unchanged; this standalone documentation deployment does not promote
-  the AI or Company Portal application.
+- Production publication uses the existing external owner-controlled, exact-main
+  qualification and immutable-artifact procedure. `target=production` is not a
+  current workflow input. Read back the independent `docs.onesa.eu` deployment;
+  publishing Docs does not deploy the AI or Company Portal application.
 
 Existing `VERCEL_TOKEN` and `VERCEL_ORG_ID` GitHub Actions secrets are reused only
 inside the runner. `VERCEL_DOCS_PROJECT_ID` is optional: without it, the workflow
