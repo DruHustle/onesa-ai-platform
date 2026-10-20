@@ -20,6 +20,11 @@ Private S3-compatible object storage holds uploaded files. Malware scanning fail
 
 ## Hosting status and limitations
 
-The reviewed backend startup is Node executing the compiled server. Readiness verifies schema and restricted database privileges. A process responding to liveness is insufficient if readiness fails. The production database-role failure is not declared resolved by a local correction. The separate staging API layout has been inspected, but credentials, persistent storage, a real worker and end-to-end operational tests remain required. A web service named worker does not prove the worker process is running.
+The backend runs on Oracle Cloud Infrastructure independently of its Vercel frontend.
+Readiness checks schema and restricted database privileges. Separate workers process
+queued work and use a private malware scanner; a healthy public page alone does not
+prove a job finished or a document is safe. Release checks and owner acceptance apply
+to the actual changed component and workflow. Do not infer applicant-processing,
+governance approval or deletion authority from a successful deployment.
 
 [Open the company site](https://onesa.eu/) · [Open the portal](https://portal.onesa.eu/) · [API explorer](/api-explorer) · [Ecosystem](ecosystem.md).

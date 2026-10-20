@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clarify Applications and planned Industrial AI in the existing public guides and product specification. Prepare a narrowly scoped read-only investigation milestone, explicit fixture/evaluation/human-review boundaries and commercial hypotheses; no industrial integration, customer or training claim. Updated Docs publication remains separately qualified.
+
 - Bound Chat image dependency downloads and reuse the npm download cache after
   a confirmed CI registry connection reset; retain locked installation, independent
   dependency audit and full runtime vulnerability/secret gates.

@@ -14,10 +14,8 @@ are planned applications; they do not yet have dedicated implemented workflows.
   forecasts, water availability, production costs and market demand to support
   practical decisions.
 
-The proposed farming workflow is **choose a crop → plan cultivation → monitor
-conditions → adapt activities → evaluate selling opportunities**. These experiences
-need suitable data integrations, source freshness, explicit assumptions and validated
-domain workflows. Weather and market data integrations are not currently qualified.
+These planned experiences need suitable data integrations, source freshness,
+explicit assumptions and validated domain workflows. Weather and market data integrations are not currently qualified.
 The existing Travel experience is described below.
 
 ## Chat
@@ -28,10 +26,10 @@ Create, rename, reopen and delete owned conversations. Stream Markdown responses
 ## Knowledge
 Upload bounded TXT/PDF documents, search owned sources and select documents for grounded Chat. Preview extracted text and rebuild a document’s search index using the configured
 embedding service. Reindex clears the displayed search results; it does not qualify
-a new model. Sources persist with answers. The active default remains a labelled lexical baseline. An optional pinned Qwen
-embedding service has passed a small local EN/DE retrieval evaluation; production
-hosting and wider language/domain quality remain unqualified. Switching requires
-controlled document reindexing.
+a new model. Sources persist with answers. Local development defaults to an explicitly labelled lexical baseline. The hosted
+configuration reviewed on 20 October 2026 selects the versioned Cloudflare Qwen semantic
+embedding profile. A provider change requires compatible dimensions, versioned indexes
+and controlled reindexing; a local example is not evidence of production model quality.
 
 [Open Knowledge](https://platform.onesa.eu/knowledge).
 

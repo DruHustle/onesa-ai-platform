@@ -1,6 +1,6 @@
 # Onesa ecosystem
 
-Onesa UG develops intelligent software, digital platforms and robotics. The Company website introduces the company and its products. Onesa AI Platform is a general-purpose engine for applications and intelligent systems. Onesa AI Robot explores its use in the physical world and is under development.
+Onesa UG develops intelligent software, digital platforms and robotics. The Company website introduces the company and its products. Onesa AI Platform has Applications and Industrial AI tracks. Applications include the protected Chat, Knowledge, Agents and Travel workspace; Industrial AI is a planned track for evidence-backed operational investigation and human-reviewed drafts. Onesa Robotics / Physical AI is a separate development line, currently demonstrated through a protected one-joint software simulator.
 
 ## Familiar behavior, distinct purposes
 
