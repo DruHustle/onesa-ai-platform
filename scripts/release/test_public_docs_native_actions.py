@@ -127,6 +127,28 @@ class ActionsNativeTests(unittest.TestCase):
         with self.assertRaises(e.Rejected):
             self.verify()
 
+    def test_binding_failure_names_only_the_fixed_category(self):
+        for field, value, category in [
+            ("source_sha256", "d" * 64, "source"),
+            ("producer_sha256", "d" * 64, "producer"),
+            ("ci_sha256", "d" * 64, "ci"),
+            ("preview_artifact_id", 999, "preview-id"),
+            ("production_artifact_sha256", "d" * 64, "production-archive"),
+            ("production_deployment_authorized", True, "no-grants"),
+        ]:
+            previous = copy.deepcopy(self.github.metadata_record)
+            self.github.metadata_record[field] = value
+            with (
+                self.subTest(field=field),
+                self.assertRaisesRegex(
+                    e.Rejected, "^Public metadata mismatch: " + category + "$"
+                ) as caught,
+            ):
+                self.read()
+            self.assertNotIn(str(value), str(caught.exception))
+            self.github.metadata_record = previous
+        self.assertEqual(self.read()["STAGING_VERIFIED"], "BLOCKED")
+
     def test_newer_authorization_revokes_prior_conditional_handoff(self):
         self.prepare()
         self.github.runs_by_id[41] = {**self.github.runs_by_id[40], "id": 41}

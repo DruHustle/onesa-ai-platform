@@ -1087,33 +1087,106 @@ def _public_docs_native_metadata(record, sha, producer, stage, now):
         "Exact sanitized public metadata schema required",
     )
     proof = stage["record"]["scopes"]["public"]
+    # Keep each original binding mandatory; log only a fixed category, never values.
     e.require(
-        type(record["schema_version"]) is int
-        and record["schema_version"] == 1
-        and record["evidence_kind"] == PUBLIC_DOCS_METADATA_KIND
-        and record["repository"] == e.REPOSITORY
-        and record["candidate_commit"] == sha
-        and record["source_sha256"] == e.source_hash()
-        and record["delivery_scope"] == "docs-public"
-        and record["classification"] == "public"
-        and record["build_environment"] == "staging"
-        and record["producer_sha256"] == producer
-        and record["ci_sha256"] == e.digest(stage["ci"])
-        and type(record["staging_run_id"]) is int
-        and record["staging_run_id"] == stage["artifact"]["run_id"]
-        and record["preview_record_sha256"] == e.digest(stage["record"])
-        and type(record["preview_artifact_id"]) is int
-        and record["preview_artifact_id"] == stage["preview_site_artifact"]["id"]
-        and type(record["production_artifact_id"]) is int
-        and record["production_artifact_id"] == stage["public_site_artifact"]["id"]
-        and record["preview_artifact_sha256"]
-        == proof["preview_artifact"]["artifact_sha256"]
-        and record["production_artifact_sha256"] == proof["artifact_sha256"]
-        and record["preview_build_sha256"] == proof["preview_artifact"]["build_sha256"]
-        and record["production_build_sha256"] == proof["build_sha256"]
-        and isinstance(record["hosted_acceptance_sha256"], str)
-        and re.fullmatch(r"[a-f0-9]{64}", record["hosted_acceptance_sha256"])
-        and all(
+        type(record["schema_version"]) is int,
+        "Public metadata mismatch: schema-type",
+    )
+    e.require(
+        record["schema_version"] == 1,
+        "Public metadata mismatch: schema-version",
+    )
+    e.require(
+        record["evidence_kind"] == PUBLIC_DOCS_METADATA_KIND,
+        "Public metadata mismatch: kind",
+    )
+    e.require(
+        record["repository"] == e.REPOSITORY,
+        "Public metadata mismatch: repository",
+    )
+    e.require(
+        record["candidate_commit"] == sha,
+        "Public metadata mismatch: candidate",
+    )
+    e.require(
+        record["source_sha256"] == e.source_hash(),
+        "Public metadata mismatch: source",
+    )
+    e.require(
+        record["delivery_scope"] == "docs-public",
+        "Public metadata mismatch: scope",
+    )
+    e.require(
+        record["classification"] == "public",
+        "Public metadata mismatch: classification",
+    )
+    e.require(
+        record["build_environment"] == "staging",
+        "Public metadata mismatch: environment",
+    )
+    e.require(
+        record["producer_sha256"] == producer,
+        "Public metadata mismatch: producer",
+    )
+    e.require(
+        record["ci_sha256"] == e.digest(stage["ci"]),
+        "Public metadata mismatch: ci",
+    )
+    e.require(
+        type(record["staging_run_id"]) is int,
+        "Public metadata mismatch: run-type",
+    )
+    e.require(
+        record["staging_run_id"] == stage["artifact"]["run_id"],
+        "Public metadata mismatch: run",
+    )
+    e.require(
+        record["preview_record_sha256"] == e.digest(stage["record"]),
+        "Public metadata mismatch: record",
+    )
+    e.require(
+        type(record["preview_artifact_id"]) is int,
+        "Public metadata mismatch: preview-id-type",
+    )
+    e.require(
+        record["preview_artifact_id"] == stage["preview_site_artifact"]["id"],
+        "Public metadata mismatch: preview-id",
+    )
+    e.require(
+        type(record["production_artifact_id"]) is int,
+        "Public metadata mismatch: production-id-type",
+    )
+    e.require(
+        record["production_artifact_id"] == stage["public_site_artifact"]["id"],
+        "Public metadata mismatch: production-id",
+    )
+    e.require(
+        record["preview_artifact_sha256"]
+        == proof["preview_artifact"]["artifact_sha256"],
+        "Public metadata mismatch: preview-archive",
+    )
+    e.require(
+        record["production_artifact_sha256"] == proof["artifact_sha256"],
+        "Public metadata mismatch: production-archive",
+    )
+    e.require(
+        record["preview_build_sha256"] == proof["preview_artifact"]["build_sha256"],
+        "Public metadata mismatch: preview-build",
+    )
+    e.require(
+        record["production_build_sha256"] == proof["build_sha256"],
+        "Public metadata mismatch: production-build",
+    )
+    e.require(
+        isinstance(record["hosted_acceptance_sha256"], str),
+        "Public metadata mismatch: acceptance-hash-type",
+    )
+    e.require(
+        re.fullmatch("[a-f0-9]{64}", record["hosted_acceptance_sha256"]),
+        "Public metadata mismatch: acceptance-hash",
+    )
+    e.require(
+        all(
             record[key] is False
             for key in [
                 "application_deployment_authorized",
@@ -1121,7 +1194,7 @@ def _public_docs_native_metadata(record, sha, producer, stage, now):
                 "production_deployment_authorized",
             ]
         ),
-        "Public metadata source, producer, CI, archives or no-grant mismatch",
+        "Public metadata mismatch: no-grants",
     )
     _internal_docs_fresh(record["verified_at"], now)
     preview = proof["preview"]
