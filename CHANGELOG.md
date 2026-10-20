@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Prepare the supported Markdown-it 15.0.3 Docs build-tool update for
+  GHSA-vfgh-jcmw-g37q, preserving unrelated locked packages and optional native
+  entries. Add bounded regressions for all four unterminated inline HTML cases.
+  The original exact-main audit failure remains recorded; no audit threshold,
+  required check or production release gate is bypassed. Publication is pending.
+
 - Prepare the supported certifi 2026.10.19 trust-store update for critical
   GHSA-6q48-6c7w-9gw2. Regenerate only the affected runtime/development locks
   (and the AI optional macOS embedding lock), preserving all other versions.
