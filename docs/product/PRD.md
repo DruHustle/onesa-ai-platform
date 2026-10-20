@@ -79,8 +79,8 @@ shows gaps/freshness/uncertainty, and prepares an editable internal work-order d
 A named reviewer makes the decision; the system does not send the draft to a CMMS,
 write PLC settings, actuate hardware or automatically execute its recommendations.
 
-The public static DEMO-01 example uses invented stops at09:12 (4min),09:31 (3min)
-and09:48 (5min), UTC within09:00–10:00. Three stops total12minutes. With no sensor
+The public static DEMO-01 example uses invented stops at 09:12 (4 min), 09:31 (3 min)
+and 09:48 (5 min), UTC within 09:00–10:00. Three stops total 12 minutes. With no sensor
 readings or approved manual, cause and corrective action are unknown. This arithmetic
 example is not an inference result, customer case or operational integration.
 
@@ -134,7 +134,7 @@ rights and acceptance before it can qualify as demonstrated Industrial AI.
 
 ### Pilot and commercial readiness
 
-Prepare10–15 discovery interviews,2–3 design-partner evaluations and1–2 paid pilot
+Prepare 10–15 discovery interviews, 2–3 design-partner evaluations and 1–2 paid pilot
 hypotheses, subject to owner approval and actual counterparts. These are targets,
 not customers or traction. Define one asset/workflow, source access, success criteria,
 data responsibilities, escalation, rollback, capacity and acceptance with each pilot.

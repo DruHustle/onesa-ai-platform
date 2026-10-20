@@ -43,11 +43,19 @@ Registration may require an invitation. Recovery uses expiring, one-use tokens a
 
 Conversation creation and history persist independently of generation. Chat routes share a model abstraction with explicitly configured Cloudflare Workers AI, mock, Ollama and vLLM adapters. Streaming, cancellation, errors and timeouts are explicit. The local Ollama model tag is not assumed interchangeable with a Hugging Face vLLM checkpoint. No fine-tuned Onesa weights are established by the registry scaffolding.
 
-The isolated hosted staging core has passed identity, ownership, restart and idle-connection checks. Real Workers AI generation and semantic embedding paths have passed staging tests. The staging storage binding has since been corrected and requires fresh hosted acceptance; these results do not establish production model availability. Missing inference must produce an honest unavailable response; a deterministic mock cannot qualify real hosted chat. Core readiness and inference readiness are deliberately separate.
+Hosted application release checks have exercised real Workers AI generation and semantic
+embeddings, alongside authentication, ownership and application workflows. Current
+configuration readback selects Cloudflare in staging and production; it is not a new
+inference or model-quality test. Missing inference produces an explicit unavailable
+response. Core readiness and inference readiness remain deliberately separate.
 
 ## Knowledge and retrieval
 
-The pipeline validates files, parses and chunks them, obtains versioned embeddings, persists vectors and searches within the requesting user's permitted documents. Citations identify retrieved sources; retrieval does not authorize cross-user access. Updates and deletion must preserve index consistency. pgvector dimensions and the embedding model/version must agree. The established default is the clearly labelled 256-dimensional lexical hashing baseline, not semantic model embeddings. The HTTP and Workers AI semantic adapters are implemented. Real Workers AI staging retrieval has passed; production and corrected staging storage acceptance remain separate gates. A chat endpoint does not prove an embedding endpoint works. Private file persistence must be qualified separately from database persistence.
+The pipeline validates files, parses and chunks them, obtains versioned embeddings, persists vectors and searches within the requesting user's permitted documents. Citations identify retrieved sources; retrieval does not authorize cross-user access. Updates and deletion must preserve index consistency. pgvector dimensions and the embedding model/version must agree. Local development defaults to the clearly labelled 256-dimensional lexical hashing
+baseline. The hosted configuration uses the versioned Workers AI Qwen semantic profile;
+the HTTP adapter remains separately configurable. A chat response does not prove an
+embedding endpoint works. The applicable release must verify both retrieval and private
+persistence; configuration alone cannot qualify them.
 
 ## Agents and Travel
 
