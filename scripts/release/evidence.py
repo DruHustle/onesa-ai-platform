@@ -310,12 +310,17 @@ def checked_ci(github, sha):
         (POLICY["ci"], POLICY["jobs"]),
         ("repository-hygiene.yml", ["publication-hygiene"]),
     ]:
-        runs = [
+        observed = [
             run
             for run in github.runs(workflow, sha)
-            if run["event"] == "push"
-            and run["head_branch"] in {"main", POLICY["staging_branch"]}
+            if run["head_branch"] in {"main", POLICY["staging_branch"]}
         ]
+        runs = [run for run in observed if run["event"] == "push"]
+        # An absent push event is not a successful check. The owner may dispatch
+        # the same complete CI workflow at the exact permanent-branch revision.
+        # Never replace a failed, pending, skipped or cancelled push with this path.
+        if not runs:
+            runs = [run for run in observed if run["event"] == "workflow_dispatch"]
         main_runs = [item for item in runs if item["head_branch"] == "main"]
         if main_runs:
             runs = main_runs
@@ -328,7 +333,7 @@ def checked_ci(github, sha):
             workflow,
             sha,
             {"main", POLICY["staging_branch"]},
-            event="push",
+            event=run["event"],
             completed=False,
         )
         jobs = github.jobs(run)
@@ -370,6 +375,10 @@ def checked_ci(github, sha):
                 "verified_at": run.get("updated_at"),
             }
         )
+        if run["event"] == "workflow_dispatch":
+            references[-1]["source_event"] = "workflow_dispatch"
+            references[-1]["manual_reason"] = "No exact-source push run exists"
+
     return ("FAIL" if failed else "BLOCKED" if missing else "PASS"), references
 
 

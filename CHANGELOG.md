@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Retain bounded, fixed renderer/hydration/visibility state when any public Docs interaction fails; preserve original assertions, deadlines and failure identity. The20October hosted architecture timeout remains a failed qualification; targeted21-diagram reproduction passed, so its original cause is not claimed resolved.
+
+- Require complete, exact-source owner-dispatched CI when an automatic push run is absent; retain real event provenance and reject substitution for existing failed/pending push checks. Correct the documented external public Docs production path.
+
+- Clarify Applications and planned Industrial AI in the existing public guides and product specification. Prepare a narrowly scoped read-only investigation milestone, explicit fixture/evaluation/human-review boundaries and commercial hypotheses; no industrial integration, customer or training claim. Updated Docs publication remains separately qualified.
+
 - Bound Chat image dependency downloads and reuse the npm download cache after
   a confirmed CI registry connection reset; retain locked installation, independent
   dependency audit and full runtime vulnerability/secret gates.

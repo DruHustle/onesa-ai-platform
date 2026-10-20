@@ -6,4 +6,16 @@ The model registry and dataset preparation are separate engineering workflows. P
 
 ## Current provider paths
 
-Vercel serves product frontends and the public docs. Render serves product APIs. Portal's Oracle background executor and ClamAV have passed synthetic staging checks; production replacement qualification is separate. AI's Workers AI generation and semantic embedding paths have passed real staging tests; production acceptance and corrected staging storage qualification remain separate. Robot is cloud software simulation with physical actuation disabled. Detailed environment, schema, recovery and onboarding references belong in the separate engineering build.
+Vercel serves product frontends and public Docs. Oracle Cloud Infrastructure hosts
+separate staging and production APIs and Portal background workers; Cloudflare provides
+HTTPS ingress and security controls. The protected engineering site remains separate.
+Databases, private Portal storage, mail and AI inference have their own service boundaries;
+moving the API host did not move all data or model serving onto that VM.
+
+The current AI configuration uses Cloudflare Workers AI for generation and semantic
+embeddings. Real inference and retrieval have source-bound release evidence; that is
+not proof of unrestricted availability, complete model-language quality or industrial
+connectivity. Robot currently provides protected one-joint software simulation, with
+no connected physical controller. Shared hosting has one failure domain and is not
+high availability. Detailed configuration and incident/recovery records remain in
+protected engineering documentation.

@@ -228,6 +228,24 @@ class PublicNativeTests(unittest.TestCase):
         with self.assertRaises(e.Rejected):
             self.read()
 
+    def test_full_owner_dispatched_ci_keeps_preview_pending_and_production_denied(self):
+        self.github.main_sha = "d" * 40
+        for identifier in [10, 11]:
+            self.github.runs_by_id[identifier].update(
+                head_branch="staging", event="workflow_dispatch"
+            )
+        stage = f.public_docs_native_preview(self.github, SHA, 20)
+        self.assertEqual(stage["status"], "REQUIRES_EXTERNAL_LIVE_VALIDATION")
+        self.assertEqual(stage["STAGING_VERIFIED"], "BLOCKED")
+        for field in [
+            "production_deployment_authorized",
+            "application_deployment_authorized",
+            "backend_deployment_authorized",
+        ]:
+            self.assertIs(stage[field], False)
+        with self.assertRaises(e.Rejected):
+            self.read()
+
     def test_failed_skipped_ci_foreign_owner_and_rerun_refused(self):
         for field, value in [
             ("actor", {"login": "foreign"}),

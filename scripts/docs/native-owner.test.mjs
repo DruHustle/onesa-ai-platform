@@ -4,7 +4,7 @@ import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
 import {createRequire} from 'node:module';
 import {nativeGet,exactPreviewOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
-import {waitForInteractiveDocumentation} from './acceptance.mjs';
+import {waitForInteractiveDocumentation,observeDocumentationFailure} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
 const PREVIEW='https://onesa-docs-synthetic-druhustles-projects.vercel.app';
@@ -179,4 +179,29 @@ test('toolbar and cache controls affect only the owned target and preserve origi
  await page.goto(origin+'/owned');await original.goto(origin+'/original');
  assert.equal(received.find(x=>x.path==='/owned').skip,'1');assert.equal(received.find(x=>x.path==='/original').skip,undefined);
  await cleanupOwnedTargets(page,guard,new Map());assert.ok(context.pages().includes(original));
+});
+
+
+test('interaction failures retain only fixed renderer state and keep the original error',async t=>{
+ const browser=await chromium.launch();t.after(()=>browser.close());const page=await browser.newPage();
+ await page.setContent('<!doctype html><title>Private synthetic title</title><main>Fixture</main>');
+ const error=new Error('Synthetic original interaction timeout');error.name='TimeoutError';
+ await observeDocumentationFailure(error,page,'desktop');
+ assert.equal(error.name,'TimeoutError');assert.equal(error.message,'Synthetic original interaction timeout');
+ assert.deepEqual(error.documentationObservation,{phase:'desktop',state:{readyState:'complete',hydrated:false,visible:true,scripts:0}});
+ assert.ok(!JSON.stringify(error.documentationObservation).includes('Private synthetic title'));
+});
+
+test('unavailable failure diagnostics cannot replace the original interaction failure',async()=>{
+ const error=new Error('Original interaction failure');const original=error;
+ await observeDocumentationFailure(error,{evaluate:async()=>{throw Error('Diagnostic unavailable');}},'untrusted-url');
+ assert.equal(error,original);assert.equal(error.message,'Original interaction failure');
+ assert.deepEqual(error.documentationObservation,{phase:'unspecified',state:null});
+});
+
+test('stalled failure diagnostics finish boundedly and do not turn failure into success',async()=>{
+ const error=new Error('Original stalled interaction');const start=performance.now();
+ await observeDocumentationFailure(error,{evaluate:()=>new Promise(()=>{})});
+ assert.ok(performance.now()-start<3000);assert.equal(error.message,'Original stalled interaction');
+ assert.deepEqual(error.documentationObservation,{phase:'unspecified',state:null});
 });

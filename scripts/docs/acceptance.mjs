@@ -32,14 +32,8 @@ const expectedApplications=applications.applications.map(application=>({
  href:publicOrigin(application.id==='ai'?(process.env.ONESA_APPLICATION_URL||application.href):application.id==='docs'?(process.env.ONESA_PUBLIC_DOCUMENTATION_URL||application.href):application.href),
 }));
 const types={'.html':'text/html','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon','.pdf':'application/pdf','.css':'text/css','.xml':'application/xml','.txt':'text/plain','.mmd':'text/plain'};
-export async function waitForInteractiveDocumentation(page,timeout=10000,phase='unspecified'){
- // SSR markup is visible before React installs the dropdown's keyboard handler.
- // Docusaurus owns this public DOM marker; a missing hydration still fails boundedly.
- try{
-  await expect(page.locator('html')).toHaveAttribute('data-has-hydrated','true',{timeout});
- }catch(error){
-  // Retain only fixed diagnostic categories, never URLs, HTML, input or error text.
-  // Keep the original assertion and deadline; this observation cannot turn FAIL into PASS.
+// Observe only fixed renderer state after a failure; never turn it into success.
+export async function observeDocumentationFailure(error,page,phase='unspecified'){
   let state=null;
   let timer;
   try{state=await Promise.race([page.evaluate(()=>({
@@ -50,8 +44,10 @@ export async function waitForInteractiveDocumentation(page,timeout=10000,phase='
   })),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),1500);})]);}catch{}
   finally{clearTimeout(timer);}
   error.documentationObservation={phase:['desktop','mobile'].includes(phase)?phase:'unspecified',state};
-  throw error;
- }
+}
+export async function waitForInteractiveDocumentation(page,timeout=10000,phase='unspecified'){
+ try{await expect(page.locator('html')).toHaveAttribute('data-has-hydrated','true',{timeout});}
+ catch(error){await observeDocumentationFailure(error,page,phase);throw error;}
 }
 export async function validatePublicDocumentation({page,requestGet,origin,expectedRevision,expectedEnvironment,storageFixture=false}){
 const errors=[];const onError=e=>errors.push(e.name);page.on('pageerror',onError);
@@ -174,7 +170,7 @@ try{
   evidence.environment_context=expectedEnvironment;
  }
  expect(errors).toEqual([]);return {result:'PASS',...evidence};
-}finally{page.off('pageerror',onError);}
+}catch(error){if(!error.documentationObservation)await observeDocumentationFailure(error,page);throw error;}finally{page.off('pageerror',onError);}
 }
 
 async function main(){
