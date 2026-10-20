@@ -37,7 +37,7 @@
     "typescript": "5.9.3",
     "@playwright/test": "1.64.0",
     "esbuild": "0.28.2",
-    "markdown-it": "15.0.2",
+    "markdown-it": "15.0.3",
     "@types/react-dom": "18.3.7"
   },
   "overrides": {

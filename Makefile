@@ -81,6 +81,7 @@ docs-check:
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_prepare_cloudflare.py
 	npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
 	node --test scripts/docs/cloudflare-access.test.mjs
+	node --test scripts/docs/test_markdown_security.mjs
 	npm --prefix onesa-ai-platform-frontend/apps/docs run typecheck
 	$(PYTHON) -m ruff check scripts/docs
 	$(PYTHON) scripts/docs/validate.py
