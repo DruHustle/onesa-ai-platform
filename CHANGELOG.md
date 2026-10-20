@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Prepare the supported certifi 2026.10.19 trust-store update for critical
+  GHSA-6q48-6c7w-9gw2. Regenerate only the affected runtime/development locks
+  (and the AI optional macOS embedding lock), preserving all other versions.
+  Source audits and targeted CA/TLS controls pass. Production images remain
+  unpatched until qualified replacement and deployed-package readback; no scan
+  exception, certificate-verification bypass or model/hardware change is granted.
+
 - Align protected Engineering Docs homepage learning order, remove card numbers
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
