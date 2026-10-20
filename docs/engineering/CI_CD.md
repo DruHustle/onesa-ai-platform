@@ -261,3 +261,14 @@ hardware authorization remain outside AI Platform release scope.
 
 See [deployment](DEPLOYMENT.md), [private-Free safeguards](../development/PRIVATE_FREE_SAFEGUARDS.md)
 and the protected release register for current source-specific operational evidence.
+
+### Missing automatic CI event
+
+If GitHub records no push run for the exact staging/main candidate, the owner may
+dispatch the existing full CI and repository-hygiene workflows at that unchanged
+permanent-branch revision. Record the actual `workflow_dispatch` run IDs; never
+label them as push runs. The verifier requires the exact source, workflow, repository,
+owner actor/triggering actor, first attempt and every required job/security step.
+An existing failed, pending, skipped or cancelled push cannot be replaced this way.
+PR checks and local results alone remain insufficient; no test or production gate
+is bypassed. Missing checks still block until the full dispatched jobs pass.
