@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Retain every public Docs custody binding while reporting a fixed mismatch category instead of one compound error; diagnostics disclose no metadata values and grant no release authority. Prepared after run 39468226358 failed; no repeat or publication is claimed.
+
 - Retain bounded, fixed renderer/hydration/visibility state when any public Docs interaction fails; preserve original assertions, deadlines and failure identity. The20October hosted architecture timeout remains a failed qualification; targeted21-diagram reproduction passed, so its original cause is not claimed resolved.
 
 - Require complete, exact-source owner-dispatched CI when an automatic push run is absent; retain real event provenance and reject substitution for existing failed/pending push checks. Correct the documented external public Docs production path.
