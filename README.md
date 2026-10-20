@@ -5,6 +5,17 @@ Vercel frontend and existing data services remain. See the
 [verified hosting cutover](docs/engineering/DEPLOYMENT.md#verified-production-hosting-cutover--2026-10-16)
 for source identities, protected ingress, acceptance and rollback.
 
+Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
+`docs.onesa.eu`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` (2026-10-20).
+Exact-source native Preview qualification passed; canonical acceptance verified all
+279 public files, 16 responsive/accessibility views and six private-path denials.
+This is a Docs-only release. The AI application remains frontend `3b38acd862f8db177035adec49c920470217894d`
+/ `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API `6011890047dc16267147241ea68b94f494c89827`.
+Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
+18 October accepted record; the newer protected build is not published or currently
+verified with an approved production identity. See the
+[component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-public-docs-release--2026-10-20).
+
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional
 language/domain adaptation is an additional specialization. Existing open-weight

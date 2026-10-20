@@ -2,41 +2,41 @@
 
 ## Unreleased
 
-- Retain every public Docs custody binding while reporting a fixed mismatch category instead of one compound error; diagnostics disclose no metadata values and grant no release authority. Prepared after run 39468226358 failed; no repeat or publication is claimed.
-
-- Retain bounded, fixed renderer/hydration/visibility state when any public Docs interaction fails; preserve original assertions, deadlines and failure identity. The20October hosted architecture timeout remains a failed qualification; targeted21-diagram reproduction passed, so its original cause is not claimed resolved.
-
-- Require complete, exact-source owner-dispatched CI when an automatic push run is absent; retain real event provenance and reject substitution for existing failed/pending push checks. Correct the documented external public Docs production path.
-
-- Clarify Applications and planned Industrial AI in the existing public guides and product specification. Prepare a narrowly scoped read-only investigation milestone, explicit fixture/evaluation/human-review boundaries and commercial hypotheses; no industrial integration, customer or training claim. Updated Docs publication remains separately qualified.
-
-- Bound Chat image dependency downloads and reuse the npm download cache after
-  a confirmed CI registry connection reset; retain locked installation, independent
-  dependency audit and full runtime vulnerability/secret gates.
-
 - Align protected Engineering Docs homepage learning order, remove card numbers
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
   acceptance remain pending. Public Docs has its own accepted record below.
 
-- Organize documentation around Start here, Product guides, Tutorials, API, Architecture
-  and Troubleshooting/releases; preserve classified builds and primary source identities.
-- Remove the second Chat dependency install from the same browser CI job; retain the
-  first install, separate-job isolation, security scans, TLS and all required release checks.
+## 2026-10-20 — Public Docs accepted; application and backend retained
 
-- Remove local-runner workflows, provisioning, hooks, configuration and CI consumers.
-  Keep standard hosted validation and prepare the owner-managed private GitHub Free
-  transition; exhausted included allowance blocks validation instead of paid fallback.
-
-- Correct the public clean-checkout quickstart, derive documentation identity from
-  its package version and generate readable search previews with separate ranking terms.
-
-- Activate public-repository main PR/check protection using actual successful check
-  identities, including the fail-closed summary and all applicable image scans.
-  Preserve solo-owner review, administrator enforcement and external release authority.
-
-
-
+- Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a`, Vercel
+  `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2`, is accepted at `docs.onesa.eu`.
+  Publish the coherent learning path, current product/provider guides, readable
+  search previews and exports with one favicon and explicit production destinations.
+  Applications and planned Industrial AI remain separate from Robotics / Physical AI;
+  industrial milestones, evaluation and commercial hypotheses are proposals.
+- Exact-main native Preview acceptance passes 124 accessibility views, 20 layout
+  views, 21 diagrams, 11 PDFs and 1,860 links. Existing successful qualification
+  `39481475428` and owner authorization `39482253997` retain the original evidence
+  timestamp. Canonical production passes all 279 byte/MIME/hash checks, 16 views
+  and six private-path denials. Failed observations remain recorded; a confirmed
+  local path-order mismatch was corrected without changing the prepared digest,
+  uploading twice or repeating full native qualification.
+- Retain AI frontend `3b38acd862f8db177035adec49c920470217894d` /
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9` and Oracle API
+  `6011890047dc16267147241ea68b94f494c89827`. Protected Docs retains its separate
+  18 October record; newer private content and current approved-account acceptance
+  remain pending. This release claims no new inference, training or hardware result.
+- Main CI uses bounded dependency downloads/cache, one locked Chat install per job,
+  complete exact-source checks and fixed-category Docs diagnostics without relaxing
+  assertions or deadlines. Earlier architecture/custody failures remain failures;
+  targeted controls and subsequent qualified evidence have separate records.
+- Local-runner workflows, provisioning, hooks and consumers are removed; current
+  repository readback confirms no registered self-hosted runners. Standard hosted
+  validation and solo-owner-controlled release remain. Public protection is verified;
+  a later owner-managed private GitHub Free transition needs its documented feature/
+  allowance checks and procedural controls. No paid fallback or unavailable reviewer
+  is required. Repository visibility is unchanged.
 
 ## 2026-10-19 — AI workflows and public Docs accepted
 

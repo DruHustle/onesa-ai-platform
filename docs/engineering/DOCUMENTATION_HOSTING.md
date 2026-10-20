@@ -1,5 +1,41 @@
 # Onesa UG documentation hosting
 
+## Current public Docs release — 2026-10-20
+
+Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
+`https://docs.onesa.eu/`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2`.
+The exact-main Preview passed 124 accessibility views, 20 layout views, 21 diagram
+checks, 11 PDFs and 1,860 internal links. Qualification run `39481475428` and
+owner authorization `39482253997` bound that original native evidence; its
+19:01 UTC observation timestamp was preserved. Canonical production acceptance
+then matched all 279 public files byte-for-byte, checked 16 functional/responsive
+views and six private-path 404 denials. Automated Chromium/WebKit evidence is not
+represented as native Safari, a physical device or authenticated Engineering Docs.
+
+Failed earlier observations remain failed. The final local canonical observer
+initially compared JavaScript string ordering with Python component-wise Path
+ordering; it stopped before the first application request. Eight isolated controls
+and all 279 source files confirmed the corrected comparator matches the unchanged
+prepared digest. Only the remaining canonical check ran; no second upload or full
+native qualification was requested. Existing CLI access was refreshed normally,
+and the already approved isolated browser was reopened when its endpoint was absent.
+
+The AI application remains frontend `3b38acd862f8db177035adec49c920470217894d`
+/ `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API
+`6011890047dc16267147241ea68b94f494c89827`; no backend or application deployment
+accompanied this Docs release. Protected Engineering Docs retains the separate
+last accepted source `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages
+`2daea640-3c73-40da-8b01-397bec2ca3ea`. That identity is a release-record claim,
+not a new authenticated production observation. Its updated learning homepage
+remains unpublished pending its own approved-identity verification and controls.
+
+Restricted receipts, before/after captures and the 26-finding register remain in
+the existing owner release evidence area. No private evidence bundle is published
+with these public sources. Rollback uses the previously accepted public Docs
+`3b38acd862f8db177035adec49c920470217894d` / `dpl_94epioyn7QQv1BpL1qPNYdNqY3Eh`
+through the same owner-controlled process after verifying current provider state;
+it does not roll back the AI application, backend or protected Docs.
+
 ## Engineering sign-in and membership — owner direction, 2026-10-16
 
 The owner-selected production address is **https://docs.engineering.onesa.eu/**.
@@ -479,10 +515,9 @@ Declare the browser favicon once through the typed SVG entry in `headTags`.
 Do not also configure Docusaurus `favicon`, which emits another declaration.
 The Apple touch icon serves mobile home-screen installation; the existing ICO
 asset remains available for legacy requests without adding another favicon link.
-Use plain navbar labels: Docusaurus supplies the accessible external-link icon.
-Adding a hand-typed arrow produces a second indicator beside Public docs and the
-application entries. Desktop/mobile acceptance checks the registry labels and
-allows at most one framework icon per application link.
+Use plain navbar labels without hand-typed arrows or decorative external-link
+icons. Desktop/mobile acceptance checks the registry labels and the single favicon;
+application destinations and accessible link names remain explicit.
 Hosted application menus must use the validated production application origins,
 including the protected engineering build. A corrected source does not resolve
 localhost destinations in an older deployment until that classified build ships.
@@ -492,11 +527,22 @@ Set `ONESA_DOCS_ENVIRONMENT=staging` for an approved preview/Pages staging build
 From the reviewed AI repository root, generate/validate assets first, then build the actual target:
 
 ```sh
-ONESA_DOCS_ENVIRONMENT=staging ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_URL=https://staging.onesa-engineering-docs.pages.dev npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
+ONESA_DOCS_ENVIRONMENT=staging ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_URL="$APPROVED_ENGINEERING_PREVIEW_ORIGIN" npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
 ONESA_DOCS_ENVIRONMENT=production ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
 ```
 
-These commands build source; they do not upload or prove qualification. Preserve existing Access bindings, approved identity/MFA and all-path verifier when packaging internal output with `scripts/docs/prepare_cloudflare.py`. Its provenance must match the committed current source. Public upload remains the independent `docs-hosting.yml` target workflow; production requires qualified main. The observed protected reference is [Onesa Design System](https://staging.onesa-engineering-docs.pages.dev/docs/architecture/ONESA_DESIGN_SYSTEM); verify that exact candidate route after upload. The proposed engineering custom hostname is not assumed assigned.
+These commands build source; they do not upload or prove qualification. Set
+`APPROVED_ENGINEERING_PREVIEW_ORIGIN` to the exact verified candidate Pages origin,
+not an inferred staging hostname. Preserve Access bindings, individual approved
+engineering membership and the all-path verifier when packaging internal output
+with `scripts/docs/prepare_cloudflare.py`. Provenance must match the committed
+source. Production Engineering Docs uses `https://docs.engineering.onesa.eu/`;
+the Pages provider address is not a development environment. Sign-in is delegated
+to Onesa Portal with an Onesa email link or the registered email/password. Docs
+adds no separate MFA enrollment; Portal administrator MFA remains enforced.
+Public upload remains the independent `docs-hosting.yml` path and requires
+qualified main. Verify the candidate design-system route before publication and
+the canonical production route afterward.
 
 
 Public Robot guides describe the product, development scope and protected user workflows.
