@@ -156,3 +156,9 @@ independent versioned certificate bundle.
 See the [advisory](https://github.com/advisories/GHSA-6q48-6c7w-9gw2) and
 [Node TLS API](https://nodejs.org/api/tls.html#tlssetdefaultcacertificatescerts).
 Source tests are separate from source-bound staging and production acceptance.
+After the Chat build, run `node scripts/check_tls_bundle.mjs
+onesa-ai-platform-frontend/apps/chat` from the repository root. The guard requires
+the trust policy in each server gateway's actual file trace and rejects browser
+bundle inclusion. Owner-built Vercel artifacts require the same command with their
+`.vercel/output` directory as the third argument before publication; a successful
+Next build or instrumentation source alone does not prove serverless packaging.

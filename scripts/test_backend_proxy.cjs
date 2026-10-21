@@ -12,11 +12,29 @@ const compiled = ts.transpileModule(source, {compilerOptions: {module: ts.Module
 const exported = {};
 let upstream;
 let fetches = 0;
+let trustLoaded = false;
 const context = {
   exports: exported, Request, Response, Headers, URL, AbortSignal, crypto: webcrypto,
   process: {env: {ONESA_API_URL: 'https://staging-api.example.invalid'}},
-  require: name => {assert.equal(name, 'server-only'); return {};},
-  fetch: async (url, options) => {fetches++; upstream = {url, ...options}; return Response.json({ok:true});},
+  require: name => {
+    if (name === 'server-only') return {};
+    assert.equal(name, './server/tls-trust');
+    const policySource = fs.readFileSync(path.join(chat, 'src/lib/server/tls-trust.ts'), 'utf8');
+    const policyCode = ts.transpileModule(policySource, {compilerOptions: {
+      module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
+    }}).outputText;
+    const policyExports = {};
+    vm.runInNewContext(policyCode, {exports: policyExports, process: {env: {}},
+      require: dependency => {assert(['node:tls', 'node:crypto'].includes(dependency)); return require(dependency);},
+    });
+    assert.equal(policyExports.tlsTrustPolicy.blockedCAAbsent, true);
+    trustLoaded = true;
+    return policyExports;
+  },
+  fetch: async (url, options) => {
+    assert.equal(trustLoaded, true, 'TLS initialization must finish before gateway transport');
+    fetches++; upstream = {url, ...options}; return Response.json({ok:true});
+  },
 };
 vm.runInNewContext(compiled, context, {filename: 'backend-proxy-regression.js'});
 

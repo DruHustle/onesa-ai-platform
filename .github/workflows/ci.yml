@@ -141,6 +141,8 @@ jobs:
         python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc --noEmit --pretty false
 
         npm run build'
+    - name: Verify TLS policy in traced server routes
+      run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
     - run: node --test scripts/test_ui_failure_diagnostics.cjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
