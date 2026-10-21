@@ -17,10 +17,15 @@ Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
 `docs.onesa.eu`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` (2026-10-20).
 Exact-source native Preview qualification passed; canonical acceptance verified all
 279 public files, 16 responsive/accessibility views and six private-path denials.
-The AI application retains frontend `3b38acd862f8db177035adec49c920470217894d`
-/ `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56`, accepted on 21 October
-under qualified main `204e666c40943af2dc1f53359f360feaffbaa126`. The backend-only
-security replacement preserves application data and the independently accepted frontend.
+The AI frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` is accepted at
+`dpl_3ExobTe8RY5QzpkhEpwN7vAnk8gW` on `platform.onesa.eu` (2026-10-21).
+The qualified Node TLS correction passes five canonical public/private checks;
+application UI, authentication and business workflow bytes are unchanged. Prior
+23 real workflow checks and 42 UI views remain separately source-bound evidence.
+Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56` is retained, accepted under
+qualified main `204e666c40943af2dc1f53359f360feaffbaa126`. No model call, new
+production account, backend deployment or application-data change accompanied the
+frontend release. Public and protected Docs have independent release identities.
 Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
 18 October accepted record; the newer protected build is not published or currently
 verified with an approved production identity. See the
