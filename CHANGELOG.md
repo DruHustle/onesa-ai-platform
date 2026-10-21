@@ -2,23 +2,39 @@
 
 ## Unreleased
 
+- Replace detailed public operational runbooks with protected-reference pages after
+  preserving exact original source/hash provenance in restricted custody. Historical
+  Git copies remain public; this is active-source classification, not history removal.
+  Private Docs publication and approved-user acceptance are recorded separately.
+
 - Prepare the supported Markdown-it 15.0.3 Docs build-tool update for
   GHSA-vfgh-jcmw-g37q, preserving unrelated locked packages and optional native
   entries. Add bounded regressions for all four unterminated inline HTML cases.
   The original exact-main audit failure remains recorded; no audit threshold,
   required check or production release gate is bypassed. Publication is pending.
 
-- Prepare the supported certifi 2026.10.19 trust-store update for critical
-  GHSA-6q48-6c7w-9gw2. Regenerate only the affected runtime/development locks
-  (and the AI optional macOS embedding lock), preserving all other versions.
-  Source audits and targeted CA/TLS controls pass. Production images remain
-  unpatched until qualified replacement and deployed-package readback; no scan
-  exception, certificate-verification bypass or model/hardware change is granted.
-
 - Align protected Engineering Docs homepage learning order, remove card numbers
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
   acceptance remain pending. Public Docs has its own accepted record below.
+
+## 2026-10-21 — AI backend trust-store patch accepted
+
+- Oracle API source `776362dcbd994ecde3ca253cbc558faf2c279a56` is accepted after
+  normal promotion to qualified main `204e666c40943af2dc1f53359f360feaffbaa126`
+  and full exact-main CI `39510142001`. certifi 2026.10.19 is installed; actual
+  bundle digest and removal of the affected emSign root match the scanned image.
+- All 23 real staging workflow checks and 42 UI views pass with synthetic-identity
+  cleanup. The subsequent five-path Docs-only correction preserves backend, Chat
+  and release-verifier bytes; it does not relabel the actual image source or repeat
+  inference. Production passes six private-route denials and three readiness
+  samples. Credentials, data and the eight other service identities are preserved.
+- Retain frontend `3b38acd862f8db177035adec49c920470217894d` /
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, public Docs `4f30218d`, and the separate
+  protected Docs record. No migration, new production account or model call ran.
+  The original verifier's unavailable certificate-parser dependency is recorded;
+  its isolated standard-library correction passed before remaining read-only
+  acceptance. No additional deployment or failed-test override was used.
 
 ## 2026-10-20 — Public Docs accepted; application and backend retained
 

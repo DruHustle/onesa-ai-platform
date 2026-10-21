@@ -9,6 +9,16 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[2]
 folder = root / "docs/ecosystem"
+diagram_names = [
+    "privacy-document-review",
+    "privacy-retention-lifecycle",
+    "privacy-subject-deletion",
+    "privacy-processor-assessment",
+    "privacy-tailscale-administration",
+    "privacy-transfer-review",
+    "privacy-notice-publication",
+    "privacy-vercel-transition",
+]
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -41,8 +51,11 @@ for name in manifest:
         for path in paths:
             if path.endswith(".sql"):
                 r["sources"][path] = ""
-        r["sources"]["docs/engineering/PRIVACY_GOVERNANCE.md"] = ""
-        r["sources"]["docs/engineering/ENGINEERING_DOCS_IDENTITY.md"] = ""
+        for private_document in [
+            "docs/engineering/PRIVACY_GOVERNANCE.md",
+            "docs/engineering/ENGINEERING_DOCS_IDENTITY.md",
+        ]:
+            r["sources"].pop(private_document, None)
         r["sources"]["onesa-company-portal-backend/src/services/migration-plan.ts"] = ""
     if name == "onesa-ai-robot":
         for p in [
@@ -102,39 +115,36 @@ for name in manifest:
             + sql
             + "```\n"
         )
-        governance = subprocess.check_output(
-            ["git", "show", sha + ":docs/engineering/PRIVACY_GOVERNANCE.md"],
-            cwd=repo,
-            text=True,
-        )
-        (folder / "PORTAL_PRIVACY_GOVERNANCE.md").write_text(governance)
-        identity = subprocess.check_output(
-            ["git", "show", sha + ":docs/engineering/ENGINEERING_DOCS_IDENTITY.md"],
-            cwd=repo,
-            text=True,
-        )
-        (folder / "PORTAL_ENGINEERING_DOCS_IDENTITY.md").write_text(identity)
-        identity_graphs = re.findall(r"```mermaid\n(.*?)```", identity, re.DOTALL)
-        assert len(identity_graphs) == 1
-        (root / "docs/diagrams/engineering-docs-identity.mmd").write_text(
-            identity_graphs[0].strip() + "\n"
-        )
-        diagram_names = [
-            "privacy-document-review",
-            "privacy-retention-lifecycle",
-            "privacy-subject-deletion",
-            "privacy-processor-assessment",
-            "privacy-tailscale-administration",
-            "privacy-transfer-review",
-            "privacy-notice-publication",
-            "privacy-vercel-transition",
-        ]
-        graphs = re.findall(r"```mermaid\n(.*?)```", governance, re.DOTALL)
-        assert len(graphs) == len(diagram_names)
-        for identifier, graph in zip(diagram_names, graphs):
-            (root / "docs/diagrams" / (identifier + ".mmd")).write_text(
-                graph.strip() + "\n"
+        # Import references only. Never reintroduce operational bodies from a sibling
+        # source into public Git. Full protected publication uses its private bundle.
+        r["protected_document_references"] = {}
+        for source, target, identifier in [
+            (
+                "docs/engineering/PRIVACY_GOVERNANCE.md",
+                "PORTAL_PRIVACY_GOVERNANCE.md",
+                "portal-governance",
+            ),
+            (
+                "docs/engineering/ENGINEERING_DOCS_IDENTITY.md",
+                "PORTAL_ENGINEERING_DOCS_IDENTITY.md",
+                "portal-engineering-identity",
+            ),
+        ]:
+            reference = subprocess.check_output(
+                ["git", "show", sha + ":" + source], cwd=repo, text=True
             )
+            if "<!-- onesa-protected-source: " + identifier + " -->" not in reference:
+                raise ValueError(
+                    "Sibling operational document must be a public-safe reference before refresh"
+                )
+            (folder / target).write_text(reference)
+            r["protected_document_references"][source] = {
+                "identifier": identifier,
+                "reference_sha256": hashlib.sha256(reference.encode()).hexdigest(),
+                "full_document_location": "protected publication bundle; never copied into Git",
+            }
+        # Sanitized process diagrams remain independently reviewed definitions;
+        # a reference-only document must not erase or regenerate them from a stub.
         contract = json.loads(
             subprocess.check_output(
                 [

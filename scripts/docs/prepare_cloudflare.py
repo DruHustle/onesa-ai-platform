@@ -7,6 +7,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from protected_sources import validate_publication
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -57,6 +59,7 @@ def prepare(output: Path, *, placeholder: bool = False):
         raise ValueError(
             "Internal build revision is stale; rebuild the reviewed current source"
         )
+    private_bundle_hash = validate_publication(provenance)
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source, output)
     output.chmod(0o700)
@@ -71,6 +74,7 @@ def prepare(output: Path, *, placeholder: bool = False):
     return {
         "prepared": True,
         "scope": "internal",
+        "protected_source_bundle_sha256": private_bundle_hash,
         "deployment_requested": False,
         "hosted_access_verified": False,
         "required_owner_controls": [

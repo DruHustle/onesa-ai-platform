@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 
 from pdf_links import validate_manual_source_links
+from protected_sources import content as document_content
+from protected_sources import provenance as protected_source_provenance
+from protected_sources import validate_publication
 from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,6 +34,12 @@ def validate(staged=False, assets_only=False):
             / f"onesa-ai-platform-frontend/apps/docs/.generated/{scope}/static/generated"
         )
         provenance = json.loads((generated / "provenance.json").read_text())
+        expected_private = protected_source_provenance(scope)
+        assert provenance.get("protected_document_sources") == expected_private, (
+            "Protected document provenance drift"
+        )
+        if expected_private is not None:
+            validate_publication(provenance)
         if scope == "internal":
             assert (
                 provenance["navigation_sha256"]
@@ -47,9 +56,12 @@ def validate(staged=False, assets_only=False):
         else:
             assert not (generated / "engineering-navigation.json").exists()
         for source, digest in provenance["sources"].items():
-            assert hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest, (
-                f"Source drift: {source}"
-            )
+            assert (
+                hashlib.sha256(
+                    document_content(ROOT / source, ROOT, scope).encode()
+                ).hexdigest()
+                == digest
+            ), f"Source drift: {source}"
             if scope == "public":
                 assert source in approved, f"Unapproved source: {source}"
         for source, digest in provenance.get("code_sources", {}).items():
@@ -171,8 +183,14 @@ def validate(staged=False, assets_only=False):
             assert hashlib.sha256(path.read_bytes()).hexdigest() == manual["sha256"]
             for source, digest in manual.get("source_hashes", {}).items():
                 assert (
-                    hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest
+                    hashlib.sha256(
+                        document_content(ROOT / source, ROOT, scope).encode()
+                    ).hexdigest()
+                    == digest
                 ), f"PDF source drift: {source}"
+            assert manual.get("protected_source_bundle_sha256") == (
+                expected_private["bundle_sha256"] if expected_private else None
+            ), "PDF protected source bundle drift"
             assert manual["version"] == documentation_version, "PDF version drift"
             document = PdfReader(path)
             cover = " ".join((document.pages[0].extract_text() or "").split())

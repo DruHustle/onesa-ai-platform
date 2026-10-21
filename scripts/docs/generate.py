@@ -24,20 +24,26 @@ OUTPUT = ROOT / "onesa-ai-platform-frontend/apps/docs/.cache/authoritative"
 
 def write(name, value):
     path = OUTPUT / name
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path.parent.chmod(0o700)
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
+    path.chmod(0o600)
 
 
 from documentation_identity import documentation_version, sync_release_summary
+from protected_sources import content as document_content
+from protected_sources import provenance as protected_source_provenance
 from search_content import api_entry
 from search_content import entry as search_entry
 from source_policy import sources as documentation_sources
 
 
-def generate():
+def generate(scope="all"):
     from ecosystem import validate as validate_ecosystem
 
     validate_ecosystem()
+    authoritative_scope = "public" if scope == "public" else "internal"
+    protected_source_provenance(authoritative_scope)
     sync_release_summary()
     schema = create_app(Settings()).openapi()
     # Public application contracts only; operational/private endpoints are excluded.
@@ -263,9 +269,19 @@ def generate():
         },
     )
     search = []
-    for doc in documentation_sources(ROOT):
+    authoritative_sources = (
+        [
+            ROOT / p
+            for p in json.loads((ROOT / "docs/documentation-policy.json").read_text())[
+                "public_sources"
+            ]
+        ]
+        if scope == "public"
+        else documentation_sources(ROOT)
+    )
+    for doc in authoritative_sources:
         rel = doc.relative_to(ROOT / "docs").with_suffix("").as_posix()
-        raw = doc.read_text()
+        raw = document_content(doc, ROOT, authoritative_scope)
         title = next(iter(re.findall(r"^# (.+)$", raw, re.MULTILINE)), doc.stem)
         search.append(
             search_entry(title, "/docs" if rel == "README" else "/docs/" + rel, raw)
@@ -276,8 +292,10 @@ def generate():
                 search.append(api_entry(path, method, operation))
     write("search.json", search)
     sources = {
-        str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in documentation_sources(ROOT)
+        str(p.relative_to(ROOT)): hashlib.sha256(
+            document_content(p, ROOT, authoritative_scope).encode()
+        ).hexdigest()
+        for p in authoritative_sources
     }
     sources.update(
         {
@@ -289,6 +307,9 @@ def generate():
         "provenance.json",
         {
             "documentation_version": documentation_version(),
+            "protected_document_sources": protected_source_provenance(
+                authoritative_scope
+            ),
             "schema_head": REQUIRED_SCHEMA_REVISION,
             "sources": sources,
             "openapi_sha256": hashlib.sha256(
@@ -296,21 +317,26 @@ def generate():
             ).hexdigest(),
         },
     )
-    split(schema, tables)
+    split(schema, tables, ("public", "internal") if scope == "all" else (scope,))
     print(
         f"Generated {len(tables)} tables, {len(search)} search entries and public API schema."
     )
 
 
-def split(schema, tables):
+def split(schema, tables, scopes=("public", "internal")):
     from app.knowledge import embed, version
 
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
     catalog = json.loads((ROOT / "docs/diagrams/catalog.json").read_text())
     examples = examples_markdown(schema)
     (ROOT / "docs/public/examples.md").write_text(examples)
-    for scope in ["public", "internal"]:
+    for scope in scopes:
         destination = ROOT / "onesa-ai-platform-frontend/apps/docs/.generated" / scope
+        if scope == "internal":
+            if destination.is_symlink():
+                raise ValueError("Internal output directory must not be a symlink")
+            destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+            destination.chmod(0o700)
         docs = destination / "docs"
         static = destination / "static/generated"
         pages = destination / "pages"
@@ -357,13 +383,15 @@ def split(schema, tables):
         )
         search = []
         chunks = []
+        source_texts = {}
         for source in sources:
             if not source.is_file():
                 raise ValueError(f"Missing classified source: {source}")
             relative = source.relative_to(ROOT / "docs")
             output = docs / relative
             output.parent.mkdir(parents=True, exist_ok=True)
-            raw = source.read_text()
+            raw = document_content(source, ROOT, scope)
+            source_texts[relative.as_posix()] = raw
             included = set(sources)
 
             def rewrite(match, source=source, included=included):
@@ -406,6 +434,7 @@ def split(schema, tables):
                             "embedding": embed([text], Settings())[0],
                         }
                     )
+        write("source-texts-" + scope + ".json", source_texts)
         public_schema = json.loads(json.dumps(schema))
         public_schema["paths"] = {
             p: v
@@ -515,6 +544,7 @@ def split(schema, tables):
                 "policy_schema_version": policy["schema_version"],
                 "documentation_version": documentation_version(),
                 "classification": scope,
+                "protected_document_sources": protected_source_provenance(scope),
                 "revision": os.environ.get("GITHUB_SHA")
                 or subprocess.check_output(
                     ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -533,7 +563,9 @@ def split(schema, tables):
                     )
                 ).hexdigest(),
                 "sources": {
-                    str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+                    str(p.relative_to(ROOT)): hashlib.sha256(
+                        document_content(p, ROOT, scope).encode()
+                    ).hexdigest()
                     for p in sources
                 },
             },
@@ -708,4 +740,8 @@ def examples_markdown(schema):
 
 
 if __name__ == "__main__":
-    generate()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scope", choices=["all", "public", "internal"], default="all")
+    generate(parser.parse_args().scope)

@@ -125,3 +125,15 @@ both clean-baseline navigation and continued protection of a genuine unsaved edi
 Only fixed step/matcher labels enter failure diagnostics; never log input values,
 credentials or raw assertion messages. Passing local controls does not authorize a
 hosted retry or establish production performance.
+
+## Classified operational source checks
+
+`make docs-public` uses public-only generation and must not read private source
+bundles. `make docs-internal` uses the internal scope; real protected publication
+requires the configured restricted bundle and complete per-document provenance.
+Run `python -m unittest discover -s scripts/docs -p test_protected_sources.py`
+and `node --test scripts/docs/secure_internal_output.test.mjs` for the content,
+path/hash/permissions, public isolation and packaging boundaries. The normal Docs
+suite retains navigation, search, diagrams, PDF/source-link and private route checks.
+A reference-only CI build does not qualify a protected edition with full runbooks.
+Keep all local model/database targets synthetic while generating documentation.
