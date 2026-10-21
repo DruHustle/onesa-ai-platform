@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     documentation_sources_directory: str = "/app/docs-sources"
     documentation_engineering_user_ids: list[str] = Field(default_factory=list)
     environment: Literal["development", "test", "staging", "production"] = "development"
+    industrial_demo_enabled: bool = False
 
     @field_validator("model_quantization", "model_revision", mode="before")
     @classmethod

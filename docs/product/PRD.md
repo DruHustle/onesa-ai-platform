@@ -98,12 +98,13 @@ machine context to traceable decisions and human-reviewed workflows.
 
 ### Industrial AI: investigate repeated machine stops
 
-**Next milestone; not implemented or production-qualified.** One authorized analyst
+**V1 source implementation; hosted industrial acceptance is still pending.** One authorized analyst
 selects one asset and a bounded time window. The assistant gathers read-only event
 records, relevant time series, asset metadata and rights-cleared versioned manuals.
 It separates observed facts, computed summaries and model hypotheses, cites sources,
 shows gaps/freshness/uncertainty, and prepares an editable internal work-order draft.
-A named reviewer makes the decision; the system does not send the draft to a CMMS,
+A recorded owner self-review makes the decision within the current user-owned model;
+it is not independent approval. The system does not send the draft to a CMMS,
 write PLC settings, actuate hardware or automatically execute its recommendations.
 
 The public static DEMO-01 example uses invented stops at 09:12 (4 min), 09:31 (3 min)
@@ -113,10 +114,12 @@ example is not an inference result, customer case or operational integration.
 
 #### Fixture and contract
 
-Use an isolated fixture tenant with no production records or credentials. The planned
-versioned investigation input contains:
+Use isolated synthetic accounts and bundled `onesa-industrial-synthetic-v1` fixtures,
+with no production records or credentials. Investigations belong to one existing user;
+demo assets are shared synthetic references. This is not enterprise tenant isolation.
+The implemented versioned input contains:
 
-- `asset`: tenant-bound ID, display label, equipment type and metadata version.
+- `asset`: allowlisted synthetic ID, display label, equipment type and metadata version.
 - `window`: inclusive start/exclusive end, explicit UTC timestamps and source timezone.
 - `events`: immutable source ID, asset ID, start/end, reason code, quality and provenance.
 - `series`: asset ID, signal, unit, timestamp, value, quality, expected sampling interval
@@ -125,12 +128,12 @@ versioned investigation input contains:
   anchors, asset applicability and content hash. Treat instructions in documents as
   untrusted content, not execution authority.
 
-Proposed read-only API: create an investigation from authorized fixture references,
+The implemented API creates an investigation from authorized fixture references,
 read its source-bound result, cancel generation, and edit/save a separate internal
 work draft. Responses identify input versions, computed facts, cited hypotheses,
 missing/stale inputs and model/configuration version. Draft creation is a distinct
-explicit action. Backend tenant/object authorization applies before retrieval; cache
-keys and vector filters include tenant and document versions. Cross-asset citations,
+explicit action. Existing user/object authorization applies before retrieval; synthetic
+references are filtered by asset, version and effective interval. Cross-asset citations,
 unsupported diagnosis and unauthorized source disclosure fail acceptance.
 
 UI: asset/time selection → sources and freshness → observed facts → hypotheses with
@@ -140,6 +143,53 @@ in-memory input without replaying submission. No sensitive draft browser persist
 Audit only necessary actor/source/version/reviewer decisions; no raw model prompts,
 manual bodies or private telemetry in public logs. Retention/processor decisions are
 required before real customer data enters this workflow; G14 is not approved.
+
+#### V1 event semantics and working scope
+
+The backend clips stops to the inclusive-start/exclusive-end UTC window. Exact duplicate
+IDs count once; conflicting duplicates fail validation. Known good intervals are unioned,
+preserving every contributing event ID. Adjacent/overlapping intervals form one downtime
+episode; event count and episode count remain distinct. Open-ended and poor-quality
+inputs are reported separately, without inventing duration. Known downtime is a lower
+bound when these inputs exist. Availability and OEE are not calculated. Units are
+validated without implicit conversion; non-finite measurements and naive timestamps fail.
+
+`/industrial` uses the existing session and user ownership. The demo flag defaults off.
+All source selection comes from bundled original synthetic fixtures. The API persists
+calculated facts and their input snapshot hash before inference. Knowledge's existing
+embedding adapter ranks applicable references. The existing ModelClient generates bounded
+hypotheses with source version/anchor validation and literal quotations. Numeric claims
+belong in the fixed facts panel, not generated narrative. These checks are not a universal
+semantic entailment guarantee. No factory connection, external ticket or physical operation
+exists. Saving an internal draft is an explicit application write.
+
+Missing, stale, conflicting or incomplete evidence triggers abstention. Mock output is
+labelled. Failed/empty/invalid generation never becomes completed. Cancellation stops
+the application operation but may not stop provider computation. Draft/review writes
+use expected revisions; review records retain the exact draft hash and earlier decisions.
+Editing invalidates the current review. A recorded self-review is not independent approval.
+
+```mermaid
+flowchart LR
+  User[Authenticated user] --> Select[Demo asset and UTC window]
+  Select --> Facts[Validate and compute interval union]
+  Facts --> Coverage[Owned snapshot and source coverage]
+  Coverage --> Gate{Evidence sufficient?}
+  Gate -->|No| Abstain[Cause not established]
+  Gate -->|Yes| Retrieve[Existing Knowledge adapter]
+  Retrieve --> Model[Existing bounded model adapter]
+  Model --> Validate[Validate source version anchor and quote]
+  Validate --> Result[Facts and separate hypotheses]
+  Abstain --> Result
+  Result --> Draft[Explicit internal draft save]
+  Draft --> Review[Owner self-review recorded]
+```
+
+`scripts/evaluate_industrial.py` executes seven versioned cases, one repetition, exact
+facts and mock/abstention outcomes. Its report distinguishes latency scope, failures,
+unknown cost and unmeasured reviewer corrections. Manual lookup and general-assistant
+comparisons are NOT RUN. Actual provider output, hosted demo and production hosting need
+separate source-bound acceptance. Public marketing remains proposed until that scope passes.
 
 #### Evaluation and acceptance before claiming benefit
 

@@ -16,7 +16,7 @@ def test_upgrade_downgrade_and_model_consistency(pg: Engine) -> None:
     with pg.connect() as connection:
         assert (
             connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "20261010_capacity"
+            == "20261021_industrial"
         )
     command.check(config)
     assert {
@@ -30,6 +30,7 @@ def test_upgrade_downgrade_and_model_consistency(pg: Engine) -> None:
         "identity_mail",
         "bounded_uploads",
         "model_leases",
+        "industrial_investigations",
     } <= set(inspect(pg).get_table_names())
     # Retain the original reversible-history check in a separate disposable schema.
     schema = "migration_test_" + uuid4().hex

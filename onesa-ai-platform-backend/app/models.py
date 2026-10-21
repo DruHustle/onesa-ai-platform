@@ -186,6 +186,19 @@ class ModelLease(Record):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 
+class IndustrialInvestigation(Record):
+    __tablename__ = "industrial_investigations"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(20), default="ready")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    __table_args__ = (
+        CheckConstraint("revision > 0"),
+        CheckConstraint("status IN ('ready', 'running', 'completed', 'failed', 'cancelled')"),
+    )
+
+
 Index("conversation_owner_updated", Conversation.user_id, Conversation.updated_at)
 
 

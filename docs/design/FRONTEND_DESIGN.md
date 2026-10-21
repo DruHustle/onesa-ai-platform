@@ -1,6 +1,7 @@
 # Frontend design
 
-One Next.js App Router application provides `/`, `/knowledge`, `/agents`, `/travel`.
+One Next.js App Router application provides `/`, `/knowledge`, `/agents`, `/travel`
+and the protected, feature-flagged synthetic `/industrial` workspace.
 The Chat page owns session discovery, auth form, conversation selection/history,
 streaming state, abort controller, document selection, and error/retry UI. FeatureShell
 shares navigation for document/tool/trip screens. lib/api reads the CSRF cookie and uses
@@ -49,3 +50,13 @@ Caddy may proxy API routes directly to FastAPI using the same public origin.
 ## Shared interface contract
 
 Read [Onesa Design System](../architecture/ONESA_DESIGN_SYSTEM.md) and the pinned consumer manifest before frontend changes. AI and Docs retain distinct product shells over shared semantic tokens. Browser/OS preference controls appearance without selectors, clock timers or stored overrides. Verify drafts, focus, streams, forced colors, reduced motion and affected routes in both modes; local verification does not prove deployed acceptance.
+
+
+## Industrial Investigation V1
+
+The existing session-renewal wrapper and in-memory draft guard protect the synthetic
+workspace. Users inspect coverage, calculated facts and cited hypotheses before explicitly
+creating an internal draft. Pending mutations lock selection; failed saves keep text.
+Same-account renewal preserves mounted work; another account remounts it. No draft browser
+storage is used. Named timeline scroll regions support keyboard focus. Critical controls
+and errors have EN/DE labels; original references and generated narrative remain English.

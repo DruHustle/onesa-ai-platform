@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261010_capacity. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261021_industrial. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -162,6 +162,22 @@ Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id"
 Indexes: [{"name": "ix_identity_tokens_expires_at", "columns": ["expires_at"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash", "purpose IN ('invitation', 'recovery')"]
+
+## industrial_investigations
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| user_id | UUID | False | FK users.id / CASCADE |
+| revision | INTEGER | False | ORM default |
+| status | VARCHAR(20) | False | ORM default |
+| updated_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+| payload | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_industrial_investigations_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "revision > 0", "status IN ('ready', 'running', 'completed', 'failed', 'cancelled')"]
 
 ## inference_runs
 

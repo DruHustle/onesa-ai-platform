@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Implement protected Industrial Investigation V1 with versioned original synthetic
+  fixtures, deterministic interval calculations, bounded existing inference/retrieval,
+  citation/quote validation, explicit abstention, owned saved results and revisioned
+  internal drafts/self-review. Add an additive schema migration, generated contracts,
+  EN/DE critical controls and synthetic evaluations. Hosting and real-model acceptance
+  are not inferred from local tests; no factory writes or physical operation exists.
+
+
 - Update `pypdf` to 6.21.2 and regenerate the existing runtime/dev locks after
   newly disclosed parser vulnerabilities blocked native CI. Hosted deployment
   and installed-version verification remain separate release steps.

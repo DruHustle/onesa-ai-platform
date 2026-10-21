@@ -26,6 +26,7 @@ from app import (
     chat,
     conversations,
     documentation,
+    industrial,
     knowledge,
     observability,
     travel,
@@ -74,6 +75,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     api.include_router(agents.router)
     api.include_router(travel.router)
     api.include_router(documentation.router)
+    api.include_router(industrial.router)
     api.include_router(observability.router)
 
     @api.exception_handler(HTTPException)
@@ -176,7 +178,9 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 return False
             with Session(engine) as db:
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
-                valid = revision == REQUIRED_SCHEMA_REVISION
+                valid = revision in {REQUIRED_SCHEMA_REVISION, "20261010_capacity"}
+                if config.industrial_demo_enabled:
+                    valid = revision == REQUIRED_SCHEMA_REVISION
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(
