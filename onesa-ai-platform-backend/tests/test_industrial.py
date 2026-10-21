@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.industrial import Explanation, validate_explanation
@@ -18,6 +18,34 @@ from app.models import IndustrialInvestigation
 from tests.conftest import signup
 
 WINDOW = {"start": "2026-10-20T09:00:00Z", "end": "2026-10-20T10:00:00Z"}
+
+
+@pytest.mark.parametrize(
+    "revision,demo,expected_status",
+    [
+        ("20261010_capacity", False, 200),
+        ("20261010_capacity", True, 503),
+        ("20261021_industrial", False, 200),
+        ("20261021_industrial", True, 200),
+        ("unknown", False, 503),
+        ("unknown", True, 503),
+    ],
+)
+def test_schema_rollout_requires_feature_compatible_head(api, pg, revision, demo, expected_status):
+    # pg is the guarded disposable _test database, never a runtime database.
+    with pg.begin() as connection:
+        original = connection.scalar(text("SELECT version_num FROM alembic_version"))
+        connection.execute(
+            text("UPDATE alembic_version SET version_num=:revision"), {"revision": revision}
+        )
+    try:
+        api.app.state.settings.industrial_demo_enabled = demo
+        assert api.get("/core-ready").status_code == expected_status
+    finally:
+        with pg.begin() as connection:
+            connection.execute(
+                text("UPDATE alembic_version SET version_num=:revision"), {"revision": original}
+            )
 
 
 @pytest.mark.parametrize(

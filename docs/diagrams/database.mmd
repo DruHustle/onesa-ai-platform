@@ -90,6 +90,15 @@ erDiagram
     UUID id PK
     TIMESTAMP_WITH_TIME_ZONE created_at
   }
+  industrial_investigations {
+    UUID user_id FK
+    INTEGER revision
+    VARCHAR_20_ status
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    JSONB payload
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
   inference_runs {
     UUID request_id
     UUID user_id FK
@@ -160,6 +169,7 @@ erDiagram
   users ||--o{ identity_audit : "actor_id"
   identity_tokens ||--o{ identity_mail : "token_id"
   users ||--o{ identity_tokens : "user_id"
+  users ||--o{ industrial_investigations : "user_id"
   users ||--o{ inference_runs : "user_id"
   conversations ||--o{ inference_runs : "conversation_id"
   conversations ||--o{ messages : "conversation_id"

@@ -178,9 +178,9 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 return False
             with Session(engine) as db:
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
-                valid = revision in {REQUIRED_SCHEMA_REVISION, "20261021_industrial"}
+                valid = revision in {REQUIRED_SCHEMA_REVISION, "20261010_capacity"}
                 if config.industrial_demo_enabled:
-                    valid = revision == "20261021_industrial"
+                    valid = revision == REQUIRED_SCHEMA_REVISION
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(
