@@ -5,6 +5,7 @@ endif
 
 PYTHON := .venv/bin/python
 API := onesa-ai-platform-backend
+DOCS_SCOPE ?= all
 
 .PHONY: install check test run openapi up down frontend-check training-check
 install:
@@ -50,7 +51,7 @@ integration:
 .PHONY: docs-api docs-diagrams docs-pdf docs-assets docs-public docs-internal docs-validate docs-check docs-serve docs-stop docs-screenshots up-docs
 docs-api:
 	$(MAKE) openapi
-	$(PYTHON) scripts/docs/generate.py
+	$(PYTHON) scripts/docs/generate.py --scope $(DOCS_SCOPE)
 
 docs-diagrams: docs-api
 	node scripts/docs/render.mjs
@@ -60,10 +61,12 @@ docs-pdf: docs-diagrams
 
 docs-assets: docs-pdf
 
+docs-public: DOCS_SCOPE=public
 docs-public: docs-api
 	$(PYTHON) scripts/docs/validate.py --staged
 	npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
 
+docs-internal: DOCS_SCOPE=internal
 docs-internal: docs-api
 	npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
 
@@ -72,6 +75,7 @@ docs-validate:
 	node scripts/docs/visual-acceptance.mjs
 
 docs-check:
+	$(PYTHON) -m unittest discover -s scripts/docs -p test_protected_sources.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_search_content.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_documentation_identity.py
 	$(PYTHON) -m unittest discover -s scripts/docs -p test_source_policy.py

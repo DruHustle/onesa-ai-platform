@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Replace detailed public operational runbooks with protected-reference pages after
+  preserving exact original source/hash provenance in restricted custody. Historical
+  Git copies remain public; this is active-source classification, not history removal.
+  Private Docs publication and approved-user acceptance are recorded separately.
+
 - Prepare the supported Markdown-it 15.0.3 Docs build-tool update for
   GHSA-vfgh-jcmw-g37q, preserving unrelated locked packages and optional native
   entries. Add bounded regressions for all four unterminated inline HTML cases.

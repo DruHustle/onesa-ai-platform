@@ -1,5 +1,32 @@
 # Onesa UG documentation hosting
 
+## Public source and protected operational documents
+
+Repository visibility remains public under the owner's current instruction. Public
+implementation references and sanitized diagrams are intentionally readable source;
+this does not make their protected website confidential. Detailed deployment,
+recovery, VM operations, governance and identity runbooks use public-safe reference
+pages. Exact original bodies and their original repository revisions/hashes are
+preserved in the existing restricted engineering source bundle. Git history still
+contains earlier editions; active-source cleanup does not erase historical exposure.
+
+A public-only build (`make docs-public`) never reads that bundle, even if its private
+location is configured or private publication is required. A protected owner build
+sets `ONESA_INTERNAL_DOCS_SOURCE_ROOT` to the approved local bundle and
+`ONESA_REQUIRE_PROTECTED_SOURCES=1`. No private bundle or deployment credential goes
+to public PR/Actions jobs. Missing, partial, modified, permissive or symlink sources
+fail private publication. CI can build reference-only internal fixtures; those are
+not publishable full engineering editions.
+
+Protected HTML, search and PDF inputs use the same verified bodies. Provenance
+records the original per-document repository/revision/content hash plus the bundle
+hash alongside the publishing code revision. Never label external private bodies as
+bytes committed in the public publishing revision. Internal caches/builds and final
+packages are restricted; public generation and exports remain separately allowlisted.
+Current protected publication still needs its own approved-identity browser acceptance;
+source cleanup or a temporary mailbox test cannot stand in for that observation.
+
+
 ## Current public Docs release — 2026-10-20
 
 Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
@@ -20,7 +47,7 @@ prepared digest. Only the remaining canonical check ran; no second upload or ful
 native qualification was requested. Existing CLI access was refreshed normally,
 and the already approved isolated browser was reopened when its endpoint was absent.
 
-The AI application remains frontend `3b38acd862f8db177035adec49c920470217894d`
+At the time of that Docs release, the AI application retained frontend `3b38acd862f8db177035adec49c920470217894d`
 / `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API
 `6011890047dc16267147241ea68b94f494c89827`; no backend or application deployment
 accompanied this Docs release. Protected Engineering Docs retains the separate
