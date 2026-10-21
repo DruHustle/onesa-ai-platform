@@ -1,8 +1,30 @@
 # Product requirements baseline
 
-Status: working local platform baseline. Chat/auth/persistence, documents/retrieval,
-bounded tools and saved travel are implemented and verified with mock inference.
-Real GPU/semantic embedding/provider/production execution remains pending.
+## Current interpretation and release status
+
+The platform is pre-commercial, with implemented application capabilities and
+source-bound hosted release records. It is not a mock-only product, and its
+current infrastructure does not require a local NVIDIA host. The current product
+hierarchy and proposed Industrial AI milestone are defined in the dated section
+below. That milestone is not yet implemented or production-qualified.
+
+Use [README](../../README.md), [CHANGELOG](../../CHANGELOG.md) and the
+[deployment reference](../engineering/DEPLOYMENT.md) for maintained component
+identities, actual acceptance scope and outstanding checks. A passing CI run or
+this requirements document does not establish a fresh production verification.
+Do not use the historical setup assumptions below as current deployment commands,
+current provider bindings or evidence that an old blocker remains unresolved.
+
+## Historical setup baseline
+
+The following original setup description and milestone constraints are retained
+for design history. They describe the initial mock-based development stage, not
+the current serving system. Current requirements in the dated section below
+supersede conflicting historical provider, infrastructure and acceptance status.
+
+Original status: working local platform baseline. Chat/auth/persistence,
+documents/retrieval, bounded tools and saved travel were verified with mock
+inference; real provider and hosted acceptance had not yet been established.
 
 Onesa AI is a European-based general-purpose modular AI platform for enterprise, developer,
 institutional and consumer applications in European and international markets. Organizations
@@ -31,6 +53,8 @@ Performance targets will be established by measured baselines, not invented here
 
 ## Milestone scope and pending acceptance
 
+Historical milestone snapshot; not a statement of current release acceptance.
+
 M2 enables real vLLM inference; M3 document ingestion/embeddings/pgvector; M4 agents;
 M5 Travel; M6 dataset preparation and fine-tuning configuration; M7 release hardening.
 M3–M6 software is now delivered; real-model/provider/training acceptance is still pending.
@@ -42,6 +66,9 @@ Bookings require separately authorized integrations and confirmation. No expensi
 training jobs, remote deployments, or large model downloads are part of the MVP.
 
 ## Constraints and open decisions
+
+Historical setup assumptions. Consult the current records before interpreting
+any listed infrastructure choice or open decision as current.
 
 Use Python 3.11+, FastAPI, SQLAlchemy 2/Alembic, Next.js/TypeScript, PostgreSQL,
 Docker Compose, and local NVIDIA/vLLM infrastructure. No Redis/Kubernetes until
