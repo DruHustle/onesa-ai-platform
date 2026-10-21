@@ -1,4 +1,5 @@
-// Server-only same-origin BFF. The destination is operator configuration, never browser input.
+import "./server/tls-trust";
+// Server-only same-origin BFF; the destination is operator configuration.
 import "server-only";
 
 export async function proxy(request: Request): Promise<Response> {
