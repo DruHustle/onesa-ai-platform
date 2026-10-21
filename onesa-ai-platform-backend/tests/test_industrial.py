@@ -5,11 +5,12 @@ import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from threading import Barrier, BrokenBarrierError
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select, text
+from sqlalchemy import event, func, select, text
 from sqlalchemy.orm import Session
 
 from app.industrial import Explanation, validate_explanation
@@ -253,6 +254,84 @@ def test_full_owned_workflow_and_optimistic_review(api):
         api.get(f"/api/v1/industrial/investigations/{row['id']}").json()["payload"]["draft"]
         == "Edited after review."
     )
+
+
+def test_parallel_creation_respects_per_user_limit(api, pg):
+    enable(api)
+    seed = new(api)
+    user_id = UUID(api.get("/api/v1/auth/me").json()["id"])
+    with Session(pg) as db:
+        db.add_all(
+            IndustrialInvestigation(user_id=user_id, payload=seed["payload"]) for _ in range(98)
+        )
+        db.commit()
+    barrier = Barrier(2, timeout=1)
+
+    def overlap_count_reads(connection, cursor, statement, params, context, many):
+        # Force unprotected count snapshots to observe the last available slot.
+        # Serialization instead breaks the barrier and must remain correct.
+        if "count(" in statement and "industrial_investigations" in statement:
+            try:
+                barrier.wait()
+            except BrokenBarrierError:
+                pass
+
+    engine = api.app.state.engine
+    event.listen(engine, "after_cursor_execute", overlap_count_reads)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(
+                executor.map(
+                    lambda _: api.post(
+                        "/api/v1/industrial/investigations",
+                        json={**WINDOW, "id": str(uuid4()), "asset_id": "demo-press-01"},
+                    ),
+                    range(2),
+                )
+            )
+    finally:
+        event.remove(engine, "after_cursor_execute", overlap_count_reads)
+    assert sorted(r.status_code for r in results) == [201, 409]
+    assert (
+        next(r for r in results if r.status_code == 409).json()["error"]["code"]
+        == "investigation_limit"
+    )
+    with Session(pg) as db:
+        assert db.scalar(select(func.count()).select_from(IndustrialInvestigation)) == 100
+
+
+def test_parallel_identical_creation_is_idempotent(api, pg):
+    enable(api)
+    identifier = str(uuid4())
+    barrier = Barrier(2, timeout=1)
+
+    def overlap_identity_reads(connection, cursor, statement, params, context, many):
+        if statement.lstrip().startswith("SELECT industrial_investigations.id"):
+            try:
+                barrier.wait()
+            except BrokenBarrierError:
+                pass
+
+    engine = api.app.state.engine
+    event.listen(engine, "after_cursor_execute", overlap_identity_reads)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(
+                executor.map(
+                    lambda _: api.post(
+                        "/api/v1/industrial/investigations",
+                        json={**WINDOW, "id": identifier, "asset_id": "demo-press-01"},
+                    ),
+                    range(2),
+                )
+            )
+    finally:
+        event.remove(engine, "after_cursor_execute", overlap_identity_reads)
+    assert [r.status_code for r in results] == [201, 201]
+    assert {r.json()["id"] for r in results} == {identifier}
+    assert {r.json()["revision"] for r in results} == {1}
+    with Session(pg) as db:
+        assert db.scalar(select(func.count()).select_from(IndustrialInvestigation)) == 1
 
 
 def test_repeat_create_csrf_wrong_asset_and_user_isolation(api):

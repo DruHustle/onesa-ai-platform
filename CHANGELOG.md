@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
+  leave application startup, security assertions and qualification single-attempt.
+
+- Serialize Industrial investigation creation per user so parallel requests cannot
+  exceed the saved-investigation limit or race repeated identifiers.
+
+- Retain one-day synthetic browser failure evidence in hosted CI, with network
+  traces limited to CI loopback targets. Keep all assertions, deadlines and release
+  checks unchanged; the earlier isolated Firefox startup failure is not claimed fixed.
+
 - Implement protected Industrial Investigation V1 with versioned original synthetic
   fixtures, deterministic interval calculations, bounded existing inference/retrieval,
   citation/quote validation, explicit abstention, owned saved results and revisioned
