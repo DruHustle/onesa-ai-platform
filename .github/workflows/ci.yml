@@ -189,6 +189,14 @@ jobs:
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
+    - name: Preserve isolated synthetic browser failure evidence
+      if: failure()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: isolated-browser-failure-${{ github.sha }}
+        path: onesa-ai-platform-frontend/apps/chat/test-results
+        if-no-files-found: ignore
+        retention-days: 1
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
       with:
         python-version: '3.11'
