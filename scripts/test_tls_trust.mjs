@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('..',import.meta.url));
-const config={"modules":["onesa-ai-platform-frontend/apps/chat/src/lib/server/tls-trust.ts"],"hooks":[],"instrumentation":["onesa-ai-platform-frontend/apps/chat/src/instrumentation.ts"]};
+const config={"modules":["onesa-ai-platform-frontend/apps/chat/src/lib/server/tls-trust.ts"],"hooks":[["onesa-ai-platform-frontend/apps/chat/src/lib/backend.ts","import \"./server/tls-trust\";"]],"instrumentation":["onesa-ai-platform-frontend/apps/chat/src/instrumentation.ts"]};
 const fingerprint='86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b';
 const fixture=resolve(root,'scripts/fixtures/emsign-ecc-g3-public-cert.txt');
 const child=`
