@@ -59,7 +59,7 @@ export default function Chat() {
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
     const intended = new URLSearchParams(window.location.search).get("next");
-    if (intended === "/travel" || intended === "/knowledge") {window.location.replace(intended); return;}
+    if (intended === "/travel" || intended === "/knowledge" || intended === "/industrial") {window.location.replace(intended); return;}
     setUser(current);
   }, []);
   useEffect(() => {
@@ -430,6 +430,7 @@ export default function Chat() {
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
+          <Link href="/industrial">{copy.industrial}</Link>
           <Link href="/settings" lang="en">Account settings</Link>
           <DocumentationNav />
         </div>

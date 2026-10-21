@@ -26,6 +26,7 @@ export default function FeatureShell({
           <Link href="/knowledge" aria-current={pathname === "/knowledge" ? "page" : undefined}>{copy.knowledge}</Link>
           <Link href="/agents" aria-current={pathname === "/agents" ? "page" : undefined}>{copy.agents}</Link>
           <Link href="/travel" aria-current={pathname === "/travel" ? "page" : undefined}>{copy.travel}</Link>
+          <Link href="/industrial" aria-current={pathname === "/industrial" ? "page" : undefined}>{copy.industrial}</Link>
           <Link href="/settings" aria-current={pathname === "/settings" ? "page" : undefined}>Account settings</Link>
           <DocumentationNav />
         </nav>
@@ -36,7 +37,7 @@ export default function FeatureShell({
         <p className="eyebrow">Onesa AI Platform · {copy.workspace}</p>
         <h1>{title}</h1>
         <ProductionWorkspaceCue />
-        {!title.toLowerCase().includes("settings") && (
+        {!title.toLowerCase().includes("settings") && pathname !== "/industrial" && (
           <DocumentationHelp
             topic={
               title.toLowerCase().includes("knowledge")

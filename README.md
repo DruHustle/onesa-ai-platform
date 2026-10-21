@@ -31,6 +31,13 @@ Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
 verified with an approved production identity. See the
 [component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-public-docs-release--2026-10-20).
 
+Industrial Investigation V1 is now implemented in source at `/industrial`, using only
+bundled synthetic assets and original reference text. It provides deterministic downtime
+facts, bounded source-cited hypotheses or abstention, and explicit owned internal drafts
+and self-review. The demo defaults off; hosted qualification and production activation
+remain separate. See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
+and `scripts/evaluate_industrial.py`. No industrial connector or physical operation is claimed.
+
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional
 language/domain adaptation is an additional specialization. Existing open-weight
