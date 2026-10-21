@@ -15,13 +15,25 @@
       "onesa-company-portal-backend/migrations/006_bounded_transfers.sql": "da997d58639f6dd6e6eac5cf5a845e59422b1a96e2e0f4ba6b38c4d84ce111be",
       "onesa-company-portal-backend/migrations/007_operational_state.sql": "f1c27cd7ada57de2b262feb67e6c8290419b27e8094754ed01ca3ebed4ea76ea",
       "onesa-company-portal-backend/migrations/008_privacy_governance.sql": "c016c076686dfcb2982c743359ad94bfa24fca71bc1250e20fc3b7c655df02e3",
-      "docs/engineering/PRIVACY_GOVERNANCE.md": "30585f4b1bba56bc6f30ec8733d297a3f884357ca77e71462e981eac48f151dc",
       "onesa-company-portal-backend/migrations/009_privacy_lifecycle.sql": "8d066d911d17dd5aec1cc89915037bfb5f158afa069e381e4fb42976348877a5",
       "onesa-company-portal-backend/migrations/010_engineering_identity.sql": "11f4cb0d0fb2de052c31583a35d72b68f4ed288b155196e6cee9cf56010f5c86",
-      "docs/engineering/ENGINEERING_DOCS_IDENTITY.md": "5260ec5fa66ae7acb012ee9ce7a9f4e054d2c328007598b36365f2c0bb237f2e",
       "onesa-company-portal-backend/src/services/migration-plan.ts": "4a7b2a9acb62a87e1e023a2873a5c38438400ad694e218370de9639a819b3a43",
       "onesa-company-portal-backend/migrations/011_access_registration.sql": "11ee7bd502a78ee876f1634edf34dc626d3a3b9c7417646427abe03607e0e297",
       "onesa-company-portal-backend/migrations/012_editorial_publications.sql": "8da498b00c9eef6e9cdd4bf4299d2ffa7a890e5d936fc23c6f37e9398b54608c"
+    },
+    "protected_document_references": {
+      "docs/engineering/PRIVACY_GOVERNANCE.md": {
+        "identifier": "portal-governance",
+        "reference_sha256": "20683cd725cb4e8ff418dcb495dabac59b870a3de421a3a2df2085cf5912b17a",
+        "full_document_location": "protected publication bundle; never copied into Git",
+        "reference_replaces_historically_public_snapshot": true
+      },
+      "docs/engineering/ENGINEERING_DOCS_IDENTITY.md": {
+        "identifier": "portal-engineering-identity",
+        "reference_sha256": "e43907353f0485efa64f312fb43297f5e60bafe298289b0f3f5a230de7fced38",
+        "full_document_location": "protected publication bundle; never copied into Git",
+        "reference_replaces_historically_public_snapshot": true
+      }
     }
   },
   "onesa-ai-robot": {

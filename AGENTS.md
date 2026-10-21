@@ -44,6 +44,11 @@ unrelated credential rotation or production deletion without specific authority.
 - `docs`: classified engineering references and explicitly allowlisted public sources.
   Restricted `docs/internal/release-audit` is excluded from both site builds.
 
+Detailed operational reference pages in public Git are stubs; use the protected
+canonical or configured private source bundle before provider/recovery work. Public
+PR/Actions jobs must never receive that bundle. Private publication requires exact
+document provenance; moving active copies does not erase public Git history.
+
 Consult `docs/engineering/AI_CONFIGURATION_INVENTORY.md`. Preserve loopback Ollama,
 ports/data/accounts. Builds use pinned snapshots, never sibling imports/live OpenAPI.
 No direct cross-product database access.

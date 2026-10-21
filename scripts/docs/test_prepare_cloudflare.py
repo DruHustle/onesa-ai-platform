@@ -1,5 +1,6 @@
 """Packaging never permits public provenance, existing outputs or symlink artifacts."""
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -7,6 +8,33 @@ from pathlib import Path
 from unittest.mock import patch
 
 import prepare_cloudflare
+from protected_sources import REFERENCES
+
+
+def private_provenance():
+    documents = {
+        path: {
+            "sha256": "0" * 64,
+            "repository": "onesa-ai-platform",
+            "source_revision": "a" * 40,
+            "source_path": path,
+        }
+        for path in REFERENCES
+    }
+    digest = hashlib.sha256(
+        json.dumps(documents, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {
+        "classification": "internal",
+        "revision": "a" * 40,
+        "sources": {path: "0" * 64 for path in REFERENCES},
+        "protected_document_sources": {
+            "schema_version": 1,
+            "classification": "internal",
+            "documents": documents,
+            "bundle_sha256": digest,
+        },
+    }
 
 
 class PackagingTests(unittest.TestCase):
@@ -62,7 +90,7 @@ class PackagingTests(unittest.TestCase):
             source = root / "onesa-ai-platform-frontend/apps/docs/build-internal"
             (source / "generated").mkdir(parents=True)
             (source / "generated/provenance.json").write_text(
-                json.dumps({"classification": "internal", "revision": "a" * 40})
+                json.dumps(private_provenance())
             )
             (source / "index.html").write_text("Synthetic internal fixture")
             worker = root / "infra/cloudflare-docs/worker.mjs"
@@ -75,6 +103,15 @@ class PackagingTests(unittest.TestCase):
                     prepare_cloudflare.subprocess, "check_output", return_value="a" * 40
                 ),
             ):
+                manifest = source / "generated/provenance.json"
+                complete = private_provenance()
+                manifest.write_text(
+                    json.dumps({"classification": "internal", "revision": "a" * 40})
+                )
+                with self.assertRaisesRegex(ValueError, "private-document provenance"):
+                    prepare_cloudflare.prepare(output)
+                self.assertFalse(output.exists())
+                manifest.write_text(json.dumps(complete))
                 record = prepare_cloudflare.prepare(output)
                 self.assertFalse(record["deployment_requested"])
                 self.assertFalse(record["hosted_access_verified"])
@@ -96,9 +133,7 @@ class PackagingTests(unittest.TestCase):
             source = root / "onesa-ai-platform-frontend/apps/docs/build-internal"
             (source / "generated").mkdir(parents=True)
             manifest = source / "generated/provenance.json"
-            manifest.write_text(
-                json.dumps({"classification": "internal", "revision": "a" * 40})
-            )
+            manifest.write_text(json.dumps(private_provenance()))
             output = root / "package"
             with (
                 patch.object(prepare_cloudflare, "ROOT", root),

@@ -32,6 +32,14 @@ let counter=0;
 for(const scope of ['public','internal']){
  const staticDir=path.join(app,'.generated',scope,'static/generated');
  const catalog=JSON.parse(await fs.readFile(path.join(staticDir,'diagrams.json'),'utf8'));
+ const sourceProvenance=JSON.parse(await fs.readFile(path.join(staticDir,'provenance.json'),'utf8'));
+ const internalSourceTexts=scope==='internal'?JSON.parse(await fs.readFile(path.join(cache,'authoritative/source-texts-internal.json'),'utf8')):null;
+ const sourceText=async doc=>{
+  const raw=scope==='public'?await fs.readFile(path.join(root,'docs',doc),'utf8'):internalSourceTexts[doc];
+  if(typeof raw!=='string'||crypto.createHash('sha256').update(raw).digest('hex')!==sourceProvenance.sources['docs/'+doc])throw new Error('Classified manual source differs from its actual provenance');
+  return raw;
+ };
+
  const diagramDir=path.join(staticDir,'diagrams');await fs.rm(diagramDir,{recursive:true,force:true});await fs.mkdir(diagramDir,{recursive:true});
  const svgById={};
  for(const diagram of catalog){
@@ -84,7 +92,7 @@ for(const scope of ['public','internal']){
    return defaultLink(tokens,i,opts,env,self);
   };
   let body='';
-  for(const doc of documents){currentDoc=doc;const raw=await fs.readFile(path.join(root,'docs',doc),'utf8');body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="${base}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
+  for(const doc of documents){currentDoc=doc;const raw=await sourceText(doc);body+=`<section class="section">${md.render(raw)}<p class="refs">Source: <a href="${base}/docs/${doc.replace(/\.md$/,'')}">${escape(doc)}</a></p></section>`;}
   if(name==='api-reference'||name==='ecosystem-api-reference'){
    const schemas=await Promise.all(['openapi.json',...(name==='ecosystem-api-reference'?['openapi-portal.json','openapi-robot.json']:[])].map(async file=>[file,JSON.parse(await fs.readFile(path.join(staticDir,file),'utf8'))]));
    for(const [contract,schema] of schemas){
@@ -108,14 +116,14 @@ for(const scope of ['public','internal']){
   let figures='<section class="section"><h1>Architecture illustrations</h1>';
   for(const id of diagramIds){if(!svgById[id])continue;const d=catalog.find(d=>d.id===id);figures+=`<figure class="figure">${svgById[id]}<figcaption class="caption">${escape(d.title)} · ${escape(d.status)}</figcaption></figure>`;}figures+='</section>';
   const now=process.env.SOURCE_DATE_EPOCH?new Date(Number(process.env.SOURCE_DATE_EPOCH)*1000):new Date();const date=now.toISOString().slice(0,10);
-  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(title)}</title><style>${css}</style></head><body><section class="cover"><p class="brand">Onesa</p><p class="eyebrow">${scope} documentation / ${documentationVersion}</p><h1>${escape(titles[index])}</h1><p>European-based. General-purpose. Globally applicable.</p><p class="status">Version ${documentationVersion} · Generated ${date}<br>Classification: ${scope}<br>Status: Development reference; verified, mock, unverified and proposed work labelled.</p></section><section class="toc"><h1>Contents</h1><ol>${toc.map(t=>`<li><a href="#${t.id}">${escape(t.text)}</a></li>`).join('')}<li>Generated contracts / architecture illustrations where applicable</li></ol></section>${figures}${body}</body></html>`;
+  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(title)}</title><style>${css}</style></head><body><section class="cover"><p class="brand">Onesa</p><p class="eyebrow">${scope} documentation / ${documentationVersion}</p><h1>${escape(titles[index])}</h1><p>AI software. Applications. Robotics.</p><p class="status">Version ${documentationVersion} · Generated ${date}<br>Classification: ${scope}<br>Status: Development reference; verified, mock, unverified and proposed work labelled.</p></section><section class="toc"><h1>Contents</h1><ol>${toc.map(t=>`<li><a href="#${t.id}">${escape(t.text)}</a></li>`).join('')}<li>Generated contracts / architecture illustrations where applicable</li></ol></section>${figures}${body}</body></html>`;
   const pdfPage=await browser.newPage();await pdfPage.setContent(html,{waitUntil:'load'});await pdfPage.emulateMedia({media:'print'});
   const file=`${String(index+1).padStart(2,'0')} — ${title}.pdf`;
   await pdfPage.pdf({path:path.join(manualDir,file),format:'A4',printBackground:true,displayHeaderFooter:true,tagged:true,outline:true,headerTemplate:`<div style="font:8px Arial;width:100%;padding:0 16mm;color:#2366d1">${escape(title)} · ${scope.toUpperCase()} · v${documentationVersion}</div>`,footerTemplate:'<div style="font:8px Arial;width:100%;padding:0 16mm;color:#52789b">Onesa · Engineering reference <span style="float:right"><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',margin:{top:'21mm',right:'16mm',bottom:'20mm',left:'16mm'}});await pdfPage.close();
-  const bytes=await fs.readFile(path.join(manualDir,file));manuals.push({name:title,file,category:name,classification:scope,description:titles[index]+' derived from approved repository sources',version:documentationVersion,date,status:'Development reference',sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,pages:0,source_hashes:Object.fromEntries(await Promise.all(documents.map(async doc=>["docs/"+doc,crypto.createHash("sha256").update(await fs.readFile(path.join(root,"docs",doc))).digest("hex")]))),renderer_sha256:crypto.createHash("sha256").update(await fs.readFile(fileURLToPath(import.meta.url))).digest("hex")});counter++;
+  const bytes=await fs.readFile(path.join(manualDir,file));manuals.push({name:title,file,category:name,classification:scope,description:titles[index]+' derived from classified source records',version:documentationVersion,date,status:'Development reference',sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,pages:0,source_hashes:Object.fromEntries(await Promise.all(documents.map(async doc=>["docs/"+doc,crypto.createHash("sha256").update(await sourceText(doc)).digest("hex")]))),protected_source_bundle_sha256:scope==='internal'?sourceProvenance.protected_document_sources?.bundle_sha256??null:null,renderer_sha256:crypto.createHash("sha256").update(await fs.readFile(fileURLToPath(import.meta.url))).digest("hex")});counter++;
  }
  await fs.writeFile(path.join(staticDir,'manuals.json'),JSON.stringify(manuals,null,2)+'\n');
- const output=path.join(root,'docs/generated',scope);await fs.mkdir(output,{recursive:true});await fs.rm(path.join(output,'diagrams'),{recursive:true,force:true});await fs.rm(path.join(output,'manuals'),{recursive:true,force:true});await fs.cp(diagramDir,path.join(output,'diagrams'),{recursive:true});await fs.cp(manualDir,path.join(output,'manuals'),{recursive:true});await fs.copyFile(path.join(staticDir,'manuals.json'),path.join(output,'manuals.json'));
+ const output=path.join(root,'docs/generated',scope);await fs.mkdir(output,{recursive:true,mode:scope==='internal'?0o700:0o755});if(scope==='internal')await fs.chmod(output,0o700);await fs.rm(path.join(output,'diagrams'),{recursive:true,force:true});await fs.rm(path.join(output,'manuals'),{recursive:true,force:true});await fs.cp(diagramDir,path.join(output,'diagrams'),{recursive:true});await fs.cp(manualDir,path.join(output,'manuals'),{recursive:true});await fs.copyFile(path.join(staticDir,'manuals.json'),path.join(output,'manuals.json'));
  console.log(`${scope}: ${catalog.length} SVG/PNG/PDF diagrams, ${manuals.length} real PDF manuals`);
 }
 await browser.close();console.log(`Rendered ${counter} classified manuals.`);
