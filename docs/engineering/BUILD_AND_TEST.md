@@ -137,3 +137,22 @@ path/hash/permissions, public isolation and packaging boundaries. The normal Doc
 suite retains navigation, search, diagrams, PDF/source-link and private route checks.
 A reference-only CI build does not qualify a protected edition with full runbooks.
 Keep all local model/database targets synthetic while generating documentation.
+
+## Node TLS trust regression
+
+Use Node 24.12 or later in the 24 series. Run
+`node --test scripts/test_tls_trust.mjs` from the repository root. The test uses
+a known public CA certificate and newly generated synthetic localhost certificates
+in isolated child processes. It proves native fetch/HTTPS trust, rejection of
+untrusted certificates and hostname mismatches, idempotence and fail-closed startup.
+Temporary test keys are removed; it sends no application/provider requests.
+
+The startup policy excludes only the SHA-256 fingerprint of the affected
+emSign ECC Root CA - G3 from the effective application default store. It retains
+other default/extra authorities and never disables certificate verification.
+Node changes are thread-local. The Next frontend completes its Node-only
+instrumentation hook before handling requests. The Python model API keeps its
+independent versioned certificate bundle.
+See the [advisory](https://github.com/advisories/GHSA-6q48-6c7w-9gw2) and
+[Node TLS API](https://nodejs.org/api/tls.html#tlssetdefaultcacertificatescerts).
+Source tests are separate from source-bound staging and production acceptance.
