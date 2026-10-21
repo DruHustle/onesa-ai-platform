@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Serialize Industrial investigation creation per user so parallel requests cannot
+  exceed the saved-investigation limit or race repeated identifiers.
+
 - Retain one-day synthetic browser failure evidence in hosted CI, with network
   traces limited to CI loopback targets. Keep all assertions, deadlines and release
   checks unchanged; the earlier isolated Firefox startup failure is not claimed fixed.

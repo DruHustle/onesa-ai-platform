@@ -32,7 +32,7 @@ from app.industrial_evidence import (
 )
 from app.inference import GenerationStats, ModelMessage, observe_generation
 from app.knowledge import embed, version
-from app.models import IndustrialInvestigation, now
+from app.models import IndustrialInvestigation, User, now
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/industrial", tags=["industrial synthetic demonstration"])
@@ -185,6 +185,10 @@ def create(body: CreateInvestigation, request: Request, db: DB, auth: Auth) -> d
     enabled(request)
     if body.asset_id not in ASSETS:
         fail(404, "not_found", "Demo asset not found")
+    # Serialize this user's identity/count checks and insert in one transaction.
+    # A plain count lets parallel requests both claim the final available slot.
+    if db.scalar(select(User.id).where(User.id == auth[0].id).with_for_update()) is None:
+        fail(401, "unauthorized", "Sign in again before creating an investigation")
     selection = body.model_dump(mode="json", exclude={"id"})
     existing = db.get(IndustrialInvestigation, body.id)
     if existing is not None:

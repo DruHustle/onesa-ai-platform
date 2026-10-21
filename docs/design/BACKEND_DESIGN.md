@@ -21,6 +21,9 @@ No code executes arbitrary model-proposed commands or user-provided external URL
 
 ## Industrial Investigation V1
 
+Investigation creation serializes the user’s identifier, saved-count check and insert
+in one transaction; parallel submissions preserve the per-user limit and idempotency.
+
 `industrial_evidence.py` contains original, versioned synthetic inputs and deterministic
 interval/quality/provenance validation. `industrial.py` reuses Auth, Knowledge embeddings,
 ModelClient and shared model admission. Owned investigation rows keep snapshots, facts,
