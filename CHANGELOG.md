@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Update `pypdf` to 6.21.2 and regenerate the existing runtime/dev locks after
+  newly disclosed parser vulnerabilities blocked native CI. Hosted deployment
+  and installed-version verification remain separate release steps.
+
 - Align the protected Docs sign-in sequence with the separately accepted Portal
   cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
   state/PKCE and explicit verified-email confirmation before one-use redemption.
