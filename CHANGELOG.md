@@ -2,11 +2,6 @@
 
 ## Unreleased
 
-- Exclude the affected emSign ECC G3 root from Node application TLS defaults
-  before outbound clients start. Preserve all other authorities and certificate
-  verification; isolated native-fetch/HTTPS regressions cover trust and denial.
-  Deployment and effective runtime-store verification are recorded separately.
-
 - Replace detailed public operational runbooks with protected-reference pages after
   preserving exact original source/hash provenance in restricted custody. Historical
   Git copies remain public; this is active-source classification, not history removal.
@@ -22,6 +17,21 @@
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
   acceptance remain pending. Public Docs has its own accepted record below.
+
+## 2026-10-21 — AI frontend TLS correction accepted
+
+- Frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` /
+  `dpl_3ExobTe8RY5QzpkhEpwN7vAnk8gW` is live on `platform.onesa.eu` after
+  normal promotion, full exact-main CI and affected staging gateway checks.
+- Initialize the reviewed Node trust policy before outbound clients. Exclude only
+  the affected emSign ECC G3 root; retain other authorities and TLS verification.
+  Isolated native-fetch/HTTPS and actual packaged-server checks pass.
+- Five canonical public/private checks pass. Retain Oracle API `776362dc` and both
+  independent Docs deployments. Unchanged UI/business evidence is reused with source
+  equivalence; no inference, production identity or application-data mutation.
+- A packaging observer initially missed Vercel's mapped dependencies. The policy
+  was present; the existing build was materialized standalone and verified without
+  rebuilding. The original failed observer and its correction remain in evidence.
 
 ## 2026-10-21 — AI backend trust-store patch accepted
 
