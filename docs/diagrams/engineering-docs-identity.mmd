@@ -9,7 +9,13 @@ sequenceDiagram
  alt Emailed sign-in link
  P->>M: Enqueue encrypted one-use link
  M-->>E: Email link with token fragment
- E->>P: Explicit same-browser link confirmation
+ E->>P: Open link in receiving browser
+ P->>P: Validate unused link and membership
+ P-->>E: Encrypted handoff and fixed Docs continuation
+ E->>A: Start receiving-browser authorization
+ A->>P: Fresh OIDC state, PKCE and interaction
+ P-->>E: Show verified email
+ E->>P: Explicit confirmation and one-use redemption
  else Email and password
  E->>P: Verify registered password
  end

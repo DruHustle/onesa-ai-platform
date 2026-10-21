@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Update `pypdf` to 6.21.2 and regenerate the existing runtime/dev locks after
+  newly disclosed parser vulnerabilities blocked native CI. Hosted deployment
+  and installed-version verification remain separate release steps.
+
+- Align the protected Docs sign-in sequence with the separately accepted Portal
+  cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
+  state/PKCE and explicit verified-email confirmation before one-use redemption.
+  This source correction does not establish protected publication or an owner
+  sign-in, and changes no AI application, backend or public Docs component.
+
 - Replace detailed public operational runbooks with protected-reference pages after
   preserving exact original source/hash provenance in restricted custody. Historical
   Git copies remain public; this is active-source classification, not history removal.
