@@ -131,6 +131,8 @@ jobs:
           onesa-ai-platform-frontend/apps/docs/package-lock.json
 
           scripts/contract-tools/package-lock.json'
+    - name: Verify application TLS trust and isolated certificate rejection
+      run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - run: 'cd onesa-ai-platform-frontend/apps/chat
 
