@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
+  leave application startup, security assertions and qualification single-attempt.
+
 - Serialize Industrial investigation creation per user so parallel requests cannot
   exceed the saved-investigation limit or race repeated identifiers.
 

@@ -408,6 +408,8 @@ jobs:
     - run: make install
     - run: .venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps
     - run: python3 scripts/acceptance/bootstrap.py
+    - name: Fetch pinned TLS proxy with bounded registry-read recovery
+      run: python3 scripts/ci/pull_image.py
     - name: Build and start isolated TLS staging
       run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
         -f compose.acceptance.yaml up --build --wait --wait-timeout 240
