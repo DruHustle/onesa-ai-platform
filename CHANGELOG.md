@@ -2,9 +2,55 @@
 
 ## Unreleased
 
-- Update `pypdf` to 6.21.2 and regenerate the existing runtime/dev locks after
-  newly disclosed parser vulnerabilities blocked native CI. Hosted deployment
-  and installed-version verification remain separate release steps.
+- Distinguish bounded Industrial retrieval, stream, JSON, schema, numeric-narrative,
+  citation, quotation and abstention failures without retaining model text in
+  errors. Retrieval outages now finish the saved investigation as failed rather
+  than leaving it running. Preserve facts, validation rules and admission limits;
+  new hosted model acceptance is still required.
+
+- Bound npm advisory requests and permit one transport-only audit retry after a
+  confirmed registry timeout/HTTP 503 blocked Docs and frontend CI. Preserve
+  Docs' low and Chat's high severity thresholds and fail closed for blocking
+  findings, invalid reports, input changes or
+  exhausted transport attempts; dependency installation and release tests are unchanged.
+
+- Recheck session/account/grant authorization before returning long-running
+  Industrial results. Preserve explicit failure/cancellation metadata and reject
+  whitespace-only output, drafts and review notes. Interrupted admission cannot
+  report success. Disable anonymous runtime schema/UI pages; offline contracts
+  remain available through classified documentation.
+- Lock investigation navigation during cancellation, reconcile completion races
+  without replaying writes, and refresh both saved state and the visible draft.
+  Protect unsaved text/review notes and bind review to the displayed saved revision.
+  Bound ordinary UI requests and explain uncertain outcomes without dropping input.
+  Identify a real model abstention explicitly instead of labeling it as hypotheses.
+  These corrections require fresh exact-source CI and separate hosted acceptance.
+
+- Keep Industrial evidence previews and saved calculations identical by excluding
+  creation-request identity and selection fields from the UTC window contract.
+  Verify separate investigation identifiers produce the same observed facts.
+
+- Hide closed source comments in generated PDF manuals and contents labels while
+  preserving code examples, escaped HTML and bounded handling of malformed input. Bind the comment renderer
+  dependency to each manual’s provenance; protected publication remains separate.
+
+- Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
+  leave application startup, security assertions and qualification single-attempt.
+
+- Serialize Industrial investigation creation per user so parallel requests cannot
+  exceed the saved-investigation limit or race repeated identifiers.
+
+- Retain one-day synthetic browser failure evidence in hosted CI, with network
+  traces limited to CI loopback targets. Keep all assertions, deadlines and release
+  checks unchanged; the earlier isolated Firefox startup failure is not claimed fixed.
+
+- Implement protected Industrial Investigation V1 with versioned original synthetic
+  fixtures, deterministic interval calculations, bounded existing inference/retrieval,
+  citation/quote validation, explicit abstention, owned saved results and revisioned
+  internal drafts/self-review. Add an additive schema migration, generated contracts,
+  EN/DE critical controls and synthetic evaluations. Hosting and real-model acceptance
+  are not inferred from local tests; no factory writes or physical operation exists.
+
 
 - Align the protected Docs sign-in sequence with the separately accepted Portal
   cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
@@ -27,6 +73,18 @@
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
   acceptance remain pending. Public Docs has its own accepted record below.
+
+## 2026-10-22 — AI backend parser security patch accepted
+
+- Backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048` is accepted independently
+  with installed `pypdf 6.21.2` verified in staging and production. Only the parser
+  manifest/lockfiles differ from the preceding backend; application code and schema
+  are unchanged. Exact-source native CI, image scanning and hosted readback passed.
+- Runtime configuration, persistent record identifiers/counts and user/grant/session
+  digests passed preservation checks; no migration, account creation or model request
+  was performed. Ten canonical HTTPS checks pass, and the frontend/Docs are retained.
+  Full business-payload comparison and a new authenticated production walkthrough
+  are not claimed. Industrial model qualification remains separate and pending.
 
 ## 2026-10-21 — AI frontend TLS correction accepted
 

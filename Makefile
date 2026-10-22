@@ -104,7 +104,7 @@ up-docs:
 
 .PHONY: docs-release-check docs-browser
 docs-release-check: docs-check
-	npm --prefix onesa-ai-platform-frontend/apps/docs audit --audit-level=low
+	$(PYTHON) scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/docs
 
 docs-browser:
 	node scripts/docs/verify.mjs

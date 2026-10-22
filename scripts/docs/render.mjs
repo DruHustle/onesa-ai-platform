@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
+import sourceComments from './markdown-comments.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const app=path.join(root,'onesa-ai-platform-frontend/apps/docs');
 const {version:documentationVersion}=JSON.parse(await fs.readFile(path.join(app,'package.json'),'utf8'));
@@ -10,6 +11,7 @@ const require=createRequire(path.join(app,'package.json'));
 const {chromium}=require('@playwright/test');
 const {build}=require('esbuild');
 const MarkdownIt=require('markdown-it');
+const rendererDependencies={'scripts/docs/markdown-comments.mjs':crypto.createHash('sha256').update(await fs.readFile(new URL('./markdown-comments.mjs',import.meta.url))).digest('hex')};
 const cache=path.join(app,'.cache');await fs.mkdir(cache,{recursive:true});
 await fs.writeFile(path.join(cache,'mermaid-entry.mjs'),`import mermaid from ${JSON.stringify(path.join(app,'node_modules/mermaid/dist/mermaid.esm.min.mjs'))}; window.mermaid=mermaid;`);
 await build({entryPoints:[path.join(cache,'mermaid-entry.mjs')],bundle:true,format:'iife',outfile:path.join(cache,'mermaid.js'),logLevel:'silent'});
@@ -56,7 +58,7 @@ for(const scope of ['public','internal']){
  for(const name of selectedNames){
   const index=names.indexOf(name), title='Onesa — '+titles[index];
   const documents=scope==='public'?publicBooks[name]:books[index];
-  const md=new MarkdownIt({html:false,linkify:true});
+  const md=new MarkdownIt({html:false,linkify:true}).use(sourceComments);
   // Embed only classified, allowlisted local screenshots. PDF rendering never fetches
   // remote images or resolves arbitrary Markdown file paths.
   const screenshotUrls=JSON.parse(await fs.readFile(path.join(staticDir,'screenshots.json'),'utf8'));
@@ -75,7 +77,7 @@ for(const scope of ['public','internal']){
    token.attrSet('src',screenshotData[url]);return defaultImage(tokens,i,opts,env,self);
   };
   const toc=[];let section=0;
-  md.renderer.rules.heading_open=(tokens,i)=>{const level=Number(tokens[i].tag.slice(1)),text=tokens[i+1].content,id=`section-${++section}`;if(level<=2)toc.push({id,text,level});return `<${tokens[i].tag} id="${id}"><span>${section}. </span>`;};
+  md.renderer.rules.heading_open=(tokens,i)=>{const level=Number(tokens[i].tag.slice(1)),text=md.renderer.renderInlineAsText(tokens[i+1].children||[],md.options,{}),id=`section-${++section}`;if(level<=2)toc.push({id,text,level});return `<${tokens[i].tag} id="${id}"><span>${section}. </span>`;};
   const defaultFence=md.renderer.rules.fence;
   md.renderer.rules.fence=(tokens,i,opts,env,self)=>tokens[i].info.trim()==='mermaid'?'<p class="caption">Editable source diagram; see the rendered architecture figures and portal.</p>':defaultFence(tokens,i,opts,env,self);
   let currentDoc='';
@@ -120,7 +122,7 @@ for(const scope of ['public','internal']){
   const pdfPage=await browser.newPage();await pdfPage.setContent(html,{waitUntil:'load'});await pdfPage.emulateMedia({media:'print'});
   const file=`${String(index+1).padStart(2,'0')} — ${title}.pdf`;
   await pdfPage.pdf({path:path.join(manualDir,file),format:'A4',printBackground:true,displayHeaderFooter:true,tagged:true,outline:true,headerTemplate:`<div style="font:8px Arial;width:100%;padding:0 16mm;color:#2366d1">${escape(title)} · ${scope.toUpperCase()} · v${documentationVersion}</div>`,footerTemplate:'<div style="font:8px Arial;width:100%;padding:0 16mm;color:#52789b">Onesa · Engineering reference <span style="float:right"><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',margin:{top:'21mm',right:'16mm',bottom:'20mm',left:'16mm'}});await pdfPage.close();
-  const bytes=await fs.readFile(path.join(manualDir,file));manuals.push({name:title,file,category:name,classification:scope,description:titles[index]+' derived from classified source records',version:documentationVersion,date,status:'Development reference',sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,pages:0,source_hashes:Object.fromEntries(await Promise.all(documents.map(async doc=>["docs/"+doc,crypto.createHash("sha256").update(await sourceText(doc)).digest("hex")]))),protected_source_bundle_sha256:scope==='internal'?sourceProvenance.protected_document_sources?.bundle_sha256??null:null,renderer_sha256:crypto.createHash("sha256").update(await fs.readFile(fileURLToPath(import.meta.url))).digest("hex")});counter++;
+  const bytes=await fs.readFile(path.join(manualDir,file));manuals.push({name:title,file,category:name,classification:scope,description:titles[index]+' derived from classified source records',version:documentationVersion,date,status:'Development reference',sha256:crypto.createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length,pages:0,source_hashes:Object.fromEntries(await Promise.all(documents.map(async doc=>["docs/"+doc,crypto.createHash("sha256").update(await sourceText(doc)).digest("hex")]))),protected_source_bundle_sha256:scope==='internal'?sourceProvenance.protected_document_sources?.bundle_sha256??null:null,renderer_sha256:crypto.createHash("sha256").update(await fs.readFile(fileURLToPath(import.meta.url))).digest("hex"),renderer_dependencies:rendererDependencies});counter++;
  }
  await fs.writeFile(path.join(staticDir,'manuals.json'),JSON.stringify(manuals,null,2)+'\n');
  const output=path.join(root,'docs/generated',scope);await fs.mkdir(output,{recursive:true,mode:scope==='internal'?0o700:0o755});if(scope==='internal')await fs.chmod(output,0o700);await fs.rm(path.join(output,'diagrams'),{recursive:true,force:true});await fs.rm(path.join(output,'manuals'),{recursive:true,force:true});await fs.cp(diagramDir,path.join(output,'diagrams'),{recursive:true});await fs.cp(manualDir,path.join(output,'manuals'),{recursive:true});await fs.copyFile(path.join(staticDir,'manuals.json'),path.join(output,'manuals.json'));

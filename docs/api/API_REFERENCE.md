@@ -128,3 +128,31 @@ The private upstream embedding request now explicitly includes `dimensions:256`.
 The configured optional query instruction applies only to search text; uploaded passages
 remain unprefixed. This is an internal provider protocol change, with no public route/
 request/response change. Production HTTP embedding endpoints require authenticated HTTPS.
+
+
+## Synthetic Industrial Investigation V1
+
+All routes below require the existing session; every mutation also requires Origin/CSRF.
+The feature defaults disabled. Shared demo assets are synthetic, not organization tenancy.
+Investigation resources and drafts are user-owned. Foreign identifiers return no data.
+The generated OpenAPI/client are authoritative for current schemas.
+
+| Method and relative route | Behavior |
+| --- | --- |
+| GET `/industrial/assets` | Allowlisted synthetic asset metadata |
+| GET `/industrial/evidence` | Asset/scenario and aware start/end queries; read-only facts/coverage |
+| POST `/industrial/investigations` | Explicit ID, asset/scenario/window; persist immutable input snapshot and calculated facts |
+| GET `/industrial/investigations` | Current user's saved investigations |
+| GET `/industrial/investigations/{id}` | Owned result; expired interrupted generation is marked failed |
+| POST `/industrial/investigations/{id}/generate` | Expected revision; bounded existing model/retrieval adapters or explicit abstention |
+| POST `/industrial/investigations/{id}/cancel` | Expected revision; stop application operation; upstream computation may continue |
+| PUT `/industrial/investigations/{id}/draft` | Expected revision and explicit internal draft text; never external dispatch |
+| POST `/industrial/investigations/{id}/review` | Expected revision, accepted/needs_changes and note; records owner self-review, not independent approval |
+
+Creation IDs are idempotent only for the same owner and identical selection. A mutation
+response with an uncertain network outcome must be reconciled by reading the owned ID,
+not blindly submitted again. A failed generation retains facts and never becomes a
+completed result. Sparse/missing/conflicting inputs are explicit. No OEE or certified
+diagnosis is produced. A review binds the saved revision/draft hash and editing invalidates
+its current approval without erasing earlier decisions. Retention and real industrial
+processing decisions remain separate; this API authorizes synthetic development only.

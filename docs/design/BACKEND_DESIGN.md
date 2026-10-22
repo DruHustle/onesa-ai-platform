@@ -17,3 +17,39 @@ acquisition/completion; deadline+10-second expiry prevents permanent busy states
 
 Domain boundaries and real behavior are described in architecture/DATA_FLOWS.md.
 No code executes arbitrary model-proposed commands or user-provided external URLs.
+Runtime OpenAPI, Swagger and ReDoc routes are disabled. Contract generation still
+uses the application schema offline; publication follows documentation classification.
+
+
+## Industrial Investigation V1
+
+Investigation creation serializes the user’s identifier, saved-count check and insert
+in one transaction; parallel submissions preserve the per-user limit and idempotency.
+
+`industrial_evidence.py` contains original, versioned synthetic inputs and deterministic
+interval/quality/provenance validation. Calculation windows contain only normalized
+UTC start/end, so a preview and its saved investigation have identical observed facts
+independent of the creation UUID. `industrial.py` reuses Auth, Knowledge embeddings,
+ModelClient and shared model admission. Owned investigation rows keep snapshots, facts,
+generation states, revision-checked internal drafts and immutable prior review decisions.
+No retrieval cache or organization tenancy is introduced. A current asset/version/anchor
+and literal source quotation are required; generation cannot modify calculated facts.
+Provider failure, empty output, cancellation and interrupted persistence remain explicit.
+Whitespace-only fields are rejected. Each claimed generation records configured
+model identity, observed token counts where available, unknown cost and its terminal
+outcome; cancellation or interrupted recovery does not invent a response or elapsed
+time. Long-running completion revalidates the current session, account and access grant
+before returning private state. Terminal facts remain recoverable after access renewal.
+
+The workspace locks selection during mutations, including cancellation. A completion
+race is reconciled with one read rather than another write. Refresh updates the visible
+draft and its baseline together, after explicit discard confirmation for unsaved work.
+Review is permitted only for that saved, displayed revision. Ordinary requests have a
+bounded observation deadline; a timeout is not proof that a server mutation failed.
+
+Additive migration `20261021_industrial` creates only the new table and user ownership
+index. Its downgrade refuses destructive rollback. With the demo disabled, the new API
+accepts the prior schema or the new additive head. Enabling it requires the new head.
+An older binary still requires its old head: a schema rollback must use the reviewed
+forward compatibility/recovery process, never delete saved investigations. Actual hosted
+migration and runtime grants need separate staging verification before production.

@@ -26,6 +26,7 @@ from app import (
     chat,
     conversations,
     documentation,
+    industrial,
     knowledge,
     observability,
     travel,
@@ -48,7 +49,16 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
             engine.dispose()
 
     logging.getLogger("onesa.requests").setLevel(logging.INFO)
-    api = FastAPI(title="Onesa AI API", version="0.1.0", lifespan=lifespan)
+    # Contracts are generated offline and published through classified Docs.
+    # Do not expose an anonymous inventory of private application endpoints.
+    api = FastAPI(
+        title="Onesa AI API",
+        version="0.1.0",
+        lifespan=lifespan,
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+    )
     api.add_middleware(BodyLimit)
     api.state.auth_hash_semaphore = threading.BoundedSemaphore(config.auth_hash_concurrency)
     api.state.ingestion_semaphore = asyncio.Semaphore(config.knowledge_upload_concurrency)
@@ -74,6 +84,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     api.include_router(agents.router)
     api.include_router(travel.router)
     api.include_router(documentation.router)
+    api.include_router(industrial.router)
     api.include_router(observability.router)
 
     @api.exception_handler(HTTPException)
@@ -176,7 +187,9 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 return False
             with Session(engine) as db:
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
-                valid = revision == REQUIRED_SCHEMA_REVISION
+                valid = revision in {REQUIRED_SCHEMA_REVISION, "20261010_capacity"}
+                if config.industrial_demo_enabled:
+                    valid = revision == REQUIRED_SCHEMA_REVISION
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(
