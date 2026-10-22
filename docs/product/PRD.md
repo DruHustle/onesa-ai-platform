@@ -5,8 +5,9 @@
 The platform is pre-commercial, with implemented application capabilities and
 source-bound hosted release records. It is not a mock-only product, and its
 current infrastructure does not require a local NVIDIA host. The current product
-hierarchy and proposed Industrial AI milestone are defined in the dated section
-below. That milestone is not yet implemented or production-qualified.
+hierarchy and Industrial AI milestone are defined in the dated section below.
+Industrial Investigation V1 is implemented and has a qualified isolated synthetic
+hosted demonstration. This does not establish industrial production readiness.
 
 Use [README](../../README.md), [CHANGELOG](../../CHANGELOG.md) and the
 [deployment reference](../engineering/DEPLOYMENT.md) for maintained component
@@ -98,7 +99,8 @@ machine context to traceable decisions and human-reviewed workflows.
 
 ### Industrial AI: investigate repeated machine stops
 
-**V1 source implementation; hosted industrial acceptance is still pending.** One authorized analyst
+**Implemented and qualified as an isolated synthetic hosted demonstration.**
+Production Industrial activation remains separate. One authorized analyst
 selects one asset and a bounded time window. The assistant gathers read-only event
 records, relevant time series, asset metadata and rights-cleared versioned manuals.
 It separates observed facts, computed summaries and model hypotheses, cites sources,
@@ -107,10 +109,12 @@ A recorded owner self-review makes the decision within the current user-owned mo
 it is not independent approval. The system does not send the draft to a CMMS,
 write PLC settings, actuate hardware or automatically execute its recommendations.
 
-The public static DEMO-01 example uses invented stops at 09:12 (4 min), 09:31 (3 min)
-and 09:48 (5 min), UTC within 09:00–10:00. Three stops total 12 minutes. With no sensor
-readings or approved manual, cause and corrective action are unknown. This arithmetic
-example is not an inference result, customer case or operational integration.
+The calculation-only reference case uses invented stops at 09:12 (4 min), 09:31
+(3 min) and 09:48 (5 min), UTC within 09:00–10:00. Three stops total 12 minutes.
+These intervals alone establish neither a cause nor a corrective action. The full
+synthetic demonstration separately records available sensor/reference coverage and
+its limitations. The arithmetic is not an inference result, customer case or
+operational integration.
 
 #### Fixture and contract
 
@@ -188,8 +192,10 @@ flowchart LR
 `scripts/evaluate_industrial.py` executes seven versioned cases, one repetition, exact
 facts and mock/abstention outcomes. Its report distinguishes latency scope, failures,
 unknown cost and unmeasured reviewer corrections. Manual lookup and general-assistant
-comparisons are NOT RUN. Actual provider output, hosted demo and production hosting need
-separate source-bound acceptance. Public marketing remains proposed until that scope passes.
+comparisons are NOT RUN. The qualified hosted demonstration below is source-bound;
+additional model/fixture evaluations and production hosting need separate acceptance.
+Public descriptions may identify only the demonstrated synthetic scope, never live
+industrial connectivity or measured commercial benefit.
 
 #### Evaluation and acceptance before claiming benefit
 
@@ -206,8 +212,33 @@ sample counts, model/configuration, failures and uncertainty; do not invent upli
 
 Consider an Asset Administration Shell mapping as a future schema choice. OPC UA,
 MQTT, MES, ERP, CMMS and AAS connectivity are **not current integration claims**.
-A thin implementation needs this milestone's reviewed data contracts, isolation,
-rights and acceptance before it can qualify as demonstrated Industrial AI.
+The delivered thin workflow demonstrates only its reviewed synthetic fixture,
+source contracts and tested access boundaries. Live industrial integration and
+commercial benefit remain separate, unestablished outcomes.
+
+### Qualified synthetic demonstration — 2026-10-22
+
+Source-bound staging acceptance exercised the isolated Oracle demo API/database and
+protected Vercel interface with `onesa-industrial-synthetic-v1`. The accepted example
+calculated three stops and 720 seconds of union downtime, retained unknown cause,
+and returned one validated explanation from the existing Qwen3 adapter with a
+permitted source/version/anchor citation. Explicit internal draft save/reopen and
+revision-bound owner self-review were exercised with synthetic identities. That
+review action was automated; no human domain approval is claimed.
+
+The recorded sample comprises three application generation attempts, two real model
+responses and one validated result. Provider latency for the accepted result was
+6,259 ms (application 6,490 ms), with 1,858 input and 1,014 output tokens. All 42
+general and 16 Industrial UI views passed; unchanged real API checks were reused
+within their recorded scope. Owned test identities were removed after acceptance.
+These are finite observations, not model-accuracy, reliability, cost-saving or
+performance-improvement guarantees. Manual/general-assistant comparisons and human
+reviewer corrections remain NOT RUN. No new inference is authorized by this record.
+
+The demo is separate from ordinary production data and application activation.
+It has no factory connector, customer machine data, externally dispatched work
+order or physical control. Component source/configuration and release evidence
+remain independently bound; later source commits do not redeploy the application.
 
 ### Pilot and commercial readiness
 
