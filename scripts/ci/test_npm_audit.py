@@ -37,14 +37,14 @@ class AuditTests(unittest.TestCase):
         for name in ("package.json", "package-lock.json"):
             (self.prefix / name).write_text("{}")
 
-    def run_audit(self, responses):
+    def run_audit(self, responses, level="low"):
         output = io.StringIO()
         with (
             patch.object(npm_audit.subprocess, "run", side_effect=responses) as run,
             patch.object(npm_audit.time, "sleep") as sleep,
             contextlib.redirect_stdout(output),
         ):
-            code = npm_audit.audit(self.prefix)
+            code = npm_audit.audit(self.prefix, level)
         return code, run, sleep, output.getvalue()
 
     def test_clean_report_requires_success_and_preserves_low_threshold(self):
@@ -65,6 +65,28 @@ class AuditTests(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertEqual(run.call_count, 1)
                 sleep.assert_not_called()
+
+    def test_scope_thresholds_and_below_threshold_findings_are_preserved(self):
+        self.assertEqual(
+            npm_audit.POLICIES["onesa-ai-platform-frontend/apps/docs"], "low"
+        )
+        self.assertEqual(
+            npm_audit.POLICIES["onesa-ai-platform-frontend/apps/chat"], "high"
+        )
+        code, run, _, output = self.run_audit([result(report("moderate"))], "high")
+        self.assertEqual(code, 0)
+        self.assertIn("--audit-level=high", run.call_args.args[0])
+        self.assertIn('"package": "synthetic-package"', output)
+        self.assertIn('"severity": "moderate"', output)
+        self.assertEqual(self.run_audit([result(report("high"), 1)], "high")[0], 1)
+
+    def test_timeout_does_not_erase_even_below_threshold_findings(self):
+        code, run, sleep, _ = self.run_audit(
+            [subprocess.TimeoutExpired("npm", 100, output=report("low"))], "high"
+        )
+        self.assertEqual(code, 1)
+        self.assertEqual(run.call_count, 1)
+        sleep.assert_not_called()
 
     def test_findings_block_even_if_cli_incorrectly_returns_success(self):
         self.assertEqual(self.run_audit([result(report("high"))])[0], 1)
