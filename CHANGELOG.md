@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Register the existing 90-second account browser-test budget before fixture
+  setup. A retained WebKit trace stalled at blank-page creation before any
+  application request; the previous in-body setting left setup at 30 seconds.
+  Verify all three engines' registered limits without launching browsers. Keep
+  the account assertions and overall journey budget unchanged; no automatic retry.
+
 - Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
   replacing direct Azure archive URIs and removing only its entry from the
   referenced runner failover list, retaining canonical/security mirrors, suites,
