@@ -41,6 +41,16 @@ outcome; cancellation or interrupted recovery does not invent a response or elap
 time. Long-running completion revalidates the current session, account and access grant
 before returning private state. Terminal facts remain recoverable after access renewal.
 
+Evidence validation rejects contradictory records sharing a signal ID or a reference
+`(id, version, anchor)` key, even when each reference independently has a valid text
+hash. Exact repeats and distinct reference versions/anchors remain valid; validation
+does not rewrite or deduplicate the saved snapshot. Signal timestamps are compared
+after UTC normalization. The bundled conflict scenario remains valid because it uses
+different reference versions; coverage must still flag that semantic disagreement.
+Offline regressions are in `tests/test_industrial_identity.py`. This strengthens the
+synthetic evidence boundary without adding an external-data ingestion endpoint or
+establishing general semantic correctness of model hypotheses.
+
 The workspace locks selection during mutations, including cancellation. A completion
 race is reconciled with one read rather than another write. Refresh updates the visible
 draft and its baseline together, after explicit discard confirmation for unsaved work.
