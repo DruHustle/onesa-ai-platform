@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Update only the Docs transitive DOMPurify package to 3.4.17 for newly
+  surfaced sanitizer advisories. Preserve the production-derived application,
+  current API tree and full mandatory CI; exclude Industrial-only workflow steps
+  whose source is intentionally outside this temporary security candidate.
+
 - Prepare the production-UI-only Next.js 16.4.2 security patch for
   GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r. Preserve actual serving
   frontend business code/assets and API7079a66 source; no Industrial activation,
