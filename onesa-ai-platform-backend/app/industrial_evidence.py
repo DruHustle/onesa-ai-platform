@@ -127,6 +127,21 @@ class Evidence(Strict):
             or any(item.asset_id != self.asset_id for item in self.references)
         ):
             raise ValueError("Evidence asset boundary mismatch")
+        # One immutable identity must not resolve to contradictory source data.
+        # Preserve exact repeats and distinct reference versions/anchors.
+        signals: dict[str, dict[str, Any]] = {}
+        for signal in self.signals:
+            value = signal.model_dump(mode="json")
+            if signal.id in signals and signals[signal.id] != value:
+                raise ValueError("Conflicting duplicate signal ID")
+            signals[signal.id] = value
+        references: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for reference in self.references:
+            key = (reference.id, reference.version, reference.anchor)
+            value = reference.model_dump(mode="json")
+            if key in references and references[key] != value:
+                raise ValueError("Conflicting duplicate reference key")
+            references[key] = value
         return self
 
 
