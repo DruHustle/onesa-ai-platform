@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Bound npm advisory requests and permit one transport-only audit retry after a
+  confirmed registry timeout blocked staging PR CI. Preserve the low-severity
+  threshold and fail closed for findings, invalid reports, input changes or
+  exhausted transport attempts; dependency installation and release tests are unchanged.
+
 - Recheck session/account/grant authorization before returning long-running
   Industrial results. Preserve explicit failure/cancellation metadata and reject
   whitespace-only output, drafts and review notes. Interrupted admission cannot
