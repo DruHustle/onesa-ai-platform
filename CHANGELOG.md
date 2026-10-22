@@ -52,10 +52,6 @@
   are not inferred from local tests; no factory writes or physical operation exists.
 
 
-- Update `pypdf` to 6.21.2 and regenerate the existing runtime/dev locks after
-  newly disclosed parser vulnerabilities blocked native CI. Hosted deployment
-  and installed-version verification remain separate release steps.
-
 - Align the protected Docs sign-in sequence with the separately accepted Portal
   cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
   state/PKCE and explicit verified-email confirmation before one-use redemption.
@@ -77,6 +73,18 @@
   and move secondary status guidance below the starting path. Its classified build
   and local checks pass; updated protected publication and current approved-identity
   acceptance remain pending. Public Docs has its own accepted record below.
+
+## 2026-10-22 — AI backend parser security patch accepted
+
+- Backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048` is accepted independently
+  with installed `pypdf 6.21.2` verified in staging and production. Only the parser
+  manifest/lockfiles differ from the preceding backend; application code and schema
+  are unchanged. Exact-source native CI, image scanning and hosted readback passed.
+- Runtime configuration, persistent record identifiers/counts and user/grant/session
+  digests passed preservation checks; no migration, account creation or model request
+  was performed. Ten canonical HTTPS checks pass, and the frontend/Docs are retained.
+  Full business-payload comparison and a new authenticated production walkthrough
+  are not claimed. Industrial model qualification remains separate and pending.
 
 ## 2026-10-21 — AI frontend TLS correction accepted
 

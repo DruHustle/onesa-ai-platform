@@ -22,10 +22,14 @@ The AI frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` is accepted at
 The qualified Node TLS correction passes five canonical public/private checks;
 application UI, authentication and business workflow bytes are unchanged. Prior
 23 real workflow checks and 42 UI views remain separately source-bound evidence.
-Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56` is retained, accepted under
-qualified main `204e666c40943af2dc1f53359f360feaffbaa126`. No model call, new
-production account, backend deployment or application-data change accompanied the
-frontend release. Public and protected Docs have independent release identities.
+At that frontend release, Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56`
+was retained under qualified main `204e666c40943af2dc1f53359f360feaffbaa126`.
+On 2026-10-22, backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048`
+was independently accepted with `pypdf 6.21.2` verified in staging and production.
+Its application code and schema are unchanged from the preceding backend; runtime,
+credential and record-identifier preservation checks passed. Canonical readiness and
+private-access denials pass. This parser patch introduced no production model request,
+new account or Industrial feature. The frontend and both Docs retain independent identities.
 Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
 18 October accepted record; the newer protected build is not published or currently
 verified with an approved production identity. See the
