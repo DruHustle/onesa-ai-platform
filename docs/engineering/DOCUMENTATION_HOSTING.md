@@ -23,8 +23,9 @@ records the original per-document repository/revision/content hash plus the bund
 hash alongside the publishing code revision. Never label external private bodies as
 bytes committed in the public publishing revision. Internal caches/builds and final
 packages are restricted; public generation and exports remain separately allowlisted.
-Current protected publication still needs its own approved-identity browser acceptance;
+Each protected publication needs its own approved-identity browser acceptance;
 source cleanup or a temporary mailbox test cannot stand in for that observation.
+The current accepted protected edition is recorded below.
 
 
 ## Current public Docs release — 2026-10-20
@@ -50,11 +51,10 @@ and the already approved isolated browser was reopened when its endpoint was abs
 At the time of that Docs release, the AI application retained frontend `3b38acd862f8db177035adec49c920470217894d`
 / `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API
 `6011890047dc16267147241ea68b94f494c89827`; no backend or application deployment
-accompanied this Docs release. Protected Engineering Docs retains the separate
-last accepted source `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages
-`2daea640-3c73-40da-8b01-397bec2ca3ea`. That identity is a release-record claim,
-not a new authenticated production observation. Its updated learning homepage
-remains unpublished pending its own approved-identity verification and controls.
+accompanied this public Docs release. At that time protected Engineering Docs retained
+source `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages
+`2daea640-3c73-40da-8b01-397bec2ca3ea`. That historical edition was superseded by the
+independently accepted 22 October protected release below.
 
 Restricted receipts, before/after captures and the 26-finding register remain in
 the existing owner release evidence area. No private evidence bundle is published
@@ -62,6 +62,30 @@ with these public sources. Rollback uses the previously accepted public Docs
 `3b38acd862f8db177035adec49c920470217894d` / `dpl_94epioyn7QQv1BpL1qPNYdNqY3Eh`
 through the same owner-controlled process after verifying current provider state;
 it does not roll back the AI application, backend or protected Docs.
+
+## Current protected Docs release — 2026-10-22
+
+Protected source `34e9ab83c412fc87183a1428537ae0547a22ed04` is accepted at
+`https://docs.engineering.onesa.eu/`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d`.
+Its exact-source Preview and canonical production each verified all 751 private
+files byte-for-byte, anonymous denial on every published path, 18 responsive and
+accessibility views, application navigation, search, icons and architecture topics.
+The edition contains 22 manuals and 87 diagrams. The actual approved owner session
+and current Portal identity / exact-membership controls passed; this is not inferred
+from a temporary mailbox or a successful link-request response.
+
+Actions qualification `39771458619` and conditional owner authorization
+`39771516658` carried only bounded counts and hashes. The external pinned
+verifier established hosted acceptance before one production upload. No private
+HTML/PDF/source bundle was uploaded to public Actions. The earlier edition, original
+source hashes, failed observations and rollback evidence remain in restricted custody.
+
+The AI application retained frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6`
+and Oracle backend `7079a66dc0c2fc9de9cd632894b45a9a5cea5048`; public Docs retains
+source `4f30218dca47d1197a0cb88b25a16bd33696832a`. This protected publication changed
+no backend, membership, credential or inference configuration. New repository
+metadata commits do not change the serving protected source above. G14 decisions
+remain deferred and are not converted into approvals by this publication.
 
 ## Engineering sign-in and membership — owner direction, 2026-10-16
 

@@ -2,11 +2,22 @@
 
 ## Unreleased
 
+- Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
+  replacing direct Azure archive URIs and removing only its entry from the
+  referenced runner failover list, retaining canonical/security mirrors, suites,
+  components and signing keys. Bound APT reads and
+  fail on repository-update errors. Bound each browser dependency installation
+  to ten minutes after measured 119 MB package downloads exceeded five minutes
+  while still progressing; keep the documentation job at 30 minutes. Keep Chromium,
+  Firefox, WebKit and every security/release assertion mandatory; no automatic
+  workflow/test retry, paid infrastructure or application deployment is introduced.
+
 - Distinguish bounded Industrial retrieval, stream, JSON, schema, numeric-narrative,
   citation, quotation and abstention failures without retaining model text in
   errors. Retrieval outages now finish the saved investigation as failed rather
   than leaving it running. Preserve facts, validation rules and admission limits;
-  new hosted model acceptance is still required.
+  the isolated synthetic staging demo is now qualified; production Industrial
+  activation remains separate.
 
 - Bound npm advisory requests and permit one transport-only audit retry after a
   confirmed registry timeout/HTTP 503 blocked Docs and frontend CI. Preserve
@@ -24,7 +35,8 @@
   Protect unsaved text/review notes and bind review to the displayed saved revision.
   Bound ordinary UI requests and explain uncertain outcomes without dropping input.
   Identify a real model abstention explicitly instead of labeling it as hypotheses.
-  These corrections require fresh exact-source CI and separate hosted acceptance.
+  These corrections passed exact-source CI and isolated synthetic demo acceptance;
+  they are not an Industrial production release.
 
 - Keep Industrial evidence previews and saved calculations identical by excluding
   creation-request identity and selection fields from the UTC window contract.
@@ -67,12 +79,35 @@
   GHSA-vfgh-jcmw-g37q, preserving unrelated locked packages and optional native
   entries. Add bounded regressions for all four unterminated inline HTML cases.
   The original exact-main audit failure remains recorded; no audit threshold,
-  required check or production release gate is bypassed. Publication is pending.
+  required check or production release gate is bypassed. The protected edition is
+  accepted below; the public Docs release remains independent.
 
 - Align protected Engineering Docs homepage learning order, remove card numbers
-  and move secondary status guidance below the starting path. Its classified build
-  and local checks pass; updated protected publication and current approved-identity
-  acceptance remain pending. Public Docs has its own accepted record below.
+  and move secondary status guidance below the starting path. The classified protected
+  edition and approved-identity acceptance are recorded below. Public Docs retains
+  its own independent release.
+
+## 2026-10-22 — Protected Docs accepted; synthetic Industrial demo qualified
+
+- Protected Docs source `34e9ab83c412fc87183a1428537ae0547a22ed04` is accepted at
+  `docs.engineering.onesa.eu`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d`.
+  Staging and production each matched all 751 protected files, denied anonymous
+  requests to those paths, and passed 18 responsive/accessibility views. The edition
+  includes 22 manuals and 87 diagrams, the updated learning order and comment-safe
+  PDF rendering. Exact original private sources remain recoverable. The existing
+  approved owner identity and current Portal/Access policy were verified; no
+  credentials, membership or backend changed and no private assets entered Actions.
+- Industrial Investigation V1 passed its isolated synthetic hosted demonstration:
+  one validated model explanation, three stops / 720 seconds, one resolved source
+  citation, explicit draft save/reopen, 42 general UI views and 16 Industrial views.
+  Qualified source `34e9ab83c412fc87183a1428537ae0547a22ed04` preserves actual demo API `3574f21`
+  and frontend `c9f45fc` identities separately. Both run-owned users were removed;
+  prior failed attempts remain recorded. No customer/factory data, actual human
+  domain review, physical operation or Industrial production activation is claimed.
+- The existing production AI frontend/backend and public Docs remain on their
+  separately accepted revisions below. A repository metadata promotion does not
+  redeploy those components. Generated API documentation is restricted by a
+  separately verified narrow edge control; the existing API image is retained.
 
 ## 2026-10-22 — AI backend parser security patch accepted
 
