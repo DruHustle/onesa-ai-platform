@@ -75,3 +75,12 @@ test('manual comment handling bounds repeated unterminated block and inline sear
     execFileSync(process.execPath, ['--input-type=module', '-e', stdinProgram, parser], {input: source, timeout: 5000, maxBuffer: 1024, stdio: ['pipe', 'pipe', 'pipe']});
   }
 });
+
+
+test('manual contents labels use visible heading text without comments or Markdown markers', () => {
+  const MarkdownIt = require('markdown-it');
+  const md = new MarkdownIt({html: false}).use(sourceComments);
+  const heading = md.parse('# **Guide** <!-- internal note --> and `code`', {}).find(t => t.type === 'inline');
+  assert.equal(md.renderer.renderInlineAsText(heading.children, md.options, {}), 'Guide  and code');
+  assert.ok(!md.render('# **Guide** <!-- internal note --> and `code`').includes('internal note'));
+});

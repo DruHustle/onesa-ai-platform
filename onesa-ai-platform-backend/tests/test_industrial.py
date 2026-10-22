@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.industrial import Explanation, validate_explanation
 from app.industrial_evidence import Evidence, Signal, Window, calculate, coverage, fixture
-from app.models import IndustrialInvestigation
+from app.models import AccessGrant, AuthSession, IndustrialInvestigation, ModelLease, User
 from tests.conftest import signup
 
 WINDOW = {"start": "2026-10-20T09:00:00Z", "end": "2026-10-20T10:00:00Z"}
@@ -207,6 +207,24 @@ def test_disabled_and_anonymous(api):
     assert api.get("/api/v1/industrial/assets").status_code == 404
 
 
+def test_saved_facts_match_reviewed_preview_without_creation_metadata(api):
+    enable(api)
+    preview = api.get(
+        "/api/v1/industrial/evidence",
+        params={
+            "asset_id": "demo-press-01",
+            "start": "2026-10-20T09:00:00Z",
+            "end": "2026-10-20T10:00:00Z",
+            "scenario": "reference",
+        },
+    )
+    assert preview.status_code == 200
+    saved = new(api)
+    assert saved["payload"]["facts"] == preview.json()["facts"]
+    assert set(saved["payload"]["facts"]["window"]) == {"start", "end"}
+    assert new(api)["payload"]["facts"] == saved["payload"]["facts"]
+
+
 def test_full_owned_workflow_and_optimistic_review(api):
     enable(api)
     assert len(api.get("/api/v1/industrial/assets").json()["items"]) == 2
@@ -221,6 +239,17 @@ def test_full_owned_workflow_and_optimistic_review(api):
     assert row["payload"]["generation"]["mode"] == "mock"
     assert row["payload"]["generation"]["cost"] is None
     assert row["payload"]["generation"]["real_model_response"] is False
+    assert (
+        api.put(
+            f"/api/v1/industrial/investigations/{row['id']}/draft",
+            json={"expected_revision": row["revision"], "text": " \t "},
+        ).status_code
+        == 422
+    )
+    assert (
+        api.get(f"/api/v1/industrial/investigations/{row['id']}").json()["revision"]
+        == row["revision"]
+    )
     draft = api.put(
         f"/api/v1/industrial/investigations/{row['id']}/draft",
         json={
@@ -228,6 +257,17 @@ def test_full_owned_workflow_and_optimistic_review(api):
             "text": "Human review required; not an instruction.",
         },
     ).json()
+    assert (
+        api.post(
+            f"/api/v1/industrial/investigations/{row['id']}/review",
+            json={"expected_revision": draft["revision"], "decision": "accepted", "note": " \t "},
+        ).status_code
+        == 422
+    )
+    assert (
+        api.get(f"/api/v1/industrial/investigations/{row['id']}").json()["revision"]
+        == draft["revision"]
+    )
     assert (
         api.put(
             f"/api/v1/industrial/investigations/{row['id']}/draft",
@@ -397,16 +437,19 @@ class Provider:
             if self.mode == "slow":
                 await asyncio.sleep(10)
             if self.mode != "empty":
-                yield json.dumps(
-                    explanation(
-                        "invented" if self.mode == "citation" else "demo-press-01-reference"
-                    )
+                value = explanation(
+                    "invented" if self.mode == "citation" else "demo-press-01-reference"
                 )
+                if self.mode == "blank":
+                    value["hypotheses"][0]["statement"] = " \t"
+                    value["hypotheses"][0]["human_review"] = "  "
+                    value["limitations"] = [" "]
+                yield json.dumps(value)
         finally:
             self.closed = True
 
 
-@pytest.mark.parametrize("mode", ["empty", "quota", "citation", "slow"])
+@pytest.mark.parametrize("mode", ["empty", "quota", "citation", "slow", "blank"])
 def test_provider_failures_preserve_facts_and_never_complete(api, mode):
     enable(api)
     provider = Provider(mode)
@@ -419,6 +462,11 @@ def test_provider_failures_preserve_facts_and_never_complete(api, mode):
     ).json()
     assert result["status"] == "failed" and result["payload"]["explanation"] is None
     assert result["payload"]["facts"]["known_downtime_seconds"] == 720
+    attempt = result["payload"]["generation"]
+    assert attempt["mode"] == "failed" and attempt["backend"] == "vllm"
+    assert attempt["model"] == api.app.state.settings.model_name
+    assert attempt["real_model_response"] is False and attempt["latency_ms"] >= 0
+    assert attempt["cost"] is None and attempt["cost_status"] == "not_observed"
     assert provider.closed
 
 
@@ -449,6 +497,55 @@ def test_cancel_and_concurrent_generation(api):
         )
         assert future.result(timeout=4).json()["status"] == "cancelled"
     assert provider.closed
+
+
+@pytest.mark.parametrize(
+    "reason,status", [("expired", 401), ("revoked", 401), ("disabled", 401), ("grant", 403)]
+)
+def test_generation_rechecks_access_before_returning_private_results(api, pg, reason, status):
+    import time
+
+    enable(api)
+    provider = Provider("slow")
+    api.app.state.model_client = provider
+    api.app.state.settings.model_backend = "vllm"
+    row = new(api)
+    url = f"/api/v1/industrial/investigations/{row['id']}"
+    api.app.state.settings.registration_mode = "invitation"
+    with Session(pg) as db:
+        user_id = db.get(IndustrialInvestigation, row["id"]).user_id
+        db.add(AccessGrant(user_id=user_id, expires_at=datetime.now(UTC) + timedelta(hours=1)))
+        db.commit()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(api.post, url + "/generate", json={"expected_revision": 1})
+        deadline = time.monotonic() + 4
+        while time.monotonic() < deadline:
+            current = api.get(url).json()
+            if current["status"] == "running" and provider.messages:
+                break
+            time.sleep(0.02)
+        assert current["status"] == "running" and provider.messages
+        with Session(pg) as db:
+            session = db.scalar(select(AuthSession).where(AuthSession.user_id == user_id))
+            if reason == "expired":
+                session.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+            elif reason == "revoked":
+                session.revoked_at = datetime.now(UTC)
+            elif reason == "disabled":
+                db.get(User, user_id).status = "disabled"
+            else:
+                db.get(AccessGrant, user_id).expires_at = datetime.now(UTC) - timedelta(seconds=1)
+            db.commit()
+        response = future.result(timeout=4)
+        assert response.status_code == status
+        assert "payload" not in response.json() and "facts" not in response.json()
+    assert provider.closed
+    with Session(pg) as db:
+        saved = db.get(IndustrialInvestigation, row["id"])
+        assert saved.status == "cancelled"
+        assert saved.payload["explanation"] is None
+        assert saved.payload["facts"]["known_downtime_seconds"] == 720
+        assert not db.scalar(select(func.count()).select_from(ModelLease))
 
 
 def test_stale_run_recovery_and_expired_session(api, pg):
@@ -512,6 +609,33 @@ def test_unsupported_quote_numeric_claim_and_cross_asset_citation():
         )
 
 
+def test_interrupted_claim_never_returns_success(api, pg, monkeypatch):
+    from app import industrial
+
+    enable(api)
+    row = new(api)
+    original = industrial.owned
+    calls = 0
+
+    def interrupted(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("Synthetic interrupted claim")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(industrial, "owned", interrupted)
+    response = api.post(
+        f"/api/v1/industrial/investigations/{row['id']}/generate", json={"expected_revision": 1}
+    )
+    assert response.status_code == 503
+    with Session(pg) as db:
+        saved = db.get(IndustrialInvestigation, row["id"])
+        assert saved.status == "ready" and saved.revision == 1
+        assert saved.payload["facts"]["known_downtime_seconds"] == 720
+        assert not db.scalar(select(func.count()).select_from(ModelLease))
+
+
 def test_interrupted_completion_is_not_reported_completed(api, pg, monkeypatch):
     enable(api)
     row = new(api)
@@ -543,3 +667,11 @@ def test_interrupted_completion_is_not_reported_completed(api, pg, monkeypatch):
     assert recovered["status"] == "failed"
     assert recovered["payload"]["error"] == "generation_interrupted"
     assert recovered["payload"]["facts"]["known_downtime_seconds"] == 720
+    assert recovered["payload"]["generation"]["mode"] == "failed"
+    assert recovered["payload"]["generation"]["latency_ms"] is None
+
+
+def test_private_schema_is_not_an_anonymous_runtime_route(api):
+    for path in ["/docs", "/redoc", "/openapi.json"]:
+        assert api.get(path).status_code == 404
+    assert "/api/v1/industrial/investigations" in api.app.openapi()["paths"]

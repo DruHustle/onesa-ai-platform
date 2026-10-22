@@ -163,7 +163,9 @@ def calculate(evidence: Evidence, window: Window) -> dict[str, Any]:
             episodes.append({"start": start, "end": end, "event_ids": [identifier]})
     seconds = sum((episode["end"] - episode["start"]).total_seconds() for episode in episodes)
     return {
-        "window": window.model_dump(mode="json"),
+        # Creation requests subclass Window; identity/selection fields are not
+        # calculation inputs and must not alter preview-versus-saved facts.
+        "window": window.model_dump(mode="json", include={"start", "end"}),
         "event_count": len(intervals) + len(incomplete) + len(excluded),
         "known_stop_events": len(intervals),
         "distinct_downtime_episodes": len(episodes),

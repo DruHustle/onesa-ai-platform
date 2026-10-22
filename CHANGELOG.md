@@ -2,8 +2,24 @@
 
 ## Unreleased
 
-- Hide closed source comments in generated PDF manuals while preserving code examples,
-  escaped HTML and bounded handling of malformed input. Bind the comment renderer
+- Recheck session/account/grant authorization before returning long-running
+  Industrial results. Preserve explicit failure/cancellation metadata and reject
+  whitespace-only output, drafts and review notes. Interrupted admission cannot
+  report success. Disable anonymous runtime schema/UI pages; offline contracts
+  remain available through classified documentation.
+- Lock investigation navigation during cancellation, reconcile completion races
+  without replaying writes, and refresh both saved state and the visible draft.
+  Protect unsaved text/review notes and bind review to the displayed saved revision.
+  Bound ordinary UI requests and explain uncertain outcomes without dropping input.
+  Identify a real model abstention explicitly instead of labeling it as hypotheses.
+  These corrections require fresh exact-source CI and separate hosted acceptance.
+
+- Keep Industrial evidence previews and saved calculations identical by excluding
+  creation-request identity and selection fields from the UTC window contract.
+  Verify separate investigation identifiers produce the same observed facts.
+
+- Hide closed source comments in generated PDF manuals and contents labels while
+  preserving code examples, escaped HTML and bounded handling of malformed input. Bind the comment renderer
   dependency to each manual’s provenance; protected publication remains separate.
 
 - Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
