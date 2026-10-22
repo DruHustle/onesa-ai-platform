@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Bound npm advisory requests and permit one transport-only audit retry after a
+  confirmed registry timeout/HTTP 503 blocked Docs and frontend CI. Preserve
+  Docs' low and Chat's high severity thresholds and fail closed for blocking
+  findings, invalid reports, input changes or
+  exhausted transport attempts; dependency installation and release tests are unchanged.
+
 - Recheck session/account/grant authorization before returning long-running
   Industrial results. Preserve explicit failure/cancellation metadata and reject
   whitespace-only output, drafts and review notes. Interrupted admission cannot
