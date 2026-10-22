@@ -69,8 +69,6 @@ jobs:
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
     - run: make install
-    - name: Evaluate synthetic industrial evidence without provider calls
-      run: .venv/bin/python scripts/evaluate_industrial.py
     - name: 'Release requirement: qualification failure-path tests'
       run: .venv/bin/python -m unittest discover -s scripts/release -p 'test_*.py'
     - run: .venv/bin/python scripts/check_secrets.py
@@ -188,7 +186,7 @@ jobs:
     - name: Fetch pinned fixture database with bounded registry-read recovery
       timeout-minutes: 4
       run: python3 scripts/ci/pull_image.py --database
-    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
+    - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
       timeout-minutes: 10
