@@ -77,7 +77,7 @@ for(const scope of ['public','internal']){
    token.attrSet('src',screenshotData[url]);return defaultImage(tokens,i,opts,env,self);
   };
   const toc=[];let section=0;
-  md.renderer.rules.heading_open=(tokens,i)=>{const level=Number(tokens[i].tag.slice(1)),text=tokens[i+1].content,id=`section-${++section}`;if(level<=2)toc.push({id,text,level});return `<${tokens[i].tag} id="${id}"><span>${section}. </span>`;};
+  md.renderer.rules.heading_open=(tokens,i)=>{const level=Number(tokens[i].tag.slice(1)),text=md.renderer.renderInlineAsText(tokens[i+1].children||[],md.options,{}),id=`section-${++section}`;if(level<=2)toc.push({id,text,level});return `<${tokens[i].tag} id="${id}"><span>${section}. </span>`;};
   const defaultFence=md.renderer.rules.fence;
   md.renderer.rules.fence=(tokens,i,opts,env,self)=>tokens[i].info.trim()==='mermaid'?'<p class="caption">Editable source diagram; see the rendered architecture figures and portal.</p>':defaultFence(tokens,i,opts,env,self);
   let currentDoc='';

@@ -6,8 +6,8 @@
   creation-request identity and selection fields from the UTC window contract.
   Verify separate investigation identifiers produce the same observed facts.
 
-- Hide closed source comments in generated PDF manuals while preserving code examples,
-  escaped HTML and bounded handling of malformed input. Bind the comment renderer
+- Hide closed source comments in generated PDF manuals and contents labels while
+  preserving code examples, escaped HTML and bounded handling of malformed input. Bind the comment renderer
   dependency to each manual’s provenance; protected publication remains separate.
 
 - Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
