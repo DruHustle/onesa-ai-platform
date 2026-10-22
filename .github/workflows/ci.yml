@@ -235,6 +235,7 @@ jobs:
     - changes
   documentation:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
       env:
@@ -305,7 +306,9 @@ jobs:
       run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
+    - name: Install documentation browsers and system dependencies
+      timeout-minutes: 5
+      run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
         --noEmit --pretty false
