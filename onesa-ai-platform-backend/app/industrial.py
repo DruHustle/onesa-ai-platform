@@ -10,7 +10,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, Field, ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -83,6 +83,47 @@ class Explanation(Strict):
     hypotheses: list[Hypothesis] = Field(max_length=3)
     limitations: list[NonEmptyText] = Field(min_length=1, max_length=8)
     abstained: bool
+
+
+class GenerationFailure(ValueError):
+    """Only fixed categories may leave the private generation boundary."""
+
+    def __init__(self, code: str):
+        allowed = {
+            "retrieval_unavailable",
+            "retrieval_invalid",
+            "model_stream_unavailable",
+            "model_output_limit",
+            "model_output_empty",
+            "model_output_json_invalid",
+            "model_output_schema_invalid",
+            "model_output_narrative_numbers",
+            "model_output_citation_invalid",
+            "model_output_quote_invalid",
+            "model_output_abstention_invalid",
+        }
+        self.code = code if code in allowed else "generation_unavailable_or_invalid"
+        super().__init__(self.code)
+
+
+def parse_explanation(raw: str) -> Explanation:
+    if not raw.strip():
+        raise GenerationFailure("model_output_empty")
+    try:
+        return Explanation.model_validate_json(raw)
+    except ValidationError as error:
+        errors = error.errors(include_url=False, include_context=False, include_input=False)
+        if any(item["type"] == "json_invalid" for item in errors):
+            code = "model_output_json_invalid"
+        elif any(
+            item["type"] == "string_pattern_mismatch"
+            and item["loc"][-1:] in [("statement",), ("human_review",)]
+            for item in errors
+        ):
+            code = "model_output_narrative_numbers"
+        else:
+            code = "model_output_schema_invalid"
+        raise GenerationFailure(code) from None
 
 
 class InvestigationOut(Strict):
@@ -361,7 +402,12 @@ async def explain(
             "mode": "not_requested_insufficient_evidence",
             "latency_ms": int((time.monotonic() - started) * 1000),
         }
-    references = await run_in_threadpool(selected_references, evidence, window, request)
+    try:
+        references = await run_in_threadpool(selected_references, evidence, window, request)
+    except HTTPException:
+        raise GenerationFailure("retrieval_unavailable") from None
+    except (TypeError, ValueError):
+        raise GenerationFailure("retrieval_invalid") from None
     if config.model_backend == "mock":
         first = references[0]
         result = Explanation(
@@ -421,25 +467,39 @@ async def explain(
             ),
         ]
         parts, length = [], 0
-        with observe_generation(stats):
-            stream = request.app.state.model_client.stream(messages)
-            try:
-                async for part in stream:
-                    length += len(part)
-                    if length > 16000:
-                        raise ValueError("Bounded output exceeded")
-                    parts.append(part)
-            finally:
-                close = getattr(stream, "aclose", None)
-                if close is not None:
-                    await close()
-        result = Explanation.model_validate_json("".join(parts))
+        try:
+            with observe_generation(stats):
+                stream = request.app.state.model_client.stream(messages)
+                try:
+                    async for part in stream:
+                        length += len(part)
+                        if length > 16000:
+                            raise GenerationFailure("model_output_limit")
+                        parts.append(part)
+                finally:
+                    close = getattr(stream, "aclose", None)
+                    if close is not None:
+                        await close()
+        except GenerationFailure:
+            raise
+        except Exception:
+            raise GenerationFailure("model_stream_unavailable") from None
+        result = parse_explanation("".join(parts))
         identity.update(
             real_model_response=True,
             input_tokens=stats.input_tokens,
             output_tokens=stats.output_tokens,
         )
-    validate_explanation(result, references)
+    try:
+        validate_explanation(result, references)
+    except ValueError as error:
+        category = {
+            "Invalid citation": "model_output_citation_invalid",
+            "Unsupported source quotation": "model_output_quote_invalid",
+            "Empty explanation": "model_output_abstention_invalid",
+            "Contradictory abstention": "model_output_abstention_invalid",
+        }.get(str(error), "model_output_schema_invalid")
+        raise GenerationFailure(category) from None
     return result.model_dump(), {
         **identity,
         "mode": "mock" if config.model_backend == "mock" else "model",
@@ -507,6 +567,8 @@ async def generate(
                     break
     except HTTPException:
         raise
+    except GenerationFailure as error:
+        status, result, generation, category = "failed", None, None, error.code
     except TimeoutError:
         status, result, generation, category = "failed", None, None, "provider_timeout"
     except asyncio.CancelledError:
