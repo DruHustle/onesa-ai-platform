@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-10-22 — Public/protected Docs sanitizer and isolated demo frontend accepted
+
+- Public Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`, Vercel
+  `dpl_4h1tQYKcCssNgrsEwPUL2DnjKFEi`, is accepted at `docs.onesa.eu` with DOMPurify 3.4.17.
+  Full native CI and the source-bound owner Preview pass: 279 artifact file hashes,
+  124 responsive/accessibility views, 20 additional layout checks, 21 diagram journeys,
+  11 PDFs and private-publication boundaries. Canonical production verifies all 279
+  file hashes, 16 responsive/accessibility views, six private-path denials, navigation,
+  search, favicon and indexing configuration. SSO, domains and bypass inventory are
+  preserved; no new automation token or paid service was created.
+- Protected Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`, Pages
+  `2d937ff1-391f-4156-8df6-75d2d14aaa5e`, is accepted on its canonical hostname.
+  It includes DOMPurify 3.4.17 for GHSA-cg2g-xh64-v4q7,
+  GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f, and the factual qualified-demo
+  Technical Overview.
+  All 751 private asset hashes and anonymous denials, 18 production views, 18 topics,
+  17 chapters, four onboarding days, 22 manuals and 87 diagrams pass. Only the
+  unfinished staging architecture/onboarding tail continued after its prior timeout;
+  completed file/access/UI evidence and the original stopped receipt are retained.
+- The real approved owner accessed current canonical/Preview Docs. Supported Access
+  logout then denied provenance, manuals and search at both hosts after propagation,
+  exercising the retained Preview cookie without exporting values. The original
+  email challenge remains owner-confirmed rather than independently witnessed.
+  Membership, passwords, MFA and provider policies remain unchanged. Private assets
+  stayed outside public Actions; only scoped count/hash qualification metadata entered it.
+- The isolated synthetic Industrial frontend is independently accepted at source
+  `373889b`, Vercel `dpl_AAX1uyYoBpcmZ1biJ6BmnJZvDLSQ`, with Next.js 16.4.2.
+  Sixty anonymous views and existing synthetic-owner login/assets/logout pass.
+  The original one-valid-response/58-view proof is reused only after unchanged
+  business/API checks; no additional model request is inferred. API3574f21/image
+  and database remain; one exact Preview-origin configuration recreation was needed.
+  Original grants, credentials, records and other ten service identities are preserved.
+- The public verifier's output-path guard and duplicate Playwright import stopped
+  before any application request. Offline controls reproduced the duplicate and
+  proved the single-frozen-checkout correction; acceptance assertions were unchanged.
+  These setup failures remain recorded. No full suite, security gate or failed
+  application acceptance was bypassed, and no backend production activation occurred.
+- These component releases are distinct from later README/CHANGELOG reconciliation
+  commits. Production AI frontend remains ac7f840/API7079a66; Industrial is isolated
+  staging, with no factory/customer connection, human domain approval or physical operation.
+
 ## Accepted component — AI frontend security, 2026-10-22
 
 - Source `ac7f840` is accepted on the canonical AI host with Next.js 16.4.2 for
@@ -22,12 +63,6 @@
   Keep it single-attempt, report timeout without configuration contents, and
   preserve the existing four-minute image-prefetch step (223-second inner
   maximum), immutable digest checks and unchanged application tests.
-
-- Update Docs’ transitive DOMPurify to 3.4.17 for the newly surfaced
-  GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f
-  audit findings. Preserve compatible Mermaid ranges, existing optional native
-  parser entries, confidentiality controls and all release checks. Source,
-  public Docs and protected Docs publication remain separate component records.
 
 - Extend the existing immutable-image download helper to the pinned synthetic
   database after a registry HTTP 500 stopped Docs setup before any build. Allow
