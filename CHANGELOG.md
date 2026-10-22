@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Pin Next.js 16.4.2 for GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r,
+  preserving React, application behavior and all audit thresholds. Production's
+  source lock already includes Sharp 0.35.5, the published image-processing
+  workaround; installed runtime exposure and frontend deployment remain separate
+  checks. Do not promote the Industrial demo to production merely for this patch.
+
 - Extend the existing immutable-image download helper to the pinned synthetic
   database after a registry HTTP 500 stopped Docs setup before any build. Allow
   one bounded recovery for recognized transport failures, verify the same digest,
