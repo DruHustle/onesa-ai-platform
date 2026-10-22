@@ -3,8 +3,9 @@
 ## Unreleased
 
 - Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
-  replacing only the observed Azure archive mirror with the canonical Ubuntu
-  archive, preserving suites, components and signing keys. Bound APT reads and
+  replacing direct Azure archive URIs and removing only its entry from the
+  referenced runner failover list, retaining canonical/security mirrors, suites,
+  components and signing keys. Bound APT reads and
   fail on repository-update errors. Bound each browser dependency installation
   to five minutes and the documentation job to 30 minutes. Keep Chromium,
   Firefox, WebKit and every security/release assertion mandatory; no automatic

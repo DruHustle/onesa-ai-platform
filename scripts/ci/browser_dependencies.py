@@ -17,13 +17,20 @@ NETWORK = (
 )
 
 
-def rewrite_sources(text, deb822=False):
+def rewrite_sources(text, deb822=False, mirror_files=None):
     """Change only the observed Azure mirror URI; retain trust and suite fields."""
     changes = 0
 
     def replace(match):
         nonlocal changes
         value = match.group(0)
+        if value.startswith("mirror+file:"):
+            if (
+                value == "mirror+file:/etc/apt/apt-mirrors.txt"
+                and mirror_files is not None
+            ):
+                mirror_files.add("apt-mirrors.txt")
+            return value
         uri = urlsplit(value)
         if uri.hostname != "azure.archive.ubuntu.com":
             return value
@@ -56,9 +63,57 @@ def rewrite_sources(text, deb822=False):
             active = bool(re.match(r"^\s*deb(?:-src)?\s", line))
         if active:
             content, marker, comment = line.partition("#")
-            line = re.sub(r"https?://[^\s]+", replace, content) + marker + comment
+            line = (
+                re.sub(r"(?:https?://|mirror\+file:)[^\s]+", replace, content)
+                + marker
+                + comment
+            )
         result.append(line)
     return "".join(result), changes
+
+
+def rewrite_mirror_list(text):
+    """Remove only Azure from the runner's referenced archive failover list."""
+    if len(text.splitlines()) > 32:
+        raise ValueError("Unexpected mirror-list bounds")
+    output = []
+    removed = 0
+    canonical = False
+    for line in text.splitlines(keepends=True):
+        if not line.strip() or line.lstrip().startswith("#"):
+            output.append(line)
+            continue
+        match = re.fullmatch(
+            r"(https?://[^\s]+)(?:[ \t]+priority:[1-9][0-9]*)?[ \t]*(?:\r?\n)?", line
+        )
+        if not match:
+            raise ValueError("Unexpected runner mirror-list entry")
+        uri = urlsplit(match.group(1))
+        if (
+            uri.scheme not in {"http", "https"}
+            or uri.username
+            or uri.password
+            or uri.port
+            or uri.query
+            or uri.fragment
+            or uri.path not in {"/ubuntu", "/ubuntu/"}
+            or uri.hostname
+            not in {
+                "azure.archive.ubuntu.com",
+                "archive.ubuntu.com",
+                "security.ubuntu.com",
+            }
+        ):
+            raise ValueError("Unexpected runner mirror-list URI")
+        if uri.hostname == "azure.archive.ubuntu.com":
+            removed += 1
+            continue
+        if uri.hostname == "archive.ubuntu.com" and uri.scheme == "https":
+            canonical = True
+        output.append(line)
+    if not canonical:
+        raise ValueError("Existing signed archive transport must remain available")
+    return "".join(output), removed
 
 
 def regular(path):
@@ -101,12 +156,21 @@ def prepare(root):
     if not 1 <= len(files) <= 32:
         raise ValueError("Bounded existing APT source inventory required")
     replacements = []
+    mirror_files = set()
+    mirror_updates = 0
     for path in files:
         before = regular(path)
         text = path.read_text()
-        updated, count = rewrite_sources(text, path.suffix == ".sources")
+        updated, count = rewrite_sources(text, path.suffix == ".sources", mirror_files)
         if count:
             replacements.append((path, updated, stat.S_IMODE(before.st_mode), count))
+    for name in sorted(mirror_files):
+        path = apt / name
+        before = regular(path)
+        updated, count = rewrite_mirror_list(path.read_text())
+        if count:
+            replacements.append((path, updated, stat.S_IMODE(before.st_mode), count))
+            mirror_updates += 1
     config = apt / "apt.conf.d/99-onesa-ci-network"
     if config.exists():
         regular(config)
@@ -118,7 +182,8 @@ def prepare(root):
         atomic(path, updated, mode)
     atomic(config, NETWORK, 0o644)
     return {
-        "source_files_updated": len(replacements),
+        "source_files_updated": len(replacements) - mirror_updates,
+        "mirror_list_files_updated": mirror_updates,
         "mirror_URIs_updated": sum(row[3] for row in replacements),
         "request_timeout_seconds": 20,
         "APT_file_retries": 1,

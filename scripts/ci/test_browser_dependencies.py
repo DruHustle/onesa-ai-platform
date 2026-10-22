@@ -131,6 +131,79 @@ class BrowserDependenciesTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), before)
             self.assertEqual(config.read_text(), "OWNER_CONFIG\n")
 
+    def test_actual_runner_indirection_preserves_sources_and_other_mirrors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            apt, source = self.fixture(root)
+            source.write_text(
+                "URIs: mirror+file:/etc/apt/apt-mirrors.txt\nSuites: noble noble-security\nSigned-By: /keys/ubuntu.gpg\n"
+            )
+            before = source.read_text()
+            mirror = apt / "apt-mirrors.txt"
+            mirror.write_text(
+                "# hosted Ubuntu archive failover\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:1\nhttps://archive.ubuntu.com/ubuntu/\tpriority:2\nhttps://security.ubuntu.com/ubuntu/\tpriority:3\n"
+            )
+            mirror.chmod(0o644)
+            result = browser.prepare(root)
+            self.assertEqual(result["mirror_list_files_updated"], 1)
+            self.assertEqual(result["mirror_URIs_updated"], 1)
+            self.assertEqual(source.read_text(), before)
+            self.assertEqual(
+                mirror.read_text(),
+                "# hosted Ubuntu archive failover\nhttps://archive.ubuntu.com/ubuntu/\tpriority:2\nhttps://security.ubuntu.com/ubuntu/\tpriority:3\n",
+            )
+            self.assertEqual(browser.prepare(root)["mirror_URIs_updated"], 0)
+
+    def test_mirror_list_rejects_custom_entries_or_missing_canonical_archive(self):
+        for text in [
+            "http://azure.archive.ubuntu.com/ubuntu/ priority:1\n",
+            "https://user:secret@archive.ubuntu.com/ubuntu/ priority:2\n",
+            "https://unrelated.example/ubuntu/ priority:2\n",
+            "https://archive.ubuntu.com/ubuntu/ shell-option\n",
+        ]:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                browser.rewrite_mirror_list(text)
+
+    def test_invalid_referenced_mirror_preserves_all_existing_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            apt, source = self.fixture(root)
+            source.write_text(
+                source.read_text() + "URIs: mirror+file:/etc/apt/apt-mirrors.txt\n"
+            )
+            before = source.read_bytes()
+            mirror = apt / "apt-mirrors.txt"
+            mirror.write_text("https://unrelated.example/ubuntu/\n")
+            mirror.chmod(0o644)
+            with self.assertRaises(ValueError):
+                browser.prepare(root)
+            self.assertEqual(source.read_bytes(), before)
+            self.assertFalse((apt / "apt.conf.d/99-onesa-ci-network").exists())
+
+    def test_unreferenced_mirror_file_is_never_modified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            apt, _source = self.fixture(root)
+            mirror = apt / "apt-mirrors.txt"
+            mirror.write_text("UNRELATED OWNER CONFIGURATION\n")
+            before = mirror.read_bytes()
+            browser.prepare(root)
+            self.assertEqual(mirror.read_bytes(), before)
+
+    def test_referenced_mirror_alias_is_rejected_before_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            apt, source = self.fixture(root)
+            source.write_text(
+                "URIs: mirror+file:/etc/apt/apt-mirrors.txt\nSuites: noble\n"
+            )
+            (apt / "apt-mirrors.txt").symlink_to(source)
+            before = source.read_bytes()
+            with self.assertRaises(ValueError):
+                browser.prepare(root)
+            self.assertEqual(source.read_bytes(), before)
+            self.assertFalse((apt / "apt.conf.d/99-onesa-ci-network").exists())
+
     def test_source_alias_is_rejected_before_write(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
