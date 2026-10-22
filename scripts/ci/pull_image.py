@@ -102,13 +102,21 @@ def main(database=False):
             "json",
         ]
     )
-    result = subprocess.run(
-        compose,
-        capture_output=True,
-        text=True,
-        timeout=15,
-        check=False,
-    )
+    # A hosted first Compose invocation exceeded the former 15s bound before
+    # any image read. Keep this read single-attempt and leave the four-minute
+    # step enough time for 30 + (2 * 90) + 3 + 10 = 223 seconds in total.
+    try:
+        result = subprocess.run(
+            compose,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(
+            "Isolated compose configuration timed out; no retry"
+        ) from None
     if result.returncode != 0 or len(result.stdout) > 1024 * 1024:
         raise RuntimeError("Isolated compose configuration unavailable")
     # The generated configuration contains only isolated fixtures, but do not log it.
