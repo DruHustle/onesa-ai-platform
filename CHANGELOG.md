@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Extend the existing immutable-image download helper to the pinned synthetic
+  database after a registry HTTP 500 stopped Docs setup before any build. Allow
+  one bounded recovery for recognized transport failures, verify the same digest,
+  and stop on authentication, manifest, unknown or identity errors. Application
+  builds, startup and tests remain single-attempt; no production service changes.
+
+- Register the existing 90-second account browser-test budget before fixture
+  setup. A retained WebKit trace stalled at blank-page creation before any
+  application request; the previous in-body setting left setup at 30 seconds.
+  Verify all three engines' registered limits without launching browsers. Keep
+  the account assertions and overall journey budget unchanged; no automatic retry.
+
 - Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
   replacing direct Azure archive URIs and removing only its entry from the
   referenced runner failover list, retaining canonical/security mirrors, suites,

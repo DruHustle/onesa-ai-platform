@@ -146,7 +146,7 @@ jobs:
     - name: Verify TLS policy in traced server routes
       run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
-    - run: node --test scripts/test_ui_failure_diagnostics.cjs
+    - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs
     - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
@@ -185,6 +185,9 @@ jobs:
 
           scripts/contract-tools/package-lock.json'
     - run: python3 scripts/bootstrap_env.py
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
@@ -320,6 +323,9 @@ jobs:
     - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
         --noEmit --pretty false
     - run: python3 scripts/bootstrap_env.py
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
