@@ -11,6 +11,7 @@
   without replaying writes, and refresh both saved state and the visible draft.
   Protect unsaved text/review notes and bind review to the displayed saved revision.
   Bound ordinary UI requests and explain uncertain outcomes without dropping input.
+  Identify a real model abstention explicitly instead of labeling it as hypotheses.
   These corrections require fresh exact-source CI and separate hosted acceptance.
 
 - Keep Industrial evidence previews and saved calculations identical by excluding

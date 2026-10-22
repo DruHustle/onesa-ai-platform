@@ -726,20 +726,30 @@ function Workspace() {
                 )}
               </h2>
               <p>
-                {payload.generation?.mode === "mock"
-                  ? text(
-                      "MOCK · No real model response",
-                      "MOCK · Keine echte Modellantwort",
-                    )
-                  : payload.generation?.mode === "model"
+                {payload.explanation.abstained
+                  ? payload.generation?.mode === "model"
                     ? text(
-                        "Model-generated hypotheses · verify the sources",
-                        "Modellgenerierte Hypothesen · Quellen prüfen",
+                        "Model abstained · cause not established",
+                        "Modell enthält sich · Ursache nicht festgestellt",
                       )
                     : text(
                         "Abstained before generation",
                         "Vor Generierung enthalten",
-                      )}
+                      )
+                  : payload.generation?.mode === "mock"
+                    ? text(
+                        "MOCK · No real model response",
+                        "MOCK · Keine echte Modellantwort",
+                      )
+                    : payload.generation?.mode === "model"
+                      ? text(
+                          "Model-generated hypotheses · verify the sources",
+                          "Modellgenerierte Hypothesen · Quellen prüfen",
+                        )
+                      : text(
+                          "Abstained before generation",
+                          "Vor Generierung enthalten",
+                        )}
               </p>
               <p>
                 {text(

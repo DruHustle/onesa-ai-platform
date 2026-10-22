@@ -157,6 +157,14 @@ test("pending cancellation blocks selection and reports an already-finished resu
   );
   expect(completeResponse.status()).toBe(200);
   const complete = await completeResponse.json();
+  // Synthetic response fixture exercises a valid real-provider abstention state;
+  // it does not claim that this local mock run made a real inference request.
+  complete.payload.generation.mode = "model";
+  complete.payload.explanation = {
+    abstained: true,
+    hypotheses: [],
+    limitations: ["Synthetic evidence is insufficient to establish a cause."],
+  };
   const secondResponse = await page.request.post(
     "/api/v1/industrial/investigations",
     {
@@ -231,6 +239,9 @@ test("pending cancellation blocks selection and reports an already-finished resu
       .filter({ hasText: "Generation has already ended. Saved state loaded." }),
   ).toBeVisible();
   expect(cancelWrites).toBe(0);
+  await expect(
+    page.getByText("Model abstained · cause not established", { exact: true }),
+  ).toBeVisible();
 });
 
 test("refresh reconciles the visible saved draft and protects unsaved text and review notes", async ({
