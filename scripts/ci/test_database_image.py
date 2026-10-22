@@ -133,6 +133,28 @@ class DatabaseImageTests(unittest.TestCase):
                     pull_image.pull(image, database=True)
         run.assert_not_called()
 
+    def test_configuration_timeout_stops_before_image_read_without_leaking(self):
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                side_effect=subprocess.TimeoutExpired(
+                    ["docker", "compose", "config"],
+                    30,
+                    output="synthetic-private-configuration",
+                ),
+            ) as run,
+            patch.object(pull_image, "pull") as pull,
+            self.assertRaisesRegex(
+                RuntimeError, "configuration timed out; no retry"
+            ) as error,
+        ):
+            pull_image.main(database=True)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_args.kwargs["timeout"], 30)
+        pull.assert_not_called()
+        self.assertNotIn("synthetic-private-configuration", str(error.exception))
+
     def test_database_config_selects_only_db_without_printing_configuration(self):
         config = json.dumps(
             {
@@ -160,3 +182,5 @@ class DatabaseImageTests(unittest.TestCase):
             run.call_args.args[0], ["docker", "compose", "config", "--format", "json"]
         )
         self.assertNotIn("synthetic-marker", output.getvalue())
+        self.assertEqual(run.call_args.kwargs["timeout"], 30)
+        self.assertLessEqual(30 + 2 * 90 + 3 + 10, 240)

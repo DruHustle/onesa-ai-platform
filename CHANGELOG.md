@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Bound the read-only Compose configuration lookup to 30 seconds after a
+  hosted first invocation exceeded 15 seconds before any fixture image read.
+  Keep it single-attempt, report timeout without configuration contents, and
+  preserve the existing four-minute image-prefetch step (223-second inner
+  maximum), immutable digest checks and unchanged application tests.
+
+- Update Docs’ transitive DOMPurify to 3.4.17 for the newly surfaced
+  GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f
+  audit findings. Preserve compatible Mermaid ranges, existing optional native
+  parser entries, confidentiality controls and all release checks. Source,
+  public Docs and protected Docs publication remain separate component records.
+
+- Pin Next.js 16.4.2 for GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r,
+  preserving React, application behavior and all audit thresholds. Production's
+  source lock already includes Sharp 0.35.5, the published image-processing
+  workaround; installed runtime exposure and frontend deployment remain separate
+  checks. Do not promote the Industrial demo to production merely for this patch.
+
 - Extend the existing immutable-image download helper to the pinned synthetic
   database after a registry HTTP 500 stopped Docs setup before any build. Allow
   one bounded recovery for recognized transport failures, verify the same digest,
