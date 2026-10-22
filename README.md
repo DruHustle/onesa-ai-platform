@@ -13,10 +13,15 @@ Vercel frontend and existing data services remain. See the
 [verified hosting cutover](docs/engineering/DEPLOYMENT.md#verified-production-hosting-cutover--2026-10-16)
 for source identities, protected ingress, acceptance and rollback.
 
-Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
-`docs.onesa.eu`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` (2026-10-20).
-Exact-source native Preview qualification passed; canonical acceptance verified all
-279 public files, 16 responsive/accessibility views and six private-path denials.
+Public Docs source `373889be9bda3357ff50b74692e9b75637e2bb59` is accepted at
+`docs.onesa.eu`, Vercel `dpl_4h1tQYKcCssNgrsEwPUL2DnjKFEi` (2026-10-22).
+The source-bound native Preview passed all 279 public file hashes, 124 responsive/
+accessibility views, 20 additional layout checks, 21 diagram journeys and 11 PDF
+checks. Canonical production verifies all 279 qualified file hashes, 16 responsive/
+accessibility views and six private-path denials. DOMPurify 3.4.17 is included in
+the qualified artifact; SSO, domains, credentials and AI services are unchanged.
+The earlier public edition `4f30218dca47d1197a0cb88b25a16bd33696832a` /
+`dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` remains retained release history.
 AI frontend security candidate `ac7f840938b39c3d22f2d7a90460578684ecbafe` is
 accepted on `platform.onesa.eu` (2026-10-22), with Next.js 16.4.2 verified in the
 sealed traced artifact, full native CI, 48 staged views and 16 canonical views.
@@ -37,26 +42,38 @@ Its application code and schema are unchanged from the preceding backend; runtim
 credential and record-identifier preservation checks passed. Canonical readiness and
 private-access denials pass. This parser patch introduced no production model request,
 new account or Industrial feature. The frontend and both Docs retain independent identities.
-Protected Engineering Docs source `34e9ab83c412fc87183a1428537ae0547a22ed04`
-is independently accepted at
-`docs.engineering.onesa.eu`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d` (2026-10-22).
-Approved production membership, current Portal identity controls, all 751 private
-assets and their anonymous denials, and 18 responsive/accessibility views passed
-in each of staging and production. The edition includes 22 manuals and 87 diagrams;
-no private artifact was uploaded to public GitHub Actions. See the
-[component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-protected-docs-release--2026-10-22).
-These component identities remain distinct from later repository metadata commits.
+Protected Engineering Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`
+is independently accepted at `docs.engineering.onesa.eu`, Pages
+`2d937ff1-391f-4156-8df6-75d2d14aaa5e` (2026-10-22), with DOMPurify 3.4.17
+and factual isolated-demo documentation. All 751 private assets and anonymous denials,
+18 production responsive/accessibility views, 18 architecture topics, 17 chapters,
+four onboarding days, 22 manuals and 87 diagrams pass. Staging reuses completed
+751-asset/denial and 18-view evidence with only its unfinished architecture/onboarding
+tail continued; the original stopped observation is preserved.
+Actual approved-owner membership/access and supported Access logout/refusal were
+observed, including the retained Preview cookie without extracting session values.
+The original email challenge was owner-confirmed, not independently witnessed.
+No membership, password, MFA or provider policy changed; no private artifact entered
+public GitHub Actions. This supersedes protected source `34e9ab8` / Pages `48d6eebd`;
+repository metadata commits remain distinct from each accepted component identity.
 
-Industrial Investigation V1 is now implemented in source at `/industrial`, using only
-bundled synthetic assets and original reference text. It provides deterministic downtime
-facts, bounded source-cited hypotheses or abstention, and explicit owned internal drafts
-and self-review. Its isolated synthetic staging demo is qualified from exact-tree
-main `34e9ab8`: one validated real-model explanation, 42 general and 16 Industrial UI
-views, explicit draft save/reopen and owned-fixture cleanup passed. This single
-example is not a model-accuracy benchmark or a human domain review. Ordinary
-production has not received Industrial code; production activation remains separate.
-See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
-and `scripts/evaluate_industrial.py`. No industrial connector or physical operation is claimed.
+Industrial Investigation V1 is implemented at `/industrial`, using only bundled
+synthetic assets and original versioned reference text. Deterministic facts, bounded
+source-cited hypotheses or abstention, owned internal drafts and explicit save/reopen
+are qualified in the isolated synthetic staging demo. Its original real-model context
+passed 42 general and 16 Industrial UI views: three stops/720 seconds, one permitted
+citation and one validated explanation. Automated self-review is not human domain approval.
+The current demo frontend `373889be9bda3357ff50b74692e9b75637e2bb59`, Vercel
+`dpl_AAX1uyYoBpcmZ1biJ6BmnJZvDLSQ`, uses Next.js 16.4.2. Sixty anonymous views
+and existing synthetic-owner login/assets/logout checks pass, reusing the original
+model acceptance only after business/UI/API equivalence checks. API `3574f21` and its
+image/database are unchanged; only the exact Preview origin required one isolated
+API container recreation. No additional model request, schema, password or grant
+change accompanied that update. Demo grants retain their original expiry.
+Ordinary production has not received Industrial code. No live factory/customer
+connector, external work order, physical operation, human-domain result or comparative
+accuracy/business benefit is claimed. See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
+and `scripts/evaluate_industrial.py` for the finite fixture and evidence scope.
 
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional
