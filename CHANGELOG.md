@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Distinguish bounded Industrial retrieval, stream, JSON, schema, numeric-narrative,
+  citation, quotation and abstention failures without retaining model text in
+  errors. Retrieval outages now finish the saved investigation as failed rather
+  than leaving it running. Preserve facts, validation rules and admission limits;
+  new hosted model acceptance is still required.
+
 - Bound npm advisory requests and permit one transport-only audit retry after a
   confirmed registry timeout/HTTP 503 blocked Docs and frontend CI. Preserve
   Docs' low and Chat's high severity thresholds and fail closed for blocking
