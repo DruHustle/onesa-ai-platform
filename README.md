@@ -17,13 +17,20 @@ Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
 `docs.onesa.eu`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` (2026-10-20).
 Exact-source native Preview qualification passed; canonical acceptance verified all
 279 public files, 16 responsive/accessibility views and six private-path denials.
-The AI frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` is accepted at
-`dpl_3ExobTe8RY5QzpkhEpwN7vAnk8gW` on `platform.onesa.eu` (2026-10-21).
-The qualified Node TLS correction passes five canonical public/private checks;
-application UI, authentication and business workflow bytes are unchanged. Prior
-23 real workflow checks and 42 UI views remain separately source-bound evidence.
-At that frontend release, Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56`
-was retained under qualified main `204e666c40943af2dc1f53359f360feaffbaa126`.
+AI frontend security candidate `ac7f840938b39c3d22f2d7a90460578684ecbafe` is
+accepted on `platform.onesa.eu` (2026-10-22), with Next.js 16.4.2 verified in the
+sealed traced artifact, full native CI, 48 staged views and 16 canonical views.
+Private denials, readiness and served asset hashes passed. It preserves the
+preceding production application UI/proxy source and retains API `7079a66` with
+its accepted image, container and runtime configuration. It does not activate
+Industrial functionality. Its temporary security branch remains retained for
+release/rollback evidence; the same dependency fix follows dev → staging → main.
+The preceding `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` frontend carried the
+Node TLS correction (2026-10-21). Those trust controls remain preserved. Prior
+23 real workflow checks and 42 UI views retain their original independent scope;
+no new real-model or authenticated production walkthrough is inferred from the
+security-only frontend checks. Actual provider receipts remain in the restricted
+component-serving manifest, separate from repository metadata commits.
 On 2026-10-22, backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048`
 was independently accepted with `pypdf 6.21.2` verified in staging and production.
 Its application code and schema are unchanged from the preceding backend; runtime,
@@ -72,9 +79,9 @@ flowchart LR
 
 ## Product tracks
 
-**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** is a
-planned track for evidence-backed operational investigation and human-reviewed
-internal work drafts. The focused milestone and evaluation contract are in the
+**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** has
+a qualified synthetic investigation demonstration for evidence-backed operational
+investigation and internal drafts; broader industrial integrations remain planned. The focused milestone and evaluation contract are in the
 [existing product requirements](docs/product/PRD.md#current-product-hierarchy-and-industrial-milestone--2026-10-20).
 No live machine/PLC/MES/ERP/CMMS connection or autonomous industrial control is claimed.
 Onesa Robotics / Physical AI remains a separate product development line.
