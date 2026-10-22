@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Update Docs’ transitive DOMPurify to 3.4.17 for the newly surfaced
+  GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f
+  audit findings. Preserve compatible Mermaid ranges, existing optional native
+  parser entries, confidentiality controls and all release checks. Source,
+  public Docs and protected Docs publication remain separate component records.
+
 - Pin Next.js 16.4.2 for GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r,
   preserving React, application behavior and all audit thresholds. Production's
   source lock already includes Sharp 0.35.5, the published image-processing
