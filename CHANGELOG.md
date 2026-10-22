@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Bound the read-only Compose configuration lookup to 30 seconds after a
+  hosted first invocation exceeded 15 seconds before any fixture image read.
+  Keep it single-attempt, report timeout without configuration contents, and
+  preserve the existing four-minute image-prefetch step (223-second inner
+  maximum), immutable digest checks and unchanged application tests.
+
 - Update Docs’ transitive DOMPurify to 3.4.17 for the newly surfaced
   GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f
   audit findings. Preserve compatible Mermaid ranges, existing optional native
