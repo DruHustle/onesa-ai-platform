@@ -2,11 +2,13 @@
 
 ## Unreleased
 
-- Bound documentation CI's browser/system dependency installation to five minutes
-  and its complete job to 30 minutes after an install exceeded 25 minutes against
-  prior successful 39–48 second installs. Keep Chromium, Firefox, WebKit and all
-  documentation/security assertions mandatory; timeouts fail the job. No automatic
-  installation retry, skipped engine or production deployment is introduced.
+- Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
+  replacing only the observed Azure archive mirror with the canonical Ubuntu
+  archive, preserving suites, components and signing keys. Bound APT reads and
+  fail on repository-update errors. Bound each browser dependency installation
+  to five minutes and the documentation job to 30 minutes. Keep Chromium,
+  Firefox, WebKit and every security/release assertion mandatory; no automatic
+  workflow/test retry, paid infrastructure or application deployment is introduced.
 
 - Distinguish bounded Industrial retrieval, stream, JSON, schema, numeric-narrative,
   citation, quotation and abstention failures without retaining model text in

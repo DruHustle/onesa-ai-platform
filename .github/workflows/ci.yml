@@ -187,7 +187,12 @@ jobs:
     - run: python3 scripts/bootstrap_env.py
     - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 5
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
     - name: Preserve isolated synthetic browser failure evidence
       if: failure()
@@ -307,7 +312,10 @@ jobs:
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install documentation browsers and system dependencies
       timeout-minutes: 5
-      run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/docs
+        npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
         --noEmit --pretty false
@@ -420,7 +428,12 @@ jobs:
         -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
     - run: .venv/bin/python scripts/acceptance/tls_security.py
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 5
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat
         run test:e2e -- tests/chat.spec.ts
     - run: .venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json
