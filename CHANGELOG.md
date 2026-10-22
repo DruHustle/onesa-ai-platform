@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Hide closed source comments in generated PDF manuals while preserving code examples,
+  escaped HTML and bounded handling of malformed input. Bind the comment renderer
+  dependency to each manual’s provenance; protected publication remains separate.
+
 - Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
   leave application startup, security assertions and qualification single-attempt.
 
