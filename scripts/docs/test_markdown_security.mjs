@@ -61,7 +61,7 @@ test('comment-like code, escaped text, following text and unterminated input rem
 
 test('manual comment handling bounds repeated unterminated block and inline searches', () => {
   const plugin = new URL('./markdown-comments.mjs', import.meta.url).href;
-  for (const source of ['x ' + '<!--'.repeat(64000), '<!--\n\n'.repeat(64000)]) {
+  for (const source of ['x ' + '<!--'.repeat(64000), '<!--\n\n'.repeat(64000), '<!--\n\n'.repeat(64000) + '-->following text', '<!--\n\n'.repeat(64000) + '-->' + ' '.repeat(64000) + 'text']) {
     const program = `
       import {createRequire} from 'node:module';
       import sourceComments from ${JSON.stringify(plugin)};
