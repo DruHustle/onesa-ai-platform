@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extend the existing immutable-image download helper to the pinned synthetic
+  database after a registry HTTP 500 stopped Docs setup before any build. Allow
+  one bounded recovery for recognized transport failures, verify the same digest,
+  and stop on authentication, manifest, unknown or identity errors. Application
+  builds, startup and tests remain single-attempt; no production service changes.
+
 - Register the existing 90-second account browser-test budget before fixture
   setup. A retained WebKit trace stalled at blank-page creation before any
   application request; the previous in-body setting left setup at 30 seconds.
