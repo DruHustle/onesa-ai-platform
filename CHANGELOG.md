@@ -1,6 +1,21 @@
 # Changelog
 
+## Accepted component — AI frontend security, 2026-10-22
+
+- Source `ac7f840` is accepted on the canonical AI host with Next.js 16.4.2 for
+  GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r. Full native checks, 48 staged
+  and 16 canonical views, private denials/readiness and artifact-byte checks pass.
+  Retain the accepted API image/configuration and existing Node trust policy;
+  no Industrial production activation, model request, data or credential change.
+  This is an independent frontend component release, not deployment of mainline
+  Industrial features, public/protected Docs or the complete repository.
+
 ## Unreleased
+
+- Reconcile the PRD and roadmap with the already accepted isolated synthetic
+  Industrial demonstration, preserving historical setup assumptions and the
+  existing no-factory/no-physical-operation boundaries. Distinguish automated
+  self-review from unperformed human/domain review and production activation.
 
 - Bound the read-only Compose configuration lookup to 30 seconds after a
   hosted first invocation exceeded 15 seconds before any fixture image read.
@@ -13,12 +28,6 @@
   audit findings. Preserve compatible Mermaid ranges, existing optional native
   parser entries, confidentiality controls and all release checks. Source,
   public Docs and protected Docs publication remain separate component records.
-
-- Pin Next.js 16.4.2 for GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r,
-  preserving React, application behavior and all audit thresholds. Production's
-  source lock already includes Sharp 0.35.5, the published image-processing
-  workaround; installed runtime exposure and frontend deployment remain separate
-  checks. Do not promote the Industrial demo to production merely for this patch.
 
 - Extend the existing immutable-image download helper to the pinned synthetic
   database after a registry HTTP 500 stopped Docs setup before any build. Allow

@@ -2,11 +2,12 @@
 
 Current Industrial Investigation V1 source is implemented for synthetic development,
 with deterministic facts, owned persistence, bounded grounded hypotheses and internal
-draft/self-review actions. Local regression/evaluation records are separate from pending
-hosted qualification. This update does not establish factory connectors or production
-industrial readiness. See the current [PRD](PRD.md#v1-event-semantics-and-working-scope).
+draft/self-review actions. Its isolated hosted synthetic demonstration passed the
+recorded 22 October acceptance: one validated real-model explanation, 42 general
+and 16 Industrial UI views, and explicit draft save/reopen. Production Industrial
+activation, live factory connectors and human domain review remain separate. See the current [PRD](PRD.md#v1-event-semantics-and-working-scope).
 
-> Current hosted status, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
+> Historical hosted snapshot, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
 
 | Milestone | Delivered | Remaining evidence |
 | --- | --- | --- |
