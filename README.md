@@ -30,16 +30,25 @@ Its application code and schema are unchanged from the preceding backend; runtim
 credential and record-identifier preservation checks passed. Canonical readiness and
 private-access denials pass. This parser patch introduced no production model request,
 new account or Industrial feature. The frontend and both Docs retain independent identities.
-Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
-18 October accepted record; the newer protected build is not published or currently
-verified with an approved production identity. See the
-[component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-public-docs-release--2026-10-20).
+Protected Engineering Docs source `34e9ab83c412fc87183a1428537ae0547a22ed04`
+is independently accepted at
+`docs.engineering.onesa.eu`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d` (2026-10-22).
+Approved production membership, current Portal identity controls, all 751 private
+assets and their anonymous denials, and 18 responsive/accessibility views passed
+in each of staging and production. The edition includes 22 manuals and 87 diagrams;
+no private artifact was uploaded to public GitHub Actions. See the
+[component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-protected-docs-release--2026-10-22).
+These component identities remain distinct from later repository metadata commits.
 
 Industrial Investigation V1 is now implemented in source at `/industrial`, using only
 bundled synthetic assets and original reference text. It provides deterministic downtime
 facts, bounded source-cited hypotheses or abstention, and explicit owned internal drafts
-and self-review. The demo defaults off; hosted qualification and production activation
-remain separate. See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
+and self-review. Its isolated synthetic staging demo is qualified from exact-tree
+main `34e9ab8`: one validated real-model explanation, 42 general and 16 Industrial UI
+views, explicit draft save/reopen and owned-fixture cleanup passed. This single
+example is not a model-accuracy benchmark or a human domain review. Ordinary
+production has not received Industrial code; production activation remains separate.
+See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
 and `scripts/evaluate_industrial.py`. No industrial connector or physical operation is claimed.
 
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
