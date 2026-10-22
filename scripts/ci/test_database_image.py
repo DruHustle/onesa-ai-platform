@@ -145,7 +145,9 @@ class DatabaseImageTests(unittest.TestCase):
                 ),
             ) as run,
             patch.object(pull_image, "pull") as pull,
-            self.assertRaisesRegex(RuntimeError, "configuration timed out; no retry") as error,
+            self.assertRaisesRegex(
+                RuntimeError, "configuration timed out; no retry"
+            ) as error,
         ):
             pull_image.main(database=True)
         self.assertEqual(run.call_count, 1)

@@ -114,7 +114,9 @@ def main(database=False):
             check=False,
         )
     except subprocess.TimeoutExpired:
-        raise RuntimeError("Isolated compose configuration timed out; no retry") from None
+        raise RuntimeError(
+            "Isolated compose configuration timed out; no retry"
+        ) from None
     if result.returncode != 0 or len(result.stdout) > 1024 * 1024:
         raise RuntimeError("Isolated compose configuration unavailable")
     # The generated configuration contains only isolated fixtures, but do not log it.
