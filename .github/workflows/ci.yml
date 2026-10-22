@@ -188,7 +188,7 @@ jobs:
     - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
         cd onesa-ai-platform-frontend/apps/chat
@@ -311,7 +311,7 @@ jobs:
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install documentation browsers and system dependencies
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
         cd onesa-ai-platform-frontend/apps/docs
@@ -429,7 +429,7 @@ jobs:
     - run: .venv/bin/python scripts/acceptance/tls_security.py
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
         cd onesa-ai-platform-frontend/apps/chat

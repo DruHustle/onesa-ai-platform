@@ -7,7 +7,8 @@
   referenced runner failover list, retaining canonical/security mirrors, suites,
   components and signing keys. Bound APT reads and
   fail on repository-update errors. Bound each browser dependency installation
-  to five minutes and the documentation job to 30 minutes. Keep Chromium,
+  to ten minutes after measured 119 MB package downloads exceeded five minutes
+  while still progressing; keep the documentation job at 30 minutes. Keep Chromium,
   Firefox, WebKit and every security/release assertion mandatory; no automatic
   workflow/test retry, paid infrastructure or application deployment is introduced.
 
