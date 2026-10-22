@@ -207,6 +207,24 @@ def test_disabled_and_anonymous(api):
     assert api.get("/api/v1/industrial/assets").status_code == 404
 
 
+def test_saved_facts_match_reviewed_preview_without_creation_metadata(api):
+    enable(api)
+    preview = api.get(
+        "/api/v1/industrial/evidence",
+        params={
+            "asset_id": "demo-press-01",
+            "start": "2026-10-20T09:00:00Z",
+            "end": "2026-10-20T10:00:00Z",
+            "scenario": "reference",
+        },
+    )
+    assert preview.status_code == 200
+    saved = new(api)
+    assert saved["payload"]["facts"] == preview.json()["facts"]
+    assert set(saved["payload"]["facts"]["window"]) == {"start", "end"}
+    assert new(api)["payload"]["facts"] == saved["payload"]["facts"]
+
+
 def test_full_owned_workflow_and_optimistic_review(api):
     enable(api)
     assert len(api.get("/api/v1/industrial/assets").json()["items"]) == 2

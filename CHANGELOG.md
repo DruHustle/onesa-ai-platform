@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep Industrial evidence previews and saved calculations identical by excluding
+  creation-request identity and selection fields from the UTC window contract.
+  Verify separate investigation identifiers produce the same observed facts.
+
 - Hide closed source comments in generated PDF manuals while preserving code examples,
   escaped HTML and bounded handling of malformed input. Bind the comment renderer
   dependency to each manual’s provenance; protected publication remains separate.

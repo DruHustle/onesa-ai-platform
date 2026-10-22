@@ -25,7 +25,9 @@ Investigation creation serializes the user’s identifier, saved-count check and
 in one transaction; parallel submissions preserve the per-user limit and idempotency.
 
 `industrial_evidence.py` contains original, versioned synthetic inputs and deterministic
-interval/quality/provenance validation. `industrial.py` reuses Auth, Knowledge embeddings,
+interval/quality/provenance validation. Calculation windows contain only normalized
+UTC start/end, so a preview and its saved investigation have identical observed facts
+independent of the creation UUID. `industrial.py` reuses Auth, Knowledge embeddings,
 ModelClient and shared model admission. Owned investigation rows keep snapshots, facts,
 generation states, revision-checked internal drafts and immutable prior review decisions.
 No retrieval cache or organization tenancy is introduced. A current asset/version/anchor
