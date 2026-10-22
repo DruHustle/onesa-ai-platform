@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Recheck session/account/grant authorization before returning long-running
+  Industrial results. Preserve explicit failure/cancellation metadata and reject
+  whitespace-only output, drafts and review notes. Interrupted admission cannot
+  report success. Disable anonymous runtime schema/UI pages; offline contracts
+  remain available through classified documentation.
+- Lock investigation navigation during cancellation, reconcile completion races
+  without replaying writes, and refresh both saved state and the visible draft.
+  Protect unsaved text/review notes and bind review to the displayed saved revision.
+  Bound ordinary UI requests and explain uncertain outcomes without dropping input.
+  These corrections require fresh exact-source CI and separate hosted acceptance.
+
 - Keep Industrial evidence previews and saved calculations identical by excluding
   creation-request identity and selection fields from the UTC window contract.
   Verify separate investigation identifiers produce the same observed facts.

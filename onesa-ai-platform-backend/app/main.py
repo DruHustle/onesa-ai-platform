@@ -49,7 +49,16 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
             engine.dispose()
 
     logging.getLogger("onesa.requests").setLevel(logging.INFO)
-    api = FastAPI(title="Onesa AI API", version="0.1.0", lifespan=lifespan)
+    # Contracts are generated offline and published through classified Docs.
+    # Do not expose an anonymous inventory of private application endpoints.
+    api = FastAPI(
+        title="Onesa AI API",
+        version="0.1.0",
+        lifespan=lifespan,
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+    )
     api.add_middleware(BodyLimit)
     api.state.auth_hash_semaphore = threading.BoundedSemaphore(config.auth_hash_concurrency)
     api.state.ingestion_semaphore = asyncio.Semaphore(config.knowledge_upload_concurrency)

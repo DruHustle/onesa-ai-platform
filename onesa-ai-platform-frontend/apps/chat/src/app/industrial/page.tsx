@@ -66,7 +66,7 @@ type Payload = {
     mode: string;
     backend: string;
     model: string;
-    latency_ms: number;
+    latency_ms: number | null;
     cost: number | null;
   } | null;
   error: string | null;
@@ -109,6 +109,7 @@ function Workspace() {
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [draft, setDraft] = useState(""),
     [baseline, setBaseline] = useState("");
   const [editing, setEditing] = useState(false),
@@ -119,10 +120,14 @@ function Workspace() {
   } | null>(null);
   const pending = useRef(false),
     generation = useRef<AbortController | null>(null);
+  const cancelPending = useRef(false),
+    lifetime = useRef<AbortController | null>(null),
+    latest = useRef<Investigation | null>(null);
+  const locked = busy || cancelling;
   const createId = useRef<string | null>(null);
   const navigate = useDraftNavigation(
     draft !== baseline || Boolean(reviewNote),
-    busy,
+    locked,
     () => {
       setDraft(baseline);
       setReviewNote("");
@@ -130,14 +135,28 @@ function Workspace() {
   );
   const payload = selected?.payload;
 
+  function requestSignal(milliseconds = 25000) {
+    return AbortSignal.any([
+      AbortSignal.timeout(milliseconds),
+      ...(lifetime.current ? [lifetime.current.signal] : []),
+    ]);
+  }
   function accept(row: InvestigationOut) {
-    const value = decode(row);
+    const incoming = decode(row),
+      known = latest.current;
+    const value =
+      known?.id === incoming.id && known.revision > incoming.revision
+        ? known
+        : incoming;
+    latest.current = value;
     setSelected(value);
     setItems((old) => [value, ...old.filter((item) => item.id !== value.id)]);
     return value;
   }
   function choose(value: Investigation | null) {
+    if (pending.current || cancelPending.current) return;
     navigate(() => {
+      latest.current = value;
       setSelected(value);
       setDraft(value?.payload.draft || "");
       setBaseline(value?.payload.draft || "");
@@ -148,6 +167,11 @@ function Workspace() {
     });
   }
   function message(reason: unknown) {
+    if (reason instanceof Error && reason.name === "TimeoutError")
+      return text(
+        "The request timed out and may still finish on the server. Your entries are kept; refresh saved state before repeating a change.",
+        "Die Anfrage hat das Zeitlimit erreicht und kann auf dem Server noch abgeschlossen werden. Deine Eingaben bleiben erhalten; lade vor einer erneuten Änderung den gespeicherten Zustand.",
+      );
     if (reason instanceof ApiError) {
       if (reason.status === 401)
         return text(
@@ -177,9 +201,11 @@ function Workspace() {
   }
   useEffect(() => {
     const abort = new AbortController();
+    lifetime.current = abort;
+    const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(25000)]);
     Promise.all([
-      api("GET /industrial/assets", { signal: abort.signal }),
-      api("GET /industrial/investigations", { signal: abort.signal }),
+      api("GET /industrial/assets", { signal }),
+      api("GET /industrial/investigations", { signal }),
     ])
       .then(([catalog, saved]) => {
         setAssets(catalog.items as { id: string; name: string }[]);
@@ -196,7 +222,7 @@ function Workspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   async function action(run: () => Promise<void>) {
-    if (pending.current) return;
+    if (pending.current || cancelPending.current) return;
     pending.current = true;
     setBusy(true);
     setError("");
@@ -221,7 +247,12 @@ function Workspace() {
       });
       // Query parameters are explicit evidence selection, never a source path or provider URL.
       const { call } = await import("../../lib/api");
-      const response = await call("/industrial/evidence?" + query);
+      const response = await call(
+        "/industrial/evidence?" + query,
+        "GET",
+        undefined,
+        requestSignal(),
+      );
       setPreview(await response.json());
     });
   }
@@ -229,6 +260,7 @@ function Workspace() {
     await action(async () => {
       createId.current ||= crypto.randomUUID();
       const row = await api("POST /industrial/investigations", {
+        signal: requestSignal(),
         body: {
           id: createId.current,
           asset_id: asset,
@@ -271,36 +303,95 @@ function Workspace() {
     });
   }
   async function cancel() {
-    if (!selected) return;
+    if (
+      !selected ||
+      cancelPending.current ||
+      (pending.current && !generation.current)
+    )
+      return;
+    cancelPending.current = true;
+    setCancelling(true);
+    setError("");
+    setNotice("");
+    const signal = requestSignal();
+    function stopped(row: InvestigationOut) {
+      const value = accept(row);
+      generation.current?.abort();
+      setNotice(
+        value.status === "cancelled"
+          ? text(
+              "Application operation stopped. Upstream provider computation may continue.",
+              "Anwendungsvorgang gestoppt. Der Anbieter kann noch weiterrechnen.",
+            )
+          : text(
+              "Generation has already ended. Saved state loaded.",
+              "Die Generierung ist bereits beendet. Der gespeicherte Zustand wurde geladen.",
+            ),
+      );
+    }
     try {
       const row = await api("GET /industrial/investigations/{identifier}", {
         params: { identifier: selected.id },
+        signal,
       });
       if (row.status === "running")
-        accept(
+        stopped(
           await api("POST /industrial/investigations/{identifier}/cancel", {
             params: { identifier: selected.id },
             body: { expected_revision: row.revision },
+            signal,
           }),
         );
-      else accept(row);
-      generation.current?.abort();
-      setNotice(
-        text(
-          "Application operation stopped. Upstream provider computation may continue.",
-          "Anwendungsvorgang gestoppt. Der Anbieter kann noch weiterrechnen.",
-        ),
-      );
+      else stopped(row);
     } catch (reason) {
+      if (reason instanceof ApiError && reason.code === "revision_conflict") {
+        try {
+          // Reconcile a completion race with one read, never another cancel write.
+          const current = await api(
+            "GET /industrial/investigations/{identifier}",
+            {
+              params: { identifier: selected.id },
+              signal,
+            },
+          );
+          if (current.status !== "running") {
+            stopped(current);
+            return;
+          }
+        } catch {
+          /* Preserve the original failure and entered work. */
+        }
+      }
       setError(message(reason));
+    } finally {
+      cancelPending.current = false;
+      setCancelling(false);
     }
+  }
+  function refresh() {
+    if (!selected) return;
+    navigate(() => {
+      void action(async () => {
+        const row = accept(
+          await api("GET /industrial/investigations/{identifier}", {
+            params: { identifier: selected.id },
+            signal: requestSignal(),
+          }),
+        );
+        setDraft(row.payload.draft || "");
+        setBaseline(row.payload.draft || "");
+        setEditing(Boolean(row.payload.draft));
+        setReviewNote("");
+      });
+    });
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!selected) return;
+    if (!selected || selected.status !== "completed") return;
     await action(async () => {
       const row = accept(
         await api("PUT /industrial/investigations/{identifier}/draft", {
+          signal: requestSignal(),
           params: { identifier: selected.id },
           body: { expected_revision: selected.revision, text: draft },
         }),
@@ -315,10 +406,17 @@ function Workspace() {
     });
   }
   async function review(decision: "accepted" | "needs_changes") {
-    if (!selected || !reviewNote.trim()) return;
+    if (
+      !selected ||
+      !reviewNote.trim() ||
+      draft !== baseline ||
+      draft !== selected.payload.draft
+    )
+      return;
     await action(async () => {
       accept(
         await api("POST /industrial/investigations/{identifier}/review", {
+          signal: requestSignal(),
           params: { identifier: selected.id },
           body: {
             expected_revision: selected.revision,
@@ -359,7 +457,7 @@ function Workspace() {
         </p>
       )}
       <p role="status" aria-live="polite">
-        {busy
+        {locked
           ? text(
               "Working… Facts and drafts stay separate from generation.",
               "In Bearbeitung… Fakten und Entwürfe bleiben von der Generierung getrennt.",
@@ -374,7 +472,7 @@ function Workspace() {
           )}
           className={styles.saved}
         >
-          <button disabled={busy} onClick={() => choose(null)}>
+          <button disabled={locked} onClick={() => choose(null)}>
             {text("New investigation", "Neue Untersuchung")}
           </button>
           {!items.length && (
@@ -388,7 +486,7 @@ function Workspace() {
           {items.map((item) => (
             <button
               key={item.id}
-              disabled={busy}
+              disabled={locked}
               aria-current={selected?.id === item.id ? "true" : undefined}
               onClick={() => choose(item)}
             >
@@ -403,7 +501,7 @@ function Workspace() {
           {!selected && (
             <form onSubmit={inspect} className={styles.panel}>
               <h2>{text("1. Select evidence", "1. Belege auswählen")}</h2>
-              <fieldset disabled={busy} className={styles.fields}>
+              <fieldset disabled={locked} className={styles.fields}>
                 <label>
                   {text("Demo asset", "Demo-Anlage")}
                   <select
@@ -472,11 +570,11 @@ function Workspace() {
                 )}
               </p>
               <div className={styles.actions}>
-                <button disabled={busy || !assets.length} type="submit">
+                <button disabled={locked || !assets.length} type="submit">
                   {text("Review source coverage", "Quellenabdeckung prüfen")}
                 </button>
                 {preview && (
-                  <button disabled={busy} type="button" onClick={create}>
+                  <button disabled={locked} type="button" onClick={create}>
                     {text("Create investigation", "Untersuchung erstellen")}
                   </button>
                 )}
@@ -499,7 +597,7 @@ function Workspace() {
               <div className={styles.actions}>
                 <button
                   disabled={
-                    busy ||
+                    locked ||
                     selected.status === "running" ||
                     Boolean(payload?.draft)
                   }
@@ -508,23 +606,14 @@ function Workspace() {
                   {text("Run investigation", "Untersuchung starten")}
                 </button>
                 {(generating || selected.status === "running") && (
-                  <button onClick={cancel}>
+                  <button
+                    disabled={cancelling || (busy && !generating)}
+                    onClick={cancel}
+                  >
                     {text("Cancel generation", "Generierung abbrechen")}
                   </button>
                 )}
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    action(async () => {
-                      accept(
-                        await api(
-                          "GET /industrial/investigations/{identifier}",
-                          { params: { identifier: selected.id } },
-                        ),
-                      );
-                    })
-                  }
-                >
+                <button disabled={locked} onClick={refresh}>
                   {text("Refresh saved state", "Gespeicherten Zustand laden")}
                 </button>
               </div>
@@ -703,18 +792,25 @@ function Workspace() {
               </p>
               {!editing && (
                 <button
-                  disabled={busy}
+                  disabled={locked}
                   onClick={() => {
                     setEditing(true);
+                    setBaseline(payload.draft || "");
                     setDraft(
-                      text(
-                        "Internal investigation draft\nObserved cause: not established.\nHuman review required:\n",
-                        "Interner Untersuchungsentwurf\nUrsache: nicht festgestellt.\nMenschliche Prüfung erforderlich:\n",
-                      ),
+                      payload.draft ||
+                        text(
+                          "Internal investigation draft\nObserved cause: not established.\nHuman review required:\n",
+                          "Interner Untersuchungsentwurf\nUrsache: nicht festgestellt.\nMenschliche Prüfung erforderlich:\n",
+                        ),
                     );
                   }}
                 >
-                  {text("Create internal draft", "Internen Entwurf erstellen")}
+                  {payload.draft
+                    ? text("Open saved draft", "Gespeicherten Entwurf öffnen")
+                    : text(
+                        "Create internal draft",
+                        "Internen Entwurf erstellen",
+                      )}
                 </button>
               )}
             </section>
@@ -763,14 +859,18 @@ function Workspace() {
                 </label>
                 <textarea
                   id="industrial-draft"
-                  disabled={busy}
+                  disabled={locked}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={8}
                   maxLength={8000}
                   required
                 />
-                <button disabled={busy || !draft.trim()}>
+                <button
+                  disabled={
+                    locked || !draft.trim() || selected?.status !== "completed"
+                  }
+                >
                   {text("Save internal draft", "Internen Entwurf speichern")}
                 </button>
               </form>
@@ -781,7 +881,7 @@ function Workspace() {
                   </label>
                   <textarea
                     id="industrial-review-note"
-                    disabled={busy}
+                    disabled={locked}
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}
                     rows={3}
@@ -790,7 +890,10 @@ function Workspace() {
                   <div className={styles.actions}>
                     <button
                       disabled={
-                        busy || draft !== baseline || !reviewNote.trim()
+                        locked ||
+                        draft !== baseline ||
+                        draft !== payload.draft ||
+                        !reviewNote.trim()
                       }
                       onClick={() => review("accepted")}
                     >
@@ -798,7 +901,10 @@ function Workspace() {
                     </button>
                     <button
                       disabled={
-                        busy || draft !== baseline || !reviewNote.trim()
+                        locked ||
+                        draft !== baseline ||
+                        draft !== payload.draft ||
+                        !reviewNote.trim()
                       }
                       onClick={() => review("needs_changes")}
                     >
