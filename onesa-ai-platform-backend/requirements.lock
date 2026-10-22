@@ -74,7 +74,7 @@ pydantic-core==2.50.0
     # via pydantic
 pydantic-settings==2.15.0
     # via onesa-api (onesa-ai-platform-backend/pyproject.toml)
-pypdf==6.19.0
+pypdf==6.21.2
     # via onesa-api (onesa-ai-platform-backend/pyproject.toml)
 python-dotenv==1.2.4
     # via

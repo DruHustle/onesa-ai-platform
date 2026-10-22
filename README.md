@@ -1,3 +1,13 @@
+# Scoped production frontend security candidate
+
+This temporary owner-controlled candidate preserves the currently serving AI
+frontend application and its assets, applying Next.js 16.4.2 only. It excludes the
+Industrial UI present on development/main. The backend source matches the
+separately accepted production API 7079a66; no backend deployment is part of this
+frontend release. Existing staging and owner-controlled production qualification
+remain mandatory. Current safe engineering reference pages and reviewed CI
+reliability corrections are retained; no private runbook or new environment is added.
+
 # Onesa AI Platform
 
 Server gateway imports and traced-bundle checks keep the Node trust policy in

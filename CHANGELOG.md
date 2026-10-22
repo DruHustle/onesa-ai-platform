@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Prepare the production-UI-only Next.js 16.4.2 security patch for
+  GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r. Preserve actual serving
+  frontend business code/assets and API7079a66 source; no Industrial activation,
+  backend deployment, model request or production acceptance is implied.
+
+
 - Exclude the affected emSign ECC G3 root from Node application TLS defaults
   before outbound clients start. Preserve all other authorities and certificate
   verification; isolated native-fetch/HTTPS regressions cover trust and denial.

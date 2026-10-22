@@ -69,6 +69,8 @@ jobs:
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
     - run: make install
+    - name: Evaluate synthetic industrial evidence without provider calls
+      run: .venv/bin/python scripts/evaluate_industrial.py
     - name: 'Release requirement: qualification failure-path tests'
       run: .venv/bin/python -m unittest discover -s scripts/release -p 'test_*.py'
     - run: .venv/bin/python scripts/check_secrets.py
@@ -144,8 +146,8 @@ jobs:
     - name: Verify TLS policy in traced server routes
       run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
-    - run: node --test scripts/test_ui_failure_diagnostics.cjs
-    - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
+    - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs
+    - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
     env:
@@ -183,10 +185,26 @@ jobs:
 
           scripts/contract-tools/package-lock.json'
     - run: python3 scripts/bootstrap_env.py
-    - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
+    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
+    - name: Preserve isolated synthetic browser failure evidence
+      if: failure()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: isolated-browser-failure-${{ github.sha }}
+        path: onesa-ai-platform-frontend/apps/chat/test-results
+        if-no-files-found: ignore
+        retention-days: 1
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
       with:
         python-version: '3.11'
@@ -295,11 +313,19 @@ jobs:
       run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
+    - name: Install documentation browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/docs
+        npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
         --noEmit --pretty false
     - run: python3 scripts/bootstrap_env.py
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
@@ -314,7 +340,7 @@ jobs:
     - if: always()
       run: docker compose down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.documentation == 'true') }}
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
@@ -398,6 +424,8 @@ jobs:
     - run: make install
     - run: .venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps
     - run: python3 scripts/acceptance/bootstrap.py
+    - name: Fetch pinned TLS proxy with bounded registry-read recovery
+      run: python3 scripts/ci/pull_image.py
     - name: Build and start isolated TLS staging
       run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
         -f compose.acceptance.yaml up --build --wait --wait-timeout 240
@@ -406,7 +434,12 @@ jobs:
         -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
     - run: .venv/bin/python scripts/acceptance/tls_security.py
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat
         run test:e2e -- tests/chat.spec.ts
     - run: .venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json
