@@ -53,6 +53,10 @@
 
 ## Unreleased
 
+- Reject malformed Industrial asset catalogs before placing them in workspace
+  state. Keep the editor/error message available and source-review actions disabled;
+  invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
+
 - Incorporate reviewer correction `b3cb8e7` once and apply locked formatting.
   Evaluation rejects downstream failures and malformed/empty/skipped database
   receipts; scoring controls remain separate from the frozen 43 product cases.

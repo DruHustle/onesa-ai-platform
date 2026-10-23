@@ -216,8 +216,12 @@ function Workspace() {
     const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(25000)]);
     api("GET /industrial/assets", { signal })
       .then((catalog) => {
-        if (!abort.signal.aborted)
-          setAssets(catalog.items as { id: string; name: string }[]);
+        if (abort.signal.aborted) return;
+        if (!Array.isArray(catalog?.items) || !catalog.items.every(item =>
+          item && typeof item.id === "string" && item.id.length > 0 &&
+          typeof item.name === "string" && item.name.length > 0))
+          throw new Error("Invalid Industrial asset catalog");
+        setAssets(catalog.items as { id: string; name: string }[]);
       })
       .catch((reason) => {
         if (!abort.signal.aborted) setError(message(reason));
