@@ -501,8 +501,8 @@ export default function Chat() {
             </>
           )}
         </header>
-        {model && (
-          <p className="inference-status" role="status">
+        <p className="inference-status" role="status">
+          {model ? <>
             {model.real_inference
               ? "Real inference"
               : "Mock inference — no AI model"}
@@ -510,8 +510,8 @@ export default function Chat() {
             {model.backend}
             {" · "}
             {model.model_identifier}
-          </p>
-        )}
+          </> : "Loading inference configuration…"}
+        </p>
         <p className="inference-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
         <div className="messages" aria-busy={busy} onScroll={event => {
           const element = event.currentTarget;
