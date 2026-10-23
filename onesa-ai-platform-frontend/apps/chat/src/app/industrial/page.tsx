@@ -214,13 +214,23 @@ function Workspace() {
     const abort = new AbortController();
     lifetime.current = abort;
     const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(25000)]);
-    Promise.all([
-      api("GET /industrial/assets", { signal }),
-      api("GET /industrial/investigations", { signal }),
-    ])
-      .then(([catalog, saved]) => {
-        setAssets(catalog.items as { id: string; name: string }[]);
-        setItems(saved.items.map(decode));
+    api("GET /industrial/assets", { signal })
+      .then((catalog) => {
+        if (!abort.signal.aborted)
+          setAssets(catalog.items as { id: string; name: string }[]);
+      })
+      .catch((reason) => {
+        if (!abort.signal.aborted) setError(message(reason));
+      });
+    api("GET /industrial/investigations", { signal })
+      .then((saved) => {
+        if (abort.signal.aborted) return;
+        const loaded = saved.items.map(decode);
+        // Preserve records accepted while this initial snapshot was in flight.
+        setItems((current) => [
+          ...current,
+          ...loaded.filter((row) => !current.some((known) => known.id === row.id)),
+        ]);
         setListState("loaded");
       })
       .catch((reason) => {

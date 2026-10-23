@@ -63,6 +63,9 @@ and errors have EN/DE labels; original references and generated narrative remain
 
 ### V1.1 feedback and evidence
 
+Asset catalog and saved-list loading are independent. A failed catalog cannot hide
+available saved records. A late initial list merges missing IDs while retaining
+records already accepted during the request; it does not replace the editor.
 Initial list loading, failed loading, confirmed empty and populated results are
 separate states. Only `industrial_demo_disabled` identifies a disabled demo;
 a resource 404 says missing or unavailable to this account, without revealing
