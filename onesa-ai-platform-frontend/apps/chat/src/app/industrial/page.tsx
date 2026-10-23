@@ -216,8 +216,12 @@ function Workspace() {
     const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(25000)]);
     api("GET /industrial/assets", { signal })
       .then((catalog) => {
-        if (!abort.signal.aborted)
-          setAssets(catalog.items as { id: string; name: string }[]);
+        if (abort.signal.aborted) return;
+        if (!Array.isArray(catalog?.items) || !catalog.items.every(item =>
+          item && typeof item.id === "string" && item.id.length > 0 &&
+          typeof item.name === "string" && item.name.length > 0))
+          throw new Error("Invalid Industrial asset catalog");
+        setAssets(catalog.items as { id: string; name: string }[]);
       })
       .catch((reason) => {
         if (!abort.signal.aborted) setError(message(reason));
@@ -494,7 +498,7 @@ function Workspace() {
   }
   const facts = payload?.facts || preview?.facts;
   return (
-    <FeatureShell title="Industrial Investigation">
+    <FeatureShell title="Industrial Investigation" contentLang={locale}>
       <div className={styles.banner}>
         <span>
           {text(
@@ -829,9 +833,9 @@ function Workspace() {
                     {text("Possible explanation", "Mögliche Erklärung")}{" "}
                     {index + 1}
                   </h3>
-                  <p>{hypothesis.statement}</p>
-                  <blockquote>{hypothesis.quote}</blockquote>
-                  <p>{hypothesis.human_review}</p>
+                  <p lang="en">{hypothesis.statement}</p>
+                  <blockquote lang="en">{hypothesis.quote}</blockquote>
+                  <p lang="en">{hypothesis.human_review}</p>
                   <ul>
                     {hypothesis.citations.map((citation) => (
                       <li
@@ -856,7 +860,7 @@ function Workspace() {
               ))}
               <ul>
                 {payload.explanation.limitations.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li lang="en" key={item}>{item}</li>
                 ))}
               </ul>
               <p>
@@ -905,6 +909,7 @@ function Workspace() {
               ))}
               {payload.evidence.references.map((source) => (
                 <details
+                  lang="en"
                   key={source.id + source.version}
                   id={`source-${source.id}-${source.version}-${source.anchor}`}
                 >

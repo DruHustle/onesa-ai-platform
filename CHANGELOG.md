@@ -53,6 +53,19 @@
 
 ## Unreleased
 
+- Reject malformed Industrial asset catalogs before placing them in workspace
+  state. Keep the editor/error message available and source-review actions disabled;
+  invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
+
+- Incorporate reviewer correction `b3cb8e7` once and apply locked formatting.
+  Evaluation rejects downstream failures and malformed/empty/skipped database
+  receipts; scoring controls remain separate from the frozen 43 product cases.
+  This tooling change does not itself release an application component.
+- Match Industrial navigation to the current API/account's successful access
+  response. Mark the translated Industrial region with its selected language,
+  retaining English for untranslated workspaces and generated/source text.
+  Backend authorization and ordinary-production feature settings remain enforced.
+
 - Keep Chat's inference-status row mounted while optional model metadata loads.
   A retained WebKit trace and controlled pointer-down/metadata/pointer-up regression
   reproduce a Send-button layout shift that swallowed the first click. Reserve the

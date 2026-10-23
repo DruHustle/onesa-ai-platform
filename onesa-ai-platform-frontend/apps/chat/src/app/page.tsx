@@ -2,6 +2,7 @@
 import ApplicationsNav from "../components/applications-nav";
 import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
+import IndustrialNav from "../components/industrial-nav";
 import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -430,7 +431,7 @@ export default function Chat() {
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
-          <Link href="/industrial">{copy.industrial}</Link>
+          <IndustrialNav />
           <Link href="/settings" lang="en">Account settings</Link>
           <DocumentationNav />
         </div>
