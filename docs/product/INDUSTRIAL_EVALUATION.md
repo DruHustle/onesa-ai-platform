@@ -23,7 +23,7 @@ outside the stated experiment. Explain the mock label if using local fixtures.
 
 ## Frozen evaluation scope
 
-`onesa-industrial-evaluation-v1.1.0` lives in the existing backend fixture area.
+`onesa-industrial-evaluation-v1.1.1` lives in the existing backend fixture area: 43 cases, 7 development and 36 visible held-out regressions. It extends the immutable original 39-case v1.1.0 manifest by hash; no original golden expectation was changed.
 Run `./.venv/bin/python scripts/evaluate_industrial.py --output <new-private-file>`.
 With an isolated loopback database named `_test`, add `--database` to execute API/
 lifecycle tests. Never point the harness at staging/production records. CI executes

@@ -189,7 +189,7 @@ flowchart LR
   Draft --> Review[Owner self-review recorded]
 ```
 
-`scripts/evaluate_industrial.py` executes seven versioned cases, one repetition, exact
+The original V1 evaluator executed seven versioned cases, one repetition, exact
 facts and mock/abstention outcomes. Its report distinguishes latency scope, failures,
 unknown cost and unmeasured reviewer corrections. Manual lookup and general-assistant
 comparisons are NOT RUN. The qualified hosted demonstration below is source-bound;
@@ -257,7 +257,7 @@ new provider or real industrial processing is authorized by this specification.
 
 The V1 thin workflow is retained. V1.1 corrects review-state feedback, cancel/restart
 observation and partial-quality abstention, and extends the existing evaluator to
-39 versioned synthetic cases (7 development, 32 visible held-out regression cases).
+43 versioned synthetic cases (7 development, 36 visible held-out regression cases).
 Golden facts and allowed/forbidden claim criteria are frozen before execution;
 these are not secret training data or a blind model-generalization benchmark.
 `--database` adds separately scored local authorization/state/fault tests using mocked

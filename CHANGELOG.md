@@ -62,8 +62,8 @@
   confirmed-empty UI states. Fence old generation observers by their claimed revision
   after cancel/restart. Abstain before retrieval/inference for incomplete downtime
   caused by excluded bad/unknown-quality events; retain the known lower bound.
-- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.0`:
-  39 synthetic cases (7 development / 32 visible held-out regressions), plus isolated
+- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.1`:
+  43 synthetic cases (7 development / 36 visible held-out regressions), plus isolated
   API/lifecycle checks. Structural citation validation deliberately does not prove
   semantic support. Add explicit engineering-review criteria and an owned, allowlisted
   synthetic evidence download using the existing browser download pattern.
