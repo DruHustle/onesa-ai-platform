@@ -58,6 +58,11 @@ users. Use the existing integration guide before running `make integration`. Bro
 checks use an isolated mock stack, not the active application or a real inference service.
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
 
+The Industrial database suite includes a fresh status read while another transaction
+holds the record's writer lock. The read must return the committed snapshot promptly;
+stale-recovery mutations still acquire and recheck their own lock. This synthetic
+regression uses no model requests and does not replace hosted model acceptance.
+
 Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers`,
 `tls-acceptance`. Add `publication-hygiene` to required checks. CI runs relevant main/staging PR checks and full release-source push checks, with fail-closed summaries. No remote
 CI success is implied by local build/test results.

@@ -314,7 +314,8 @@ def listing(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
 @router.get("/investigations/{identifier}", response_model=InvestigationOut)
 def detail(identifier: UUID, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     enabled(request)
-    row = owned(db, identifier, auth[0].id, lock=True)
+    # Fresh status reads need no writer lock. Stale recovery locks and rechecks below.
+    row = owned(db, identifier, auth[0].id)
     recover_stale(db, row, request)
     return output(row)
 
