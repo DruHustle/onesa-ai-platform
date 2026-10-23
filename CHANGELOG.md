@@ -53,6 +53,13 @@
 
 ## Unreleased
 
+- Clarify the Industrial model contract by naming the qualitative-only statement
+  and human-review fields separately from exact citation identifiers and verbatim
+  quotes. Retain strict numeric, citation and quotation rejection, immutable facts
+  and single-attempt behavior. The first V1.1 hosted scenario was rejected for
+  numeric narrative; its failure is preserved. Prompt clarification is tested
+  offline and does not establish a successful corrected hosted generation.
+
 - Preserve the reviewer’s three Industrial source-identity commits exactly once;
   qualify them under the locked Python 3.11 project environment. Contradictory
   signal IDs and reference identity keys fail validation; exact repeats and distinct
