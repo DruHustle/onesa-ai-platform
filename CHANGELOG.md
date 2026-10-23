@@ -58,6 +58,9 @@
   signal IDs and reference identity keys fail validation; exact repeats and distinct
   reference versions/anchors remain supported. This is contract hardening, not a
   claim of an exploited public arbitrary-evidence endpoint.
+- Load the asset catalog and saved investigations independently so a catalog outage
+  does not hide existing records; merge late initial list results without replacing
+  newly accepted entries.
 - Separate disabled-demo, unavailable/missing record, list loading, load failure and
   confirmed-empty UI states. Fence old generation observers by their claimed revision
   after cancel/restart. Abstain before retrieval/inference for incomplete downtime
