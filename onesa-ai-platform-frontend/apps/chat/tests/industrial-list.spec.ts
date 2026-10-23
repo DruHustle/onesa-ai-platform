@@ -39,6 +39,61 @@ test("populated list remains visible", async ({ page }) => {
   await expect(page.getByText("No saved investigations.", { exact: true })).toHaveCount(0);
 });
 
+for (const status of [401, 403, 404, 503]) {
+  test(`Industrial navigation stays absent when this API/account returns ${status}`, async ({ page }) => {
+    await page.route("**/api/v1/industrial/assets", route => json(route, { error: { code: "synthetic_denial" } }, status));
+    await page.route("**/api/v1/industrial/investigations", route => json(route, { items: [] }));
+    const observed = page.waitForResponse(response => response.url().endsWith("/api/v1/industrial/assets"));
+    await page.goto("/industrial");
+    await observed;
+    await expect(page.getByRole("heading", { name: "Industrial Investigation", exact: true })).toBeVisible();
+    await expect(page.locator('nav[aria-label="AI workspace"] a[href="/industrial"]')).toHaveCount(0);
+  });
+}
+
+test("Industrial navigation requires a valid eligible response and marks German content", async ({ page }) => {
+  await page.route("**/api/v1/industrial/investigations", route => json(route, { items: [] }));
+  await page.goto("/industrial");
+  await expect(page.locator('nav[aria-label="AI workspace"] a[href="/industrial"]')).toHaveAttribute("aria-current", "page");
+  await page.getByLabel("Interface language").selectOption("de");
+  const content = page.locator("main.feature-shell > section");
+  await expect(content).toHaveAttribute("lang", "de");
+  await expect(content.getByRole("heading", {name: "1. Belege auswählen", exact: true})).toBeVisible();
+  await page.getByLabel("Sprache der Oberfläche").selectOption("en");
+  await expect(content).toHaveAttribute("lang", "en");
+  await page.route("**/api/v1/industrial/assets", route => json(route, { unexpected: [] }));
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Industrial Investigation", exact: true })).toBeVisible();
+  await expect(page.locator('nav[aria-label="AI workspace"] a[href="/industrial"]')).toHaveCount(0);
+});
+
+test("untranslated Travel content stays English after changing the interface language", async ({ page }) => {
+  await page.goto("/travel");
+  await page.getByLabel("Interface language").selectOption("de");
+  await expect(page.locator("main.feature-shell > section").last()).toHaveAttribute("lang", "en");
+});
+
+test("German investigation keeps untranslated narrative and source passages marked English", async ({ page }) => {
+  const payload = {
+    selection: { asset_id: "demo-press-01", start: "2026-10-20T09:00:00Z", end: "2026-10-20T10:00:00Z" },
+    snapshot_sha256: "a".repeat(64),
+    facts: { event_count: 0, known_downtime_seconds: 0, distinct_downtime_episodes: 0, downtime_complete: true, incomplete_event_ids: [], timeline: [] },
+    coverage: { missing: [], stale_signal_ids: [], reference_conflict: false, signal_coverage: "Synthetic fixture" },
+    evidence: { fixture_version: "test-only", metadata_version: "1", signals: [], references: [{ id: "synthetic-source", version: "1", title: "Synthetic manual", anchor: "safety", text: "Review the source evidence.", rights: "Synthetic test fixture", sha256: "b".repeat(64) }] },
+    explanation: { abstained: false, limitations: ["Synthetic limitations only."], hypotheses: [{ statement: "A synthetic hypothesis.", quote: "Review the source evidence.", human_review: "An engineer must review this.", citations: [{ document_id: "synthetic-source", version: "1", anchor: "safety" }] }] },
+    generation: { mode: "mock", latency_ms: null, cost: null }, error: null, draft: null, review: null,
+  };
+  await page.route("**/api/v1/industrial/investigations", route => json(route, { items: [{ id: "synthetic-language", status: "ready", revision: 1, payload }] }));
+  await page.goto("/industrial");
+  await page.getByRole("button", { name: /demo-press-01.*ready/ }).click();
+  await page.getByLabel("Interface language").selectOption("de");
+  await expect(page.locator("main.feature-shell > section")).toHaveAttribute("lang", "de");
+  for (const text of ["A synthetic hypothesis.", "An engineer must review this.", "Synthetic limitations only."])
+    await expect(page.getByText(text, {exact: true})).toHaveAttribute("lang", "en");
+  await expect(page.locator('details[id="source-synthetic-source-1-safety"]')).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("heading", {name: "3. Hypothesen und Grenzen"})).toBeVisible();
+});
+
 test("catalog failure preserves a successfully loaded saved list", async ({ page }) => {
   await page.route("**/api/v1/industrial/assets", route => json(route, { error: { code: "unavailable", message: "Synthetic catalog outage" } }, 503));
   await page.route("**/api/v1/industrial/investigations", route => json(route, { items: [{ id: "synthetic-row", status: "ready", revision: 1, payload: { selection: { asset_id: "demo-press-01" } } }] }));

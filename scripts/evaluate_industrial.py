@@ -163,9 +163,9 @@ async def evaluate() -> dict:
                     if case.get("explanation"):
                         candidate = deepcopy(result)
                         if case["explanation"] == "fabricated":
-                            candidate["hypotheses"][0]["citations"][0]["document_id"] = (
-                                "fabricated"
-                            )
+                            candidate["hypotheses"][0]["citations"][0][
+                                "document_id"
+                            ] = "fabricated"
                         else:
                             candidate["hypotheses"][0]["statement"] = (
                                 "The pump caused every stop; replace it immediately."

@@ -54,12 +54,8 @@ def evaluator(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "Settings", lambda **kwargs: SimpleNamespace(**kwargs))
     record = SimpleNamespace(model_dump=lambda **kwargs: {})
     monkeypatch.setattr(module, "input_case", lambda case: {})
-    monkeypatch.setattr(
-        module, "Evidence", SimpleNamespace(model_validate=lambda value: record)
-    )
-    monkeypatch.setattr(
-        module, "Window", SimpleNamespace(model_validate=lambda value: record)
-    )
+    monkeypatch.setattr(module, "Evidence", SimpleNamespace(model_validate=lambda value: record))
+    monkeypatch.setattr(module, "Window", SimpleNamespace(model_validate=lambda value: record))
     monkeypatch.setattr(
         module,
         "calculate",
@@ -106,9 +102,7 @@ def test_downstream_failure_cannot_rescue_a_missed_input_rejection(evaluator, mo
     async def rejected_generation(*args):
         return rejected(*args)
 
-    monkeypatch.setattr(
-        module, layer, rejected_generation if layer == "explain" else rejected
-    )
+    monkeypatch.setattr(module, layer, rejected_generation if layer == "explain" else rejected)
     result = asyncio.run(module.evaluate())
     assert result["result"] == "FAIL"
     assert not calls
@@ -215,9 +209,7 @@ def test_database_receipt_needs_nonempty_clean_results(evaluator, monkeypatch, x
 
     def completed(command, **kwargs):
         receipt = next(
-            value.split("=", 1)[1]
-            for value in command
-            if value.startswith("--junitxml=")
+            value.split("=", 1)[1] for value in command if value.startswith("--junitxml=")
         )
         Path(receipt).write_text(xml)
         return SimpleNamespace(returncode=code)
