@@ -139,7 +139,7 @@ for(const [label,body] of [["missing items",{}],["non-array items",{items:{}}],[
     await page.route("**/api/v1/industrial/investigations",route=>json(route,{items:[]}));
     await page.goto("/industrial");
     await expect(page.getByRole("heading",{name:"Industrial Investigation",exact:true})).toBeVisible();
-    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.locator("main.feature-shell").getByRole("alert")).toBeVisible();
     await expect(page.getByRole("button",{name:"Review source coverage",exact:true})).toBeDisabled();
     await expect(page.locator('nav[aria-label="AI workspace"] a[href="/industrial"]')).toHaveCount(0);
     expect(errors).toEqual([]);
