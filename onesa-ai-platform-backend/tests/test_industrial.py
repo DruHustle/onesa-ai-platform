@@ -470,6 +470,28 @@ def test_provider_failures_preserve_facts_and_never_complete(api, mode):
     assert provider.closed
 
 
+def test_fresh_detail_reads_do_not_wait_for_a_concurrent_writer(api, pg):
+    enable(api)
+    row = new(api)
+    url = f"/api/v1/industrial/investigations/{row['id']}"
+    with pg.connect() as writer:
+        transaction = writer.begin()
+        writer.execute(
+            select(IndustrialInvestigation.id)
+            .where(IndustrialInvestigation.id == UUID(row["id"]))
+            .with_for_update()
+        )
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            result = executor.submit(api.get, url)
+            try:
+                response = result.result(timeout=1)
+            finally:
+                transaction.rollback()
+            assert response.status_code == 200
+            assert response.json()["status"] == "ready"
+            assert response.json()["payload"]["facts"]["known_downtime_seconds"] == 720
+
+
 def test_cancel_and_concurrent_generation(api):
     enable(api)
     provider = Provider("slow")
