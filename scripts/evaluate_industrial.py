@@ -121,8 +121,10 @@ async def evaluate() -> dict:
     for case in manifest["cases"]:
         started = time.perf_counter()
         observed: dict = {}
+        # Fixture construction errors are harness failures, not input rejection.
+        data = input_case(case)
         try:
-            evidence = Evidence.model_validate(input_case(case))
+            evidence = Evidence.model_validate(data)
             window = Window.model_validate(
                 case.get(
                     "window",
@@ -130,49 +132,64 @@ async def evaluate() -> dict:
                 )
             )
             facts = calculate(evidence, window)
-            payload = {
-                "selection": window.model_dump(mode="json"),
-                "evidence": evidence.model_dump(mode="json"),
-                "facts": facts,
-                "coverage": coverage(evidence, window),
-            }
-            result, generation = await explain(request, payload)
-            observed = {
-                "events": facts["event_count"],
-                "seconds": facts["known_downtime_seconds"],
-                "episodes": facts["distinct_downtime_episodes"],
-                "complete": facts["downtime_complete"],
-                "abstained": result["abstained"],
-            }
-            correct = not case.get("reject", False) and observed == case["expected"]
-            structural = "VALIDATED_MOCK_OR_ABSTENTION"
-            if case.get("explanation"):
-                candidate = deepcopy(result)
-                if case["explanation"] == "fabricated":
-                    candidate["hypotheses"][0]["citations"][0]["document_id"] = (
-                        "fabricated"
-                    )
-                else:
-                    candidate["hypotheses"][0]["statement"] = (
-                        "The pump caused every stop; replace it immediately."
-                    )
-                try:
-                    validate_explanation(
-                        Explanation.model_validate(candidate),
-                        payload["evidence"]["references"],
-                    )
-                    structural = "accepted_requires_human"
-                except ValueError:
-                    structural = "reject"
-                correct = correct and structural == case["validation"]
-            observed.update(
-                snapshot_sha256=checksum(payload["evidence"]),
-                source_validation=structural,
-                generation=generation,
-            )
         except (ValidationError, ValueError):
             correct = case.get("reject", False)
             observed = {"input_rejected": True}
+        else:
+            # A negative case must fail here, before coverage/retrieval/generation.
+            # A later ValueError cannot prove that the input boundary rejected it.
+            correct = False
+            observed = {"input_rejected": False}
+            if case.get("reject", False):
+                observed["failure"] = "expected_input_rejection_missing"
+            else:
+                try:
+                    payload = {
+                        "selection": window.model_dump(mode="json"),
+                        "evidence": evidence.model_dump(mode="json"),
+                        "facts": facts,
+                        "coverage": coverage(evidence, window),
+                    }
+                    result, generation = await explain(request, payload)
+                    observed = {
+                        "events": facts["event_count"],
+                        "seconds": facts["known_downtime_seconds"],
+                        "episodes": facts["distinct_downtime_episodes"],
+                        "complete": facts["downtime_complete"],
+                        "abstained": result["abstained"],
+                    }
+                    correct = observed == case["expected"]
+                    structural = "VALIDATED_MOCK_OR_ABSTENTION"
+                    if case.get("explanation"):
+                        candidate = deepcopy(result)
+                        if case["explanation"] == "fabricated":
+                            candidate["hypotheses"][0]["citations"][0]["document_id"] = (
+                                "fabricated"
+                            )
+                        else:
+                            candidate["hypotheses"][0]["statement"] = (
+                                "The pump caused every stop; replace it immediately."
+                            )
+                        try:
+                            validate_explanation(
+                                Explanation.model_validate(candidate),
+                                payload["evidence"]["references"],
+                            )
+                            structural = "accepted_requires_human"
+                        except ValueError:
+                            structural = "reject"
+                        correct = correct and structural == case["validation"]
+                    observed.update(
+                        snapshot_sha256=checksum(payload["evidence"]),
+                        source_validation=structural,
+                        generation=generation,
+                    )
+                except (ValidationError, ValueError):
+                    correct = False
+                    observed = {
+                        "input_rejected": False,
+                        "failure": "downstream_evaluation_error",
+                    }
         outcomes.append(
             {
                 "id": case["id"],
@@ -261,7 +278,11 @@ def database_cases() -> dict:
             case.attrib["name"] for case in cases if case.find("skipped") is not None
         ]
         return {
-            "status": "PASS" if result.returncode == 0 and not skipped else "FAIL",
+            "status": (
+                "PASS"
+                if result.returncode == 0 and cases and not failures and not skipped
+                else "FAIL"
+            ),
             "environment": "isolated loopback PostgreSQL; mocked inference only",
             "tests": len(cases),
             "failed_test_names": failures,
