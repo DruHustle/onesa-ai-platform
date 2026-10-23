@@ -2,6 +2,7 @@
 import ApplicationsNav from "./applications-nav";
 import ProductionWorkspaceCue from "./production-workspace-cue";
 import DocumentationNav from "./documentation-nav";
+import IndustrialNav from "./industrial-nav";
 import DocumentationHelp from "./documentation-help";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,9 +10,11 @@ import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function FeatureShell({
   title,
   children,
+  contentLang = "en",
 }: {
   title: string;
   children: React.ReactNode;
+  contentLang?: "en" | "de";
 }) {
   const { copy } = useLocale();
   const pathname = usePathname();
@@ -26,14 +29,14 @@ export default function FeatureShell({
           <Link href="/knowledge" aria-current={pathname === "/knowledge" ? "page" : undefined}>{copy.knowledge}</Link>
           <Link href="/agents" aria-current={pathname === "/agents" ? "page" : undefined}>{copy.agents}</Link>
           <Link href="/travel" aria-current={pathname === "/travel" ? "page" : undefined}>{copy.travel}</Link>
-          <Link href="/industrial" aria-current={pathname === "/industrial" ? "page" : undefined}>{copy.industrial}</Link>
+          <IndustrialNav />
           <Link href="/settings" aria-current={pathname === "/settings" ? "page" : undefined}>Account settings</Link>
           <DocumentationNav />
         </nav>
         <ApplicationsNav />
         <LanguageSelect />
       </header>
-      <section lang="en">
+      <section lang={contentLang}>
         <p className="eyebrow">Onesa AI Platform · {copy.workspace}</p>
         <h1>{title}</h1>
         <ProductionWorkspaceCue />

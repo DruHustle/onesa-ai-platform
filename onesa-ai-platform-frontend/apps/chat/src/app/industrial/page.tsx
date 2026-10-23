@@ -494,7 +494,7 @@ function Workspace() {
   }
   const facts = payload?.facts || preview?.facts;
   return (
-    <FeatureShell title="Industrial Investigation">
+    <FeatureShell title="Industrial Investigation" contentLang={locale}>
       <div className={styles.banner}>
         <span>
           {text(
@@ -829,9 +829,9 @@ function Workspace() {
                     {text("Possible explanation", "Mögliche Erklärung")}{" "}
                     {index + 1}
                   </h3>
-                  <p>{hypothesis.statement}</p>
-                  <blockquote>{hypothesis.quote}</blockquote>
-                  <p>{hypothesis.human_review}</p>
+                  <p lang="en">{hypothesis.statement}</p>
+                  <blockquote lang="en">{hypothesis.quote}</blockquote>
+                  <p lang="en">{hypothesis.human_review}</p>
                   <ul>
                     {hypothesis.citations.map((citation) => (
                       <li
@@ -856,7 +856,7 @@ function Workspace() {
               ))}
               <ul>
                 {payload.explanation.limitations.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li lang="en" key={item}>{item}</li>
                 ))}
               </ul>
               <p>
@@ -905,6 +905,7 @@ function Workspace() {
               ))}
               {payload.evidence.references.map((source) => (
                 <details
+                  lang="en"
                   key={source.id + source.version}
                   id={`source-${source.id}-${source.version}-${source.anchor}`}
                 >
