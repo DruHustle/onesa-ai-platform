@@ -52,6 +52,8 @@ type Payload = {
   facts: Facts;
   coverage: Coverage;
   evidence: {
+    fixture_version: string;
+    metadata_version: string;
     references: Source[];
     signals: {
       id: string;
@@ -66,6 +68,9 @@ type Payload = {
     mode: string;
     backend: string;
     model: string;
+    revision: string | null;
+    input_tokens: number | null;
+    output_tokens: number | null;
     latency_ms: number | null;
     cost: number | null;
   } | null;
@@ -98,6 +103,7 @@ function Workspace() {
   const { locale } = useLocale(),
     de = locale === "de";
   const text = (en: string, german: string) => (de ? german : en);
+  const [listState, setListState] = useState<"loading" | "loaded" | "failed">("loading");
   const [assets, setAssets] = useState<{ id: string; name: string }[]>([]);
   const [items, setItems] = useState<Investigation[]>([]),
     [selected, setSelected] = useState<Investigation | null>(null);
@@ -183,10 +189,15 @@ function Workspace() {
           "A newer revision exists. Your entries are kept; reopen the saved investigation before making a deliberate update.",
           "Eine neuere Version ist vorhanden. Deine Eingaben bleiben erhalten; öffne die gespeicherte Untersuchung vor einer bewussten Änderung.",
         );
-      if (reason.code === "industrial_demo_disabled" || reason.status === 404)
+      if (reason.code === "industrial_demo_disabled")
         return text(
           "The synthetic demonstration is not enabled on this environment.",
           "Die synthetische Demonstration ist in dieser Umgebung nicht aktiviert.",
+        );
+      if (reason.status === 404)
+        return text(
+          "This investigation was not found or is not available to this account.",
+          "Diese Untersuchung wurde nicht gefunden oder ist für dieses Konto nicht verfügbar.",
         );
       if (reason.status === 429)
         return text(
@@ -210,9 +221,13 @@ function Workspace() {
       .then(([catalog, saved]) => {
         setAssets(catalog.items as { id: string; name: string }[]);
         setItems(saved.items.map(decode));
+        setListState("loaded");
       })
       .catch((reason) => {
-        if (!abort.signal.aborted) setError(message(reason));
+        if (!abort.signal.aborted) {
+          setListState("failed");
+          setError(message(reason));
+        }
       });
     return () => {
       abort.abort();
@@ -434,6 +449,39 @@ function Workspace() {
       );
     });
   }
+  function exportEvidence() {
+    if (!selected || !payload || locked || generating) return;
+    const document = {
+      format: "onesa-industrial-evidence-v1.1",
+      label: "Synthetic demonstration · no connected equipment",
+      selection: payload.selection,
+      investigation_revision: selected.revision,
+      snapshot_sha256: payload.snapshot_sha256,
+      fixture_version: payload.evidence.fixture_version,
+      metadata_version: payload.evidence.metadata_version,
+      facts: payload.facts,
+      coverage: payload.coverage,
+      sources: payload.evidence.references.map(({ id, version, anchor, sha256, rights }) => ({ id, version, anchor, sha256, rights })),
+      explanation: payload.explanation,
+      generation: payload.generation && {
+        mode: payload.generation.mode, backend: payload.generation.backend,
+        model: payload.generation.model, revision: payload.generation.revision,
+        input_tokens: payload.generation.input_tokens, output_tokens: payload.generation.output_tokens,
+        latency_ms: payload.generation.latency_ms, cost: payload.generation.cost,
+      },
+      outcome: selected.status,
+      draft: payload.draft,
+      review: payload.review,
+      limitations: ["Citation and quotation matches are not semantic assurance.", "Owner self-review is not independent engineering approval.", "No factory/customer data, dispatch, machine writes or physical operation.", "Costs and comparative benefit have not been established."],
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(document, null, 2)], { type: "application/json" }));
+    const link = window.document.createElement("a");
+    link.href = url;
+    link.download = "onesa-industrial-synthetic-evidence.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setNotice(text("Synthetic evidence downloaded. Keep it within your approved review scope.", "Synthetische Belege heruntergeladen. Nur im genehmigten Prüfungsumfang verwenden."));
+  }
   const facts = payload?.facts || preview?.facts;
   return (
     <FeatureShell title="Industrial Investigation">
@@ -475,7 +523,9 @@ function Workspace() {
           <button disabled={locked} onClick={() => choose(null)}>
             {text("New investigation", "Neue Untersuchung")}
           </button>
-          {!items.length && (
+          {listState === "loading" && <p role="status">{text("Loading saved investigations…", "Gespeicherte Untersuchungen werden geladen…")}</p>}
+          {listState === "failed" && <p role="alert">{text("Saved investigations could not be loaded. Your entries are kept.", "Gespeicherte Untersuchungen konnten nicht geladen werden. Eingaben bleiben erhalten.")}</p>}
+          {listState === "loaded" && !items.length && (
             <p>
               {text(
                 "No saved investigations.",
@@ -594,6 +644,11 @@ function Workspace() {
                 {selected.payload.selection.end}
               </p>
               <CoveragePanel info={selected.payload.coverage} de={de} />
+              <button disabled={locked || generating} onClick={exportEvidence}>{text("Download synthetic evidence", "Synthetische Belege herunterladen")}</button>
+              <details><summary>{text("Engineering review criteria", "Kriterien für die technische Prüfung")}</summary>
+                <p>{text("Check the asset, UTC window, coverage and source versions. Verify each fact and quoted source. Reject unsupported causes, invented certainty or operating instructions. Record missing evidence and useful corrections before accepting a draft.", "Prüfe Anlage, UTC-Zeitfenster, Abdeckung und Quellversionen. Prüfe jeden Fakt und jedes Zitat. Lehne unbelegte Ursachen, erfundene Gewissheit und Betriebsanweisungen ab. Dokumentiere fehlende Belege und Korrekturen vor Annahme eines Entwurfs.")}</p>
+                <p>{text("Acceptance records your review of an internal draft. It does not authorize equipment work or establish independent human-domain validation.", "Die Annahme dokumentiert die Prüfung eines internen Entwurfs. Sie genehmigt keine Maschinenarbeit und belegt keine unabhängige fachliche Validierung.")}</p>
+              </details>
               <div className={styles.actions}>
                 <button
                   disabled={
@@ -757,6 +812,7 @@ function Workspace() {
                   "Synthetische Referenzen und generierte Erklärungen sind derzeit auf Englisch.",
                 )}
               </p>
+              <p>{text("Citations identify source text; they do not establish that a hypothesis is supported. A qualified engineer must review each conclusion before use.", "Zitate bezeichnen Quelltext; sie belegen nicht automatisch eine Hypothese. Fachkundige Prüfung ist vor der Nutzung erforderlich.")}</p>
               {payload.explanation.hypotheses.map((hypothesis, index) => (
                 <article key={index}>
                   <h3>
