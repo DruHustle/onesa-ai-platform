@@ -195,6 +195,41 @@ test("ordinary chat accepts an unsent draft while optional document loading is p
   }
 });
 
+test("late model metadata does not move Send out from under an in-progress click", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await authenticated(page);
+  const model = await hold(page, "/models", { items: [{
+    backend: "mock", model_identifier: "deterministic-mock", real_inference: false,
+  }] });
+  let submissions = 0;
+  await page.route("**/api/v1/conversations", async route => {
+    if (route.request().method() === "POST") {
+      submissions++;
+      await json(route, { error: { code: "synthetic_failure", message: "Synthetic submission reached the API" } }, 503);
+    } else await json(route, { items: [] });
+  });
+  try {
+    await page.goto("/");
+    await model.requested;
+    await page.getByLabel("Message Onesa AI").fill("Synthetic click during model loading");
+    const send = page.getByLabel("Send message");
+    await expect(send).toBeEnabled();
+    await send.scrollIntoViewIfNeeded();
+    const box = await send.boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    model.release();
+    await expect(page.locator(".inference-status").first()).toContainText("deterministic-mock");
+    await page.mouse.up();
+    await expect(page.locator("main").getByRole("alert")).toContainText("Synthetic submission reached the API");
+    expect(submissions).toBe(1);
+  } finally {
+    model.release();
+    await page.mouse.up();
+  }
+});
+
 test("a requested document remains blocked until its accessible document list is verified", async ({ page }) => {
   await authenticated(page);
   const documents = await hold(page, "/knowledge/documents", { items: [{ id: "synthetic-document", title: "Synthetic verified notes" }] });

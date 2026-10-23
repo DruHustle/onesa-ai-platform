@@ -53,6 +53,13 @@
 
 ## Unreleased
 
+- Keep Chat's inference-status row mounted while optional model metadata loads.
+  A retained WebKit trace and controlled pointer-down/metadata/pointer-up regression
+  reproduce a Send-button layout shift that swallowed the first click. Reserve the
+  existing row without blocking input or waiting for the optional request. This is
+  a source correction; ordinary production and the qualified Industrial route retain
+  their independent serving artifacts.
+
 - Clarify the Industrial model contract by naming the qualitative-only statement
   and human-review fields separately from exact citation identifiers and verbatim
   quotes. Retain strict numeric, citation and quotation rejection, immutable facts
