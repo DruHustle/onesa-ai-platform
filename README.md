@@ -22,7 +22,7 @@ accessibility views and six private-path denials. DOMPurify 3.4.17 is included i
 the qualified artifact; SSO, domains, credentials and AI services are unchanged.
 The earlier public edition `4f30218dca47d1197a0cb88b25a16bd33696832a` /
 `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` remains retained release history.
-AI frontend security candidate `ac7f840938b39c3d22f2d7a90460578684ecbafe` is
+The earlier AI frontend security candidate `ac7f840938b39c3d22f2d7a90460578684ecbafe` was
 accepted on `platform.onesa.eu` (2026-10-22), with Next.js 16.4.2 verified in the
 sealed traced artifact, full native CI, 48 staged views and 16 canonical views.
 Private denials, readiness and served asset hashes passed. It preserves the
@@ -57,23 +57,47 @@ No membership, password, MFA or provider policy changed; no private artifact ent
 public GitHub Actions. This supersedes protected source `34e9ab8` / Pages `48d6eebd`;
 repository metadata commits remain distinct from each accepted component identity.
 
-Industrial Investigation V1 is implemented at `/industrial`, using only bundled
-synthetic assets and original versioned reference text. Deterministic facts, bounded
-source-cited hypotheses or abstention, owned internal drafts and explicit save/reopen
-are qualified in the isolated synthetic staging demo. Its original real-model context
-passed 42 general and 16 Industrial UI views: three stops/720 seconds, one permitted
-citation and one validated explanation. Automated self-review is not human domain approval.
-The current demo frontend `373889be9bda3357ff50b74692e9b75637e2bb59`, Vercel
-`dpl_AAX1uyYoBpcmZ1biJ6BmnJZvDLSQ`, uses Next.js 16.4.2. Sixty anonymous views
-and existing synthetic-owner login/assets/logout checks pass, reusing the original
-model acceptance only after business/UI/API equivalence checks. API `3574f21` and its
-image/database are unchanged; only the exact Preview origin required one isolated
-API container recreation. No additional model request, schema, password or grant
-change accompanied that update. Demo grants retain their original expiry.
-Ordinary production has not received Industrial code. No live factory/customer
-connector, external work order, physical operation, human-domain result or comparative
-accuracy/business benefit is claimed. See the [PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope)
-and `scripts/evaluate_industrial.py` for the finite fixture and evidence scope.
+On 2026-10-23, normal AI frontend source
+`69b7a21ec3d5a6cd477170473e8538ba6894c0d4`, Vercel
+`dpl_G6QBtLwvZHELx43VLASEaDZHUMYZ`, was accepted at `platform.onesa.eu`.
+It includes the first-click Chat layout correction and access-aware Industrial
+navigation. Full exact-main native checks and eight canonical Chromium/WebKit
+light/dark responsive views pass. Those canonical UI journeys use intercepted
+synthetic authentication/submission responses; they do not claim a new real-owner
+login or model result. Normal API `7079a66`, its configuration and data remain
+unchanged. Industrial is still disabled on normal production.
+
+Industrial Investigation V1.1 is separately accepted at the protected
+`industrial-demo.onesa.eu/industrial` address. Its frontend and isolated Oracle API
+use source `b81945414faa5ee07782b2a0a916626c7d76a67d`; Vercel deployment
+`dpl_Ds2HmjJWEEsCqL3M6z3DndXZgSqp`. The final reviewed main differs only in a
+regression assertion, with identical application/runtime bytes. The existing
+synthetic owner account passes actual canonical login, two-asset selection,
+current navigation, accessibility, logout and private-access refusal. Outer Vercel
+Preview protection remains; automated provider access is not human SSO acceptance.
+No new account, grant renewal, model request or business-record write accompanied
+this component update. The original versioned fixture and isolated database remain.
+Fresh status reads no longer wait for a generation writer lock; stale recovery
+still locks and rechecks before changing state.
+
+The retained six-scenario V1.1 evaluation produced two accepted source-cited model
+responses and four pre-inference abstentions. One earlier numeric-narrative rejection
+remains recorded: three cumulative provider attempts, with no automatic retries or
+remaining agent generation allowance. Current deployment reuses those responses
+only after calculation, evidence, prompt, authorization and runtime-equivalence
+checks. Frozen evaluation remains 43 synthetic cases, separate from scoring controls.
+Human/domain ratings, baseline comparison and cost per useful completed task remain
+unperformed. Temporary qualification records were removed after their evidence was
+archived; they are not promised as live owner records. Use the existing
+[evaluation worksheet](docs/product/INDUSTRIAL_EVALUATION.md) and protected evidence
+package for the recorded demonstration and human review.
+
+No live factory/customer connector, external work order, machine write, physical
+operation or comparative accuracy/business benefit is claimed. See the
+[PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope) and
+`scripts/evaluate_industrial.py` for the finite fixture and evidence scope.
+Public/protected Docs retain source `373889b`; repository metadata commits do not
+republish any component or establish a new authenticated production walkthrough.
 
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional

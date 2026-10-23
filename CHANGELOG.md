@@ -1,5 +1,90 @@
 # Changelog
 
+## 2026-10-23 — V1.1 application and isolated demo components accepted
+
+- Normal AI frontend `69b7a21ec3d5a6cd477170473e8538ba6894c0d4`, Vercel
+  `dpl_G6QBtLwvZHELx43VLASEaDZHUMYZ`, is live on `platform.onesa.eu` after full
+  exact-main native CI. Eight canonical Chromium/WebKit light/dark mobile/desktop
+  views pass with synthetic intercepted authentication/submissions and no inference.
+  API `7079a66` is retained; normal-production Industrial remains disabled.
+- The isolated demo frontend and API are accepted at source `b81945414faa5ee07782b2a0a916626c7d76a67d`,
+  Vercel `dpl_Ds2HmjJWEEsCqL3M6z3DndXZgSqp`, at the stable protected demo address.
+  Exact-main application equivalence is verified. Actual existing synthetic-owner
+  login, two-asset access, navigation, accessibility, logout and private denial pass.
+  Database, owner credentials/grant and other services are preserved. The update
+  makes no model call, migration, new identity or business-record write.
+- Retain the earlier six-case model acceptance: two accepted source-cited responses,
+  four pre-inference abstentions, one original rejected generation, three total
+  provider attempts and no automatic retry. Human ratings/comparison are NOT RUN;
+  useful-task cost is unobserved. Archived qualification records are not live owner
+  records. No live factory connector, customer data or physical operation is claimed.
+- Full source CI corrected a real fresh-status GET writer-lock defect and a separate
+  numeric-substring false positive in the private-error regression. Original failed
+  runs remain recorded; the exact structured error assertion is stricter. Locked
+  frozen product expectations and security gates remain unchanged.
+- Accepted Docs and Robot components keep their independent serving revisions.
+  Later README/CHANGELOG reconciliation commits require source checks but do not
+  redeploy these application components.
+
+- Check the complete private-investigation 404 response contract instead of
+  searching correlation IDs for a numeric fact. A deterministic valid UUID
+  reproduces the former false positive; extra fields or detailed error messages
+  still fail the stricter response assertion. Application behavior is unchanged.
+
+- Keep fresh Industrial investigation status reads free of writer locks. Stale
+  recovery still locks and rechecks before changing a record. A held-writer
+  regression reproduces the former blocked read without inference; existing
+  concurrent generation, revocation and cancellation checks remain required.
+
+- Reject malformed Industrial asset catalogs before placing them in workspace
+  state. Keep the editor/error message available and source-review actions disabled;
+  invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
+
+- Incorporate reviewer correction `b3cb8e7` once and apply locked formatting.
+  Evaluation rejects downstream failures and malformed/empty/skipped database
+  receipts; scoring controls remain separate from the frozen 43 product cases.
+  This tooling change does not itself release an application component.
+- Match Industrial navigation to the current API/account's successful access
+  response. Mark the translated Industrial region with its selected language,
+  retaining English for untranslated workspaces and generated/source text.
+  Backend authorization and ordinary-production feature settings remain enforced.
+
+- Keep Chat's inference-status row mounted while optional model metadata loads.
+  A retained WebKit trace and controlled pointer-down/metadata/pointer-up regression
+  reproduce a Send-button layout shift that swallowed the first click. Reserve the
+  existing row without blocking input or waiting for the optional request. The
+  correction is now in the independently accepted normal and isolated demo
+  frontends, with their original failure evidence retained.
+
+- Clarify the Industrial model contract by naming the qualitative-only statement
+  and human-review fields separately from exact citation identifiers and verbatim
+  quotes. Retain strict numeric, citation and quotation rejection, immutable facts
+  and single-attempt behavior. The first V1.1 hosted scenario was rejected for
+  numeric narrative; its failure is preserved. The retained corrected hosted
+  context accepted two source-cited responses; the original failure remains recorded, with no new generation during this release.
+
+- Preserve the reviewer’s three Industrial source-identity commits exactly once;
+  qualify them under the locked Python 3.11 project environment. Contradictory
+  signal IDs and reference identity keys fail validation; exact repeats and distinct
+  reference versions/anchors remain supported. This is contract hardening, not a
+  claim of an exploited public arbitrary-evidence endpoint.
+- Load the asset catalog and saved investigations independently so a catalog outage
+  does not hide existing records; merge late initial list results without replacing
+  newly accepted entries.
+- Separate disabled-demo, unavailable/missing record, list loading, load failure and
+  confirmed-empty UI states. Fence old generation observers by their claimed revision
+  after cancel/restart. Abstain before retrieval/inference for incomplete downtime
+  caused by excluded bad/unknown-quality events; retain the known lower bound.
+- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.1`:
+  43 synthetic cases (7 development / 36 visible held-out regressions), plus isolated
+  API/lifecycle checks. Structural citation validation deliberately does not prove
+  semantic support. Add explicit engineering-review criteria and an owned, allowlisted
+  synthetic evidence download using the existing browser download pattern.
+- Prepare the five-minute demonstration, human worksheet, discovery guide and bounded
+  pilot template. Human ratings, comparative benefit and actual cost remain
+  unobserved. The accepted six-scenario context is retained separately from the newer serving
+  components; accepted Docs/Robot remain independent.
+
 ## 2026-10-22 — Public/protected Docs sanitizer and isolated demo frontend accepted
 
 - Public Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`, Vercel
@@ -52,65 +137,6 @@
   Industrial features, public/protected Docs or the complete repository.
 
 ## Unreleased
-
-- Check the complete private-investigation 404 response contract instead of
-  searching correlation IDs for a numeric fact. A deterministic valid UUID
-  reproduces the former false positive; extra fields or detailed error messages
-  still fail the stricter response assertion. Application behavior is unchanged.
-
-- Keep fresh Industrial investigation status reads free of writer locks. Stale
-  recovery still locks and rechecks before changing a record. A held-writer
-  regression reproduces the former blocked read without inference; existing
-  concurrent generation, revocation and cancellation checks remain required.
-
-- Reject malformed Industrial asset catalogs before placing them in workspace
-  state. Keep the editor/error message available and source-review actions disabled;
-  invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
-
-- Incorporate reviewer correction `b3cb8e7` once and apply locked formatting.
-  Evaluation rejects downstream failures and malformed/empty/skipped database
-  receipts; scoring controls remain separate from the frozen 43 product cases.
-  This tooling change does not itself release an application component.
-- Match Industrial navigation to the current API/account's successful access
-  response. Mark the translated Industrial region with its selected language,
-  retaining English for untranslated workspaces and generated/source text.
-  Backend authorization and ordinary-production feature settings remain enforced.
-
-- Keep Chat's inference-status row mounted while optional model metadata loads.
-  A retained WebKit trace and controlled pointer-down/metadata/pointer-up regression
-  reproduce a Send-button layout shift that swallowed the first click. Reserve the
-  existing row without blocking input or waiting for the optional request. This is
-  a source correction; ordinary production and the qualified Industrial route retain
-  their independent serving artifacts.
-
-- Clarify the Industrial model contract by naming the qualitative-only statement
-  and human-review fields separately from exact citation identifiers and verbatim
-  quotes. Retain strict numeric, citation and quotation rejection, immutable facts
-  and single-attempt behavior. The first V1.1 hosted scenario was rejected for
-  numeric narrative; its failure is preserved. Prompt clarification is tested
-  offline and does not establish a successful corrected hosted generation.
-
-- Preserve the reviewer’s three Industrial source-identity commits exactly once;
-  qualify them under the locked Python 3.11 project environment. Contradictory
-  signal IDs and reference identity keys fail validation; exact repeats and distinct
-  reference versions/anchors remain supported. This is contract hardening, not a
-  claim of an exploited public arbitrary-evidence endpoint.
-- Load the asset catalog and saved investigations independently so a catalog outage
-  does not hide existing records; merge late initial list results without replacing
-  newly accepted entries.
-- Separate disabled-demo, unavailable/missing record, list loading, load failure and
-  confirmed-empty UI states. Fence old generation observers by their claimed revision
-  after cancel/restart. Abstain before retrieval/inference for incomplete downtime
-  caused by excluded bad/unknown-quality events; retain the known lower bound.
-- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.1`:
-  43 synthetic cases (7 development / 36 visible held-out regressions), plus isolated
-  API/lifecycle checks. Structural citation validation deliberately does not prove
-  semantic support. Add explicit engineering-review criteria and an owned, allowlisted
-  synthetic evidence download using the existing browser download pattern.
-- Prepare the five-minute demonstration, human worksheet, discovery guide and bounded
-  pilot template. Human ratings, comparative benefit, actual cost and new real-model
-  results remain unobserved. Source implementation is pending component release;
-  ordinary production and accepted Docs/Robot components remain independently retained.
 
 - Reconcile the PRD and roadmap with the already accepted isolated synthetic
   Industrial demonstration, preserving historical setup assumptions and the
@@ -195,7 +221,6 @@
   internal drafts/self-review. Add an additive schema migration, generated contracts,
   EN/DE critical controls and synthetic evaluations. Hosting and real-model acceptance
   are not inferred from local tests; no factory writes or physical operation exists.
-
 
 - Align the protected Docs sign-in sequence with the separately accepted Portal
   cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
@@ -476,7 +501,6 @@
 - Prior full application qualification is reused for unchanged source; new target
   checks establish access and readiness, not a new feature or inference release.
   Staging Preview acceptance remains independently recorded in restricted evidence.
-
 
 The platform remains under development. These entries record verified hosting
 and pre-launch releases; broader launch qualification remains separate.
