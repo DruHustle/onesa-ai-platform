@@ -60,3 +60,21 @@ creating an internal draft. Pending mutations lock selection; failed saves keep 
 Same-account renewal preserves mounted work; another account remounts it. No draft browser
 storage is used. Named timeline scroll regions support keyboard focus. Critical controls
 and errors have EN/DE labels; original references and generated narrative remain English.
+
+### V1.1 feedback and evidence
+
+Asset catalog and saved-list loading are independent. A failed catalog cannot hide
+available saved records. A late initial list merges missing IDs while retaining
+records already accepted during the request; it does not replace the editor.
+Initial list loading, failed loading, confirmed empty and populated results are
+separate states. Only `industrial_demo_disabled` identifies a disabled demo;
+a resource 404 says missing or unavailable to this account, without revealing
+ownership. Errors preserve entries and never claim that an unavailable list is empty.
+
+A source-received, owned investigation can be downloaded using the existing Blob/
+download pattern. The export allowlists the synthetic label, selection and snapshot/
+source versions, computed facts, coverage, explanation/citations, model/outcome,
+draft, review and limitations. It excludes account/session identities, secrets,
+provider request IDs and raw logs. Pending mutation/generation disables export.
+A qualified engineer still reviews factual support and each hypothesis; a recorded
+owner self-review is not independent industrial acceptance or equipment authority.

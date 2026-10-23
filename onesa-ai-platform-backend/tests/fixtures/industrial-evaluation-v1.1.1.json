@@ -1,0 +1,146 @@
+{
+  "version": "onesa-industrial-evaluation-v1.1.1",
+  "fixture_version": "onesa-industrial-synthetic-v1",
+  "extends": {
+    "file": "industrial-evaluation-v1.1.json",
+    "version": "onesa-industrial-evaluation-v1.1.0",
+    "sha256": "435d5238644b35fdfdf4df9a8a8168791ac2c162169d1719fdacdc1890d04d1d"
+  },
+  "frozen_before_first_execution": true,
+  "reason": "Add explicit reference expiry, distinct anchor, right-window clipping and poor-quality signal cases without altering any of the original 39 golden expectations.",
+  "cases": [
+    {
+      "id": "expired-reference-date",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "references",
+            0,
+            "effective_end"
+          ],
+          "value": "2026-10-20T09:30:00Z"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "distinct-reference-anchor",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "reference_anchor"
+    },
+    {
+      "id": "right-boundary-clipping",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "events"
+          ],
+          "value": [
+            {
+              "id": "clipped-at-end",
+              "asset_id": "demo-press-01",
+              "start": "2026-10-20T09:58:00Z",
+              "end": "2026-10-20T10:03:00Z",
+              "quality": "good",
+              "kind": "stop",
+              "source": "synthetic-event-log",
+              "version": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "events": 1,
+        "seconds": 120,
+        "episodes": 1,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "excluded-poor-quality-signal",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals",
+            0,
+            "quality"
+          ],
+          "value": "bad"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    }
+  ]
+}

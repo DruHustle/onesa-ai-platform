@@ -53,6 +53,35 @@
 
 ## Unreleased
 
+- Clarify the Industrial model contract by naming the qualitative-only statement
+  and human-review fields separately from exact citation identifiers and verbatim
+  quotes. Retain strict numeric, citation and quotation rejection, immutable facts
+  and single-attempt behavior. The first V1.1 hosted scenario was rejected for
+  numeric narrative; its failure is preserved. Prompt clarification is tested
+  offline and does not establish a successful corrected hosted generation.
+
+- Preserve the reviewer’s three Industrial source-identity commits exactly once;
+  qualify them under the locked Python 3.11 project environment. Contradictory
+  signal IDs and reference identity keys fail validation; exact repeats and distinct
+  reference versions/anchors remain supported. This is contract hardening, not a
+  claim of an exploited public arbitrary-evidence endpoint.
+- Load the asset catalog and saved investigations independently so a catalog outage
+  does not hide existing records; merge late initial list results without replacing
+  newly accepted entries.
+- Separate disabled-demo, unavailable/missing record, list loading, load failure and
+  confirmed-empty UI states. Fence old generation observers by their claimed revision
+  after cancel/restart. Abstain before retrieval/inference for incomplete downtime
+  caused by excluded bad/unknown-quality events; retain the known lower bound.
+- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.1`:
+  43 synthetic cases (7 development / 36 visible held-out regressions), plus isolated
+  API/lifecycle checks. Structural citation validation deliberately does not prove
+  semantic support. Add explicit engineering-review criteria and an owned, allowlisted
+  synthetic evidence download using the existing browser download pattern.
+- Prepare the five-minute demonstration, human worksheet, discovery guide and bounded
+  pilot template. Human ratings, comparative benefit, actual cost and new real-model
+  results remain unobserved. Source implementation is pending component release;
+  ordinary production and accepted Docs/Robot components remain independently retained.
+
 - Reconcile the PRD and roadmap with the already accepted isolated synthetic
   Industrial demonstration, preserving historical setup assumptions and the
   existing no-factory/no-physical-operation boundaries. Distinguish automated

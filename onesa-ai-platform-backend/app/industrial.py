@@ -386,7 +386,7 @@ async def explain(
     if (
         info["missing"]
         or info["reference_conflict"]
-        or payload["facts"]["incomplete_event_ids"]
+        or not payload["facts"]["downtime_complete"]
         or payload["facts"]["event_count"] == 0
     ):
         result = Explanation(
@@ -446,8 +446,14 @@ async def explain(
                     "Use at most one concise hypothesis and brief limitations. "
                     "State hypotheses only, "
                     "never diagnosis, confidence percentages or machine instructions. "
-                    "No numbers or percentages in narrative; "
-                    "facts appear in a separate fixed panel. "
+                    "The statement and human_review fields must contain qualitative prose only: "
+                    "no digits, percentages, timestamps, asset IDs or signal IDs. "
+                    "Do not repeat measured values; facts appear in a separate fixed panel. "
+                    "A valid qualitative statement is 'Possible association only; cause not "
+                    "established.' A valid human_review is 'Review recorded sample timing.' "
+                    "Copy document_id, version and anchor exactly into citations, and copy "
+                    "the verbatim source text into quote; these evidence fields may contain "
+                    "digits. Never move identifiers into statement or human_review. "
                     "Supply a verbatim quote from a cited reference; never fabricate quotations. "
                     "Cite only supplied document ID/version/anchor. Abstain with no hypotheses "
                     "when insufficient. Identify sparse/stale/conflicting evidence. "
@@ -556,7 +562,11 @@ async def generate(
                 db.expire_all()
                 current = owned(db, identifier, auth[0].id)
                 db.commit()
-                if current.status != "running" or await request.is_disconnected():
+                if (
+                    current.status != "running"
+                    or current.revision != claimed_revision
+                    or await request.is_disconnected()
+                ):
                     break
                 if not await run_in_threadpool(capacity.active, request, lease):
                     category = "session_or_capacity_lost"
