@@ -135,6 +135,18 @@ test("actual synthetic workflow: facts, mock explanation, failed save, dirty nav
     /Synthetic draft/,
   );
   await expect(page.getByText(/accepted · r/)).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download synthetic evidence", exact: true }).click();
+  const stream = await (await download).createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+  const exported = JSON.parse(Buffer.concat(chunks).toString());
+  expect(exported.format).toBe("onesa-industrial-evidence-v1.1");
+  expect(exported.facts.known_downtime_seconds).toBe(720);
+  expect(exported.review.decision).toBe("accepted");
+  expect(exported.sources[0].sha256).toMatch(/^[a-f0-9]{64}$/);
+  expect(exported).not.toHaveProperty("user_id");
+  expect(JSON.stringify(exported)).not.toContain(password);
 });
 
 test("pending cancellation blocks selection and reports an already-finished result accurately", async ({

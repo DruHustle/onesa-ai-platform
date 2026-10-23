@@ -386,7 +386,7 @@ async def explain(
     if (
         info["missing"]
         or info["reference_conflict"]
-        or payload["facts"]["incomplete_event_ids"]
+        or not payload["facts"]["downtime_complete"]
         or payload["facts"]["event_count"] == 0
     ):
         result = Explanation(
@@ -556,7 +556,11 @@ async def generate(
                 db.expire_all()
                 current = owned(db, identifier, auth[0].id)
                 db.commit()
-                if current.status != "running" or await request.is_disconnected():
+                if (
+                    current.status != "running"
+                    or current.revision != claimed_revision
+                    or await request.is_disconnected()
+                ):
                     break
                 if not await run_in_threadpool(capacity.active, request, lease):
                     category = "session_or_capacity_lost"

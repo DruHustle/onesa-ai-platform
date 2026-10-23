@@ -63,3 +63,24 @@ accepts the prior schema or the new additive head. Enabling it requires the new 
 An older binary still requires its old head: a schema rollback must use the reviewed
 forward compatibility/recovery process, never delete saved investigations. Actual hosted
 migration and runtime grants need separate staging verification before production.
+
+### V1.1 review delta and evaluation
+
+The observation loop and final persistence both require the exact claimed running
+revision. Cancellation followed by a new generation cannot keep the old local
+observer consuming its lease until the newer generation finishes. Local task
+cancellation still does not guarantee upstream provider computation has stopped.
+
+Incomplete downtime, including excluded bad/unknown-quality events, now abstains
+before retrieval/model execution. The displayed known duration remains a lower
+bound. No historical investigation is rewritten. Citation identity, applicable
+version/anchor and literal quotation checks are structural: a perfectly quoted
+source can accompany an unsupported causal claim. The versioned evaluator retains
+that counterexample and leaves human support ratings unfilled.
+
+`scripts/evaluate_industrial.py` consumes the frozen synthetic manifest in
+`tests/fixtures/industrial-evaluation-v1.1.json`. Its optional `--database` mode
+requires an explicitly configured loopback `_test` database, executes existing
+API/state regressions with mocked inference, and separates those results from
+factual checks, model quality, actual usage and human acceptance. No schema change,
+production migration, database repair or new provider is introduced by this delta.
