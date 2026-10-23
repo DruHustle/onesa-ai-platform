@@ -252,3 +252,21 @@ Do not promise unlimited inference, uptime/HA, grant eligibility, patents, softw
 ownership clearance or superiority over a general assistant. Model, dataset, image,
 employment and contributor IP rights need their actual records. No outreach, payment,
 new provider or real industrial processing is authorized by this specification.
+
+### Industrial Investigation V1.1 — benchmarkable synthetic evaluation
+
+The V1 thin workflow is retained. V1.1 corrects review-state feedback, cancel/restart
+observation and partial-quality abstention, and extends the existing evaluator to
+39 versioned synthetic cases (7 development, 32 visible held-out regression cases).
+Golden facts and allowed/forbidden claim criteria are frozen before execution;
+these are not secret training data or a blind model-generalization benchmark.
+`--database` adds separately scored local authorization/state/fault tests using mocked
+inference. Unknown costs remain null; model outcomes, human support ratings and
+manual/general-assistant comparisons retain their actual independent status.
+
+The owned evidence download is an internal evaluation artifact. It does not dispatch
+work, approve equipment operation or bypass review. See the
+[demonstration and evaluation package](INDUSTRIAL_EVALUATION.md) for the five-minute
+script, failing-evidence example, human criteria, discovery and pilot boundaries.
+A new hosted model run requires a finite current allowance and exact source/model
+scope. Ordinary production remains distinct from the isolated synthetic demonstration.
