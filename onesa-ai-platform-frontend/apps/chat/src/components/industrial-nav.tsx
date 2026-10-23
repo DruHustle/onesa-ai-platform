@@ -17,7 +17,7 @@ export default function IndustrialNav() {
       credentials: "same-origin", cache: "no-store", signal: controller.signal,
     })
       .then(response => response.status === 200 ? response.json() : null)
-      .then(result => { if (active) setAvailable(Array.isArray(result?.items)); })
+      .then(result => { if (active) setAvailable(Array.isArray(result?.items) && result.items.every((item: unknown) => typeof item === "object" && item !== null && "id" in item && typeof item.id === "string" && item.id.length > 0 && "name" in item && typeof item.name === "string" && item.name.length > 0)); })
       .catch(() => { if (active) setAvailable(false); })
       .finally(() => clearTimeout(deadline));
     return () => { active = false; controller.abort(); clearTimeout(deadline); };

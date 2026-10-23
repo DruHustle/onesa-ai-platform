@@ -131,3 +131,17 @@ test("a late initial empty list preserves a newly created investigation", async 
     await expect(page.getByRole("heading", { name: "2. Observed evidence", exact: true })).toBeVisible();
   } finally { release(); }
 });
+
+for(const [label,body] of [["missing items",{}],["non-array items",{items:{}}],["invalid item",{items:[{id:4,name:null}]}]] as const){
+  test(`malformed asset catalog: ${label} keeps the workspace available without granting navigation`,async({page})=>{
+    const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
+    await page.route("**/api/v1/industrial/assets",route=>json(route,body));
+    await page.route("**/api/v1/industrial/investigations",route=>json(route,{items:[]}));
+    await page.goto("/industrial");
+    await expect(page.getByRole("heading",{name:"Industrial Investigation",exact:true})).toBeVisible();
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByRole("button",{name:"Review source coverage",exact:true})).toBeDisabled();
+    await expect(page.locator('nav[aria-label="AI workspace"] a[href="/industrial"]')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}
