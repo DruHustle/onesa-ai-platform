@@ -53,6 +53,11 @@
 
 ## Unreleased
 
+- Check the complete private-investigation 404 response contract instead of
+  searching correlation IDs for a numeric fact. A deterministic valid UUID
+  reproduces the former false positive; extra fields or detailed error messages
+  still fail the stricter response assertion. Application behavior is unchanged.
+
 - Keep fresh Industrial investigation status reads free of writer locks. Stale
   recovery still locks and rechecks before changing a record. A held-writer
   regression reproduces the former blocked read without inference; existing

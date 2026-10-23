@@ -374,7 +374,9 @@ def test_parallel_identical_creation_is_idempotent(api, pg):
         assert db.scalar(select(func.count()).select_from(IndustrialInvestigation)) == 1
 
 
-def test_repeat_create_csrf_wrong_asset_and_user_isolation(api):
+def test_repeat_create_csrf_wrong_asset_and_user_isolation(api, monkeypatch):
+    # A valid correlation ID may contain digits that also appear in private facts.
+    monkeypatch.setattr("app.main.uuid4", lambda: UUID("fefc5a1f-7207-427d-b746-0fe7797ff448"))
     enable(api)
     identifier = str(uuid4())
     row = new(api, identifier=identifier)
@@ -411,7 +413,16 @@ def test_repeat_create_csrf_wrong_asset_and_user_isolation(api):
                 },
             )
         assert result.status_code == 404
-        assert "720" not in result.text and "pressure-review" not in result.text
+        # Verify the whole public error contract, excluding all private payload fields.
+        # Searching a serialized response also inspects random correlation metadata.
+        assert result.json() == {
+            "error": {
+                "code": "not_found",
+                "message": "Investigation not found",
+                "request_id": "fefc5a1f-7207-427d-b746-0fe7797ff448",
+            }
+        }
+        assert result.headers["X-Request-ID"] == "fefc5a1f-7207-427d-b746-0fe7797ff448"
 
 
 @pytest.mark.parametrize("scenario", ["stale", "conflict", "open_event"])
