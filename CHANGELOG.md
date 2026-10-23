@@ -53,6 +53,11 @@
 
 ## Unreleased
 
+- Keep fresh Industrial investigation status reads free of writer locks. Stale
+  recovery still locks and rechecks before changing a record. A held-writer
+  regression reproduces the former blocked read without inference; existing
+  concurrent generation, revocation and cancellation checks remain required.
+
 - Reject malformed Industrial asset catalogs before placing them in workspace
   state. Keep the editor/error message available and source-review actions disabled;
   invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
