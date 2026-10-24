@@ -21,4 +21,6 @@ for(const origin of ['http://localhost:3200','http://localhost:3201'])for(const 
  await expect(page.locator('html')).toHaveCSS('font-size','32px');
  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 }
-const csrf=(await context.cookies()).find(c=>c.name==='onesa_csrf')?.value;await context.request.post('http://localhost:3100/api/v1/auth/logout',{headers:{Origin:'http://localhost:3100','X-CSRF-Token':csrf||''}});expect((await context.request.get('http://localhost:3201/generated/search.json')).status()).toBe(401);expect(errors).toEqual([]);await browser.close();console.log('PASS: search, diagrams, PDFs, isolated assets, engineering identity, revocation, desktop/mobile navigation and controlled inference assistance.');
+// Retry at most one reset of an idle connection for this read-only denial probe.
+// HTTP status errors and logout are never retried; the required 401 stays exact.
+const csrf=(await context.cookies()).find(c=>c.name==='onesa_csrf')?.value;await context.request.post('http://localhost:3100/api/v1/auth/logout',{headers:{Origin:'http://localhost:3100','X-CSRF-Token':csrf||''}});expect((await context.request.get('http://localhost:3201/generated/search.json',{maxRetries:1})).status()).toBe(401);expect(errors).toEqual([]);await browser.close();console.log('PASS: search, diagrams, PDFs, isolated assets, engineering identity, revocation, desktop/mobile navigation and controlled inference assistance.');

@@ -68,7 +68,7 @@ jobs:
         python-version: '3.11'
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
-        node-version: '24'
+        node-version: '24.22.1'
     - name: Require exact reviewed CI before Preview provider credentials
       if: inputs.target == 'preview'
       env:
