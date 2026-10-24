@@ -54,6 +54,7 @@ def test_import_sample_preserves_raw_meaning_and_deterministic_union():
     "path,value",
     [
         (("classification",), "customer"),
+        (("evidence", "references", 0, "superseded"), "false"),
         (("format_version",), "unknown"),
         (("source_timezone",), "CET"),
         (("source_timezone",), "Missing/Timezone"),
@@ -393,3 +394,22 @@ def test_near_limit_valid_bundle_can_be_previewed_and_saved(api):
         api.post("/api/v1/industrial/investigations", content=b" " * (516 * 1024 + 1)).status_code
         == 413
     )
+
+
+@pytest.mark.parametrize(
+    "collection,field",
+    [
+        ("events", "quality"),
+        ("events", "source"),
+        ("events", "kind"),
+        ("signals", "quality"),
+        ("signals", "version"),
+        ("references", "rights"),
+        ("references", "superseded"),
+    ],
+)
+def test_import_never_invents_missing_quality_or_provenance(collection, field):
+    bundle = sample()
+    del bundle["evidence"][collection][0][field]
+    with pytest.raises(ValidationError):
+        EvidenceBundle.model_validate(bundle)

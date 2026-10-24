@@ -182,6 +182,9 @@ a 516 KiB pre-parsing ceiling to accommodate the bounded UUID/selection envelope
 signal samples and 20 references are supported. Explicit UTC timestamps, IANA source
 timezone, compatible pressure/bar or temperature/degC units, bounded finite numbers,
 asset/metadata identity, reference text hashes and immutable source IDs are required.
+Import quality/provenance, event kind/end, reference rights/superseded state and
+evidence metadata version must be explicitly supplied; bundled-fixture defaults
+never fill missing imported facts. Superseded is a JSON boolean.
 Conflicting source IDs fail transactionally; idempotent same-content retries cannot
 overwrite a saved investigation. No URLs, files, SQL or instructions are executed.
 See the generated OpenAPI schema and synthetic `tests/fixtures/industrial-import-v1.json`.

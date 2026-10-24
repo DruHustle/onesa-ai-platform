@@ -111,7 +111,7 @@ class ImportedReference(Strict):
     rights: str = Field(default="Onesa original synthetic reference", min_length=1, max_length=500)
     effective_start: AwareDatetime
     effective_end: AwareDatetime
-    superseded: bool = False
+    superseded: bool = Field(default=False, strict=True)
     sha256: str
 
     @model_validator(mode="after")
@@ -204,6 +204,13 @@ class EvidenceBundle(Strict):
         window = value.get("window", {})
         if not isinstance(evidence, dict) or not isinstance(window, dict):
             raise ValueError("Evidence and window must be objects")
+        if "metadata_version" not in evidence:
+            raise ValueError("Imported evidence requires its explicit metadata version")
+        required = {
+            "events": {"kind", "source", "quality", "version", "end"},
+            "signals": {"source", "quality", "version"},
+            "references": {"rights", "superseded"},
+        }
         dates = [window.get(key) for key in ("start", "end")]
         for collection, names in [
             ("events", ("start", "end")),
@@ -214,6 +221,10 @@ class EvidenceBundle(Strict):
             if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
                 raise ValueError("Evidence collections must contain objects")
             for item in items:
+                if not required[collection].issubset(item):
+                    raise ValueError(
+                        "Imported evidence requires explicit quality/provenance fields"
+                    )
                 dates.extend(item.get(key) for key in names if item.get(key) is not None)
         for date in dates:
             if not isinstance(date, str) or not date.endswith(("Z", "+00:00")):
