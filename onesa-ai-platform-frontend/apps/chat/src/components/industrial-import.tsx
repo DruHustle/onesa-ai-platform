@@ -36,7 +36,7 @@ export default function IndustrialImport({locked, accept}: {
     } catch { setError("Import could not be confirmed. Your validated source is kept here; retry with the same identity or check saved investigations."); }
     finally { pending.current = false; setBusy(false); }
   }
-  return <section className="feature-card" aria-labelledby="industrial-import-title" aria-busy={busy}>
+  return <section lang="en" className="feature-card" aria-labelledby="industrial-import-title" aria-busy={busy}>
     <h2 id="industrial-import-title">Import synthetic evidence</h2>
     <p>Read-only JSON adapter v1 · synthetic inputs only. Customer processing requires separate approval. This file adapter has no live machine connection.</p>
     <label>Versioned evidence bundle (.json, up to 512 KiB)
@@ -77,7 +77,7 @@ export function IndustrialFactsTool({investigation, locked}: {investigation: Inv
     } catch { setNotice("The read could not be confirmed. Check tool-run history before retrying."); }
     finally {pending.current = false; setBusy(false);}
   }
-  return <fieldset disabled={locked || busy}>
+  return <fieldset lang="en" disabled={locked || busy}>
     <legend>Read saved facts through a registered tool</legend>
     <label><input type="checkbox" checked={allowed} onChange={event => setAllowed(event.target.checked)} />Allow read-only access to this investigation for this run</label>
     <button disabled={!allowed || locked || busy} onClick={read}>Read saved investigation facts</button>
