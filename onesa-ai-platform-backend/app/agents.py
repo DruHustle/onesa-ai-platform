@@ -1,9 +1,9 @@
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -14,11 +14,13 @@ from app import capacity
 from app.agent_runtime import (
     BasicPlanner,
     ModelToolPlanner,
+    Tool,
     ToolCall,
+    ToolRegistry,
     default_registry,
     planning_failure_reason,
 )
-from app.auth import DB, Auth
+from app.auth import DB, Auth, authenticated
 from app.errors import fail
 from app.models import AgentRun, now
 from app.observability import (
@@ -26,11 +28,61 @@ from app.observability import (
     agent_planning_failure_reasons,
     agent_planning_failures,
 )
+from app.pagination import page
 from app.responses import AgentRunList, AgentRunOut, ToolList
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 registry = default_registry()
+
+
+class InvestigationFacts(Strict):
+    investigation_id: UUID
+    snapshot_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+def scoped_registry(request: Request, user_id: UUID) -> ToolRegistry:
+    """Bind authority in server context, never in model-supplied arguments."""
+    from app.industrial import owned
+
+    if not (
+        request.app.state.settings.industrial_demo_enabled
+        and request.app.state.settings.industrial_import_enabled
+    ):
+        return registry
+    current = ToolRegistry()
+    current.tools.update(registry.tools)
+    if (
+        request.app.state.settings.industrial_demo_enabled
+        and request.app.state.settings.industrial_import_enabled
+    ):
+
+        async def facts(arguments: Any) -> dict[str, Any]:
+            body = InvestigationFacts.model_validate(arguments.model_dump())
+
+            def read() -> dict[str, Any]:
+                with Session(request.app.state.engine) as check:
+                    identity = authenticated(request, check, request.cookies.get("onesa_session"))
+                    if identity[0].id != user_id:
+                        fail(403, "source_access_denied", "Evidence access is no longer available")
+                    row = owned(check, body.investigation_id, user_id)
+                    if row.payload["snapshot_sha256"] != body.snapshot_sha256:
+                        fail(
+                            409, "source_revision_changed", "Select the saved source revision again"
+                        )
+                    return {
+                        "investigation_id": str(row.id),
+                        "snapshot_sha256": body.snapshot_sha256,
+                        "selection": row.payload["selection"],
+                        "facts": row.payload["facts"],
+                        "coverage": row.payload["coverage"],
+                        "cause": "not_established",
+                    }
+
+            return await run_in_threadpool(read)
+
+        current.register("industrial_facts", Tool(InvestigationFacts, facts))
+    return current
 
 
 class RunRequest(Strict):
@@ -51,18 +103,25 @@ def output(row: AgentRun) -> dict[str, Any]:
 
 
 @router.get("/tools", response_model=ToolList)
-def tools(auth: Auth) -> dict[str, Any]:
+def tools(request: Request, auth: Auth) -> dict[str, Any]:
     return {
         "items": [
-            {"name": name, "schema": tool.schema.model_json_schema(), "effect": "local computation"}
-            for name, tool in registry.tools.items()
+            {
+                "name": name,
+                "schema": tool.schema.model_json_schema(),
+                "effect": "read-only owned evidence"
+                if name == "industrial_facts"
+                else "local computation",
+            }
+            for name, tool in scoped_registry(request, auth[0].id).tools.items()
         ]
     }
 
 
 @router.post("/runs", status_code=201, response_model=AgentRunOut)
 async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
-    allowed = set(body.allowed_tools) & set(registry.tools)
+    current = scoped_registry(request, auth[0].id)
+    allowed = set(body.allowed_tools) & set(current.tools)
     if not allowed:
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
     if any(call.tool not in allowed for call in body.steps):
@@ -71,7 +130,7 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
     # lease checks. Valid runs retain the same shared admission and expiry limits.
     lease = await run_in_threadpool(capacity.begin, request)
     try:
-        result = await execute_admitted(body, request, db, auth[0].id, allowed)
+        result = await execute_admitted(body, request, db, auth[0].id, allowed, current)
         if not await run_in_threadpool(capacity.active, request, lease):
             fail(503, "generation_lease_lost", "Unable to verify active request authority")
         return result
@@ -80,14 +139,19 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
 
 
 async def execute_admitted(
-    body: RunRequest, request: Request, db: Session, user_id: UUID, allowed: set[str]
+    body: RunRequest,
+    request: Request,
+    db: Session,
+    user_id: UUID,
+    allowed: set[str],
+    tool_registry: ToolRegistry,
 ) -> dict[str, Any]:
     try:
         async with asyncio.timeout(request.app.state.settings.generation_timeout):
             planner = (
                 BasicPlanner()
                 if request.app.state.settings.model_backend == "mock"
-                else ModelToolPlanner(request.app.state.model_client, registry, allowed)
+                else ModelToolPlanner(request.app.state.model_client, tool_registry, allowed)
             )
             calls = body.steps or await planner.plan(body.goal)
     except Exception as error:
@@ -115,7 +179,7 @@ async def execute_admitted(
                     cancelled = current is None or current.status == "cancelled"
                 if cancelled or await request.is_disconnected():
                     break
-                result = await registry.execute(call, allowed)
+                result = await tool_registry.execute(call, allowed)
                 steps.append({"tool": call.tool, "status": "completed", "result": result})
             else:
                 status = "completed"
@@ -147,14 +211,26 @@ def owned_run(db: Session, identifier: UUID, user_id: UUID) -> AgentRun:
 
 
 @router.get("/runs", response_model=AgentRunList)
-def listing(db: DB, auth: Auth) -> dict[str, Any]:
-    rows = db.scalars(
-        select(AgentRun)
-        .where(AgentRun.user_id == auth[0].id)
-        .order_by(AgentRun.created_at.desc())
-        .limit(100)
+def listing(
+    db: DB,
+    auth: Auth,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: Annotated[str | None, Query(max_length=512)] = None,
+) -> dict[str, Any]:
+    rows, following = page(
+        db,
+        AgentRun,
+        select(AgentRun).where(AgentRun.user_id == auth[0].id),
+        limit,
+        0,
+        cursor,
+        auth[0].id,
+        "runs",
     )
-    return {"items": [output(owned_run(db, row.id, auth[0].id)) for row in rows]}
+    return {
+        "items": [output(owned_run(db, row.id, auth[0].id)) for row in rows],
+        "next_cursor": following,
+    }
 
 
 @router.get("/runs/{identifier}", response_model=AgentRunOut)

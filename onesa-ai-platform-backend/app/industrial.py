@@ -7,7 +7,7 @@ import time
 from contextlib import suppress
 from datetime import timedelta
 from typing import Annotated, Any, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import AfterValidator, Field, ValidationError
@@ -17,12 +17,13 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app import capacity
-from app.auth import DB, Auth, authenticated
+from app.auth import DB, Auth, authenticated, lock_account
 from app.errors import fail
 from app.industrial_evidence import (
     ASSETS,
     FIXTURE_VERSION,
     Evidence,
+    EvidenceBundle,
     Scenario,
     Window,
     calculate,
@@ -32,7 +33,7 @@ from app.industrial_evidence import (
 )
 from app.inference import GenerationStats, ModelMessage, observe_generation
 from app.knowledge import embed, version
-from app.models import IndustrialInvestigation, User, now
+from app.models import IndustrialInvestigation, now
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/industrial", tags=["industrial synthetic demonstration"])
@@ -51,6 +52,7 @@ class CreateInvestigation(Window):
     id: UUID
     asset_id: str = Field(max_length=80)
     scenario: Scenario = "reference"
+    source: EvidenceBundle | None = None
 
 
 class InvestigationRevision(Strict):
@@ -159,6 +161,20 @@ def output(row: IndustrialInvestigation) -> dict[str, Any]:
     }
 
 
+def attempt_history(payload: dict[str, Any], generation: dict[str, Any]) -> list[dict[str, Any]]:
+    """Bounded content-free attempt accounting; older failed observations are retained."""
+    rows = list(payload.get("generation_attempts", []))
+    identifier = generation.get("attempt_id")
+    if not identifier:
+        return rows
+    record = {**generation, "recorded_at": now().isoformat()}
+    for index, previous in enumerate(rows):
+        if previous.get("attempt_id") == identifier:
+            rows[index] = record
+            return rows
+    return [*rows, record]
+
+
 def owned(
     db: Session, identifier: UUID, user_id: UUID, *, lock: bool = False
 ) -> IndustrialInvestigation:
@@ -199,7 +215,13 @@ def recover_stale(db: Session, row: IndustrialInvestigation, request: Request) -
                 "latency_ms": None,
                 "latency_status": "not_observed_after_interruption",
                 "real_model_response": False,
+                "outcome": "failed",
+                "failure_category": "generation_interrupted",
             },
+        }
+        row.payload = {
+            **row.payload,
+            "generation_attempts": attempt_history(row.payload, row.payload["generation"]),
         }
         db.commit()
 
@@ -211,6 +233,7 @@ def assets(request: Request, auth: Auth) -> dict[str, Any]:
         "items": [{"id": key, **value, "metadata_version": "1"} for key, value in ASSETS.items()],
         "fixture_version": FIXTURE_VERSION,
         "synthetic": True,
+        "import_enabled": request.app.state.settings.industrial_import_enabled,
         "ownership": "User-owned investigations; shared synthetic assets, no enterprise tenancy",
     }
 
@@ -244,13 +267,38 @@ def preview(
 @router.post("/investigations", status_code=201, response_model=InvestigationOut)
 def create(body: CreateInvestigation, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     enabled(request)
-    if body.asset_id not in ASSETS:
+    if body.source is not None:
+        import_enabled(request)
+        if (
+            body.asset_id != body.source.asset.id
+            or Window(start=body.start, end=body.end) != body.source.window
+        ):
+            fail(422, "source_mismatch", "Use the imported asset and exact validated UTC window")
+    elif body.asset_id not in ASSETS:
         fail(404, "not_found", "Demo asset not found")
     # Serialize this user's identity/count checks and insert in one transaction.
     # A plain count lets parallel requests both claim the final available slot.
-    if db.scalar(select(User.id).where(User.id == auth[0].id).with_for_update()) is None:
-        fail(401, "unauthorized", "Sign in again before creating an investigation")
-    selection = body.model_dump(mode="json", exclude={"id"})
+    lock_account(db, auth)
+    selection = body.model_dump(mode="json", exclude={"id", "source"})
+    if body.source is not None:
+        selection["source_sha256"] = checksum(body.source.model_dump(mode="json"))
+        previous = db.scalars(
+            select(IndustrialInvestigation).where(
+                IndustrialInvestigation.user_id == auth[0].id,
+                IndustrialInvestigation.payload["import_source"]["source_id"].astext
+                == str(body.source.source_id),
+            )
+        )
+        if any(
+            row.payload["selection"].get("source_sha256") != selection["source_sha256"]
+            for row in previous
+        ):
+            fail(
+                409,
+                "source_conflict",
+                "This source identity is already bound to different content; "
+                "version it with a new identity",
+            )
     existing = db.get(IndustrialInvestigation, body.id)
     if existing is not None:
         if existing.user_id == auth[0].id and existing.payload["selection"] == selection:
@@ -266,7 +314,9 @@ def create(body: CreateInvestigation, request: Request, db: DB, auth: Auth) -> d
     )
     if count >= 100:
         fail(409, "investigation_limit", "The demonstration allows up to 100 saved investigations")
-    evidence = fixture(body.asset_id, body.scenario)
+    evidence = (
+        body.source.evidence if body.source is not None else fixture(body.asset_id, body.scenario)
+    )
     snapshot = evidence.model_dump(mode="json")
     row = IndustrialInvestigation(
         id=body.id,
@@ -284,6 +334,11 @@ def create(body: CreateInvestigation, request: Request, db: DB, auth: Auth) -> d
             "review": None,
             "decisions": [],
             "error": None,
+            **(
+                {"import_source": body.source.model_dump(mode="json", exclude={"evidence"})}
+                if body.source is not None
+                else {}
+            ),
         },
     )
     db.add(row)
@@ -293,6 +348,30 @@ def create(body: CreateInvestigation, request: Request, db: DB, auth: Auth) -> d
         db.rollback()
         fail(409, "id_conflict", "Investigation creation conflicted; reopen before retrying")
     return output(row)
+
+
+def import_enabled(request: Request) -> None:
+    enabled(request)
+    if not request.app.state.settings.industrial_import_enabled:
+        fail(404, "industrial_import_disabled", "Synthetic evidence import is not enabled here")
+
+
+class ImportPreview(Strict):
+    source_sha256: str
+    evidence: Evidence
+    facts: dict[str, Any]
+    coverage: dict[str, Any]
+
+
+@router.post("/imports/preview", response_model=ImportPreview)
+def preview_import(body: EvidenceBundle, request: Request, auth: Auth) -> dict[str, Any]:
+    import_enabled(request)
+    return {
+        "source_sha256": checksum(body.model_dump(mode="json")),
+        "evidence": body.evidence,
+        "facts": calculate(body.evidence, body.window),
+        "coverage": coverage(body.evidence, body.window),
+    }
 
 
 @router.get("/investigations", response_model=InvestigationList)
@@ -403,13 +482,25 @@ async def explain(
             "mode": "not_requested_insufficient_evidence",
             "latency_ms": int((time.monotonic() - started) * 1000),
         }
+    retrieval_started = time.monotonic()
     try:
         references = await run_in_threadpool(selected_references, evidence, window, request)
     except HTTPException:
         raise GenerationFailure("retrieval_unavailable") from None
     except (TypeError, ValueError):
         raise GenerationFailure("retrieval_invalid") from None
-    if config.model_backend == "mock":
+    finally:
+        stats.retrieval_latency_ms = int((time.monotonic() - retrieval_started) * 1000)
+    if config.model_backend == "mock" and evidence.fixture_version == "onesa-industrial-import-v1":
+        result = Explanation(
+            hypotheses=[],
+            abstained=True,
+            limitations=[
+                "Deterministic mock: imported source meaning has not been evaluated. "
+                "Review the supplied facts, provenance and missing evidence with a domain engineer."
+            ],
+        )
+    elif config.model_backend == "mock":
         first = references[0]
         result = Explanation(
             hypotheses=[
@@ -474,6 +565,7 @@ async def explain(
             ),
         ]
         parts, length = [], 0
+        generation_started = time.monotonic()
         try:
             with observe_generation(stats):
                 stream = request.app.state.model_client.stream(messages)
@@ -491,6 +583,8 @@ async def explain(
             raise
         except Exception:
             raise GenerationFailure("model_stream_unavailable") from None
+        finally:
+            stats.generation_latency_ms = int((time.monotonic() - generation_started) * 1000)
         result = parse_explanation("".join(parts))
         identity.update(
             real_model_response=True,
@@ -525,6 +619,8 @@ async def generate(
         fail(409, "generation_running", "An investigation is already running")
     if row.payload["draft"] is not None:
         fail(409, "draft_exists", "Create a separate investigation to preserve this reviewed draft")
+    if len(row.payload.get("generation_attempts", [])) >= 50:
+        fail(409, "attempt_limit", "Attempt history is full; preserve this investigation")
     db.commit()  # Do not hold a row lock while acquiring shared model capacity.
     lease = await run_in_threadpool(capacity.begin, request)
     task = None
@@ -533,6 +629,15 @@ async def generate(
     stats = GenerationStats()
     config = request.app.state.settings
     attempt = {
+        "attempt_id": str(uuid4()),
+        "started_at": now().isoformat(),
+        "finished_at": None,
+        "snapshot_sha256": row.payload["snapshot_sha256"],
+        "cache_status": "not_used",
+        "reserved_output_token_ceiling": config.model_max_output_tokens,
+        "pricing_currency": None,
+        "pricing_effective_date": None,
+        "pricing_provenance": None,
         "backend": config.model_backend,
         "model": config.model_name,
         "revision": config.model_revision,
@@ -549,7 +654,20 @@ async def generate(
         row = owned(db, identifier, auth[0].id, lock=True)
         expected(row, body)
         row.status, row.revision = "running", row.revision + 1
-        row.payload = {**row.payload, "error": None, "explanation": None, "generation": attempt}
+        legacy = row.payload.get("generation")
+        if (
+            legacy
+            and not legacy.get("attempt_id")
+            and "legacy_generation_observation" not in row.payload
+        ):
+            row.payload = {**row.payload, "legacy_generation_observation": legacy}
+        row.payload = {
+            **row.payload,
+            "error": None,
+            "explanation": None,
+            "generation": attempt,
+            "generation_attempts": attempt_history(row.payload, attempt),
+        }
         db.commit()
         claimed_revision = row.revision
         task = asyncio.create_task(explain(request, row.payload, stats))
@@ -602,18 +720,27 @@ async def generate(
     row = owned(db, identifier, auth[0].id, lock=True)
     if row.status == "running" and row.revision == claimed_revision:
         row.status, row.revision = status, row.revision + 1
+        observed = {
+            **attempt,
+            **(generation or {}),
+            "mode": (generation or {}).get("mode", status),
+            "finished_at": now().isoformat(),
+            "task_latency_ms": int((time.monotonic() - began) * 1000),
+            "retrieval_latency_ms": stats.retrieval_latency_ms,
+            "generation_latency_ms": stats.generation_latency_ms,
+            "input_tokens": stats.input_tokens,
+            "output_tokens": stats.output_tokens,
+            "outcome": status,
+            "failure_category": category,
+        }
         row.payload = {
             **row.payload,
             "explanation": result,
-            "generation": generation
-            if generation is not None
-            else {
-                **attempt,
-                "mode": status,
-                "latency_ms": int((time.monotonic() - began) * 1000),
-                "input_tokens": stats.input_tokens,
-                "output_tokens": stats.output_tokens,
+            "generation": {
+                **observed,
+                "latency_ms": observed.get("latency_ms") or observed["task_latency_ms"],
             },
+            "generation_attempts": attempt_history(row.payload, observed),
             "error": category,
             "upstream_cancellation": "Application stops; provider computation may continue",
         }
@@ -645,8 +772,15 @@ def cancel(
             "latency_ms": None,
             "latency_status": "not_observed_at_cancellation_acknowledgment",
             "real_model_response": False,
+            "outcome": "cancelled",
+            "finished_at": None,
+            "failure_category": "cancelled",
         },
         "upstream_cancellation": "Application operation stops; provider computation may continue",
+    }
+    row.payload = {
+        **row.payload,
+        "generation_attempts": attempt_history(row.payload, row.payload["generation"]),
     }
     db.commit()
     return output(row)

@@ -34,6 +34,18 @@ class DocumentationIdentityTests(unittest.TestCase):
         self.assertEqual(validate_identity(self.root), "9.8.7")
         self.assertIn("Historical 0.2.0", self.summary.read_text())
 
+    def test_explicit_public_scope_does_not_read_internal_provenance(self):
+        self.files[-1].write_text("not valid private provenance")
+        self.assertEqual(validate_identity(self.root, scope="public"), "9.8.7")
+        with self.assertRaises(ValueError):
+            validate_identity(self.root)
+        self.files[-1].unlink()
+        self.assertEqual(validate_identity(self.root, scope="public"), "9.8.7")
+        with self.assertRaises(FileNotFoundError):
+            validate_identity(self.root)
+        with self.assertRaises(ValueError):
+            validate_identity(self.root, scope="unknown")
+
     def test_each_generated_metadata_mismatch_is_rejected(self):
         for p in self.files:
             good = p.read_text()

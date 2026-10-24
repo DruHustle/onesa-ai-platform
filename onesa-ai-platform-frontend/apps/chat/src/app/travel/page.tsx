@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import {useRecordPage, RecordPageControls} from "../../lib/record-page";
 import RequireSession from "../../components/require-session";
 import { useDraftNavigation } from "../../components/draft-navigation";
 import FeatureShell from "../../components/feature-shell";
@@ -26,7 +27,9 @@ export default function Travel() {
   );
 }
 function TravelWorkspace() {
-  const [trips, setTrips] = useState<Trip[]>([]),
+  const page = useRecordPage<Trip>("/travel/trips");
+  const {items: trips, setItems: setTrips} = page;
+  const
     [selected, setSelected] = useState<Trip | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -50,18 +53,6 @@ function TravelWorkspace() {
   function change(name: keyof Draft, value: string) {
     setDraft((previous) => ({ ...previous, [name]: value }));
   }
-  useEffect(() => {
-    api("GET /travel/trips")
-      .then((r) =>
-        setTrips((previous) => [
-          ...previous,
-          ...r.items.filter(
-            (trip) => !previous.some((saved) => saved.id === trip.id),
-          ),
-        ]),
-      )
-      .catch((e) => setError(e.message));
-  }, []);
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending.current) return;
@@ -141,7 +132,8 @@ function TravelWorkspace() {
           <button disabled={busy} onClick={() => choose(null)}>
             ＋ New trip
           </button>
-          {trips.map((t) => (
+          <RecordPageControls page={page} />
+      {trips.map((t) => (
             <button
               disabled={busy}
               className="trip-link"

@@ -1,11 +1,14 @@
 # Roadmap and milestone evidence
 
-Current Industrial Investigation V1 source is implemented for synthetic development,
-with deterministic facts, owned persistence, bounded grounded hypotheses and internal
-draft/self-review actions. Its isolated hosted synthetic demonstration passed the
-recorded 22 October acceptance: one validated real-model explanation, 42 general
-and 16 Industrial UI views, and explicit draft save/reopen. Production Industrial
-activation, live factory connectors and human domain review remain separate. See the current [PRD](PRD.md#v1-event-semantics-and-working-scope).
+Industrial Investigation V1.1 has a separately accepted protected synthetic demo;
+normal AI production keeps it disabled. Current serving component identities and
+qualified source scopes are maintained in README/CHANGELOG and protected release
+receipts. The JSON evidence adapter, complete record navigation, Industrial account
+export and attempt accounting are source changes undergoing their own qualification.
+Independent domain review, a fair baseline comparison, measured useful-task economics
+and real-customer processing remain outstanding. No live factory integration or
+physical robotics is implied. See [the PRD](PRD.md) and
+[evaluation protocol](INDUSTRIAL_EVALUATION.md).
 
 > Historical hosted snapshot, reviewed 2026-10-13: [visual workflows and evidence limits](../ecosystem/VISUAL_WORKFLOWS.md). Workers AI staging generation/semantic embeddings and Oracle staging jobs/scanning are verified. Corrected database targets need new hosted acceptance; production, private documentation Access and physical hardware remain separately gated. Earlier dated milestone evidence below does not supersede this readback.
 
@@ -47,23 +50,15 @@ scope. Public descriptions live in [Applications](../public/applications.md#appl
 
 ### Existing qualification work
 
-The prepared startup fix renders sign-in content before the session check completes,
-bounds bootstrap reads to eight seconds, retries the connection without reloading,
-and defers Markdown/highlighting until messages are displayed. Optional document
-loading does not block ordinary chat; document links still require an accessible
-owned document before sending. Synthetic browser checks live in
-`apps/chat/tests/startup.spec.ts`. Exact-source hosted staging, release qualification
-and production browser timings remain required; this fix has not been deployed.
+The earlier startup and optional-document corrections are included in independently
+recorded application releases. Requalification of changed navigation/export/import
+journeys is required; do not reopen a resolved startup defect without a regression.
+Travel's live providers remain unconfigured; no paid provider or training experiment
+is authorized by this roadmap. Current hosting, semantic endpoint, recovery and
+monitoring receipts take precedence over older unverified milestone entries above.
+A limited isolated pilot still needs the named customer/domain reviewer, permitted
+inputs, identity and processing requirements, agreed acceptance and operating scope.
 
-Continue M5 authorized live travel-provider acceptance, followed by M6 approved
-training experiments and M7 hosted production acceptance. No provider credentials,
-training run, GPU host or production approval is implied by delivered software.
-The [AI configuration inventory](../engineering/AI_CONFIGURATION_INVENTORY.md)
-records the latest source-backed environment matrix, actual resources and free-only
-staging proposal. Hosted API503, isolated database provisioning/roles/migrations,
-generation and embedding hosting, identity worker delivery, backup/restore,
-manual security/accessibility and operations/content/legal acceptance remain open.
-Verify the current hosted state before closing any finding.
 Organization ownership is still unverified: published repositories are under
 DruHustle; do not claim an approved transfer to onesa-ug.
 

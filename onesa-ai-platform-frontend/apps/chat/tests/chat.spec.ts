@@ -88,7 +88,7 @@ test("documents, source-grounded chat, bounded tools and saved travel", async ({
   await expect(page.getByText("Harare is the capital of Zimbabwe.", {exact:true})).toBeVisible();
   await page.getByRole("button", {name:"Close preview"}).click();
   await page.getByRole("button", {name:"Rebuild search index"}).click();
-  await expect(page.getByRole("status")).toContainText("Document search index rebuilt");
+  await expect(page.getByRole("status").filter({hasText: "Document search index rebuilt"})).toContainText("Document search index rebuilt");
   await page.getByRole("link", { name: "Ask about this document →" }).click();
   await page.getByLabel("Message Onesa AI").fill("What is Harare?");
   await page.getByLabel("Send message").click();

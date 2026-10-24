@@ -1,6 +1,6 @@
 # Prefer the optional repository-local supported Node runtime without changing system tools.
-ifneq ($(wildcard data/runtime/node24/bin/node),)
-export PATH := $(CURDIR)/data/runtime/node24/bin:$(PATH)
+ifneq ($(wildcard data/runtime/node24-24.22.1/bin/node),)
+export PATH := $(CURDIR)/data/runtime/node24-24.22.1/bin:$(PATH)
 endif
 
 PYTHON := .venv/bin/python
@@ -54,16 +54,16 @@ docs-api:
 	$(PYTHON) scripts/docs/generate.py --scope $(DOCS_SCOPE)
 
 docs-diagrams: docs-api
-	node scripts/docs/render.mjs
+	ONESA_DOCS_SCOPE=$(DOCS_SCOPE) node scripts/docs/render.mjs
 
 docs-pdf: docs-diagrams
-	$(PYTHON) scripts/docs/validate.py --assets
+	$(PYTHON) scripts/docs/validate.py --scope $(DOCS_SCOPE) --assets
 
 docs-assets: docs-pdf
 
 docs-public: DOCS_SCOPE=public
 docs-public: docs-api
-	$(PYTHON) scripts/docs/validate.py --staged
+	$(PYTHON) scripts/docs/validate.py --scope public --staged
 	npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
 
 docs-internal: DOCS_SCOPE=internal

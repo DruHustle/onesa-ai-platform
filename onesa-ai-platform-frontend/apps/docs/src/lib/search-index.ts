@@ -28,8 +28,8 @@ export function searchDocumentation(entries: IndexedSearchEntry[], query: string
   return entries
     .filter(entry => terms.every(term => entry.searchText.includes(term)))
     .map(entry => ({entry, score: terms.reduce((score, term) =>
-      score + (entry.searchTitle.includes(term) ? 10 : 1), 0)}))
-    .sort((a, b) => b.score - a.score)
+      score + (entry.searchTitle.includes(term) ? 10 : 1), entry.url.startsWith('/docs/') ? 3 : 0)}))
+    .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
     .slice(0, 8)
     .map(({entry}) => entry);
 }

@@ -51,6 +51,11 @@ def evaluator(tmp_path, monkeypatch):
 
     select()
     monkeypatch.setattr(module, "MANIFEST", manifest)
+    # These fault injections exercise the original scoring boundary only. The
+    # independent import suite has its own real-input and fault-injection cases.
+    monkeypatch.setattr(
+        module, "evaluate_imports", lambda: {"result": "PASS", "scope": "unit double"}
+    )
     monkeypatch.setattr(module, "Settings", lambda **kwargs: SimpleNamespace(**kwargs))
     record = SimpleNamespace(model_dump=lambda **kwargs: {})
     monkeypatch.setattr(module, "input_case", lambda case: {})

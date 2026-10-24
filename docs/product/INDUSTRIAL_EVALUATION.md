@@ -115,3 +115,23 @@ identities. Keep production disabled for Industrial until its separate activatio
 is qualified. Existing approved Docs access and Robot safety/history are unaffected;
 this package does not reopen those completed acceptances or supply missing privacy,
 real-data rights, processor, retention or commercial decisions.
+
+## Import adapter evaluation and attempt evidence
+
+The same evaluator now reports a separate `onesa-industrial-import-evaluation-v1`
+section with 14 source-visible held-out regression cases and a hash-bound original
+synthetic JSON sample. It does not change the frozen original 43 cases or its parent
+hashes. Cases cover interval union/boundaries, quality/open-event lower bounds, stale
+samples, reference applicability/versions and rejected asset/timezone/unit/hash/data
+classification. Expectations are independent of generated responses. Source-visible
+cases are not blind generalisation evidence. API/browser ownership, concurrency,
+reopen/export and prompt-instruction boundaries remain separate checks.
+
+Generation attempt metadata now preserves failed/retried/cancelled observations and
+known task/retrieval/provider-stream durations, with observed usage separate from
+reserved output ceilings. Pricing currency/date/provenance and actual cost remain
+null until supplied from authorised observed billing evidence. No paid or renewed
+model experiment follows from an offline evaluation. Cost per independently accepted
+useful task remains NOT_OBSERVED until genuine review and complete costs exist.
+The restricted owner-review packet contains the unfilled review/baseline, discovery,
+pilot statement of work, privacy/identity, operations and funding decision worksheets.

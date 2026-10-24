@@ -1,4 +1,5 @@
 "use client";
+import {useRecordPage, RecordPageControls, useRecordSelection} from "../lib/record-page";
 import ApplicationsNav from "../components/applications-nav";
 import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
@@ -29,16 +30,19 @@ export default function Chat() {
   } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [sessionAttempt, setSessionAttempt] = useState(0);
-  const [documents, setDocuments] = useState<{ id: string; title: string }[]>(
-    [],
-  );
+  const [linkedDocument, setLinkedDocument] = useState<{id: string; title: string} | null>(null);
   const [documentIds, setDocumentIds] = useState<string[]>([]);
   const [knowledgeReady, setKnowledgeReady] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [checking, setChecking] = useState(true),
     [signup, setSignup] = useState(false);
-  const [list, setList] = useState<Conversation[]>([]),
-    [selected, setSelected] = useState<string | null>(null),
+  const [selectedLocation, setSelectedLocation] = useRecordSelection("conversation");
+  const history = useRecordPage<Conversation>("/conversations", user?.id || "");
+  const knowledge = useRecordPage<{id: string; title: string}>("/knowledge/documents", user?.id || "");
+  const {items: list, setItems: setList} = history;
+  const documents = linkedDocument && !knowledge.items.some(item => item.id === linkedDocument.id)
+    ? [linkedDocument, ...knowledge.items] : knowledge.items;
+  const [selected, setSelected] = useState<string | null>(null),
     [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(""),
     [partial, setPartial] = useState<string | null>(null),
@@ -52,16 +56,37 @@ export default function Chat() {
     bottom = useRef<HTMLDivElement | null>(null),
     entry = useRef<HTMLTextAreaElement | null>(null);
   const credentialDraft = useRef<HTMLInputElement | null>(null);
-  const refreshList = useCallback(async () => {
-    const response = await call("/conversations");
-    setList((await response.json()).items);
-  }, []);
+  const detailRequest = useRef(0);
+  const identityEpoch = useRef(0), draftOwner = useRef<string | null>(null);
+  const refreshList = history.reload;
   const acceptUser = useCallback((current: User) => {
+    identityEpoch.current += 1;
+    if (draftOwner.current && draftOwner.current !== current.id) {
+      setInput(""); setMessages([]); setSelected(null); detailRequest.current += 1;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("conversation");
+      for (const key of [...url.searchParams.keys()]) if (key.startsWith("page_")) url.searchParams.delete(key);
+      window.history.replaceState(window.history.state, "", url);
+      window.dispatchEvent(new Event("onesa-record-page"));
+    }
+    draftOwner.current = current.id;
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
     const intended = new URLSearchParams(window.location.search).get("next");
-    if (intended === "/travel" || intended === "/knowledge" || intended === "/industrial") {window.location.replace(intended); return;}
+    if (intended === "/agents" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial") {window.location.replace(intended); return;}
+    setLinkedDocument(null); setDocumentIds([]);
     setUser(current);
+  }, []);
+  useEffect(() => {
+    const expired = () => {
+      identityEpoch.current += 1; detailRequest.current += 1;
+      abort.current?.abort();
+      setUser(null); setBusy(false); setMessages([]); setSelected(null);
+      setLinkedDocument(null); setDocumentIds([]); setKnowledgeReady(false); setPartial(null);
+      setError("Your session expired. Sign in with the same account to continue your draft.");
+    };
+    window.addEventListener("onesa-session-expired", expired);
+    return () => window.removeEventListener("onesa-session-expired", expired);
   }, []);
   useEffect(() => {
     let active = true;
@@ -94,33 +119,15 @@ export default function Chat() {
         .then((r) => r.json())
         .then((data) => { if (active) setModel(data.items[0]); })
         .catch((e) => { if (active) setError(e.message); });
-    if (user)
-      call("/knowledge/documents", "GET", undefined, signal)
-        .then((r) => r.json())
-        .then((data) => {
+    if (user) {
+      const id = new URLSearchParams(window.location.search).get("document");
+      if (id) api("GET /knowledge/documents/{identifier}", {params: {identifier: id}, signal})
+        .then(document => {
           if (!active) return;
-          setDocuments(data.items);
-          const id = new URLSearchParams(window.location.search).get(
-            "document",
-          );
-          if (id && !data.items.some((d: { id: string }) => d.id === id)) {
-            setError("The selected document is unavailable. Open Knowledge to select an accessible document.");
-            return;
-          }
-          if (id) setDocumentIds([id]);
-          setKnowledgeReady(true);
+          setLinkedDocument(document); setDocumentIds([document.id]); setKnowledgeReady(true);
         })
-        .catch(() => {
-          if (!active) return;
-          const id = new URLSearchParams(window.location.search).get("document");
-          if (id) setError("Unable to load the selected document. Reload to retry.");
-          else setKnowledgeReady(true);
-        });
-    if (user)
-      call("/conversations", "GET", undefined, signal)
-        .then((r) => r.json())
-        .then((data) => { if (active) setList(data.items); })
-        .catch((e) => { if (active) setError(e.message); });
+        .catch(() => { if (active) setError("The selected document is unavailable or access could not be verified. Open Knowledge or reload to retry."); });
+    }
     return () => {
       active = false;
       controller.abort();
@@ -187,12 +194,29 @@ export default function Chat() {
       setBusy(false);
     }
   }
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!user || busy || selectedLocation === selected) return () => controller.abort();
+    const sequence = ++detailRequest.current;
+    const read = selectedLocation ? call(`/conversations/${encodeURIComponent(selectedLocation)}`, "GET", undefined,
+      AbortSignal.any([controller.signal, AbortSignal.timeout(8000)])).then(response => response.json()) : Promise.resolve({messages: []});
+    read.then(result => {
+      if (controller.signal.aborted || sequence !== detailRequest.current) return;
+      setMessages(result.messages); setSelected(selectedLocation); setPartial(null);
+    }).catch(() => {if (!controller.signal.aborted) setError("Unable to reopen this conversation. Select it again to retry.");});
+    return () => controller.abort();
+  }, [user, selectedLocation, selected, busy]);
+
   async function open(id: string) {
     if (busy) return;
     setError("");
     try {
-      const r = await call(`/conversations/${id}`);
-      setMessages((await r.json()).messages);
+      const request = ++detailRequest.current, epoch = identityEpoch.current;
+      const r = await call(`/conversations/${id}`, "GET", undefined, AbortSignal.timeout(8000));
+      const result = await r.json();
+      if (request !== detailRequest.current || epoch !== identityEpoch.current) return;
+      setMessages(result.messages);
+      setSelectedLocation(id);
       setSelected(id);
       setPartial(null);
       setMenu(false);
@@ -202,11 +226,14 @@ export default function Chat() {
     }
   }
   async function create(): Promise<string> {
+    const epoch = identityEpoch.current;
     const r = await call("/conversations", "POST", {
       title: input.trim().slice(0, 70) || "New conversation",
     });
     const row = await r.json();
+    if (epoch !== identityEpoch.current) return row.id;
     setSelected(row.id);
+    setSelectedLocation(row.id);
     setMessages([]);
     await refreshList();
     return row.id;
@@ -227,13 +254,15 @@ export default function Chat() {
   async function send(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim() || busy || !knowledgeReady) return;
-    const content = input;
+    const content = input, epoch = identityEpoch.current;
+    detailRequest.current += 1;
     setBusy(true);
     setError("");
     setInput("");
     let id = selected;
     try {
       if (!id) id = await create();
+      if (epoch !== identityEpoch.current) return;
       setMessages((previous) => [
         ...previous,
         { id: "pending", role: "user", content: { text: content } },
@@ -258,6 +287,7 @@ export default function Chat() {
       }
       if (!response.body) throw new Error("Streaming unavailable");
       for await (const event of chatEvents(response.body)) {
+        if (epoch !== identityEpoch.current) break;
         if (event.kind === "message_start") { activeRun.current = event; setCanStop(true); }
         if (event.kind === "content_delta") setPartial(p => (p || "") + event.text);
         if (event.kind === "error") throw new Error(event.message);
@@ -265,12 +295,14 @@ export default function Chat() {
       }
       setPartial(null);
     } catch (e) {
+      if (epoch !== identityEpoch.current) return;
       setError(
         (e as Error).name === "AbortError"
           ? "Generation stopped."
           : (e as Error).message,
       );
     } finally {
+      if (epoch === identityEpoch.current) {
       abort.current = null;
       activeRun.current = null;
       setCanStop(false);
@@ -278,13 +310,15 @@ export default function Chat() {
       if (id) {
         try {
           const r = await call(`/conversations/${id}`);
-          setMessages((await r.json()).messages);
+          const saved = await r.json();
+          if (epoch === identityEpoch.current) setMessages(saved.messages);
         } catch {
           /* Keep the existing generation error visible if history reload fails. */
         }
       }
-      await refreshList().catch(() => {});
+      refreshList();
       entry.current?.focus();
+      }
     }
   }
   async function rename() {
@@ -308,6 +342,7 @@ export default function Chat() {
       return;
     try {
       await call(`/conversations/${selected}`, "DELETE");
+      setSelectedLocation(null);
       setSelected(null);
       setMessages([]);
       setPartial(null);
@@ -317,10 +352,12 @@ export default function Chat() {
     }
   }
   async function logout() {
+    detailRequest.current += 1;
     try {
       await call("/auth/logout", "POST");
+      identityEpoch.current += 1;
       setUser(null);
-      setDocuments([]);
+      setLinkedDocument(null);
       setDocumentIds([]);
       setKnowledgeReady(false);
       setMessages([]);
@@ -440,6 +477,8 @@ export default function Chat() {
           className="new"
           disabled={busy}
           onClick={() => {
+            detailRequest.current += 1;
+            setSelectedLocation(null);
             setSelected(null);
             setMessages([]);
             setPartial(null);
@@ -450,6 +489,7 @@ export default function Chat() {
           {copy.newConversation}
         </button>
         <nav aria-label="Conversations">
+          <RecordPageControls page={history} />
           {list.map((c) => (
             <button
               key={c.id}
@@ -460,7 +500,7 @@ export default function Chat() {
               {c.title}
             </button>
           ))}
-          {!list.length && (
+          {!history.loading && !history.error && !list.length && (
             <p className="caption">Your saved conversations appear here.</p>
           )}
         </nav>
@@ -592,9 +632,11 @@ export default function Chat() {
           <div ref={bottom} />
         </div>
         <div className="composer">
-          {!!documents.length && (
+          {(!!documents.length || knowledge.error || knowledge.loading) && (
             <details className="document-picker">
               <summary>Use documents ({documentIds.length} selected)</summary>
+              <RecordPageControls page={knowledge} />
+              {!!documentIds.length && <button type="button" disabled={busy} onClick={() => setDocumentIds([])}>Clear selected documents</button>}
               {documents.map((d) => (
                 <label key={d.id}>
                   <input

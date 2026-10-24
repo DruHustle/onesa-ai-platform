@@ -916,6 +916,23 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
           }
         ],
         "responses": {
@@ -1332,6 +1349,23 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
           }
         ],
         "responses": {
@@ -1566,45 +1600,26 @@
       }
     },
     "/api/v1/agents/runs": {
-      "get": {
-        "tags": [
-          "agents"
-        ],
-        "summary": "Listing",
-        "operationId": "listing_api_v1_agents_runs_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentRunList"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      },
       "post": {
         "tags": [
           "agents"
         ],
         "summary": "Execute",
         "operationId": "execute_api_v1_agents_runs_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RunRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -1627,12 +1642,72 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Listing",
+        "operationId": "listing_api_v1_agents_runs_get",
         "security": [
           {
             "APIKeyCookie": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRunList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/agents/runs/{identifier}": {
@@ -1732,45 +1807,26 @@
       }
     },
     "/api/v1/travel/trips": {
-      "get": {
-        "tags": [
-          "travel"
-        ],
-        "summary": "Listing",
-        "operationId": "listing_api_v1_travel_trips_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TripList"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      },
       "post": {
         "tags": [
           "travel"
         ],
         "summary": "Create",
         "operationId": "create_api_v1_travel_trips_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Preferences"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -1793,12 +1849,72 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "travel"
+        ],
+        "summary": "Listing",
+        "operationId": "listing_api_v1_travel_trips_get",
         "security": [
           {
             "APIKeyCookie": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/travel/trips/{identifier}": {
@@ -2184,6 +2300,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InvestigationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/industrial/imports/preview": {
+      "post": {
+        "tags": [
+          "industrial synthetic demonstration"
+        ],
+        "summary": "Preview Import",
+        "operationId": "preview_import_api_v1_industrial_imports_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceBundle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
                 }
               }
             }
@@ -2605,6 +2767,13 @@
             "type": "array",
             "title": "Trips"
           },
+          "industrial_investigations": {
+            "items": {
+              "$ref": "#/components/schemas/InvestigationOut"
+            },
+            "type": "array",
+            "title": "Industrial Investigations"
+          },
           "scope": {
             "type": "string",
             "title": "Scope"
@@ -2619,6 +2788,7 @@
           "documents",
           "agent_runs",
           "trips",
+          "industrial_investigations",
           "scope"
         ],
         "title": "AccountExport"
@@ -2648,6 +2818,17 @@
       },
       "AgentRunList": {
         "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/AgentRunOut"
@@ -2885,6 +3066,17 @@
       },
       "ConversationList": {
         "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ConversationOut"
@@ -2987,6 +3179,16 @@
             ],
             "title": "Scenario",
             "default": "reference"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceBundle"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -3112,6 +3314,17 @@
       },
       "DocumentList": {
         "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/DocumentMetadata"
@@ -3195,6 +3408,215 @@
         ],
         "title": "DraftChange"
       },
+      "Event": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "kind": {
+            "type": "string",
+            "const": "stop",
+            "title": "Kind",
+            "default": "stop"
+          },
+          "source": {
+            "type": "string",
+            "const": "synthetic-event-log",
+            "title": "Source",
+            "default": "synthetic-event-log"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "unknown",
+              "bad"
+            ],
+            "title": "Quality",
+            "default": "good"
+          },
+          "version": {
+            "type": "string",
+            "const": "1",
+            "title": "Version",
+            "default": "1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "start",
+          "end"
+        ],
+        "title": "Event"
+      },
+      "Evidence": {
+        "properties": {
+          "fixture_version": {
+            "type": "string",
+            "enum": [
+              "onesa-industrial-synthetic-v1",
+              "onesa-industrial-import-v1"
+            ],
+            "title": "Fixture Version",
+            "default": "onesa-industrial-synthetic-v1"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "metadata_version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Metadata Version",
+            "default": "1"
+          },
+          "events": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Event"
+                },
+                {
+                  "$ref": "#/components/schemas/ImportedEvent"
+                }
+              ]
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Events"
+          },
+          "signals": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Signal"
+                },
+                {
+                  "$ref": "#/components/schemas/ImportedSignal"
+                }
+              ]
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Signals"
+          },
+          "references": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Reference"
+                },
+                {
+                  "$ref": "#/components/schemas/ImportedReference"
+                }
+              ]
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "References"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_id",
+          "events",
+          "signals",
+          "references"
+        ],
+        "title": "Evidence"
+      },
+      "EvidenceBundle": {
+        "properties": {
+          "format_version": {
+            "type": "string",
+            "const": "onesa-industrial-evidence-v1",
+            "title": "Format Version"
+          },
+          "classification": {
+            "type": "string",
+            "const": "synthetic",
+            "title": "Classification"
+          },
+          "source_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Id"
+          },
+          "source_timezone": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Source Timezone"
+          },
+          "asset": {
+            "$ref": "#/components/schemas/ImportedAsset"
+          },
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format_version",
+          "classification",
+          "source_id",
+          "source_timezone",
+          "asset",
+          "window",
+          "evidence"
+        ],
+        "title": "EvidenceBundle",
+        "description": "Data-only JSON, never a URL/file/SQL/instruction connector or rights approval."
+      },
       "ExportConversation": {
         "properties": {
           "conversation": {
@@ -3248,6 +3670,335 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportPreview": {
+        "properties": {
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/Evidence"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Facts"
+          },
+          "coverage": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Coverage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_sha256",
+          "evidence",
+          "facts",
+          "coverage"
+        ],
+        "title": "ImportPreview"
+      },
+      "ImportedAsset": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "metadata_version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Metadata Version"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "equipment_type": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Equipment Type"
+          },
+          "provenance": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "metadata_version",
+          "name",
+          "equipment_type",
+          "provenance"
+        ],
+        "title": "ImportedAsset"
+      },
+      "ImportedEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "kind": {
+            "type": "string",
+            "const": "stop",
+            "title": "Kind",
+            "default": "stop"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Source",
+            "default": "synthetic-event-log"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "unknown",
+              "bad"
+            ],
+            "title": "Quality",
+            "default": "good"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Version",
+            "default": "1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "start",
+          "end"
+        ],
+        "title": "ImportedEvent"
+      },
+      "ImportedReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Version"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Anchor"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Text"
+          },
+          "rights": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Rights",
+            "default": "Onesa original synthetic reference"
+          },
+          "effective_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective Start"
+          },
+          "effective_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective End"
+          },
+          "superseded": {
+            "type": "boolean",
+            "title": "Superseded",
+            "default": false
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "asset_id",
+          "anchor",
+          "title",
+          "text",
+          "effective_start",
+          "effective_end",
+          "sha256"
+        ],
+        "title": "ImportedReference"
+      },
+      "ImportedSignal": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "pressure",
+              "temperature"
+            ],
+            "title": "Signal"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "bar",
+              "degC"
+            ],
+            "title": "Unit"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "value": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Value"
+          },
+          "sample_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Sample Seconds"
+          },
+          "freshness_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 1.0,
+            "title": "Freshness Seconds"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "unknown",
+              "bad"
+            ],
+            "title": "Quality",
+            "default": "good"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Source",
+            "default": "synthetic-sensors"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Version",
+            "default": "1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "signal",
+          "unit",
+          "timestamp",
+          "value",
+          "sample_seconds",
+          "freshness_seconds"
+        ],
+        "title": "ImportedSignal"
       },
       "InvestigationList": {
         "properties": {
@@ -3825,6 +4576,84 @@
         ],
         "title": "RecoveryRequest"
       },
+      "Reference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Version"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Anchor"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Text"
+          },
+          "rights": {
+            "type": "string",
+            "const": "Onesa original synthetic reference",
+            "title": "Rights",
+            "default": "Onesa original synthetic reference"
+          },
+          "effective_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective Start"
+          },
+          "effective_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective End"
+          },
+          "superseded": {
+            "type": "boolean",
+            "title": "Superseded",
+            "default": false
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "asset_id",
+          "anchor",
+          "title",
+          "text",
+          "effective_start",
+          "effective_end",
+          "sha256"
+        ],
+        "title": "Reference"
+      },
       "Register": {
         "properties": {
           "email": {
@@ -4115,6 +4944,96 @@
         ],
         "title": "SessionOut"
       },
+      "Signal": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "asset_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Asset Id"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "pressure",
+              "temperature"
+            ],
+            "title": "Signal"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "bar",
+              "degC"
+            ],
+            "title": "Unit"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "value": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Value"
+          },
+          "sample_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Sample Seconds"
+          },
+          "freshness_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 1.0,
+            "title": "Freshness Seconds"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "unknown",
+              "bad"
+            ],
+            "title": "Quality",
+            "default": "good"
+          },
+          "source": {
+            "type": "string",
+            "const": "synthetic-sensors",
+            "title": "Source",
+            "default": "synthetic-sensors"
+          },
+          "version": {
+            "type": "string",
+            "const": "1",
+            "title": "Version",
+            "default": "1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "asset_id",
+          "signal",
+          "unit",
+          "timestamp",
+          "value",
+          "sample_seconds",
+          "freshness_seconds"
+        ],
+        "title": "Signal"
+      },
       "Start": {
         "properties": {
           "filename": {
@@ -4188,7 +5107,10 @@
           },
           "effect": {
             "type": "string",
-            "const": "local computation",
+            "enum": [
+              "local computation",
+              "read-only owned evidence"
+            ],
             "title": "Effect"
           }
         },
@@ -4220,6 +5142,17 @@
       },
       "TripList": {
         "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/TripOut"
@@ -4380,6 +5313,27 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Window": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "Window"
       }
     },
     "securitySchemes": {

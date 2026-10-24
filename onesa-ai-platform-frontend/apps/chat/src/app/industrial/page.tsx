@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import IndustrialImport, {IndustrialFactsTool} from "../../components/industrial-import";
 import RequireSession from "../../components/require-session";
 import FeatureShell from "../../components/feature-shell";
 import { useDraftNavigation } from "../../components/draft-navigation";
@@ -104,6 +105,7 @@ function Workspace() {
     de = locale === "de";
   const text = (en: string, german: string) => (de ? german : en);
   const [listState, setListState] = useState<"loading" | "loaded" | "failed">("loading");
+  const [importAvailable, setImportAvailable] = useState(false);
   const [assets, setAssets] = useState<{ id: string; name: string }[]>([]);
   const [items, setItems] = useState<Investigation[]>([]),
     [selected, setSelected] = useState<Investigation | null>(null);
@@ -222,6 +224,7 @@ function Workspace() {
           typeof item.name === "string" && item.name.length > 0))
           throw new Error("Invalid Industrial asset catalog");
         setAssets(catalog.items as { id: string; name: string }[]);
+        setImportAvailable(catalog.import_enabled === true);
       })
       .catch((reason) => {
         if (!abort.signal.aborted) setError(message(reason));
@@ -562,6 +565,7 @@ function Workspace() {
           ))}
         </nav>
         <div className={styles.content}>
+          {!selected && importAvailable && <IndustrialImport locked={locked} accept={accept} />}
           {!selected && (
             <form onSubmit={inspect} className={styles.panel}>
               <h2>{text("1. Select evidence", "1. Belege auswählen")}</h2>
@@ -658,6 +662,7 @@ function Workspace() {
                 {selected.payload.selection.end}
               </p>
               <CoveragePanel info={selected.payload.coverage} de={de} />
+              {importAvailable && <IndustrialFactsTool key={selected.id} investigation={selected} locked={locked} />}
               <button disabled={locked || generating} onClick={exportEvidence}>{text("Download synthetic evidence", "Synthetische Belege herunterladen")}</button>
               <details><summary>{text("Engineering review criteria", "Kriterien für die technische Prüfung")}</summary>
                 <p>{text("Check the asset, UTC window, coverage and source versions. Verify each fact and quoted source. Reject unsupported causes, invented certainty or operating instructions. Record missing evidence and useful corrections before accepting a draft.", "Prüfe Anlage, UTC-Zeitfenster, Abdeckung und Quellversionen. Prüfe jeden Fakt und jedes Zitat. Lehne unbelegte Ursachen, erfundene Gewissheit und Betriebsanweisungen ab. Dokumentiere fehlende Belege und Korrekturen vor Annahme eines Entwurfs.")}</p>

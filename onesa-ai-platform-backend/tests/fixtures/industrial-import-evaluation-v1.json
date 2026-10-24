@@ -1,0 +1,248 @@
+{
+  "version": "onesa-industrial-import-evaluation-v1",
+  "sample": "industrial-import-v1.json",
+  "sample_sha256": "e5551c6ac847d4996a63f253a5aba46d4e49c2fdd95c4d7999b2a47692469c51",
+  "provenance": "Onesa original synthetic adapter cases; expected values calculated from declared interval semantics before execution; no generated answer used",
+  "split": "visible_held_out_regression",
+  "leakage_controls": "Separate from the frozen original 43 cases. Inputs/expectations are source-visible and are not blind validation. Human/baseline ratings are unset. No model response tuning or real-model call.",
+  "cases": [
+    {
+      "id": "import-overlap-and-exact-end",
+      "patches": [],
+      "expected": {
+        "known_downtime_seconds": 300,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": true
+      }
+    },
+    {
+      "id": "import-clipped-boundary",
+      "patches": [
+        {
+          "path": [
+            "window",
+            "start"
+          ],
+          "value": "2026-10-24T09:05:00Z"
+        },
+        {
+          "path": [
+            "window",
+            "end"
+          ],
+          "value": "2026-10-24T09:06:00Z"
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 60,
+        "event_count": 1,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": true
+      }
+    },
+    {
+      "id": "import-bad-quality-lower-bound",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "events",
+            1,
+            "quality"
+          ],
+          "value": "bad"
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 180,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": false
+      }
+    },
+    {
+      "id": "import-open-event-lower-bound",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "events",
+            1,
+            "end"
+          ],
+          "value": null
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 180,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": false
+      }
+    },
+    {
+      "id": "import-stale-signal",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "signals",
+            0,
+            "timestamp"
+          ],
+          "value": "2026-10-24T09:01:00Z"
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 300,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": true
+      },
+      "missing": [
+        "fresh signal coverage"
+      ]
+    },
+    {
+      "id": "import-reference-outside-effective-window",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "references",
+            0,
+            "effective_end"
+          ],
+          "value": "2026-10-23T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 300,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": true
+      },
+      "missing": [
+        "applicable current reference"
+      ]
+    },
+    {
+      "id": "import-new-reference-version",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "references",
+            0,
+            "version"
+          ],
+          "value": "3"
+        }
+      ],
+      "expected": {
+        "known_downtime_seconds": 300,
+        "event_count": 2,
+        "distinct_downtime_episodes": 1,
+        "downtime_complete": true
+      }
+    },
+    {
+      "id": "import-reject-wrong-asset",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "events",
+            0,
+            "asset_id"
+          ],
+          "value": "other"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-wrong-metadata",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "metadata_version"
+          ],
+          "value": "other"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-ambiguous-timezone",
+      "patches": [
+        {
+          "path": [
+            "source_timezone"
+          ],
+          "value": "CET"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-non-utc-event",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "events",
+            0,
+            "start"
+          ],
+          "value": "2026-10-24T11:02:00+02:00"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-wrong-unit",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "signals",
+            0,
+            "unit"
+          ],
+          "value": "psi"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-wrong-content-hash",
+      "patches": [
+        {
+          "path": [
+            "evidence",
+            "references",
+            0,
+            "sha256"
+          ],
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "reject": true
+    },
+    {
+      "id": "import-reject-unapproved-real-classification",
+      "patches": [
+        {
+          "path": [
+            "classification"
+          ],
+          "value": "customer"
+        }
+      ],
+      "reject": true
+    }
+  ]
+}

@@ -3,7 +3,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_PYTHON_DOWNLOADS=never
 COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /usr/local/bin/uv
 WORKDIR /build
 COPY requirements.lock requirements-build.lock ./
-RUN apk upgrade --no-cache && apk add --no-cache --virtual .build-deps build-base libffi-dev
+RUN apk upgrade --no-cache && apk add --no-cache 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3' && apk add --no-cache --virtual .build-deps build-base libffi-dev
 RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/lib/python3.11/site-packages/pip* /usr/local/bin/pip* \
     && uv pip install --system --no-cache -r requirements-build.lock \
     && uv pip install --no-cache --prefix=/install -r requirements.lock
@@ -17,7 +17,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 # The PDF worker installs its BPF filter through libc.prctl on both Linux ABIs.
 # Compilation tools stay in the build stage; retain only runtime shared libraries.
-RUN apk upgrade --no-cache && apk add --no-cache libffi libstdc++ libseccomp
+RUN apk upgrade --no-cache && apk add --no-cache 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3' && apk add --no-cache libffi libstdc++ libseccomp
 COPY --from=build /install /usr/local
 COPY app ./app
 COPY alembic.ini ./

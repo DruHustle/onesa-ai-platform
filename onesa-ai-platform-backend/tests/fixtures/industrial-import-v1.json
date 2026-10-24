@@ -1,0 +1,87 @@
+{
+  "format_version": "onesa-industrial-evidence-v1",
+  "classification": "synthetic",
+  "source_id": "01234567-89ab-4cde-8123-456789abcdef",
+  "source_timezone": "Europe/Berlin",
+  "asset": {
+    "id": "synthetic-separator-17",
+    "metadata_version": "2",
+    "name": "Synthetic separator 17",
+    "equipment_type": "synthetic separator",
+    "provenance": "Onesa original synthetic adapter sample; no customer or machine input"
+  },
+  "window": {
+    "start": "2026-10-24T09:00:00Z",
+    "end": "2026-10-24T09:30:00Z"
+  },
+  "evidence": {
+    "fixture_version": "onesa-industrial-import-v1",
+    "asset_id": "synthetic-separator-17",
+    "metadata_version": "2",
+    "events": [
+      {
+        "id": "stop-a",
+        "asset_id": "synthetic-separator-17",
+        "start": "2026-10-24T09:02:00Z",
+        "end": "2026-10-24T09:05:00Z",
+        "kind": "stop",
+        "source": "synthetic-export-17",
+        "quality": "good",
+        "version": "2",
+        "reason": "Synthetic operator observation; cause unknown"
+      },
+      {
+        "id": "stop-b",
+        "asset_id": "synthetic-separator-17",
+        "start": "2026-10-24T09:04:00Z",
+        "end": "2026-10-24T09:07:00Z",
+        "kind": "stop",
+        "source": "synthetic-export-17",
+        "quality": "good",
+        "version": "2",
+        "reason": "Synthetic operator observation; cause unknown"
+      },
+      {
+        "id": "stop-boundary",
+        "asset_id": "synthetic-separator-17",
+        "start": "2026-10-24T09:30:00Z",
+        "end": "2026-10-24T09:31:00Z",
+        "kind": "stop",
+        "source": "synthetic-export-17",
+        "quality": "good",
+        "version": "2",
+        "reason": "Synthetic operator observation; cause unknown"
+      }
+    ],
+    "signals": [
+      {
+        "id": "pressure-17",
+        "asset_id": "synthetic-separator-17",
+        "signal": "pressure",
+        "unit": "bar",
+        "timestamp": "2026-10-24T09:29:00Z",
+        "value": 5.2,
+        "sample_seconds": 60,
+        "freshness_seconds": 120,
+        "quality": "good",
+        "source": "synthetic-sensor-export-17",
+        "version": "2"
+      }
+    ],
+    "references": [
+      {
+        "id": "synthetic-maintenance-17",
+        "version": "2",
+        "asset_id": "synthetic-separator-17",
+        "anchor": "pressure-review",
+        "title": "Synthetic separator review guidance",
+        "text": "Synthetic reference: compare event reasons with contemporaneous pressure observations. A pressure observation does not establish the cause of a stop. Obtain maintenance inspection evidence before any action.",
+        "rights": "Onesa original synthetic reference",
+        "effective_start": "2026-01-01T00:00:00Z",
+        "effective_end": "2027-01-01T00:00:00Z",
+        "superseded": false,
+        "sha256": "68743cdb03f13581d6a55c384113829a11cc894b0495a3c2b2e676f6efb3bcba"
+      }
+    ]
+  }
+}

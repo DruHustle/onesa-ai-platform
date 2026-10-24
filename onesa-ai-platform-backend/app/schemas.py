@@ -84,6 +84,7 @@ class ChatRequest(Strict):
 
 
 class ConversationList(Strict):
+    next_cursor: str | None = None
     items: list[ConversationOut]
     total: int
     limit: int
