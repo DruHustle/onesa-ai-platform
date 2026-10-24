@@ -54,10 +54,10 @@ docs-api:
 	$(PYTHON) scripts/docs/generate.py --scope $(DOCS_SCOPE)
 
 docs-diagrams: docs-api
-	node scripts/docs/render.mjs
+	ONESA_DOCS_SCOPE=$(DOCS_SCOPE) node scripts/docs/render.mjs
 
 docs-pdf: docs-diagrams
-	$(PYTHON) scripts/docs/validate.py --assets
+	$(PYTHON) scripts/docs/validate.py --scope $(DOCS_SCOPE) --assets
 
 docs-assets: docs-pdf
 
