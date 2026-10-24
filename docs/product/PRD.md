@@ -270,3 +270,30 @@ work, approve equipment operation or bypass review. See the
 script, failing-evidence example, human criteria, discovery and pilot boundaries.
 A new hosted model run requires a finite current allowance and exact source/model
 scope. Ordinary production remains distinct from the isolated synthetic demonstration.
+
+## Versioned synthetic import candidate
+
+The first evidence adapter accepts a bounded JSON `onesa-industrial-evidence-v1`
+bundle with an explicit synthetic classification. Asset and metadata version, UTC
+window, IANA source timezone, immutable event/signal identities, source/reason/quality,
+pressure/bar or temperature/degC units, sampling/freshness and hashed versioned
+references are required. It never fetches a source URL or executes instructions.
+Preview is non-persistent. Save binds the validated snapshot and source hash to an
+owned investigation transactionally; conflicting investigation/source IDs fail.
+The original bundled demo remains reproducible. Normal production and import flags
+remain default off. A real customer's data rights and processing/deployment approval
+are prerequisites beyond a software feature flag.
+
+The supported flow is import/select → validate and inspect facts/coverage → bounded
+hypothesis or abstention → editable draft → explicit self-review → reopen/export.
+The registered `industrial_facts` tool requires an explicit grant and reauthorizes
+the owned saved source/hash. It cannot command a machine or infer a diagnosis.
+
+Each new generation records a bounded attempt identity, outcome, actual task,
+retrieval and provider-stream durations when observed, available token usage and
+reserved ceilings separately. Failed and cancelled observations remain retained;
+missing costs/pricing/independent acceptance remain null. Self-review is not an
+independent accepted-useful-task denominator. The initial pilot deployment is one
+isolated customer with individual personal permissions, never implicit organisation
+sharing. SSO, directory provisioning, mapping and shared roles require actual approved
+customer requirements before implementation.

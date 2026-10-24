@@ -13,8 +13,8 @@ async function json(route: Route, body: unknown, status = 200) {
 async function authenticated(page: Page) {
   await page.route("**/api/v1/auth/me", route => json(route, user));
   await page.route("**/api/v1/models", route => json(route, { items: [] }));
-  await page.route("**/api/v1/conversations", route => json(route, { items: [] }));
-  await page.route("**/api/v1/knowledge/documents", route => json(route, { items: [] }));
+  await page.route("**/api/v1/conversations{,?*}", route => json(route, { items: [] }));
+  await page.route("**/api/v1/knowledge/documents{,?*}", route => json(route, { items: [] }));
   await page.route("**/api/v1/documentation/access", route => json(route, { engineering: false }));
 }
 
@@ -23,7 +23,7 @@ async function hold(page: Page, path: string, body: unknown, status = 200) {
   let observed!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
   const requested = new Promise<void>(resolve => { observed = resolve; });
-  await page.route(`**/api/v1${path}`, async route => {
+  await page.route(`**/api/v1${path}{,?*}`, async route => {
     observed();
     await pending;
     // A correctly cancelled startup request can be gone before the fixture releases it.
@@ -202,7 +202,7 @@ test("late model metadata does not move Send out from under an in-progress click
     backend: "mock", model_identifier: "deterministic-mock", real_inference: false,
   }] });
   let submissions = 0;
-  await page.route("**/api/v1/conversations", async route => {
+  await page.route("**/api/v1/conversations{,?*}", async route => {
     if (route.request().method() === "POST") {
       submissions++;
       await json(route, { error: { code: "synthetic_failure", message: "Synthetic submission reached the API" } }, 503);
@@ -230,9 +230,9 @@ test("late model metadata does not move Send out from under an in-progress click
   }
 });
 
-test("a requested document remains blocked until its accessible document list is verified", async ({ page }) => {
+test("a requested document remains blocked until its owner-checked detail is verified", async ({ page }) => {
   await authenticated(page);
-  const documents = await hold(page, "/knowledge/documents", { items: [{ id: "synthetic-document", title: "Synthetic verified notes" }] });
+  const documents = await hold(page, "/knowledge/documents/synthetic-document", { id: "synthetic-document", title: "Synthetic verified notes" });
   try {
     await page.goto("/?document=synthetic-document");
     await documents.requested;
@@ -251,12 +251,11 @@ test("a requested document remains blocked until its accessible document list is
 for (const failure of ["inaccessible", "failed"] as const) {
   test(`a ${failure} requested document keeps chat blocked and reports the cause`, async ({ page }) => {
     await authenticated(page);
-    await page.route("**/api/v1/knowledge/documents", route => failure === "inaccessible"
-      ? json(route, { items: [{ id: "another-document", title: "Another synthetic document" }] })
+    await page.route("**/api/v1/knowledge/documents/synthetic-document", route => failure === "inaccessible"
+      ? json(route, {error: {code: "not_found", message: "Synthetic owner denial"}}, 404)
       : json(route, { error: { code: "unavailable", message: "Synthetic document outage" } }, 503));
     await page.goto("/?document=synthetic-document");
-    await expect(page.locator("main").getByRole("alert")).toContainText(failure === "inaccessible"
-      ? "The selected document is unavailable" : "Unable to load the selected document");
+    await expect(page.locator("main").getByRole("alert")).toContainText("The selected document is unavailable or access could not be verified");
     await expect(page.getByLabel("Message Onesa AI")).toBeDisabled();
     await expect(page.getByLabel("Send message")).toBeDisabled();
   });
@@ -265,7 +264,7 @@ for (const failure of ["inaccessible", "failed"] as const) {
 test("saved messages load deferred Markdown with GFM tables and highlighted code", async ({ page }) => {
   await authenticated(page);
   const markdown = "| Item | Count |\n| --- | --- |\n| Synthetic row | 42 |\n\n```javascript\nconst fixture = 42;\n```";
-  await page.route("**/api/v1/conversations", route => json(route, { items: [{ id: "synthetic-saved-chat", title: "Synthetic saved conversation" }] }));
+  await page.route("**/api/v1/conversations{,?*}", route => json(route, { items: [{ id: "synthetic-saved-chat", title: "Synthetic saved conversation" }] }));
   await page.route("**/api/v1/conversations/synthetic-saved-chat", route => json(route, {
     messages: [{ id: "synthetic-saved-message", role: "assistant", content: { text: markdown } }],
   }));
@@ -308,7 +307,7 @@ test("late optional startup responses cannot repopulate the next signed-in accou
   });
   for (const [index, path] of paths.entries()) {
     let attempts = 0;
-    await page.route(`**/api/v1${path}`, async route => {
+    await page.route(`**/api/v1${path}{,?*}`, async route => {
       attempts += 1;
       if (attempts === 1) {
         requested[index].observed();

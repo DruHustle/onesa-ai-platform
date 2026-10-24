@@ -1,6 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import {useRecordPage, RecordPageControls} from "../../lib/record-page";
 import RequireSession from "../../components/require-session";
 import FeatureShell from "../../components/feature-shell";
 import { uploadDocument } from "../../lib/uploads";
@@ -12,22 +13,15 @@ import {
 } from "../../lib/api";
 export default function Knowledge() {return <RequireSession destination="/knowledge" title="Your knowledge"><KnowledgeWorkspace /></RequireSession>;}
 function KnowledgeWorkspace() {
-  const [documents, setDocuments] = useState<Document[]>([]),
-    [sources, setSources] = useState<Source[]>([]),
+  const page = useRecordPage<Document>("/knowledge/documents");
+  const documents = page.items;
+  const [sources, setSources] = useState<Source[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [query, setQuery] = useState("");
   const [preview, setPreview] = useState<DocumentDetail | null>(null);
   const [notice, setNotice] = useState("");
-  const load = useCallback(async () => {
-    const response = await api("GET /knowledge/documents");
-    setDocuments(response.items);
-  }, []);
-  useEffect(() => {
-    api("GET /knowledge/documents")
-      .then((r) => setDocuments(r.items))
-      .catch((e) => setError(e.message));
-  }, []);
+  const load = page.reload;
   async function upload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -138,6 +132,7 @@ function KnowledgeWorkspace() {
         </button>
       </form>
       <h2>Documents</h2>
+      <RecordPageControls page={page} />
       <div className="document-list">
         {documents.map((d) => (
           <article className="feature-card" key={d.id}>
@@ -159,7 +154,7 @@ function KnowledgeWorkspace() {
             </button>
           </article>
         ))}
-        {!documents.length && <p>No documents yet.</p>}
+        {!page.loading && !page.error && !documents.length && <p>No documents yet.</p>}
       </div>
       {preview && (
         <section className="feature-card" aria-labelledby="preview-heading">

@@ -19,7 +19,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });
     let reads = 0;
     const writes: unknown[] = [];
-    await page.route("**/api/v1/agents/runs", route => {
+    await page.route("**/api/v1/agents/runs{,?*}", route => {
       if (route.request().method() === "POST") { writes.push(route.request().postDataJSON()); return reply(route, {}, 503); }
       reads += 1;
       return reads === 1 ? reply(route, {}, 503) : reply(route, { items: [] });
@@ -42,7 +42,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("explicit text-statistics run requires permission and displays counts without another history request", async ({ page }) => {
   let reads = 0;
   const writes: unknown[] = [];
-  await page.route("**/api/v1/agents/runs", route => {
+  await page.route("**/api/v1/agents/runs{,?*}", route => {
     if (route.request().method() !== "POST") { reads += 1; return reply(route, { items: [] }); }
     writes.push(route.request().postDataJSON());
     return reply(route, { id: "synthetic-run", goal: "Count these words", status: "completed", created_at: "2026-10-16T10:00:00Z",
@@ -62,7 +62,7 @@ test("explicit text-statistics run requires permission and displays counts witho
 
 test("uncertain submission keeps the draft and never automatically retries", async ({ page }) => {
   let writes = 0;
-  await page.route("**/api/v1/agents/runs", route => {
+  await page.route("**/api/v1/agents/runs{,?*}", route => {
     if (route.request().method() === "POST") { writes += 1; return reply(route, {}, 503); }
     return reply(route, { items: [] });
   });
@@ -78,7 +78,7 @@ test("uncertain submission keeps the draft and never automatically retries", asy
 test("a late history response cannot erase a newly confirmed run", async ({ page }, testInfo) => {
   let release!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
-  await page.route("**/api/v1/agents/runs", async route => {
+  await page.route("**/api/v1/agents/runs{,?*}", async route => {
     if (route.request().method() === "POST") return reply(route, {
       id: "synthetic-new-run", goal: "Fresh result", status: "completed", created_at: "2026-10-16T10:00:00Z",
       steps: [{ status: "completed", tool: "text_stats", result: { words: 2, characters: 12 } }],
@@ -101,7 +101,7 @@ test("a late history response cannot erase a newly confirmed run", async ({ page
 });
 
 test("the exact input label remains stable while typing and changing system appearance", async ({ page }) => {
-  await page.route("**/api/v1/agents/runs", route => reply(route, { items: [] }));
+  await page.route("**/api/v1/agents/runs{,?*}", route => reply(route, { items: [] }));
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/agents", { waitUntil: "networkidle" });
   const draft = page.getByLabel("Text to analyze", { exact: true });

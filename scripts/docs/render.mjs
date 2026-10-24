@@ -12,6 +12,9 @@ const {chromium}=require('@playwright/test');
 const {build}=require('esbuild');
 const MarkdownIt=require('markdown-it');
 const rendererDependencies={'scripts/docs/markdown-comments.mjs':crypto.createHash('sha256').update(await fs.readFile(new URL('./markdown-comments.mjs',import.meta.url))).digest('hex')};
+const selectedScope=process.env.ONESA_DOCS_SCOPE||'all';
+if(!['all','public','internal'].includes(selectedScope))throw new Error('Explicit documentation scope must be all, public or internal');
+const publicationScopes=selectedScope==='all'?['public','internal']:[selectedScope];
 const cache=path.join(app,'.cache');await fs.mkdir(cache,{recursive:true});
 await fs.writeFile(path.join(cache,'mermaid-entry.mjs'),`import mermaid from ${JSON.stringify(path.join(app,'node_modules/mermaid/dist/mermaid.esm.min.mjs'))}; window.mermaid=mermaid;`);
 await build({entryPoints:[path.join(cache,'mermaid-entry.mjs')],bundle:true,format:'iife',outfile:path.join(cache,'mermaid.js'),logLevel:'silent'});
@@ -31,7 +34,7 @@ Object.assign(publicBooks,{"complete-system-architecture": ["public/ecosystem.md
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const css=`@page{size:A4;margin:21mm 16mm 20mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#10263e;font-size:10pt;line-height:1.55}h1,h2,h3{line-height:1.22;break-after:avoid}h1{font-size:24pt;letter-spacing:-.7pt}h2{font-size:17pt;margin:20pt 0 10pt}h3{font-size:12pt}a{color:#2366d1;text-decoration:none}p,li{orphans:3;widows:3}table{border-collapse:collapse;width:100%;table-layout:fixed;margin:12pt 0;font-size:8pt}td,th{border:1px solid #bfcfc6;padding:5pt;overflow-wrap:anywhere;vertical-align:top}th{background:#edf3fa;text-align:left}thead{display:table-header-group}tr{break-inside:avoid}pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;background:#edf3fa;border-left:3pt solid #2366d1;padding:10pt;font-size:8pt;line-height:1.45}code{font-family:monospace;font-size:8pt;overflow-wrap:anywhere}.cover{break-after:page;min-height:220mm;display:flex;flex-direction:column;justify-content:center;border-top:8pt solid #2366d1}.cover h1{font-size:35pt;max-width:155mm}.brand{font-weight:bold;font-size:19pt}.eyebrow{font-size:9pt;text-transform:uppercase;letter-spacing:2pt;color:#2366d1}.toc{break-after:page}.section{margin-top:18pt}.figure{break-inside:avoid;margin:14pt 0}.figure svg{width:100%;height:auto;max-height:190mm}.caption{font-size:8pt;color:#52789b}img{max-width:100%;max-height:160mm;object-fit:contain}blockquote{border-left:2pt solid #a8c1b3;padding-left:10pt}ul{padding-left:18pt}.refs{font-size:9pt}.status{padding:10pt;background:#edf3fa}`;
 let counter=0;
-for(const scope of ['public','internal']){
+for(const scope of publicationScopes){
  const staticDir=path.join(app,'.generated',scope,'static/generated');
  const catalog=JSON.parse(await fs.readFile(path.join(staticDir,'diagrams.json'),'utf8'));
  const sourceProvenance=JSON.parse(await fs.readFile(path.join(staticDir,'provenance.json'),'utf8'));

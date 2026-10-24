@@ -2,10 +2,10 @@
 
 import asyncio
 import json
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 from uuid import UUID
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from app.auth import DB, Auth
 from app.errors import fail
 from app.inference import ModelClient, ModelMessage
 from app.models import Trip
+from app.pagination import page
 from app.responses import Activity, Day, Itinerary, TripList, TripOut
 from app.schemas import Strict
 
@@ -158,14 +159,23 @@ async def create(body: Preferences, request: Request, db: DB, auth: Auth) -> dic
 
 
 @router.get("/trips", response_model=TripList)
-def listing(db: DB, auth: Auth) -> dict[str, Any]:
-    rows = db.scalars(
-        select(Trip)
-        .where(Trip.user_id == auth[0].id)
-        .order_by(Trip.updated_at.desc(), Trip.id)
-        .limit(100)
+def listing(
+    db: DB,
+    auth: Auth,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: Annotated[str | None, Query(max_length=512)] = None,
+) -> dict[str, Any]:
+    rows, following = page(
+        db,
+        Trip,
+        select(Trip).where(Trip.user_id == auth[0].id),
+        limit,
+        0,
+        cursor,
+        auth[0].id,
+        "trips",
     )
-    return {"items": [output(row) for row in rows]}
+    return {"items": [output(row) for row in rows], "next_cursor": following}
 
 
 @router.get("/trips/{identifier}", response_model=TripOut)

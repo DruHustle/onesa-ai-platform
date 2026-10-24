@@ -167,3 +167,18 @@ the trust policy in each server gateway's actual file trace and rejects browser
 bundle inclusion. Owner-built Vercel artifacts require the same command with their
 `.vercel/output` directory as the third argument before publication; a successful
 Next build or instrumentation source alone does not prove serverless packaging.
+
+## Explicit Docs validation scope
+
+`make docs-public` generates and validates only public provenance with
+`python scripts/docs/validate.py --scope public --staged`. It requires no generated
+internal tree or private bundle. `validate.py` without `--scope` retains full public
+and internal validation. All allowlist, asset and private-exposure checks remain.
+Static public and Cloudflare Access artifacts omit assistant navigation and use an
+architecture action. Only an explicitly configured authenticated gateway enables
+`ONESA_DOCS_ASSISTANT_ENABLED=true`; direct unsupported assistant routes explain the
+limitation and link to guides. The CI gateway fixture opts in explicitly.
+
+Synthetic screenshot capture can use `ONESA_CAPTURE_URL` and a separate `ONESA_CAPTURE_FIXTURE_NAME` (lowercase letters, digits and hyphens). `ONESA_CAPTURE_NEW_FIXTURE=1` creates a fresh disposable account for that named fixture. Keep its ignored private state and use only an explicitly isolated mock stack; the default `demo` fixture remains compatible with the configured Docs gateway checks.
+
+For a public-only checkout, after the same locked prerequisites and browser installation, run `make DOCS_SCOPE=public docs-assets docs-public`. Asset rendering and staged validation read only public generated material. The default scope remains `all`; `make docs-assets docs-public docs-internal docs-validate` still requires both classified trees and the approved private source bundle for actual protected publication.

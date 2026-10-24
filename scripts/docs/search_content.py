@@ -3,6 +3,7 @@
 import html
 import json
 import re
+from urllib.parse import quote
 
 
 def plain_text(markdown):
@@ -38,6 +39,13 @@ def api_entry(path, method, operation):
         for code, response in operation.get("responses", {}).items()
     )
     text = f"{summary} {description} {parameters} {responses}"
-    result = entry(method.upper() + " " + path, "/api-explorer", text)
+    tag = (operation.get("tags") or ["default"])[0]
+    operation_id = operation.get("operationId")
+    anchor = (
+        f"#/{quote(tag, safe='')}/{quote(operation_id, safe='')}"
+        if operation_id
+        else ""
+    )
+    result = entry(method.upper() + " " + path, "/api-explorer" + anchor, text)
     result["keywords"] += " " + json.dumps(operation, ensure_ascii=False)
     return result

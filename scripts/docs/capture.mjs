@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';import path from 'node:path';import crypto from 'node:crypto';import {fileURLToPath} from 'node:url';import {createRequire} from 'node:module';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');const require=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));const {chromium,expect}=require('@playwright/test');const base=process.env.ONESA_CAPTURE_URL||'http://localhost:3100';
-const stateFile=path.join(root,'data/runtime/docs/demo.json');await fs.mkdir(path.dirname(stateFile),{recursive:true});let account;
+const fixtureName=process.env.ONESA_CAPTURE_FIXTURE_NAME||'demo';if(!/^[a-z0-9-]{1,64}$/.test(fixtureName))throw new Error('Invalid synthetic capture fixture name');
+const stateFile=path.join(root,'data/runtime/docs',fixtureName+'.json');await fs.mkdir(path.dirname(stateFile),{recursive:true});let account;
 const fresh=process.env.ONESA_CAPTURE_NEW_FIXTURE==='1';
 try{if(fresh)throw new Error('Fresh synthetic fixture requested');account=JSON.parse(await fs.readFile(stateFile,'utf8'));}catch{account={email:'documentation-demo-'+crypto.randomBytes(8).toString('hex')+'@example.com',password:crypto.randomBytes(24).toString('base64url')};await fs.writeFile(stateFile,JSON.stringify(account),{mode:0o600});}
 const browser=await chromium.launch();const context=await browser.newContext({viewport:{width:1360,height:960}});const page=await context.newPage();const shots={};

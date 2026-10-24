@@ -156,3 +156,38 @@ completed result. Sparse/missing/conflicting inputs are explicit. No OEE or cert
 diagnosis is produced. A review binds the saved revision/draft hash and editing invalidates
 its current approval without erasing earlier decisions. Retention and real industrial
 processing decisions remain separate; this API authorizes synthetic development only.
+
+## Bounded record navigation and account data
+
+Conversation, document, run and trip lists support `limit` (1–100; default 50)
+and an opaque `cursor`, returning `next_cursor` or null. Immutable creation time
+descending and UUID descending break ties deterministically; updates do not move
+records between pages. Conversation/document offset requests remain compatible.
+Each query and cursor stays owner scoped; a cursor never grants access. Use the
+detail endpoint for an explicitly selected document, even when it is absent from
+the current page. Account export includes saved Industrial evidence, drafts and
+review decisions when that schema exists, including when Industrial is disabled.
+Row and byte ceilings include those records before materialization. Pre-Industrial
+normal AI schemas return an empty Industrial collection without querying an absent
+table. Export remains password/session/Origin/CSRF protected.
+
+## Synthetic Industrial JSON adapter
+
+`POST /industrial/imports/preview` validates `EvidenceBundle` v1 without storing it.
+`POST /industrial/investigations` accepts the same bundle as `source`, with its
+exact asset/window and a client UUID. Both existing Industrial and import flags
+must be explicitly enabled; defaults remain false. Customer data is not approved.
+The preview JSON body and validated bundle are bounded to 512 KiB. Saving uses
+a 516 KiB pre-parsing ceiling to accommodate the bounded UUID/selection envelope. Up to 500 events, 500 sparse
+signal samples and 20 references are supported. Explicit UTC timestamps, IANA source
+timezone, compatible pressure/bar or temperature/degC units, bounded finite numbers,
+asset/metadata identity, reference text hashes and immutable source IDs are required.
+Import quality/provenance, event kind/end, reference rights/superseded state and
+evidence metadata version must be explicitly supplied; bundled-fixture defaults
+never fill missing imported facts. Superseded is a JSON boolean.
+Conflicting source IDs fail transactionally; idempotent same-content retries cannot
+overwrite a saved investigation. No URLs, files, SQL or instructions are executed.
+See the generated OpenAPI schema and synthetic `tests/fixtures/industrial-import-v1.json`.
+`industrial_facts` is registered only in the enabled isolated scope, requires an
+explicit tool grant and owner-checked investigation ID/hash, and reads saved facts
+without model inference or equipment actions. Original local tools remain available.

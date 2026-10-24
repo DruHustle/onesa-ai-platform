@@ -16,6 +16,13 @@ class BodyLimit:
             await self.app(scope, receive, send)
             return
         parts: list[bytes] = []
+        bounded = {
+            "/api/v1/industrial/imports/preview": 512 * 1024,
+            # The validated bundle still has its own 512 KiB ceiling. Leave a
+            # small bounded envelope for the investigation UUID/selection.
+            "/api/v1/industrial/investigations": 516 * 1024,
+        }
+        maximum = min(self.maximum, bounded.get(scope.get("path", ""), self.maximum))
         size = 0
         expires = time.monotonic() + self.deadline
         while True:
@@ -33,12 +40,12 @@ class BodyLimit:
                 return
             data = message.get("body", b"")
             size += len(data)
-            if size > self.maximum:
+            if size > maximum:
                 response = JSONResponse(
                     {
                         "error": {
                             "code": "request_too_large",
-                            "message": "Request exceeds 6 MiB",
+                            "message": "Request exceeds the supported body size",
                             "request_id": scope.get("state", {}).get("request_id"),
                         }
                     },

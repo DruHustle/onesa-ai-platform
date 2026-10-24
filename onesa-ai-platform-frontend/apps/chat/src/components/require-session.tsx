@@ -12,7 +12,7 @@ export default function RequireSession({
   children,
 }: {
   title: string;
-  destination: "/travel" | "/knowledge" | "/industrial";
+  destination: "/travel" | "/knowledge" | "/industrial" | "/agents";
   children: React.ReactNode;
 }) {
   const { locale } = useLocale(),
@@ -78,6 +78,12 @@ export default function RequireSession({
         AbortSignal.timeout(15000),
       );
       const user: Identity = await response.json();
+      if (identity && identity.id !== user.id) {
+        const url = new URL(window.location.href);
+        for (const key of [...url.searchParams.keys()]) if (key.startsWith("page_")) url.searchParams.delete(key);
+        window.history.replaceState(window.history.state, "", url);
+        window.dispatchEvent(new Event("onesa-record-page"));
+      }
       setIdentity(user);
       setExpired(false);
       setLoginEpoch((previous) => previous + 1);

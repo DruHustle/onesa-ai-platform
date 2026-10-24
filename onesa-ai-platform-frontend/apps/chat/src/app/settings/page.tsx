@@ -240,7 +240,7 @@ export default function Settings() {
             <h2>Export your data</h2>
             <p>
               Download your profile, conversations, extracted documents, tool
-              runs and trips as JSON. Credentials and derived vectors are
+              runs, trips and Industrial investigations with evidence, drafts and review decisions as JSON. Credentials and derived vectors are
               excluded. Large exports require support; data is never silently
               truncated.
             </p>
@@ -263,7 +263,7 @@ export default function Settings() {
             <h2>Delete your account</h2>
             <p>
               This permanently deletes your profile, sessions, conversations,
-              documents and their search vectors, tool runs and trips from the
+              documents and their search vectors, tool runs, trips and Industrial investigations from the
               live application. Stop active chat and tool runs first. Export
               anything you want to keep. Backup copies require separate
               retention processing.
