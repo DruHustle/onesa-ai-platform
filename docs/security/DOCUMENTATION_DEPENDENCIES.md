@@ -35,3 +35,16 @@ Use Node 24 on PATH for direct npm commands, or the repository-local bin directo
 For a backport change, review the source/diff, increment its local version, regenerate exact patches, run `make docs-security-pack`, update direct tarball specs, reinstall and commit reviewed sources, archives, provenance and lockfile together. Changing a tarball under the same version risks cached installations; integrity tests intentionally reject stale files. Replace a backport with an official compatible fixed release only after these regressions and both scope builds pass. Never remove an advisory from the audit, spoof an upstream release, or mark a local fork safe based solely on a zero audit result.
 
 The dependency blocker is resolved locally. Publication still requires an explicitly authorized target/workflow; this change publishes nothing. Semantic embedding, NVIDIA, provider and production qualification are separate outstanding milestones, not package-release failures.
+
+## 24 October 2026 source patches
+
+The Docs lock narrowly updates body-parser 1.20.9, Fast URI 3.1.9 and
+serialize-javascript 7.1.3. The existing backports and unrelated locks are retained.
+These dependencies participate in the build/dev toolchain; static hosting does not
+run Express. A fixed lock does not establish a rebuilt or accepted hosted artifact.
+Authoritative advisories: [body-parser](https://github.com/advisories/GHSA-27r3-jxmh-p828),
+[Serialize JavaScript](https://github.com/advisories/GHSA-m5mm-p8h7-m29v).
+Chat's development tooling resolves Zod 4.6.6 for
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+Full locked installs, behavioral backport checks, all-severity audits and final
+runtime/artifact qualification remain separate required evidence.
