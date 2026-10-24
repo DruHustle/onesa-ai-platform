@@ -165,7 +165,10 @@ descending and UUID descending break ties deterministically; updates do not move
 records between pages. Conversation/document offset requests remain compatible.
 Each query and cursor stays owner scoped; a cursor never grants access. Use the
 detail endpoint for an explicitly selected document, even when it is absent from
-the current page. Account export includes saved Industrial evidence, drafts and
+the current page. Travel keeps a saved trip ID in the URL and restores it through
+the owner-checked detail endpoint on reload; failed restoration blocks saving until
+retried or another trip is selected. Draft text stays in the current window only.
+Account export includes saved Industrial evidence, drafts and
 review decisions when that schema exists, including when Industrial is disabled.
 Row and byte ceilings include those records before materialization. Pre-Industrial
 normal AI schemas return an empty Industrial collection without querying an absent
