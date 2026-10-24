@@ -130,7 +130,7 @@ jobs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       with:
-        node-version: '24'
+        node-version: '24.22.1'
     - name: Build and deploy protected Preview only
       if: github.ref == 'refs/heads/staging' && (inputs.staging_action == 'deploy-preview' || inputs.staging_action == 'deploy-staging')
       run: 'npm install --global vercel@63.1.0

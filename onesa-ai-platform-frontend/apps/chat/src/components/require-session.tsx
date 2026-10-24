@@ -80,7 +80,7 @@ export default function RequireSession({
       const user: Identity = await response.json();
       if (identity && identity.id !== user.id) {
         const url = new URL(window.location.href);
-        for (const key of [...url.searchParams.keys()]) if (key.startsWith("page_")) url.searchParams.delete(key);
+        for (const key of [...url.searchParams.keys()]) if (key.startsWith("page_") || key === "trip") url.searchParams.delete(key);
         window.history.replaceState(window.history.state, "", url);
         window.dispatchEvent(new Event("onesa-record-page"));
       }
