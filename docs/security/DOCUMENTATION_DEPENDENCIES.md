@@ -16,7 +16,7 @@ sprintf-js retains sprintf/vsprintf, named arguments, flags and ordinary numeric
 
 ## Supported runtime and peers
 
-Documentation is qualified on Node 24.21.0. CI uses Node 24. A checksum-verified optional native runtime lives in ignored data/runtime/node24; install with `.venv/bin/python scripts/local/install_node24.py`. Make automatically prefers it when present, without modifying system executables. The official distribution and SHA-256 list come from nodejs.org; no system package installer is used.
+Earlier documentation qualification used Node 24.21.0; new security candidates use Node 24.22.1. CI uses Node 24. A checksum-verified optional native runtime lives in ignored data/runtime/node24-24.22.1; install with `.venv/bin/python scripts/local/install_node24.py`. Make automatically prefers it when present, without modifying system executables. The official distribution and SHA-256 list come from nodejs.org; no system package installer is used.
 
 The docs project uses React/React DOM 18.3.1, the supported intersection of Docusaurus and its Swagger dependencies, with matching TypeScript types. The separate Onesa Chat application retains its existing React version. Runtime and peer alignment remove the earlier unsupported engine/React dependency warnings.
 
@@ -48,3 +48,5 @@ Chat's development tooling resolves Zod 4.6.6 for
 [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
 Full locked installs, behavioral backport checks, all-severity audits and final
 runtime/artifact qualification remain separate required evidence.
+
+The Node 24.22.1 runtime patch follows the [official 21 October security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases), including the bundled Brotli decoder fix. OS Brotli in the separate file scanner is independently constrained to Alpine 1.2.1-r0 or later; a clean npm audit does not cover either native runtime.

@@ -1,6 +1,6 @@
 # Prefer the optional repository-local supported Node runtime without changing system tools.
-ifneq ($(wildcard data/runtime/node24/bin/node),)
-export PATH := $(CURDIR)/data/runtime/node24/bin:$(PATH)
+ifneq ($(wildcard data/runtime/node24-24.22.1/bin/node),)
+export PATH := $(CURDIR)/data/runtime/node24-24.22.1/bin:$(PATH)
 endif
 
 PYTHON := .venv/bin/python
