@@ -16,12 +16,13 @@ class BodyLimit:
             await self.app(scope, receive, send)
             return
         parts: list[bytes] = []
-        maximum = (
-            min(self.maximum, 512 * 1024)
-            if scope.get("path")
-            in {"/api/v1/industrial/imports/preview", "/api/v1/industrial/investigations"}
-            else self.maximum
-        )
+        bounded = {
+            "/api/v1/industrial/imports/preview": 512 * 1024,
+            # The validated bundle still has its own 512 KiB ceiling. Leave a
+            # small bounded envelope for the investigation UUID/selection.
+            "/api/v1/industrial/investigations": 516 * 1024,
+        }
+        maximum = min(self.maximum, bounded.get(scope.get("path", ""), self.maximum))
         size = 0
         expires = time.monotonic() + self.deadline
         while True:

@@ -1,5 +1,6 @@
 """Synthetic file adapter: validation, atomic identities, ownership and lifecycle."""
 
+import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -341,3 +342,54 @@ def test_import_csrf_revocation_and_injection_are_data_only(api, pg):
     assert api.post("/api/v1/industrial/investigations", json=creation(bundle)).status_code == 403
     with Session(pg) as db:
         assert not list(db.scalars(select(IndustrialInvestigation)))
+
+
+def test_near_limit_valid_bundle_can_be_previewed_and_saved(api):
+    signup(api)
+    enable(api)
+    bundle = sample()
+    bundle["evidence"]["events"] = [
+        {**bundle["evidence"]["events"][0], "id": f"size-{index}"} for index in range(500)
+    ]
+    bundle["evidence"]["references"] = [
+        {**bundle["evidence"]["references"][0], "id": f"reference-{index}"} for index in range(20)
+    ]
+    bundle = EvidenceBundle.model_validate(bundle).model_dump(mode="json")
+
+    def encode(value):
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+
+    remaining = 512 * 1024 - 64 - len(encode(bundle))
+    for name, ceiling in [("reason", 500), ("source", 200), ("version", 40)]:
+        for event in bundle["evidence"]["events"]:
+            added = min(remaining, ceiling - len(event[name]))
+            event[name] += "x" * added
+            remaining -= added
+    for reference in bundle["evidence"]["references"]:
+        added = min(remaining, 4000 - len(reference["text"]))
+        reference["text"] += "x" * added
+        remaining -= added
+        reference["sha256"] = hashlib.sha256(reference["text"].encode()).hexdigest()
+    assert remaining == 0
+    assert (
+        api.post(
+            "/api/v1/industrial/imports/preview",
+            content=encode(bundle),
+            headers={"Content-Type": "application/json"},
+        ).status_code
+        == 200
+    )
+    body = encode(creation(bundle))
+    assert 512 * 1024 < len(body) < 516 * 1024
+    assert (
+        api.post(
+            "/api/v1/industrial/investigations",
+            content=body,
+            headers={"Content-Type": "application/json"},
+        ).status_code
+        == 201
+    )
+    assert (
+        api.post("/api/v1/industrial/investigations", content=b" " * (516 * 1024 + 1)).status_code
+        == 413
+    )

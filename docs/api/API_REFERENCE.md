@@ -177,7 +177,8 @@ table. Export remains password/session/Origin/CSRF protected.
 `POST /industrial/investigations` accepts the same bundle as `source`, with its
 exact asset/window and a client UUID. Both existing Industrial and import flags
 must be explicitly enabled; defaults remain false. Customer data is not approved.
-The JSON body is bounded to 512 KiB before parsing. Up to 500 events, 500 sparse
+The preview JSON body and validated bundle are bounded to 512 KiB. Saving uses
+a 516 KiB pre-parsing ceiling to accommodate the bounded UUID/selection envelope. Up to 500 events, 500 sparse
 signal samples and 20 references are supported. Explicit UTC timestamps, IANA source
 timezone, compatible pressure/bar or temperature/degC units, bounded finite numbers,
 asset/metadata identity, reference text hashes and immutable source IDs are required.
