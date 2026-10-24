@@ -2,19 +2,27 @@
 
 The platform brings together **Applications** and **Industrial AI**. Applications
 include the existing protected Chat, Knowledge, Agents and Travel workspace.
-Industrial AI is a planned development track for source-backed operational
-investigation and human-reviewed work drafts, not a live factory integration.
-Robotics / Physical AI is Onesa’s separate robotics development line.
+Industrial Investigation is available as an isolated, protected synthetic software
+ demonstration. Ordinary AI production keeps Industrial disabled. Wider industrial
+ integrations remain under development. Robotics / Physical AI is Onesa’s separate
+ development line.
 
-## Industrial AI — planned
+## Industrial Investigation — isolated synthetic demonstration
 
-The first proposed workflow investigates repeated stops for one authorized machine
-and time window, using permitted event data and versioned manuals. It would show
-observed facts separately from hypotheses, cite supporting sources and identify
-missing information before preparing an editable internal work draft. A person
-reviews the outcome. No PLC, actuator or CMMS write integration is currently claimed.
+Maintenance and reliability engineers can inspect a repeated-stop investigation for
+one permitted asset and UTC window. Deterministic facts and interval totals remain
+separate from source-linked hypotheses, missing evidence and an editable internal
+draft. Saved source versions, evidence hashes and self-review decisions make the
+result traceable. The demonstration has not established customer benefit or
+independent domain acceptance. There is no live factory, PLC, actuator or CMMS
+write integration.
 
-[Discuss a pilot scope](https://onesa.eu/en/contact?topic=industrial).
+The first proposed limited pilot evaluates permitted event histories and versioned
+maintenance references against a predefined human-reviewed task. The new JSON import
+adapter is a development candidate qualified initially with synthetic inputs; it is
+not an advertised live connector or approval for customer data.
+
+[Discuss a focused pilot scope](https://onesa.eu/en/contact?topic=industrial).
 
 ## Apps powered by the Onesa AI Platform
 

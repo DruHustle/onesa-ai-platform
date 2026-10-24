@@ -31,7 +31,10 @@ def sync_release_summary(root=ROOT):
     path.write_text(text)
 
 
-def validate_identity(root=ROOT, *, generated=True):
+def validate_identity(root=ROOT, *, generated=True, scope="all"):
+    if scope not in {"all", "public", "internal"}:
+        raise ValueError("Unknown documentation validation scope")
+    scopes = ["public", "internal"] if scope == "all" else [scope]
     version = documentation_version(root)
     summary = (root / "docs/public/release-notes.md").read_text()
     current = summary.split("<!-- documentation-version:start -->", 1)[1].split(
@@ -42,23 +45,25 @@ def validate_identity(root=ROOT, *, generated=True):
     if generated:
         app = root / "onesa-ai-platform-frontend/apps/docs"
         paths = [app / ".cache/authoritative/provenance.json"] + [
-            app / f".generated/{scope}/static/generated/provenance.json"
-            for scope in ["public", "internal"]
+            app / f".generated/{publication_scope}/static/generated/provenance.json"
+            for publication_scope in scopes
         ]
         for path in paths:
             if json.loads(path.read_text()).get("documentation_version") != version:
                 raise ValueError(
                     "Generated documentation version mismatch: " + path.name
                 )
-        for scope in ["public", "internal"]:
-            site = app / f"build-{scope}/index.html"
+        for publication_scope in scopes:
+            site = app / f"build-{publication_scope}/index.html"
             if site.exists():
                 footer = re.search(
                     r"<footer\b.*?</footer>", site.read_text(), re.DOTALL
                 )
                 if not footer or "Documentation v" + version not in footer[0]:
                     raise ValueError("Site footer documentation version mismatch")
-            manuals = app / f".generated/{scope}/static/generated/manuals.json"
+            manuals = (
+                app / f".generated/{publication_scope}/static/generated/manuals.json"
+            )
             if manuals.exists() and any(
                 x.get("version") != version for x in json.loads(manuals.read_text())
             ):

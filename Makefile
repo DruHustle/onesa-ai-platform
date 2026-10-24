@@ -63,7 +63,7 @@ docs-assets: docs-pdf
 
 docs-public: DOCS_SCOPE=public
 docs-public: docs-api
-	$(PYTHON) scripts/docs/validate.py --staged
+	$(PYTHON) scripts/docs/validate.py --scope public --staged
 	npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
 
 docs-internal: DOCS_SCOPE=internal
