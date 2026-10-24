@@ -188,7 +188,7 @@ jobs:
     - name: Fetch pinned fixture database with bounded registry-read recovery
       timeout-minutes: 4
       run: python3 scripts/ci/pull_image.py --database
-    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
+    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
       timeout-minutes: 10
@@ -226,7 +226,7 @@ jobs:
     - run: .venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml
         up -d --wait
-    - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
+    - run: ONESA_DOCS_ASSISTANT_ENABLED=true ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
     - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-serve
     - run: ONESA_DOCS_EXPECT_BACKEND=mock make docs-browser
     - if: failure()

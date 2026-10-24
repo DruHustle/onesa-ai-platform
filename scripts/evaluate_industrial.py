@@ -25,6 +25,7 @@ from app.industrial import Explanation, explain, validate_explanation
 from app.industrial_evidence import (
     FIXTURE_VERSION,
     Evidence,
+    EvidenceBundle,
     Window,
     calculate,
     checksum,
@@ -36,6 +37,66 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = (
     ROOT / "onesa-ai-platform-backend/tests/fixtures/industrial-evaluation-v1.1.1.json"
 )
+
+
+def evaluate_imports() -> dict:
+    manifest_path = (
+        ROOT
+        / "onesa-ai-platform-backend/tests/fixtures/industrial-import-evaluation-v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text())
+    sample = manifest_path.with_name(manifest["sample"])
+    if hashlib.sha256(sample.read_bytes()).hexdigest() != manifest["sample_sha256"]:
+        raise ValueError("Frozen import input changed")
+    outcomes = []
+    for case in manifest["cases"]:
+        data = json.loads(sample.read_text())
+        for patch in case["patches"]:
+            target = data
+            for key in patch["path"][:-1]:
+                target = target[key]
+            target[patch["path"][-1]] = patch["value"]
+        try:
+            bundle = EvidenceBundle.model_validate(data)
+        except ValidationError:
+            observed, correct = {"input_rejected": True}, bool(case.get("reject"))
+        else:
+            try:
+                facts, info = (
+                    calculate(bundle.evidence, bundle.window),
+                    coverage(bundle.evidence, bundle.window),
+                )
+                observed = {"facts": facts, "coverage": info, "input_rejected": False}
+                correct = not case.get("reject") and all(
+                    facts[key] == value for key, value in case["expected"].items()
+                )
+                if "missing" in case:
+                    correct = correct and info["missing"] == case["missing"]
+            except (ValueError, TypeError):
+                observed = {
+                    "input_rejected": False,
+                    "failure": "downstream_evaluation_error",
+                }
+                correct = False
+        outcomes.append(
+            {
+                "id": case["id"],
+                "pass": correct,
+                "observed": observed,
+                "human_support_rating": None,
+            }
+        )
+    return {
+        "version": manifest["version"],
+        "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+        "sample_sha256": manifest["sample_sha256"],
+        "sample_size": len(outcomes),
+        "split": manifest["split"],
+        "leakage_controls": manifest["leakage_controls"],
+        "real_model_calls": 0,
+        "result": "PASS" if all(row["pass"] for row in outcomes) else "FAIL",
+        "cases": outcomes,
+    }
 
 
 def input_case(case: dict) -> dict:
@@ -203,6 +264,7 @@ async def evaluate() -> dict:
                 "human_support_rating": None,
             }
         )
+    imports = evaluate_imports()
     return {
         "evaluation_version": manifest["version"],
         "manifest_sha256": hashlib.sha256(MANIFEST.read_bytes()).hexdigest(),
@@ -215,7 +277,10 @@ async def evaluate() -> dict:
             for split in ["development", "held_out"]
         },
         "scope": "Network-free synthetic deterministic/schema/mock checks. Visible regression holdouts; no blind generalization claim.",
-        "result": "PASS" if all(case["pass"] for case in outcomes) else "FAIL",
+        "result": "PASS"
+        if all(case["pass"] for case in outcomes) and imports["result"] == "PASS"
+        else "FAIL",
+        "import_evaluation": imports,
         "cases": outcomes,
         "real_model_calls": 0,
         "model_configuration": {

@@ -1,39 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import {useRecordPage, RecordPageControls} from "../../lib/record-page";
+import RequireSession from "../../components/require-session";
 import FeatureShell from "../../components/feature-shell";
-import { api, ApiError, type AgentRunOut as Run } from "../../lib/api";
+import { api, type AgentRunOut as Run } from "../../lib/api";
 
-export default function Agents() {
-  const [runs, setRuns] = useState<Run[]>([]);
+export default function Agents() {return <RequireSession destination="/agents" title="Bounded tools"><AgentsWorkspace /></RequireSession>;}
+function AgentsWorkspace() {
+  const page = useRecordPage<Run>("/agents/runs", "session", "run history");
+  const {items: runs, setItems: setRuns, loading} = page;
   const [error, setError] = useState("");
-  const [historyError, setHistoryError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [goal, setGoal] = useState("");
   const [permission, setPermission] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    api("GET /agents/runs", { signal: AbortSignal.any([
-      controller.signal, AbortSignal.timeout(8000),
-    ]) })
-      .then((result) => {
-        if (!controller.signal.aborted) setRuns((previous) => [
-          ...previous.filter((run) => !result.items.some((item) => item.id === run.id)),
-          ...result.items,
-        ]);
-      })
-      .catch((failure: unknown) => {
-        if (!controller.signal.aborted) setHistoryError(
-          failure instanceof ApiError && failure.status === 401
-            ? "Sign in to view your tool runs."
-            : "Run history is unavailable. Your text is kept here; retry when the connection is restored.",
-        );
-      })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [attempt]);
 
   async function run(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,17 +59,8 @@ export default function Agents() {
       </form>
       <section aria-labelledby="run-history-title" aria-busy={loading}>
         <h2 id="run-history-title">Run history</h2>
-        {loading && <p role="status">Loading run history…</p>}
-        {historyError && <div className="feature-card">
-          <p role="alert">{historyError}</p>
-          <button type="button" disabled={loading} onClick={() => {
-            setHistoryError(""); setLoading(true); setAttempt((value) => value + 1);
-          }}>Retry history</button>
-        </div>}
-        {!loading && !historyError && runs.length === 0 && <div className="feature-card">
-          <h3>Your results will appear here</h3>
-          <p>Enter text and grant permission to see its word and character counts.</p>
-        </div>}
+        <RecordPageControls page={page} subject="run history" />
+        {!loading && !page.error && runs.length === 0 && <div className="feature-card"><h3>Your results will appear here</h3><p>Enter text and grant permission to see its word and character counts.</p></div>}
         {runs.map((run) => (
           <article className="feature-card" key={run.id}>
             <h3>{run.goal}</h3>

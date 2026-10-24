@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.auth import DB, Auth
 from app.errors import fail
 from app.models import Conversation, InferenceRun, Message, now
+from app.pagination import page
 from app.schemas import (
     CancelGeneration,
     ConversationCreate,
@@ -54,10 +55,11 @@ def listing(
     auth: Auth,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    cursor: Annotated[str | None, Query(max_length=512)] = None,
 ) -> dict[str, Any]:
     query = select(Conversation).where(Conversation.user_id == auth[0].id)
-    rows = db.scalars(
-        query.order_by(Conversation.updated_at.desc(), Conversation.id).offset(offset).limit(limit)
+    rows, following = page(
+        db, Conversation, query, limit, offset, cursor, auth[0].id, "conversations"
     )
     total = db.scalar(
         select(func.count()).select_from(Conversation).where(Conversation.user_id == auth[0].id)
@@ -67,6 +69,7 @@ def listing(
         "total": total,
         "limit": limit,
         "offset": offset,
+        "next_cursor": following,
     }
 
 

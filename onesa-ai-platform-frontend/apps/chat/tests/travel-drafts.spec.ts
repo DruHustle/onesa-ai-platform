@@ -34,10 +34,10 @@ test.beforeEach(async ({ page, baseURL }) => {
   await page.route("**/api/v1/documentation/access", (route) =>
     reply(route, { engineering: false }),
   );
-  await page.route("**/api/v1/travel/trips", (route) =>
+  await page.route("**/api/v1/travel/trips{,?*}", (route) =>
     reply(route, { items: [trip("a", "Lisbon"), trip("b", "Berlin")] }),
   );
-  await page.route("**/api/v1/knowledge/documents", (route) =>
+  await page.route("**/api/v1/knowledge/documents{,?*}", (route) =>
     reply(route, { items: [] }),
   );
 });
@@ -56,8 +56,8 @@ for (const path of ["/travel", "/knowledge"]) {
     });
     await page.route(
       path === "/travel"
-        ? "**/api/v1/travel/trips"
-        : "**/api/v1/knowledge/documents",
+        ? "**/api/v1/travel/trips{,?*}"
+        : "**/api/v1/knowledge/documents{,?*}",
       (route) => {
         expect(authenticated).toBe(true);
         protectedReads++;

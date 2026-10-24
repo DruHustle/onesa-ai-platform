@@ -711,6 +711,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/industrial/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Import */
+        post: operations["preview_import_api_v1_industrial_imports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/industrial/investigations/{identifier}": {
         parameters: {
             query?: never;
@@ -881,6 +898,8 @@ export interface components {
             agent_runs: components["schemas"]["AgentRunOut"][];
             /** Trips */
             trips: components["schemas"]["TripOut"][];
+            /** Industrial Investigations */
+            industrial_investigations: components["schemas"]["InvestigationOut"][];
             /** Scope */
             scope: string;
         };
@@ -893,6 +912,8 @@ export interface components {
         };
         /** AgentRunList */
         AgentRunList: {
+            /** Next Cursor */
+            next_cursor?: string | null;
             /** Items */
             items: components["schemas"]["AgentRunOut"][];
         };
@@ -995,6 +1016,8 @@ export interface components {
         };
         /** ConversationList */
         ConversationList: {
+            /** Next Cursor */
+            next_cursor?: string | null;
             /** Items */
             items: components["schemas"]["ConversationOut"][];
             /** Total */
@@ -1051,6 +1074,7 @@ export interface components {
              * @enum {string}
              */
             scenario: "reference" | "no_stops" | "overlap" | "boundary" | "open_event" | "stale" | "conflict";
+            source?: components["schemas"]["EvidenceBundle"] | null;
         };
         /** Credentials */
         Credentials: {
@@ -1102,6 +1126,8 @@ export interface components {
         };
         /** DocumentList */
         DocumentList: {
+            /** Next Cursor */
+            next_cursor?: string | null;
             /** Items */
             items: components["schemas"]["DocumentMetadata"][];
             /** Limit */
@@ -1135,6 +1161,94 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** Event */
+        Event: {
+            /** Id */
+            id: string;
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** End */
+            end: string | null;
+            /**
+             * Kind
+             * @default stop
+             * @constant
+             */
+            kind: "stop";
+            /**
+             * Source
+             * @default synthetic-event-log
+             * @constant
+             */
+            source: "synthetic-event-log";
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Quality
+             * @default good
+             * @enum {string}
+             */
+            quality: "good" | "unknown" | "bad";
+            /**
+             * Version
+             * @default 1
+             * @constant
+             */
+            version: "1";
+        };
+        /** Evidence */
+        Evidence: {
+            /**
+             * Fixture Version
+             * @default onesa-industrial-synthetic-v1
+             * @enum {string}
+             */
+            fixture_version: "onesa-industrial-synthetic-v1" | "onesa-industrial-import-v1";
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Metadata Version
+             * @default 1
+             */
+            metadata_version: string;
+            /** Events */
+            events: (components["schemas"]["Event"] | components["schemas"]["ImportedEvent"])[];
+            /** Signals */
+            signals: (components["schemas"]["Signal"] | components["schemas"]["ImportedSignal"])[];
+            /** References */
+            references: (components["schemas"]["Reference"] | components["schemas"]["ImportedReference"])[];
+        };
+        /**
+         * EvidenceBundle
+         * @description Data-only JSON, never a URL/file/SQL/instruction connector or rights approval.
+         */
+        EvidenceBundle: {
+            /**
+             * Format Version
+             * @constant
+             */
+            format_version: "onesa-industrial-evidence-v1";
+            /**
+             * Classification
+             * @constant
+             */
+            classification: "synthetic";
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Source Timezone */
+            source_timezone: string;
+            asset: components["schemas"]["ImportedAsset"];
+            window: components["schemas"]["Window"];
+            evidence: components["schemas"]["Evidence"];
+        };
         /** ExportConversation */
         ExportConversation: {
             conversation: components["schemas"]["ConversationOut"];
@@ -1155,6 +1269,152 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ImportPreview */
+        ImportPreview: {
+            /** Source Sha256 */
+            source_sha256: string;
+            evidence: components["schemas"]["Evidence"];
+            /** Facts */
+            facts: {
+                [key: string]: unknown;
+            };
+            /** Coverage */
+            coverage: {
+                [key: string]: unknown;
+            };
+        };
+        /** ImportedAsset */
+        ImportedAsset: {
+            /** Id */
+            id: string;
+            /** Metadata Version */
+            metadata_version: string;
+            /** Name */
+            name: string;
+            /** Equipment Type */
+            equipment_type: string;
+            /** Provenance */
+            provenance: string;
+        };
+        /** ImportedEvent */
+        ImportedEvent: {
+            /** Id */
+            id: string;
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** End */
+            end: string | null;
+            /**
+             * Kind
+             * @default stop
+             * @constant
+             */
+            kind: "stop";
+            /**
+             * Source
+             * @default synthetic-event-log
+             */
+            source: string;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Quality
+             * @default good
+             * @enum {string}
+             */
+            quality: "good" | "unknown" | "bad";
+            /**
+             * Version
+             * @default 1
+             */
+            version: string;
+        };
+        /** ImportedReference */
+        ImportedReference: {
+            /** Id */
+            id: string;
+            /** Version */
+            version: string;
+            /** Asset Id */
+            asset_id: string;
+            /** Anchor */
+            anchor: string;
+            /** Title */
+            title: string;
+            /** Text */
+            text: string;
+            /**
+             * Rights
+             * @default Onesa original synthetic reference
+             */
+            rights: string;
+            /**
+             * Effective Start
+             * Format: date-time
+             */
+            effective_start: string;
+            /**
+             * Effective End
+             * Format: date-time
+             */
+            effective_end: string;
+            /**
+             * Superseded
+             * @default false
+             */
+            superseded: boolean;
+            /** Sha256 */
+            sha256: string;
+        };
+        /** ImportedSignal */
+        ImportedSignal: {
+            /** Id */
+            id: string;
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Signal
+             * @enum {string}
+             */
+            signal: "pressure" | "temperature";
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "bar" | "degC";
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Value */
+            value: number;
+            /** Sample Seconds */
+            sample_seconds: number;
+            /** Freshness Seconds */
+            freshness_seconds: number;
+            /**
+             * Quality
+             * @default good
+             * @enum {string}
+             */
+            quality: "good" | "unknown" | "bad";
+            /**
+             * Source
+             * @default synthetic-sensors
+             */
+            source: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: string;
         };
         /** InvestigationList */
         InvestigationList: {
@@ -1387,6 +1647,44 @@ export interface components {
              */
             email: string;
         };
+        /** Reference */
+        Reference: {
+            /** Id */
+            id: string;
+            /** Version */
+            version: string;
+            /** Asset Id */
+            asset_id: string;
+            /** Anchor */
+            anchor: string;
+            /** Title */
+            title: string;
+            /** Text */
+            text: string;
+            /**
+             * Rights
+             * @default Onesa original synthetic reference
+             * @constant
+             */
+            rights: "Onesa original synthetic reference";
+            /**
+             * Effective Start
+             * Format: date-time
+             */
+            effective_start: string;
+            /**
+             * Effective End
+             * Format: date-time
+             */
+            effective_end: string;
+            /**
+             * Superseded
+             * @default false
+             */
+            superseded: boolean;
+            /** Sha256 */
+            sha256: string;
+        };
         /** Register */
         Register: {
             /**
@@ -1506,6 +1804,52 @@ export interface components {
             /** Current */
             current: boolean;
         };
+        /** Signal */
+        Signal: {
+            /** Id */
+            id: string;
+            /** Asset Id */
+            asset_id: string;
+            /**
+             * Signal
+             * @enum {string}
+             */
+            signal: "pressure" | "temperature";
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "bar" | "degC";
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Value */
+            value: number;
+            /** Sample Seconds */
+            sample_seconds: number;
+            /** Freshness Seconds */
+            freshness_seconds: number;
+            /**
+             * Quality
+             * @default good
+             * @enum {string}
+             */
+            quality: "good" | "unknown" | "bad";
+            /**
+             * Source
+             * @default synthetic-sensors
+             * @constant
+             */
+            source: "synthetic-sensors";
+            /**
+             * Version
+             * @default 1
+             * @constant
+             */
+            version: "1";
+        };
         /** Start */
         Start: {
             /** Filename */
@@ -1536,9 +1880,9 @@ export interface components {
             };
             /**
              * Effect
-             * @constant
+             * @enum {string}
              */
-            effect: "local computation";
+            effect: "local computation" | "read-only owned evidence";
         };
         /** ToolList */
         ToolList: {
@@ -1547,6 +1891,8 @@ export interface components {
         };
         /** TripList */
         TripList: {
+            /** Next Cursor */
+            next_cursor?: string | null;
             /** Items */
             items: components["schemas"]["TripOut"][];
         };
@@ -1618,6 +1964,19 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Window */
+        Window: {
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
         };
     };
     responses: never;
@@ -2235,6 +2594,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                cursor?: string | null;
             };
             header?: never;
             path?: never;
@@ -2512,6 +2872,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                cursor?: string | null;
             };
             header?: never;
             path?: never;
@@ -2718,7 +3079,10 @@ export interface operations {
     };
     listing_api_v1_agents_runs_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2732,6 +3096,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentRunList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2833,7 +3206,10 @@ export interface operations {
     };
     listing_api_v1_travel_trips_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2847,6 +3223,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TripList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3134,6 +3519,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvestigationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_import_api_v1_industrial_imports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenceBundle"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreview"];
                 };
             };
             /** @description Validation Error */

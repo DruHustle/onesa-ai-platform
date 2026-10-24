@@ -22,6 +22,7 @@ class DocumentDetail(DocumentMetadata):
 
 
 class DocumentList(Strict):
+    next_cursor: str | None = None
     items: list[DocumentMetadata]
     limit: int
     offset: int
@@ -61,13 +62,14 @@ class AgentRunOut(Strict):
 
 
 class AgentRunList(Strict):
+    next_cursor: str | None = None
     items: list[AgentRunOut]
 
 
 class ToolDescriptor(Strict):
     name: str
     schema_: dict[str, JsonValue] = Field(alias="schema")
-    effect: Literal["local computation"]
+    effect: Literal["local computation", "read-only owned evidence"]
 
 
 class ToolList(Strict):
@@ -116,6 +118,7 @@ class TripOut(Strict):
 
 
 class TripList(Strict):
+    next_cursor: str | None = None
     items: list[TripOut]
 
 

@@ -50,6 +50,8 @@ class InferenceError(ValueError):
 
 @dataclass
 class GenerationStats:
+    retrieval_latency_ms: int | None = None
+    generation_latency_ms: int | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
     total_seconds: float | None = None

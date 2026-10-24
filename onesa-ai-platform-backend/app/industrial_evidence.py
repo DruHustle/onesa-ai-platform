@@ -4,6 +4,8 @@ import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, Self
+from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import AwareDatetime, Field, field_validator, model_validator
 
@@ -41,15 +43,16 @@ class Window(Strict):
         return self
 
 
-class Event(Strict):
+class ImportedEvent(Strict):
     id: str = Field(min_length=1, max_length=80)
-    asset_id: str
+    asset_id: str = Field(min_length=1, max_length=80)
     start: AwareDatetime
     end: AwareDatetime | None
     kind: Literal["stop"] = "stop"
-    source: Literal["synthetic-event-log"] = "synthetic-event-log"
+    source: str = Field(default="synthetic-event-log", min_length=1, max_length=200)
+    reason: str | None = Field(default=None, max_length=500, exclude_if=lambda value: value is None)
     quality: Literal["good", "unknown", "bad"] = "good"
-    version: Literal["1"] = "1"
+    version: str = Field(default="1", min_length=1, max_length=40)
 
     @field_validator("start", "end")
     @classmethod
@@ -63,18 +66,23 @@ class Event(Strict):
         return self
 
 
-class Signal(Strict):
-    id: str
-    asset_id: str
+class Event(ImportedEvent):
+    source: Literal["synthetic-event-log"] = "synthetic-event-log"
+    version: Literal["1"] = "1"
+
+
+class ImportedSignal(Strict):
+    id: str = Field(min_length=1, max_length=80)
+    asset_id: str = Field(min_length=1, max_length=80)
     signal: Literal["pressure", "temperature"]
     unit: Literal["bar", "degC"]
     timestamp: AwareDatetime
-    value: float = Field(allow_inf_nan=False)
-    sample_seconds: int = Field(ge=1, le=3600)
-    freshness_seconds: int = Field(ge=1, le=86400)
+    value: float = Field(allow_inf_nan=False, ge=-1e12, le=1e12, strict=True)
+    sample_seconds: int = Field(ge=1, le=3600, strict=True)
+    freshness_seconds: int = Field(ge=1, le=86400, strict=True)
     quality: Literal["good", "unknown", "bad"] = "good"
-    source: Literal["synthetic-sensors"] = "synthetic-sensors"
-    version: Literal["1"] = "1"
+    source: str = Field(default="synthetic-sensors", min_length=1, max_length=200)
+    version: str = Field(default="1", min_length=1, max_length=40)
 
     @field_validator("timestamp")
     @classmethod
@@ -88,14 +96,19 @@ class Signal(Strict):
         return self
 
 
-class Reference(Strict):
-    id: str
-    version: str
-    asset_id: str
-    anchor: str
-    title: str
+class Signal(ImportedSignal):
+    source: Literal["synthetic-sensors"] = "synthetic-sensors"
+    version: Literal["1"] = "1"
+
+
+class ImportedReference(Strict):
+    id: str = Field(min_length=1, max_length=80)
+    version: str = Field(min_length=1, max_length=40)
+    asset_id: str = Field(min_length=1, max_length=80)
+    anchor: str = Field(min_length=1, max_length=80)
+    title: str = Field(min_length=1, max_length=200)
     text: str = Field(max_length=4000)
-    rights: Literal["Onesa original synthetic reference"] = "Onesa original synthetic reference"
+    rights: str = Field(default="Onesa original synthetic reference", min_length=1, max_length=500)
     effective_start: AwareDatetime
     effective_end: AwareDatetime
     superseded: bool = False
@@ -110,18 +123,35 @@ class Reference(Strict):
         return self
 
 
+class Reference(ImportedReference):
+    rights: Literal["Onesa original synthetic reference"] = "Onesa original synthetic reference"
+
+
 class Evidence(Strict):
-    fixture_version: Literal["onesa-industrial-synthetic-v1"] = FIXTURE_VERSION
-    asset_id: str
-    metadata_version: Literal["1"] = "1"
-    events: list[Event] = Field(max_length=500)
-    signals: list[Signal] = Field(max_length=500)
-    references: list[Reference] = Field(max_length=20)
+    fixture_version: Literal["onesa-industrial-synthetic-v1", "onesa-industrial-import-v1"] = (
+        FIXTURE_VERSION
+    )
+    asset_id: str = Field(min_length=1, max_length=80)
+    metadata_version: str = Field(default="1", min_length=1, max_length=40)
+    events: list[Event | ImportedEvent] = Field(max_length=500)
+    signals: list[Signal | ImportedSignal] = Field(max_length=500)
+    references: list[Reference | ImportedReference] = Field(max_length=20)
 
     @model_validator(mode="after")
     def boundary(self) -> Self:
+        if self.fixture_version == FIXTURE_VERSION and (
+            self.metadata_version != "1"
+            or any(
+                item.source != "synthetic-event-log" or item.version != "1" for item in self.events
+            )
+            or any(
+                item.source != "synthetic-sensors" or item.version != "1" for item in self.signals
+            )
+            or any(item.rights != "Onesa original synthetic reference" for item in self.references)
+        ):
+            raise ValueError("Bundled fixture provenance mismatch")
         if (
-            self.asset_id not in ASSETS
+            (self.fixture_version == FIXTURE_VERSION and self.asset_id not in ASSETS)
             or any(item.asset_id != self.asset_id for item in self.events)
             or any(item.asset_id != self.asset_id for item in self.signals)
             or any(item.asset_id != self.asset_id for item in self.references)
@@ -142,6 +172,73 @@ class Evidence(Strict):
             if key in references and references[key] != value:
                 raise ValueError("Conflicting duplicate reference key")
             references[key] = value
+        return self
+
+
+class ImportedAsset(Strict):
+    id: str = Field(min_length=1, max_length=80)
+    metadata_version: str = Field(min_length=1, max_length=40)
+    name: str = Field(min_length=1, max_length=200)
+    equipment_type: str = Field(min_length=1, max_length=200)
+    provenance: str = Field(min_length=1, max_length=500)
+
+
+class EvidenceBundle(Strict):
+    """Data-only JSON, never a URL/file/SQL/instruction connector or rights approval."""
+
+    format_version: Literal["onesa-industrial-evidence-v1"]
+    classification: Literal["synthetic"]
+    source_id: UUID
+    source_timezone: str = Field(min_length=1, max_length=80)
+    asset: ImportedAsset
+    window: Window
+    evidence: Evidence
+
+    @model_validator(mode="before")
+    @classmethod
+    def explicit_utc(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            raise ValueError("Provide a versioned JSON evidence bundle")
+        # Reject offset/local timestamps before existing evidence validators normalize.
+        evidence = value.get("evidence", {})
+        window = value.get("window", {})
+        if not isinstance(evidence, dict) or not isinstance(window, dict):
+            raise ValueError("Evidence and window must be objects")
+        dates = [window.get(key) for key in ("start", "end")]
+        for collection, names in [
+            ("events", ("start", "end")),
+            ("signals", ("timestamp",)),
+            ("references", ("effective_start", "effective_end")),
+        ]:
+            items = evidence.get(collection, [])
+            if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+                raise ValueError("Evidence collections must contain objects")
+            for item in items:
+                dates.extend(item.get(key) for key in names if item.get(key) is not None)
+        for date in dates:
+            if not isinstance(date, str) or not date.endswith(("Z", "+00:00")):
+                raise ValueError("Every source timestamp must explicitly use UTC (Z or +00:00)")
+        return value
+
+    @model_validator(mode="after")
+    def consistent(self) -> Self:
+        try:
+            ZoneInfo(self.source_timezone)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError("Source timezone must be an explicit IANA timezone") from None
+        if self.source_timezone not in {"UTC", "Etc/UTC"} and "/" not in self.source_timezone:
+            raise ValueError("Ambiguous source timezone")
+        if (
+            self.evidence.fixture_version != "onesa-industrial-import-v1"
+            or self.evidence.asset_id != self.asset.id
+            or self.evidence.metadata_version != self.asset.metadata_version
+        ):
+            raise ValueError("Imported asset/version boundary mismatch")
+        if len(self.model_dump_json().encode()) > 512 * 1024:
+            raise ValueError("Evidence bundle exceeds 512 KiB")
+        calculate(
+            self.evidence, self.window
+        )  # Reject conflicting immutable event IDs before saving.
         return self
 
 

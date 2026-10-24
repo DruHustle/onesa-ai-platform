@@ -23,6 +23,7 @@ from app.cloudflare import embeddings as cloudflare_embeddings
 from app.config import Settings
 from app.errors import fail
 from app.models import Document, DocumentChunk
+from app.pagination import page
 from app.responses import DocumentDetail, DocumentList, DocumentMetadata, KnowledgeResults
 from app.schemas import Strict
 
@@ -242,15 +243,24 @@ def documents(
     auth: Auth,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    cursor: Annotated[str | None, Query(max_length=512)] = None,
 ) -> dict[str, Any]:
-    rows = db.scalars(
-        select(Document)
-        .where(Document.user_id == auth[0].id)
-        .order_by(Document.created_at.desc(), Document.id)
-        .offset(offset)
-        .limit(limit)
+    rows, following = page(
+        db,
+        Document,
+        select(Document).where(Document.user_id == auth[0].id),
+        limit,
+        offset,
+        cursor,
+        auth[0].id,
+        "documents",
     )
-    return {"items": [metadata(row) for row in rows], "limit": limit, "offset": offset}
+    return {
+        "items": [metadata(row) for row in rows],
+        "limit": limit,
+        "offset": offset,
+        "next_cursor": following,
+    }
 
 
 @router.get("/documents/{identifier}", response_model=DocumentDetail)
