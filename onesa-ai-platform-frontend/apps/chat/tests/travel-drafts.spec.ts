@@ -267,6 +267,37 @@ for (const sameUser of [true, false]) {
   });
 }
 
+test("saved trip selection survives reload through its owned detail endpoint and retries without writes", async ({page}) => {
+  let reads = 0, writes = 0;
+  await page.route("**/api/v1/travel/trips/older-owned", route => {
+    if (route.request().method() !== "GET") {writes++; return reply(route, {}, 503);}
+    reads++;
+    return reads === 2 ? reply(route, {}, 503) : reply(route, trip("older-owned", "Older owned trip"));
+  });
+  await page.goto("/travel?trip=older-owned");
+  await expect(page.getByLabel("Destination", {exact: true})).toHaveValue("Older owned trip");
+  await page.reload();
+  await expect(page.locator("main").getByRole("alert")).toContainText("saved trip is unavailable");
+  await expect(page.getByRole("button", {name: "Create plan", exact: true})).toBeDisabled();
+  await page.getByRole("button", {name: "Retry saved trip", exact: true}).click();
+  await expect(page.getByLabel("Destination", {exact: true})).toHaveValue("Older owned trip");
+  await page.getByRole("button", {name: "New trip"}).click();
+  await expect(page).not.toHaveURL(/trip=/);
+  expect(reads).toBe(3);
+  expect(writes).toBe(0);
+});
+
+test("a refused saved trip does not become an editable new plan", async ({page}) => {
+  await page.route("**/api/v1/travel/trips/other-owner", route => reply(route, {}, 404));
+  await page.goto("/travel?trip=other-owner");
+  await expect(page.locator("main").getByRole("alert")).toContainText("saved trip is unavailable");
+  await expect(page.getByLabel("Destination", {exact: true})).toHaveValue("");
+  await expect(page.getByRole("button", {name: "Create plan", exact: true})).toBeDisabled();
+  await page.getByRole("button", {name: "Berlin · 3 days", exact: true}).click();
+  await expect(page.getByLabel("Destination", {exact: true})).toHaveValue("Berlin");
+  await expect(page).toHaveURL(/trip=b/);
+});
+
 test("late optional Docs membership denial cannot expire a newly authenticated workspace", async ({
   page,
 }) => {
