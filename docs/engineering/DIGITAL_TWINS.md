@@ -240,6 +240,9 @@ ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/
 Browser fixtures are loopback-only and use disposable accounts. MQTT verification uses
 the locked host `.venv` and overlay broker. Required CI retains its existing checks and
 adds the same local feature tests, without provider credentials or peer checkout access.
+Linux Firefox uses its headed renderer under Xvfb because the observed stock headless
+runner disables WebGL 2. Chromium/WebKit retain their headless coverage. No browser
+security preference or application graphics fallback is changed to pass the checks.
 Retained screenshots/results belong in ignored `data/` or the existing protected evidence
 index. Cold tests use fresh browser storage, deny non-Onesa application destinations,
 and inspect requests. Source-outage tests stop/block the isolated producer, keep Onesa

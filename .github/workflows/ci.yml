@@ -212,7 +212,11 @@ jobs:
         sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
         cd onesa-ai-platform-frontend/apps/chat
         npx playwright install --with-deps chromium firefox webkit
-    - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
+    - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- --project=chromium --project=webkit
+    # Stock headless Firefox disables WebGL 2 on this runner (AllowWebgl2:false).
+    # Exercise its real renderer under a disposable display, retaining every test.
+    - name: Verify Firefox rendering and workflows under Xvfb
+      run: xvfb-run -a env ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- --project=firefox --headed
     - name: Preserve isolated synthetic browser failure evidence
       if: failure()
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9

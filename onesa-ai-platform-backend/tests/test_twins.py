@@ -7,6 +7,7 @@ import struct
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.models import now
 from app.twin_demo import aas_environment, pump_aasx, pump_glb
 from app.twin_files import FileStore, bounded_json, preview
-from app.twin_models import TwinReading, TwinSource
+from app.twin_models import TwinFile, TwinReading, TwinSource
 from app.twin_schemas import ModelCreate
 from app.twins import commentary_context
 from tests.conftest import signup
@@ -265,6 +266,52 @@ def test_actual_aasx_preview_preserves_unknown_data_and_requires_review(twins):
         json={"name": "Ignored duplicate", "serial": "IMPORTED-02"},
     )
     assert again.json()["id"] == row["id"]
+
+
+@pytest.mark.parametrize("capacity", ["records", "bytes"])
+def test_package_quota_rejection_writes_no_binary_files(twins, capacity):
+    file = twins.post("/api/v1/twins/files", files={"file": ("existing.txt", b"x")}).json()
+    package = pump_aasx()
+    with Session(twins.app.state.engine) as db:
+        existing = db.get(TwinFile, UUID(file["id"]))
+        sizes = (
+            [1] * 198
+            if capacity == "records"
+            else [4194304] * 24 + [100 * 1024 * 1024 - len(package) - 2 - 1 - 24 * 4194304]
+        )
+        for size in sizes:
+            db.add(
+                TwinFile(
+                    user_id=existing.user_id,
+                    filename="quota-fixture.txt",
+                    sha256=existing.sha256,
+                    size=size,
+                    details={"format": "source_attachment"},
+                )
+            )
+        db.commit()
+    directory = Path(twins.app.state.settings.digital_twins_storage_directory)
+    before = {p.relative_to(directory) for p in directory.rglob("*")}
+    response = twins.post("/api/v1/twins/files", files={"file": ("pump.aasx", package)})
+    assert response.status_code in {409, 413}, response.text
+    assert {p.relative_to(directory) for p in directory.rglob("*")} == before
+
+
+def test_invalid_embedded_geometry_is_rejected_before_any_binary_write(twins):
+    content = io.BytesIO()
+    with (
+        zipfile.ZipFile(io.BytesIO(pump_aasx())) as source_zip,
+        zipfile.ZipFile(content, "w") as target,
+    ):
+        for name in source_zip.namelist():
+            target.writestr(
+                name, b"invalid geometry" if name.endswith(".glb") else source_zip.read(name)
+            )
+    response = twins.post(
+        "/api/v1/twins/files", files={"file": ("invalid.aasx", content.getvalue())}
+    )
+    assert response.status_code == 422
+    assert list(Path(twins.app.state.settings.digital_twins_storage_directory).rglob("*")) == []
 
 
 def test_external_geometry_is_not_fetched_or_presented_as_rendered(twins):

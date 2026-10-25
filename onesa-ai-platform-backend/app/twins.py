@@ -279,9 +279,14 @@ async def upload_file(
     filename = (file.filename or "upload").replace("\\", "/").rsplit("/", 1)[-1][:200]
     if not 0 < len(data) <= MAX_FILE:
         fail(413, "twin_file_limit", "File limit is 4 MiB")
+    prepared: list[tuple[str, bytes, dict[str, Any]]] = []
     try:
         async with request.app.state.ingestion_semaphore:
             details, embedded = await run_in_threadpool(preview, data, filename)
+            for name, content in embedded.items():
+                if name.lower().endswith((".glb", ".txt", ".pdf", ".step", ".stp", ".png", ".jpg")):
+                    detail, _ = await run_in_threadpool(preview, content, name)
+                    prepared.append((name, content, detail))
     except Exception:
         # Parser messages can contain imported content; return a fixed safe boundary.
         fail(
@@ -292,21 +297,35 @@ async def upload_file(
                 "supported AAS 3.0 package without external resources."
             ),
         )
+    # Lock the account and reserve the entire bounded package in one transaction.
+    # A rejected attachment/quota must not leave attacker-controlled disk orphans.
+    quota(db, TwinFile, auth[0].id, 200)
+    count = (
+        db.scalar(select(func.count()).select_from(TwinFile).where(TwinFile.user_id == auth[0].id))
+        or 0
+    )
+    if count + 1 + len(prepared) > 200:
+        fail(409, "twin_quota", "The package exceeds the remaining private file record quota")
+    total = (
+        db.scalar(
+            select(func.coalesce(func.sum(TwinFile.size), 0)).where(TwinFile.user_id == auth[0].id)
+        )
+        or 0
+    )
+    if total + len(data) + sum(len(content) for _, content, _ in prepared) > 100 * 1024 * 1024:
+        fail(413, "twin_storage_quota", "The package exceeds the remaining private file byte quota")
     row = save_file(request, db, auth, filename, data, details)
     attachments = []
-    for name, content in embedded.items():
-        if name.lower().endswith((".glb", ".txt", ".pdf", ".step", ".stp", ".png", ".jpg")):
-            async with request.app.state.ingestion_semaphore:
-                detail, _ = await run_in_threadpool(preview, content, name)
-            child = save_file(
-                request,
-                db,
-                auth,
-                name.rsplit("/", 1)[-1],
-                content,
-                {**detail, "package_id": str(row.id), "package_path": name},
-            )
-            attachments.append({"path": name, "id": str(child.id), "details": detail})
+    for name, content, detail in prepared:
+        child = save_file(
+            request,
+            db,
+            auth,
+            name.rsplit("/", 1)[-1],
+            content,
+            {**detail, "package_id": str(row.id), "package_path": name},
+        )
+        attachments.append({"path": name, "id": str(child.id), "details": detail})
     row.details = {**details, "attachments": attachments}
     db.commit()
     return output(row)

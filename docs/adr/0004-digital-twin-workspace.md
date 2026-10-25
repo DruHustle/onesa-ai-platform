@@ -40,6 +40,14 @@ Equipment tools reauthorize each resource through existing user sessions, return
 
 ## Implementation plan
 
+Owner update 2026-10-25: premium assembly/internal inspection is now mandatory.
+The original five-part primitive fixture is an incomplete reference for this scope.
+Extend the local authored pump/motor with a declared BOM, modeled major internals,
+reversible whole/subassembly explosion, section controls with topology-aware cut faces,
+and persisted inspection views. Preserve the standalone architecture and existing
+bindings; qualify actual assembled/exploded/cutaway/close-up states visually and in
+browser tests before recording detailed-model acceptance.
+
 1. Add migration, validated domain/storage/import modules and ownership/readiness gates. Generate reproducible self-authored pump GLB, AAS/AASX and manual fixtures.
 2. Implement setup/import preview/commit, per-revision mappings, documents, bounded telemetry/history/thresholds, scoped tools, reports and robotics view.
 3. Build accessible responsive workspace, lazy 3D interaction and useful graphics fallback. Preserve system CSS themes and existing application navigation.
