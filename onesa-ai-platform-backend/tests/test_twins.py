@@ -19,7 +19,30 @@ from app.twin_demo import aas_environment, pump_aasx, pump_glb
 from app.twin_files import FileStore, bounded_json, preview
 from app.twin_models import TwinReading, TwinSource
 from app.twin_schemas import ModelCreate
+from app.twins import commentary_context
 from tests.conftest import signup
+
+
+def test_model_context_has_its_own_budget_and_keeps_the_full_evidence_unchanged():
+    full = {
+        "question": "Inspection",
+        "equipment": {"id": "local-asset"},
+        "component": {"id": "local-component"},
+        "window": {"mode": "simulated"},
+        "facts": [{"freshness": "good", "reading": "x" * 1000} for _ in range(32)],
+        "history": {
+            "readings": [{"value": index, "provenance": "x" * 1000} for index in range(100)],
+            "events": [{"kind": "threshold_crossing"} for _ in range(100)],
+        },
+        "documents": [{"document_id": "local-document", "text": "manual " * 1000}],
+    }
+    raw = commentary_context(full)
+    assert len(raw) <= 24000
+    prompt = json.loads(raw)
+    assert prompt["history"]["readings"][-1]["value"] == 99
+    assert len(prompt["facts"]) <= 8 and prompt["documents"]
+    assert len(full["history"]["readings"]) == 100
+    assert len(full["facts"]) == 32 and len(full["documents"][0]["text"]) == 7000
 
 
 def test_account_export_keeps_owned_twins_when_disabled_and_never_exports_source_credentials(twins):

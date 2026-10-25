@@ -1150,6 +1150,34 @@ def equipment_registry(identifier: UUID, request: Request, db: DB, auth: Auth) -
     return registry
 
 
+def commentary_context(result: dict[str, Any]) -> str:
+    """Bound provider context independently from the complete owned evidence response."""
+    readings = result["history"]["readings"][-12:]
+    events = result["history"]["events"][-12:]
+    facts = sorted(result["facts"], key=lambda item: item["freshness"] != "good")[:8]
+    documents = [{**item, "text": item["text"][:2000]} for item in result["documents"]]
+    context = {
+        "question": result["question"],
+        "equipment": result["equipment"],
+        "component": result["component"],
+        "window": result["window"],
+        "facts": facts,
+        "history": {"readings": readings, "events": events},
+        "documents": documents,
+        "notice": "A bounded evidence selection; absence is not proof of no event or fault.",
+    }
+    while True:
+        raw = json.dumps(context, ensure_ascii=False)
+        if len(raw) <= 24000:
+            return raw
+        for items, minimum in ((readings, 0), (events, 0), (facts, 1), (documents, 1)):
+            if len(items) > minimum:
+                items.pop(0 if items is readings or items is events else -1)
+                break
+        else:
+            raise ValueError("Evidence metadata exceeds the model context budget")
+
+
 async def answer(
     identifier: UUID, body: ToolRequest, request: Request, db: DB, auth: Auth
 ) -> dict[str, Any]:
@@ -1204,9 +1232,7 @@ async def answer(
             ),
             ModelMessage(
                 role="user",
-                content=json.dumps(
-                    {"question": body.question, "evidence": result}, ensure_ascii=False
-                ),
+                content=commentary_context(result),
             ),
         ]
         raw = ""
@@ -1235,7 +1261,7 @@ async def answer(
                 raise ValueError("Invalid model hypothesis")
             if not 10 <= len(hypothesis["quote"]) <= 800 or not any(
                 s["document_id"] == hypothesis["document_id"] and hypothesis["quote"] in s["text"]
-                for s in result["documents"]
+                for s in json.loads(messages[1].content)["documents"]
             ):
                 raise ValueError("Ungrounded model citation")
         result["assistant"] = {

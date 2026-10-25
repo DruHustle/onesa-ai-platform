@@ -213,7 +213,10 @@ bounded rule events and document chunks. Imported instructions are untrusted evi
 Model commentary uses the existing provider and capacity controls; no new training,
 provider fallback or Smart Factory AI call exists. Mock, unavailable/invalid, deterministic
 evidence and model-backed unconfirmed hypotheses are distinct. Quotes must be present
-in returned sources. No threshold rule proves a cause or predictive maintenance.
+in the source excerpts actually sent to the model. The provider receives a separate
+24,000-character evidence selection, preserving recent observations and labeling its
+incompleteness; the complete owned tool response and saved snapshot are retained.
+No threshold rule proves a cause or predictive maintenance.
 
 Only structured `focus_component` / `highlight_components` actions with owned component
 IDs are accepted by the API. No generated JavaScript or machine command is executed.
