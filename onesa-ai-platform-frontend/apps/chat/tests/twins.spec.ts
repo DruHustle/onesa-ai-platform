@@ -216,6 +216,48 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   await expect(page.getByRole("tabpanel", { name: "Details" })).toContainText(
     "disconnected",
   );
+  // The actual optional MQTT adapter/publisher have stopped. A separate local
+  // acquisition path remains usable without relabeling that old source healthy.
+  expect((await page.request.get("/ready")).status()).toBe(200);
+  await page
+    .getByRole("button", { name: "Simulate normal", exact: true })
+    .click();
+  await expect(page.getByRole("tabpanel", { name: "Details" })).toContainText(
+    "2 mm/s",
+  );
+  const afterOutage = await (
+    await page.request.get(
+      `/api/v1/twins/assets/${telemetry.asset.id}?mode=simulated`,
+    )
+  ).json();
+  expect(
+    afterOutage.state.some(
+      (s: { source_id: string; connection: string }) =>
+        s.source_id === telemetry.source.id && s.connection === "disconnected",
+    ),
+  ).toBe(true);
+  expect(
+    afterOutage.state.some(
+      (s: { source_id: string; freshness: string }) =>
+        s.source_id !== telemetry.source.id && s.freshness === "good",
+    ),
+  ).toBe(true);
+  await page.getByRole("tab", { name: "Documents", exact: true }).click();
+  await page
+    .getByText("Onesa illustrative pump maintenance — sections 1–3", {
+      exact: true,
+    })
+    .click();
+  await expect(page.getByRole("tabpanel", { name: "Documents" })).toContainText(
+    "Section 2 — Bearing vibration inspection",
+  );
+  await page
+    .getByRole("button", { name: "Inspect selected evidence", exact: true })
+    .click();
+  await expect(page.getByLabel("Equipment evidence answer")).toContainText(
+    "Procedure evidence",
+  );
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
   await page
     .getByLabel("Equipment", { exact: true })
     .selectOption({ label: "Demo pump 02 · ONESA-DEMO-PUMP-02" });
