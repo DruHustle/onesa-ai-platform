@@ -1,0 +1,17 @@
+Onesa illustrative pump maintenance procedure — revision 1
+Self-authored synthetic demonstration; not an equipment manufacturer's instruction.
+
+Section 1 — Identification
+Confirm the installed pump serial number and selected component before inspection.
+Geometry is illustrative, right-handed Y-up, in meters. It is not calibrated CAD.
+
+Section 2 — Bearing vibration inspection
+A vibration threshold is a rule output, not a confirmed fault or prediction.
+Review the bearing observation timestamp, quality and operating mode. A stale or bad
+reading cannot establish current condition. Compare the event with bounded history.
+Inspect the bearing mounting and coupling alignment only under the equipment owner's
+approved isolation and safe maintenance procedure. This workspace issues no commands.
+
+Section 3 — Recovery
+Review the hysteresis recovery event and subsequent good-quality readings. A recovery
+event alone does not prove mechanical repair. Record the evidence and inspection outcome.

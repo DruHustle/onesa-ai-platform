@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261021_industrial. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261025_twins. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -259,6 +259,143 @@ Constraints: ["PrimaryKeyConstraint: key"]
 Indexes: [{"name": "ix_trips_user_id", "columns": ["user_id"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "budget > 0", "duration BETWEEN 1 AND 14", "revision > 0"]
+
+## twin_assets
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| template_id | UUID | False | FK twin_templates.id / None |
+| name | VARCHAR(120) | False |  |
+| serial | VARCHAR(120) | False |  |
+| definition | JSONB | False |  |
+| active_model_id | UUID | True |  |
+| revision | INTEGER | False | ORM default |
+| updated_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_assets_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: template_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: user_id, serial", "revision > 0"]
+
+## twin_events
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| source_id | UUID | False | FK twin_sources.id / CASCADE |
+| component_id | UUID | False |  |
+| reading_id | UUID | False | FK twin_readings.id / CASCADE |
+| details | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_events_asset_id", "columns": ["asset_id", "created_at"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: reading_id", "ForeignKeyConstraint: source_id", "PrimaryKeyConstraint: id"]
+
+## twin_files
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| filename | VARCHAR(200) | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| size | INTEGER | False |  |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_files_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "size BETWEEN 1 AND 4194304"]
+
+## twin_models
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| template_id | UUID | False | FK twin_templates.id / None |
+| file_id | UUID | False | FK twin_files.id / None |
+| definition | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_models_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: file_id", "ForeignKeyConstraint: template_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## twin_notes
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| component_id | UUID | True |  |
+| kind | VARCHAR(20) | False |  |
+| payload | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_notes_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "kind IN ('annotation', 'viewpoint', 'inspection')"]
+
+## twin_readings
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK twin_sources.id / CASCADE |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| component_id | UUID | False |  |
+| message_id | VARCHAR(160) | False |  |
+| tag | VARCHAR(80) | False |  |
+| mode | VARCHAR(16) | False |  |
+| unit | VARCHAR(24) | False |  |
+| value | FLOAT | False |  |
+| quality | VARCHAR(16) | False |  |
+| observed_at | TIMESTAMP WITH TIME ZONE | False |  |
+| provenance | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_readings_history", "columns": ["asset_id", "mode", "observed_at", "id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: source_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, message_id, tag, mode", "mode IN ('live', 'simulated', 'replay')", "quality IN ('good', 'bad', 'unknown')"]
+
+## twin_sources
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| name | VARCHAR(120) | False |  |
+| token_hash | VARCHAR(64) | False | unique |
+| definition | JSONB | False |  |
+| revoked_at | TIMESTAMP WITH TIME ZONE | True |  |
+| last_seen_at | TIMESTAMP WITH TIME ZONE | True |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_sources_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash"]
+
+## twin_templates
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| name | VARCHAR(120) | False |  |
+| kind | VARCHAR(80) | False |  |
+| definition | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_templates_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
 
 ## upload_chunks
 

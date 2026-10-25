@@ -1,0 +1,84 @@
+{
+  "artifact": {
+    "byteLength": 38040,
+    "mediaType": "model/gltf-binary",
+    "sha256": "4f0e1e9522e28a95ceef855c5f1b7c8fe54e27bed45390dd8ceb2ed3bb9f57ab"
+  },
+  "components": [
+    {
+      "id": "casing",
+      "label": "Casing",
+      "parentId": null
+    },
+    {
+      "id": "motor",
+      "label": "Motor",
+      "parentId": null
+    },
+    {
+      "id": "coupling-shaft",
+      "label": "Coupling Shaft",
+      "parentId": null
+    },
+    {
+      "id": "bearing",
+      "label": "Bearing",
+      "parentId": null
+    },
+    {
+      "id": "impeller",
+      "label": "Impeller",
+      "parentId": null
+    }
+  ],
+  "coordinateFrame": "right-handed-y-up",
+  "mappings": [
+    {
+      "componentId": "casing",
+      "sceneNode": "node:0"
+    },
+    {
+      "componentId": "motor",
+      "sceneNode": "node:1"
+    },
+    {
+      "componentId": "coupling-shaft",
+      "sceneNode": "node:2"
+    },
+    {
+      "componentId": "bearing",
+      "sceneNode": "node:3"
+    },
+    {
+      "componentId": "impeller",
+      "sceneNode": "node:4"
+    }
+  ],
+  "metersPerUnit": 1,
+  "modelRevision": "onesa-illustrative-pump:1.0.0",
+  "provenance": {
+    "description": "Self-authored illustrative pump and motor, not calibrated CAD or planning geometry",
+    "illustrative": true,
+    "rights": "Onesa-owned synthetic demonstration; Onesa-owned illustrative demonstration asset"
+  },
+  "schemaVersion": "1.0.0",
+  "transform": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1
+  ],
+  "unit": "m"
+}

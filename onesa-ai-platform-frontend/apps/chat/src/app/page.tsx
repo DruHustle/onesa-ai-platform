@@ -73,7 +73,7 @@ export default function Chat() {
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
     const intended = new URLSearchParams(window.location.search).get("next");
-    if (intended === "/agents" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial") {window.location.replace(intended); return;}
+    if (intended === "/agents" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial" || intended === "/industrial/twins") {window.location.replace(intended); return;}
     setLinkedDocument(null); setDocumentIds([]);
     setUser(current);
   }, []);

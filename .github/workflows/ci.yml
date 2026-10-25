@@ -136,6 +136,8 @@ jobs:
     - name: Verify application TLS trust and isolated certificate rejection
       run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
+    - name: Validate the application-owned viewer contract and fixtures
+      run: node --test scripts/twins/viewer-contract.test.mjs
     - run: 'cd onesa-ai-platform-frontend/apps/chat
 
         python3 ../../../scripts/ci/analyze.py eslint -- node_modules/.bin/eslint --format json .
@@ -184,11 +186,25 @@ jobs:
           onesa-ai-platform-frontend/apps/docs/package-lock.json
 
           scripts/contract-tools/package-lock.json'
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.11'
+        cache: pip
+        cache-dependency-path: 'infra/operations/requirements.lock
+
+          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
+
+          onesa-ai-platform-backend/requirements-build.lock
+
+          onesa-ai-platform-backend/requirements-dev.lock
+
+          onesa-ai-platform-backend/requirements.lock'
+    - run: make install
     - run: python3 scripts/bootstrap_env.py
     - name: Fetch pinned fixture database with bounded registry-read recovery
       timeout-minutes: 4
       run: python3 scripts/ci/pull_image.py --database
-    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
+    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.twins-demo.yaml up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
       timeout-minutes: 10
@@ -205,20 +221,6 @@ jobs:
         path: onesa-ai-platform-frontend/apps/chat/test-results
         if-no-files-found: ignore
         retention-days: 1
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-      with:
-        python-version: '3.11'
-        cache: pip
-        cache-dependency-path: 'infra/operations/requirements.lock
-
-          onesa-ai-platform-backend/embedding_service/requirements-macos.lock
-
-          onesa-ai-platform-backend/requirements-build.lock
-
-          onesa-ai-platform-backend/requirements-dev.lock
-
-          onesa-ai-platform-backend/requirements.lock'
-    - run: make install
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
@@ -236,7 +238,7 @@ jobs:
 
         '
     - if: always()
-      run: docker compose down
+      run: docker compose -f compose.yaml -f compose.twins-demo.yaml down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.browser == 'true') }}
     timeout-minutes: 45
     needs:

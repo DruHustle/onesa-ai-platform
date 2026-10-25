@@ -6,6 +6,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine, inspect, text
 
+from app.database import REQUIRED_SCHEMA_REVISION
+
 
 def test_upgrade_downgrade_and_model_consistency(pg: Engine) -> None:
     config = Config(str(Path(__file__).parents[1] / "alembic.ini"))
@@ -16,7 +18,7 @@ def test_upgrade_downgrade_and_model_consistency(pg: Engine) -> None:
     with pg.connect() as connection:
         assert (
             connection.scalar(text("SELECT version_num FROM alembic_version"))
-            == "20261021_industrial"
+            == REQUIRED_SCHEMA_REVISION
         )
     command.check(config)
     assert {
@@ -31,6 +33,14 @@ def test_upgrade_downgrade_and_model_consistency(pg: Engine) -> None:
         "bounded_uploads",
         "model_leases",
         "industrial_investigations",
+        "twin_templates",
+        "twin_assets",
+        "twin_files",
+        "twin_models",
+        "twin_sources",
+        "twin_readings",
+        "twin_events",
+        "twin_notes",
     } <= set(inspect(pg).get_table_names())
     # Retain the original reversible-history check in a separate disposable schema.
     schema = "migration_test_" + uuid4().hex
