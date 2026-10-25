@@ -1,4 +1,5 @@
 import { call, csrf, ApiError } from "./api";
+import type { ModelManifest, InspectionControls } from "./twin-viewer-contract";
 
 export type Component = {
   id: string;
@@ -7,6 +8,11 @@ export type Component = {
   parent_id: string | null;
   external_id: string;
   semantic_reference?: string;
+  renderable?: boolean;
+  inventory?: "assembly" | "part" | "combined" | "unavailable";
+  inventory_note?: string;
+  material?: string;
+  housing?: boolean;
 };
 export type TwinAsset = {
   id: string;
@@ -21,6 +27,7 @@ export type TwinAsset = {
     stage: string;
     review_model_id?: string;
     source_import_id?: string;
+    reference_version?: string;
     demo?: boolean;
     external_id?: string;
     aas_id?: string;
@@ -40,6 +47,7 @@ export type Model = {
     provenance: string;
     sha256: string;
     byte_length: number;
+    inspection?: ModelManifest["inspection"];
   };
 };
 export type Reading = {
@@ -80,6 +88,12 @@ export type Note = {
   payload: {
     text?: string;
     camera?: number[];
+    model_revision_id?: string;
+    inspection_view?: InspectionControls & {
+      hidden_component_ids: string[];
+      isolated_component_id: string | null;
+      transparent_surroundings: boolean;
+    };
     title?: string;
     checklist?: string[];
     evidence?: Evidence;

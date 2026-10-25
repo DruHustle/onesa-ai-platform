@@ -1,13 +1,15 @@
 {
   "files": {
+    "assembly.json": "4abc480105a6108762faebedd257467ff158c986e677339255a0f63255dcc99d",
     "external.json": "87d5458a713d2b0bbb7104f99f511e76bb32fe32b6a2a227656786f5f365df80",
-    "maintenance.txt": "0859480680e6cf67b2b5bc3aa76c1ca59f042123f926351c9875d36cbf830a22",
-    "manifest.json": "5db5877dcc880b1123ce8302d1ca2f4fd79a52494f0c50efe0f48b80048ddf5e",
-    "pump.aasx": "212e4c44cf16bc106edc5bcc84e37348c8c4e7f7aa084eb1627dc4c271902aad",
-    "pump.glb": "4f0e1e9522e28a95ceef855c5f1b7c8fe54e27bed45390dd8ceb2ed3bb9f57ab",
+    "maintenance.txt": "9a4b3803d236b9c36768416f1ccd3cd7ce18e08a0621b23d9284935c4c4139a2",
+    "manifest.json": "0af93bd542c6df2c8962d70ad695a240f926db008057600cc6db089cb910a782",
+    "pump.aasx": "45b848a849d717756ca3df8790d82d9fa3bb055431d00516f24e6e5b4dd4bce5",
+    "pump.glb": "8c929269cd592bd7641b70bbf3d119c3f34ac1bc88f426b8eaaa391327a25921",
     "pump.json": "2e61023c47fce449b0582addc112e4e61ffeefc9b356803b4da21fb7c8e28267",
-    "scenarios.json": "3cf73cbc77a842effa85d7b401222c4bb770e2e0a3a0b62880786b830d4ce9fc"
+    "scenarios.json": "3cf73cbc77a842effa85d7b401222c4bb770e2e0a3a0b62880786b830d4ce9fc",
+    "topology-audit.json": "b4977ea9095df69a9ef6fc96ee4905b26697565c608c2b6dfdec132585f8514d"
   },
-  "fixtureVersion": "1.0.0",
+  "fixtureVersion": "2.0.0",
   "source": "scripts/twins/generate_fixtures.py"
 }

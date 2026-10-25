@@ -10,7 +10,7 @@ from basyx.aas.adapter import aasx
 from basyx.aas.adapter import json as aas_json
 
 PARTS = ("casing", "motor", "coupling-shaft", "bearing", "impeller")
-MANUAL = """Onesa illustrative pump maintenance procedure — revision 1
+MANUAL = """Onesa illustrative pump maintenance procedure — revision 2
 Self-authored synthetic demonstration; not an equipment manufacturer's instruction.
 
 Section 1 — Identification
@@ -27,10 +27,34 @@ approved isolation and safe maintenance procedure. This workspace issues no comm
 Section 3 — Recovery
 Review the hysteresis recovery event and subsequent good-quality readings. A recovery
 event alone does not prove mechanical repair. Record the evidence and inspection outcome.
+
+Section 4 — Detailed illustrative assembly inspection
+This app-owned reference is an engineering-informed end-suction pump coupled to a
+TEFC squirrel-cage motor. It has no manufacturer identity, certified dimensions,
+validated maintenance sequence or calibrated physics. Explosion is a visualization.
+Select the pump, bearing or motor subassembly and use Explosion 0–100% to separate
+modeled parts. Reassemble restores the immutable assembled transforms. Guide lines
+are optional. Focus a bearing race, rolling-element set, cage, mechanical-seal ring,
+impeller, stator, copper winding assembly, rotor cage or fan to inspect its geometry.
+Section X crosses the shaft; Y and Z expose longitudinal internals. Reverse the cut
+and move the plane to inspect both sides. Solid cut faces apply only to validated
+closed surfaces; fluid cavities, shaft bores, bearing gaps and vents remain empty.
+The open-ended seal spring has no cut cap. Transparent housings have no solid cap;
+hide covers or isolate a part for an unobstructed view. Restore all returns every part.
+
+Section 5 — Reference BOM and provenance
+The assembly/BOM lists logical assemblies and separately selectable modeled parts.
+Rolling elements are selectable as one bearing set; winding conductor bundles,
+rotor lamination packs and fastener head/washer/shank assemblies are intentionally
+combined. Exact wire strands, thread helices and individual steel sheets are
+simplified, as stated in each component inventory note. Terminal electrical
+internals, wiring and hydraulic CFD are outside this mechanical reference scope.
+The parametric authoring source and topology audit are retained in this repository.
+No supplier CAD, third-party asset release or external viewer is required.
 """
 
 
-def pump_glb() -> bytes:
+def basic_pump_glb() -> bytes:
     """Five individually selectable low-poly parts; generation is deterministic."""
     binary = bytearray()
     views: list[dict[str, Any]] = []
@@ -173,6 +197,42 @@ def pump_glb() -> bytes:
     )
 
 
+_REFERENCE: tuple[bytes, dict[str, Any], bytes] | None = None
+
+
+def reference() -> tuple[bytes, dict[str, Any], bytes]:
+    """Reproduce local viewing geometry with this app's locked authoring dependency."""
+    global _REFERENCE
+    if _REFERENCE is None:
+        import subprocess
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory(
+            prefix="onesa-reference-authoring-"
+        ) as directory:
+            subprocess.run(
+                [
+                    "node",
+                    str(Path(__file__).with_name("author_reference.mjs")),
+                    directory,
+                ],
+                check=True,
+                capture_output=True,
+            )
+            target = Path(directory)
+            _REFERENCE = (
+                (target / "pump.glb").read_bytes(),
+                json.loads((target / "assembly.json").read_bytes()),
+                (target / "topology-audit.json").read_bytes(),
+            )
+    return _REFERENCE
+
+
+def pump_glb() -> bytes:
+    return reference()[0]
+
+
 def aas_environment(*, external: bool = False) -> dict[str, Any]:
     return {
         "assetAdministrationShells": [
@@ -286,8 +346,12 @@ def generate() -> None:
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
             output.writestr(info, source.read(name))
-    model = pump_glb()
+    model, assembly, audit = reference()
     files = {
+        "assembly.json": (
+            json.dumps(assembly, sort_keys=True, indent=2) + "\n"
+        ).encode(),
+        "topology-audit.json": audit,
         "pump.glb": model,
         "pump.aasx": deterministic.getvalue(),
         "pump.json": (
@@ -300,14 +364,14 @@ def generate() -> None:
     }
     manifest = {
         "schemaVersion": "1.0.0",
-        "modelRevision": "onesa-illustrative-pump:1.0.0",
+        "modelRevision": "onesa-end-suction-pump-tefc-motor:2.0.0",
         "artifact": {
             "sha256": hashlib.sha256(model).hexdigest(),
             "byteLength": len(model),
             "mediaType": "model/gltf-binary",
         },
         "provenance": {
-            "description": "Self-authored illustrative pump and motor, not calibrated CAD or planning geometry",
+            "description": "Onesa-authored detailed mechanical reference with modeled internals; illustrative, not calibrated CAD or planning geometry",
             "rights": "Onesa-owned synthetic demonstration; Onesa-owned illustrative demonstration asset",
             "illustrative": True,
         },
@@ -315,14 +379,36 @@ def generate() -> None:
         "metersPerUnit": 1,
         "coordinateFrame": "right-handed-y-up",
         "transform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-        "components": [
-            {"id": name, "label": name.replace("-", " ").title(), "parentId": None}
-            for name in PARTS
-        ],
+        "components": assembly["components"],
         "mappings": [
-            {"sceneNode": f"node:{i}", "componentId": name}
-            for i, name in enumerate(PARTS)
+            {
+                "sceneNode": f"node:{index}",
+                "componentId": node["extras"]["twin_component"],
+            }
+            for index, node in enumerate(
+                json.loads(model[20 : 20 + struct.unpack_from("<I", model, 12)[0]])[
+                    "nodes"
+                ]
+            )
+            if "mesh" in node
         ],
+        "inspection": {
+            **{
+                k: assembly["inspection"][k]
+                for k in ("version", "reference", "description", "unavailable")
+            },
+            "motions": [
+                {
+                    **{k: motion[k] for k in ("translation", "rotation", "pivot")},
+                    "component_id": motion["componentId"],
+                }
+                for motion in assembly["inspection"]["motions"]
+            ],
+            "closed_solids": assembly["inspection"]["closedSolids"],
+            "housing_components": assembly["inspection"]["housingComponents"],
+            "cover_components": assembly["inspection"]["coverComponents"],
+            "scope_notes": assembly["inspection"]["scopeNotes"],
+        },
     }
     files["manifest.json"] = (
         json.dumps(manifest, sort_keys=True, indent=2) + "\n"
@@ -356,7 +442,7 @@ def generate() -> None:
     (target / "integrity.json").write_text(
         json.dumps(
             {
-                "fixtureVersion": "1.0.0",
+                "fixtureVersion": "2.0.0",
                 "source": "scripts/twins/generate_fixtures.py",
                 "files": {
                     name: hashlib.sha256(content).hexdigest()

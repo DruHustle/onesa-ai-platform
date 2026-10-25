@@ -648,3 +648,74 @@ def test_local_simulator_needs_no_broker_and_cannot_mutate_live_or_other_instanc
         twins.post(path, json={"component_id": bearing["id"], "scenario": "cycle"}).status_code
         == 404
     )
+
+
+def test_detailed_reference_inventory_topology_and_saved_view_source_scope(twins):
+    row, other = seed(twins)
+    current = detail(twins, row)
+    model = next(m for m in current["models"] if m["id"] == row["active_model_id"])
+    components = row["definition"]["components"]
+    assert len(components) == 68
+    assert len(model["definition"]["mappings"]) == 61
+    assert len(model["definition"]["inspection"]["closed_solids"]) == 60
+    assert sum(c["renderable"] for c in components) == 61
+    roles = {c["external_id"] for c in components}
+    assert {
+        "impeller",
+        "coupling-shaft",
+        "shaft-sleeve",
+        "seal-seat",
+        "seal-face",
+        "bearing-inner",
+        "bearing-outer",
+        "bearing-balls",
+        "bearing-cage",
+        "motor-stator",
+        "motor-rotor",
+        "rotor-cage",
+        "motor-fan",
+        "winding-a",
+    } <= roles
+    body = {k: model["definition"][k] for k in ModelCreate.model_fields}
+    body["file_id"] = model["file_id"]
+    body["template_id"] = row["template_id"]
+    assert twins.post("/api/v1/twins/models", json=body).status_code == 201
+    spring = next(c for c in components if c["external_id"] == "seal-spring")
+    body["inspection"]["closed_solids"].append(spring["template_component_id"])
+    response = twins.post("/api/v1/twins/models", json=body)
+    assert (
+        response.status_code == 422 and response.json()["error"]["code"] == "inspection_open_solid"
+    )
+    view = {
+        "explode": 0.65,
+        "scope": components[0]["id"],
+        "section_enabled": True,
+        "section_axis": "z",
+        "section_position": 0.2,
+        "section_flip": False,
+        "section_caps": True,
+        "guides": True,
+        "labels": True,
+        "ghost_housings": True,
+        "hidden_component_ids": [components[1]["id"]],
+        "isolated_component_id": None,
+        "transparent_surroundings": False,
+    }
+    path = f"/api/v1/twins/assets/{row['id']}/notes"
+    note = {
+        "kind": "viewpoint",
+        "component_id": components[0]["id"],
+        "model_revision_id": model["id"],
+        "inspection_view": view,
+        "camera": [3, 2, 4, 0, 0.5, 0],
+    }
+    response = twins.post(path, json=note)
+    assert response.status_code == 201, response.text
+    saved = twins.get(f"/api/v1/twins/notes/{response.json()['id']}").json()
+    assert saved["payload"]["inspection_view"] == view
+    assert saved["payload"]["model_revision_id"] == model["id"]
+    note["inspection_view"]["scope"] = other["definition"]["components"][0]["id"]
+    assert twins.post(path, json=note).status_code == 404
+    note["inspection_view"] = None
+    note["model_revision_id"] = str(uuid4())
+    assert twins.post(path, json=note).status_code == 404

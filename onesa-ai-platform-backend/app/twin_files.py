@@ -226,7 +226,25 @@ def glb(data: bytes) -> dict[str, Any]:
     if not 1 <= len(nodes) <= 100 or not 1 <= len(meshes) <= 100:
         raise ValueError("Model must contain at most 100 nodes and meshes")
     triangles = 0
-    for mesh in meshes:
+    closed_meshes: set[int] = set()
+    position_cache: dict[int, list[tuple[int, ...]]] = {}
+
+    def accessor_values(reference: int) -> list[tuple[Any, ...]]:
+        entry = accessors[reference]
+        view = views[entry["bufferView"]]
+        code = {5121: "B", 5123: "H", 5125: "I", 5126: "f"}[entry["componentType"]]
+        width = {"SCALAR": 1, "VEC3": 3}[entry["type"]]
+        size = struct.calcsize("<" + code * width)
+        start = view.get("byteOffset", 0) + entry.get("byteOffset", 0)
+        return [
+            struct.unpack_from(
+                "<" + code * width, chunks[1][1], start + i * view.get("byteStride", size)
+            )
+            for i in range(entry["count"])
+        ]
+
+    for mesh_index, mesh in enumerate(meshes):
+        edges: dict[tuple[tuple[int, ...], tuple[int, ...]], list[int]] = {}
         for primitive in mesh.get("primitives", []):
             if primitive.get("mode", 4) != 4 or "POSITION" not in primitive.get("attributes", {}):
                 raise ValueError("Only triangle meshes with positions are supported")
@@ -236,10 +254,39 @@ def glb(data: bytes) -> dict[str, Any]:
             ]
             if any(not isinstance(ref, int) or not 0 <= ref < len(accessors) for ref in refs):
                 raise ValueError("Unresolved mesh accessor")
-            triangles += (
-                accessors[primitive.get("indices", primitive["attributes"]["POSITION"])]["count"]
-                // 3
-            )
+            reference = primitive["attributes"]["POSITION"]
+            position_accessor = accessors[reference]
+            if position_accessor["type"] != "VEC3" or position_accessor["componentType"] != 5126:
+                raise ValueError("Positions must be floating-point VEC3 values")
+            if reference not in position_cache:
+                position_cache[reference] = [
+                    tuple(round(v * 1e6) for v in row) for row in accessor_values(reference)
+                ]
+            positions = position_cache[reference]
+            if "indices" in primitive:
+                entry = accessors[primitive["indices"]]
+                if entry["type"] != "SCALAR" or entry["componentType"] not in {5121, 5123, 5125}:
+                    raise ValueError("Triangle indices must be unsigned scalar values")
+                indices = [int(row[0]) for row in accessor_values(primitive["indices"])]
+            else:
+                indices = list(range(len(positions)))
+            if len(indices) % 3 or any(not 0 <= i < len(positions) for i in indices):
+                raise ValueError("Incomplete or out-of-bounds triangle indices")
+            triangles += len(indices) // 3
+            if triangles > 100000:
+                raise ValueError("Model triangle budget exceeded")
+            for i in range(0, len(indices), 3):
+                vertices = [positions[indices[i + j]] for j in range(3)]
+                if len(set(vertices)) < 3:
+                    continue
+                for j in range(3):
+                    a, b = vertices[j], vertices[(j + 1) % 3]
+                    edge = (a, b) if a < b else (b, a)
+                    tally = edges.setdefault(edge, [0, 0])
+                    tally[0] += 1
+                    tally[1] += 1 if a < b else -1
+        if edges and all(count == 2 and winding == 0 for count, winding in edges.values()):
+            closed_meshes.add(mesh_index)
     if not 1 <= triangles <= 100000:
         raise ValueError("Model triangle budget exceeded")
     parents: dict[int, int] = {}
@@ -287,6 +334,9 @@ def glb(data: bytes) -> dict[str, Any]:
         "version": "2.0",
         "triangles": triangles,
         "vertices": total_vertices,
+        "closed_nodes": [
+            f"node:{i}" for i, node in enumerate(nodes) if node.get("mesh") in closed_meshes
+        ],
         "nodes": [
             {
                 "ref": f"node:{i}",

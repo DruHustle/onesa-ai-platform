@@ -4614,6 +4614,39 @@
             "maxLength": 400,
             "title": "Semantic Reference",
             "default": ""
+          },
+          "renderable": {
+            "type": "boolean",
+            "title": "Renderable",
+            "default": true
+          },
+          "inventory": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "part",
+              "combined",
+              "unavailable"
+            ],
+            "title": "Inventory",
+            "default": "part"
+          },
+          "inventory_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Inventory Note",
+            "default": ""
+          },
+          "material": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Material",
+            "default": ""
+          },
+          "housing": {
+            "type": "boolean",
+            "title": "Housing",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -5244,6 +5277,57 @@
         "title": "EvidenceBundle",
         "description": "Data-only JSON, never a URL/file/SQL/instruction connector or rights approval."
       },
+      "ExplodeMotion": {
+        "properties": {
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "translation": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Translation"
+          },
+          "rotation": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Rotation"
+          },
+          "pivot": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Pivot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "component_id",
+          "translation",
+          "rotation",
+          "pivot"
+        ],
+        "title": "ExplodeMotion"
+      },
       "ExportConversation": {
         "properties": {
           "conversation": {
@@ -5682,6 +5766,187 @@
         ],
         "title": "ImportedSignal"
       },
+      "InspectionModel": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "1.0.0",
+            "title": "Version"
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Reference"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description"
+          },
+          "motions": {
+            "items": {
+              "$ref": "#/components/schemas/ExplodeMotion"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Motions"
+          },
+          "closed_solids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Closed Solids"
+          },
+          "housing_components": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Housing Components"
+          },
+          "cover_components": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Cover Components"
+          },
+          "scope_notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Scope Notes"
+          },
+          "unavailable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Unavailable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "reference",
+          "description",
+          "motions"
+        ],
+        "title": "InspectionModel"
+      },
+      "InspectionView": {
+        "properties": {
+          "explode": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Explode",
+            "default": 0
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "section_enabled": {
+            "type": "boolean",
+            "title": "Section Enabled",
+            "default": false
+          },
+          "section_axis": {
+            "type": "string",
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "title": "Section Axis",
+            "default": "x"
+          },
+          "section_position": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Section Position",
+            "default": 0
+          },
+          "section_flip": {
+            "type": "boolean",
+            "title": "Section Flip",
+            "default": false
+          },
+          "section_caps": {
+            "type": "boolean",
+            "title": "Section Caps",
+            "default": true
+          },
+          "guides": {
+            "type": "boolean",
+            "title": "Guides",
+            "default": false
+          },
+          "labels": {
+            "type": "boolean",
+            "title": "Labels",
+            "default": true
+          },
+          "ghost_housings": {
+            "type": "boolean",
+            "title": "Ghost Housings",
+            "default": false
+          },
+          "hidden_component_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Hidden Component Ids"
+          },
+          "isolated_component_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isolated Component Id"
+          },
+          "transparent_surroundings": {
+            "type": "boolean",
+            "title": "Transparent Surroundings",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InspectionView"
+      },
       "InvestigationList": {
         "properties": {
           "items": {
@@ -6015,6 +6280,16 @@
             "maxLength": 1000,
             "minLength": 1,
             "title": "Provenance"
+          },
+          "inspection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InspectionModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -6167,6 +6442,28 @@
               }
             ],
             "title": "Camera"
+          },
+          "model_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Revision Id"
+          },
+          "inspection_view": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InspectionView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,

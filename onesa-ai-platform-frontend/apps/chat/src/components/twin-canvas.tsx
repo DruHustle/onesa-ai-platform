@@ -14,6 +14,13 @@ import {
   type GLTF,
 } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import InspectionLayer from "./twin-inspection-layer";
+import {
+  capturePose,
+  descendants,
+  sectionPlane,
+  type BaselinePose,
+} from "../lib/twin-inspection";
 import {
   BUDGET,
   inspectGlb,
@@ -40,12 +47,15 @@ export type EquipmentViewerProps = {
   onEvent: (event: ViewerEvent) => void;
   fallback?: React.ReactNode;
 };
-type Loaded = {
+export type Loaded = {
   gltf: GLTF;
   mapping: Map<THREE.Object3D, string>;
   loadMs: number;
   startedAt: number;
   triangles: number;
+  manifest: ModelManifest;
+  baselines: Map<THREE.Mesh, BaselinePose>;
+  assembledBounds: THREE.Box3;
   dispose: () => void;
 };
 
@@ -110,6 +120,8 @@ export async function prepareModel(
         object.traverse((child) => mapping.set(child, id));
       }
       if (object instanceof THREE.Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
         const values = Array.isArray(object.material)
           ? object.material
           : [object.material];
@@ -130,6 +142,15 @@ export async function prepareModel(
       loadMs: performance.now() - started,
       startedAt: started,
       triangles: inspected.triangles,
+      manifest,
+      baselines: new Map(
+        [...mapping.keys()]
+          .filter(
+            (object): object is THREE.Mesh => object instanceof THREE.Mesh,
+          )
+          .map((object) => [object, capturePose(object)]),
+      ),
+      assembledBounds: new THREE.Box3().setFromObject(gltf.scene),
       dispose: () => {
         if (!disposed) {
           disposed = true;
@@ -156,22 +177,37 @@ function applyScene(
     command?.action === "highlight_components"
       ? command.componentIds
       : state.highlightedComponentIds;
+  const selectedIds = descendants(loaded.manifest, state.selectedComponentId);
+  const hiddenIds = new Set(
+    state.hiddenComponentIds.flatMap((id) => [
+      ...descendants(loaded.manifest, id),
+    ]),
+  );
+  const highlightIds = new Set(
+    highlighted.flatMap((id) => [...descendants(loaded.manifest, id)]),
+  );
+  const isolatedIds = descendants(loaded.manifest, state.isolatedComponentId);
+  const housingIds = new Set(
+    loaded.manifest.inspection?.housing_components || [],
+  );
   for (const [object, id] of loaded.mapping)
     if (object instanceof THREE.Mesh) {
       object.visible =
-        !state.hiddenComponentIds.includes(id) &&
-        (!state.isolatedComponentId || state.isolatedComponentId === id);
+        !hiddenIds.has(id) &&
+        (!state.isolatedComponentId || isolatedIds.has(id));
       const values = Array.isArray(object.material)
         ? object.material
         : [object.material];
       for (const material of values)
         if (material instanceof THREE.MeshStandardMaterial) {
           const selected =
-            id === state.selectedComponentId || highlighted.includes(id);
+            (state.selectedComponentId !== null && selectedIds.has(id)) ||
+            highlightIds.has(id);
           material.emissive.set(selected ? "#686acb" : "#000000");
-          material.emissiveIntensity = selected ? 0.45 : 0;
+          material.emissiveIntensity = selected ? 0.16 : 0;
           material.transparent =
-            state.transparentSurroundings && id !== state.selectedComponentId;
+            (state.transparentSurroundings && !selectedIds.has(id)) ||
+            (Boolean(state.inspection?.ghost_housings) && housingIds.has(id));
           material.opacity = material.transparent ? 0.22 : 1;
           material.depthWrite = !material.transparent;
           material.needsUpdate = true;
@@ -192,8 +228,15 @@ function fit(
     const box = new THREE.Box3();
     const focus =
       command?.action === "focus_component" ? command.componentIds : null;
+    const focusIds = focus
+      ? new Set(focus.flatMap((id) => [...descendants(loaded.manifest, id)]))
+      : null;
     for (const [object, id] of loaded.mapping)
-      if (object instanceof THREE.Mesh && (!focus || focus.includes(id)))
+      if (
+        object instanceof THREE.Mesh &&
+        object.visible &&
+        (!focusIds || focusIds.has(id))
+      )
         box.union(new THREE.Box3().setFromObject(object));
     if (box.isEmpty()) box.setFromObject(loaded.gltf.scene);
     const center = box.getCenter(new THREE.Vector3()),
@@ -223,8 +266,10 @@ function recordRender(
   element: HTMLDivElement | null,
   renderer: THREE.WebGLRenderer,
   loaded: Loaded,
+  cpuSubmitMs: number,
 ) {
   if (!element) return;
+  element.dataset.cpuSubmitMs = cpuSubmitMs.toFixed(2);
   element.dataset.renderCount = String(
     Number(element.dataset.renderCount || "0") + 1,
   );
@@ -251,10 +296,17 @@ function recordRender(
   ]);
 }
 function markers(loaded: Loaded, state: ViewerState) {
-  return [...new Set(loaded.mapping.values())].map((id) => {
+  return [
+    ...new Set([
+      ...state.observations.map((o) => o.componentId),
+      ...state.annotations.map((a) => a.componentId),
+      ...(state.selectedComponentId ? [state.selectedComponentId] : []),
+    ]),
+  ].map((id) => {
     const box = new THREE.Box3();
+    const ids = descendants(loaded.manifest, id);
     for (const [object, component] of loaded.mapping)
-      if (id === component && object instanceof THREE.Mesh)
+      if (ids.has(component) && object instanceof THREE.Mesh)
         box.union(new THREE.Box3().setFromObject(object));
     const center = box.getCenter(new THREE.Vector3());
     center.y = box.max.y + 0.055;
@@ -274,6 +326,22 @@ function markers(loaded: Loaded, state: ViewerState) {
     };
   });
 }
+function updateMarkerPositions(
+  loaded: Loaded,
+  state: ViewerState,
+  objects: Map<string, THREE.Mesh>,
+) {
+  for (const point of markers(loaded, state)) {
+    objects.get(point.id)?.position.fromArray(point.position);
+    objects
+      .get("annotation-" + point.id)
+      ?.position.fromArray([
+        point.position[0],
+        point.position[1] + 0.07,
+        point.position[2],
+      ]);
+  }
+}
 
 function Scene({
   loaded,
@@ -290,6 +358,11 @@ function Scene({
 }) {
   const { camera, gl, invalidate, size, setDpr } = useThree(),
     controls = useRef<OrbitControls | null>(null);
+  const markerObjects = useRef(new Map<string, THREE.Mesh>());
+  const appliedCameraCommand = useRef<{
+    model: Loaded;
+    sequence: number | null;
+  } | null>(null);
   const assetId = state.assetInstanceId;
   useEffect(() => {
     setDpr(
@@ -326,15 +399,42 @@ function Scene({
     invalidate();
   }, [loaded, state, command, invalidate]);
   useEffect(() => {
+    const sequence = command?.sequence ?? null;
+    if (
+      appliedCameraCommand.current?.model === loaded &&
+      appliedCameraCommand.current.sequence === sequence
+    )
+      return;
+    appliedCameraCommand.current = { model: loaded, sequence };
     if (controls.current && command?.value.action !== "highlight_components") {
       fit(camera, controls.current, loaded, command?.value || null);
       invalidate();
     }
   }, [loaded, command, camera, invalidate]);
   useFrame(({ scene, camera }) => {
+    const submitted = performance.now();
     gl.render(scene, camera);
-    recordRender(metrics.current, gl, loaded);
+    recordRender(metrics.current, gl, loaded, performance.now() - submitted);
   }, 1);
+  useFrame(() => updateMarkerPositions(loaded, state, markerObjects.current));
+  const settled = useCallback(() => {
+    if (!controls.current || command?.value.action === "restore_viewpoint")
+      return;
+    const scope = state.inspection?.scope;
+    fit(
+      camera,
+      controls.current,
+      loaded,
+      scope
+        ? {
+            schemaVersion: "1.0.0",
+            action: "focus_component",
+            componentIds: [scope],
+          }
+        : null,
+    );
+    invalidate();
+  }, [loaded, camera, state.inspection?.scope, command, invalidate]);
   const points = useMemo(() => markers(loaded, state), [loaded, state]);
   const select = (id: string) => {
     if (state.capabilities.selection)
@@ -347,15 +447,57 @@ function Scene({
   };
   return (
     <>
-      <ambientLight intensity={state.appearance.theme === "dark" ? 1.6 : 1.4} />
-      <directionalLight position={[3, 5, 4]} intensity={3} />
+      <InspectionLayer
+        loaded={loaded}
+        state={state}
+        metrics={metrics}
+        onSettled={settled}
+        onSelect={select}
+      />
+      <ambientLight intensity={0.55} />
+      <directionalLight
+        position={[3, 5, 4]}
+        intensity={3}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-4}
+        shadow-camera-right={4}
+        shadow-camera-top={4}
+        shadow-camera-bottom={-4}
+        shadow-normalBias={0.015}
+      />
       <directionalLight position={[-3, 2, -2]} intensity={1.3} />
       <primitive
         object={loaded.gltf.scene}
         onClick={(event: {
           object: THREE.Object3D;
+          point: THREE.Vector3;
           stopPropagation: () => void;
         }) => {
+          if (!event.object.visible) return;
+          const view = state.inspection;
+          if (
+            view?.section_enabled &&
+            sectionPlane(
+              loaded.assembledBounds,
+              view.section_axis,
+              view.section_position,
+              view.section_flip,
+            ).distanceToPoint(event.point) < -1e-6
+          )
+            return;
+          const pickedMaterials =
+            event.object instanceof THREE.Mesh
+              ? Array.isArray(event.object.material)
+                ? event.object.material
+                : [event.object.material]
+              : [];
+          if (
+            pickedMaterials.some(
+              (material) => material.transparent && material.opacity < 0.3,
+            )
+          )
+            return;
           let object: THREE.Object3D | null = event.object;
           while (object) {
             const id = loaded.mapping.get(object);
@@ -372,6 +514,14 @@ function Scene({
         args={[4, 20, "#838ba4", "#969ca9"]}
         position={[0, 0.005, 0]}
       />
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.002, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[10, 10]} />
+        <shadowMaterial transparent opacity={0.15} />
+      </mesh>
       {state.capabilities.statusMarkers &&
         points
           .filter(
@@ -383,6 +533,10 @@ function Scene({
           .map((point) => (
             <mesh
               key={point.id}
+              ref={(mesh) => {
+                if (mesh) markerObjects.current.set(point.id, mesh);
+                else markerObjects.current.delete(point.id);
+              }}
               position={point.position}
               onClick={() => select(point.id)}
             >
@@ -396,6 +550,11 @@ function Scene({
           .map((point) => (
             <mesh
               key={`annotation-${point.id}`}
+              ref={(mesh) => {
+                if (mesh)
+                  markerObjects.current.set("annotation-" + point.id, mesh);
+                else markerObjects.current.delete("annotation-" + point.id);
+              }}
               position={[
                 point.position[0],
                 point.position[1] + 0.07,
@@ -502,10 +661,12 @@ function ValidViewer({
         data-testid="equipment-model-loaded"
         data-load-ms={Math.round(loaded.loadMs)}
         data-triangles={loaded.triangles}
-        style={{ height: "100%", minHeight: 300 }}
+        style={{ height: "100%", minHeight: 300, position: "relative" }}
       >
         <Canvas
           frameloop="demand"
+          gl={{ stencil: true, antialias: true }}
+          shadows
           dpr={[BUDGET.mobileDpr, BUDGET.desktopDpr]}
           camera={{ fov: 42, position: [3, 2, 4] }}
           fallback={fallback}
@@ -534,6 +695,48 @@ function ValidViewer({
             metrics={metrics}
           />
         </Canvas>
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+          }}
+        >
+          {manifest.components
+            .filter(
+              (c) =>
+                c.id === state.selectedComponentId ||
+                (state.inspection?.explode &&
+                  c.renderable === false &&
+                  c.parentId === (state.inspection.scope || null)),
+            )
+            .slice(0, 12)
+            .map((c) => (
+              <span
+                key={c.id}
+                data-world-label={c.id}
+                style={{
+                  position: "absolute",
+                  display: "none",
+                  padding: "3px 7px",
+                  borderRadius: 4,
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  transform: "translate(-50%,-110%)",
+                  color:
+                    state.appearance.theme === "dark" ? "#f0f3ff" : "#152943",
+                  background:
+                    state.appearance.theme === "dark"
+                      ? "rgba(15,22,39,.9)"
+                      : "rgba(255,255,255,.92)",
+                }}
+              >
+                {c.label}
+              </span>
+            ))}
+        </div>
       </div>
     </Boundary>
   );

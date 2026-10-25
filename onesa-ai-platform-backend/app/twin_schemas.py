@@ -27,6 +27,11 @@ class Component(Strict):
     parent_id: UUID | None = None
     external_id: str = Field(default="", max_length=200)
     semantic_reference: str = Field(default="", max_length=400)
+    renderable: bool = True
+    inventory: Literal["assembly", "part", "combined", "unavailable"] = "part"
+    inventory_note: str = Field(default="", max_length=1000)
+    material: str = Field(default="", max_length=200)
+    housing: bool = False
 
 
 class Relationship(Strict):
@@ -73,6 +78,42 @@ class Mapping(Strict):
     component_id: UUID
 
 
+class ExplodeMotion(Strict):
+    component_id: UUID
+    translation: list[Number] = Field(min_length=3, max_length=3)
+    rotation: list[Number] = Field(min_length=3, max_length=3)
+    pivot: list[Number] = Field(min_length=3, max_length=3)
+
+    @model_validator(mode="after")
+    def bounded(self) -> Self:
+        if any(abs(v) > 10 for v in self.translation) or any(abs(v) > 3.142 for v in self.rotation):
+            raise ValueError("Explosion choreography exceeds visualization limits")
+        if any(abs(v) > 1000 for v in self.pivot):
+            raise ValueError("Explosion pivot exceeds model limits")
+        return self
+
+
+class InspectionModel(Strict):
+    version: Literal["1.0.0"]
+    reference: str = Field(min_length=1, max_length=160)
+    description: str = Field(min_length=1, max_length=2000)
+    motions: list[ExplodeMotion] = Field(min_length=1, max_length=100)
+    closed_solids: list[UUID] = Field(default_factory=list, max_length=100)
+    housing_components: list[UUID] = Field(default_factory=list, max_length=100)
+    cover_components: list[UUID] = Field(default_factory=list, max_length=100)
+    scope_notes: list[str] = Field(default_factory=list, max_length=20)
+    unavailable: list[str] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def distinct(self) -> Self:
+        ids = [m.component_id for m in self.motions]
+        if len(ids) != len(set(ids)) or any(
+            len(v) > 1000 for v in self.scope_notes + self.unavailable
+        ):
+            raise ValueError("Duplicate motion or oversized scope note")
+        return self
+
+
 class ModelCreate(Strict):
     file_id: UUID
     template_id: UUID
@@ -84,6 +125,7 @@ class ModelCreate(Strict):
         default=[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], min_length=16, max_length=16
     )
     provenance: str = Field(min_length=1, max_length=1000)
+    inspection: InspectionModel | None = None
 
 
 class AssetChange(Strict):
@@ -174,11 +216,29 @@ class ViewerAction(Strict):
     component_ids: list[UUID] = Field(min_length=1, max_length=20)
 
 
+class InspectionView(Strict):
+    explode: Number = Field(default=0, ge=0, le=1)
+    scope: UUID | None = None
+    section_enabled: bool = False
+    section_axis: Literal["x", "y", "z"] = "x"
+    section_position: Number = Field(default=0, ge=-1, le=1)
+    section_flip: bool = False
+    section_caps: bool = True
+    guides: bool = False
+    labels: bool = True
+    ghost_housings: bool = False
+    hidden_component_ids: list[UUID] = Field(default_factory=list, max_length=100)
+    isolated_component_id: UUID | None = None
+    transparent_surroundings: bool = False
+
+
 class NoteCreate(Strict):
     kind: Literal["annotation", "viewpoint"]
     component_id: UUID
     text: str = Field(default="", max_length=2000)
     camera: list[Number] | None = Field(default=None, min_length=6, max_length=6)
+    model_revision_id: UUID | None = None
+    inspection_view: InspectionView | None = None
 
     @model_validator(mode="after")
     def content(self) -> Self:

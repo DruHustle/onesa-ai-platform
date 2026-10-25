@@ -326,3 +326,64 @@
     animation: none;
   }
 }
+
+.bom {
+  max-height: 600px;
+  overflow-y: auto;
+}
+.workspace :global(.twin-inspection-controls) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+.workspace :global(.twin-inspection-controls) label {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+.workspace input[type="range"] {
+  width: 100%;
+  min-height: 32px;
+  accent-color: var(--accent);
+}
+@media (max-width: 760px) {
+  .bom {
+    max-height: 230px;
+  }
+  .tree ul {
+    display: block;
+  }
+}
+
+.workspace :global(.twin-explosion-controls) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.workspace :global(.twin-explosion-controls) label {
+  flex: 0 1 220px;
+  margin: 0;
+  font-size: 0.8rem;
+}
+.workspace :global(.twin-explosion-controls) span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .assembly {
+    display: flex;
+    flex-direction: column;
+  }
+  .tree {
+    order: 1;
+  }
+  .modelPanel,
+  .details,
+  .history,
+  .documents {
+    order: 0;
+  }
+}

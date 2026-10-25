@@ -10,7 +10,9 @@ import type {
   ModelManifest,
   ViewerState,
   ViewerEvent,
+  InspectionControls,
 } from "../lib/twin-viewer-contract";
+import { DEFAULT_INSPECTION } from "../lib/twin-viewer-contract";
 import type { Component, Model, Signal, Note } from "../lib/twins";
 
 type Props = {
@@ -28,6 +30,7 @@ type Props = {
   signals?: Signal[];
   annotations?: Note[];
   highlights?: string[];
+  inspection?: InspectionControls;
 };
 
 export default function TwinViewer({
@@ -45,6 +48,7 @@ export default function TwinViewer({
   signals = [],
   annotations = [],
   highlights = [],
+  inspection = DEFAULT_INSPECTION,
 }: Props) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
@@ -84,6 +88,11 @@ export default function TwinViewer({
           : components.map((c) => ({
               id: c.template_component_id,
               label: c.name,
+              renderable: c.renderable,
+              inventory: c.inventory,
+              note: c.inventory_note,
+              material: c.material,
+              housing: c.housing,
               parentId:
                 components.find((p) => p.id === c.parent_id)
                   ?.template_component_id || null,
@@ -98,6 +107,8 @@ export default function TwinViewer({
               sceneNode: m.node,
               componentId: m.component_id,
             })),
+      inspection:
+        assetId === "model-preview" ? null : model.definition.inspection,
     }),
     [model, components, assetId],
   );
@@ -119,6 +130,10 @@ export default function TwinViewer({
         .filter((v): v is string => v !== null),
       isolatedComponentId: isolated ? templateId(isolated) : null,
       transparentSurroundings: transparent,
+      inspection: {
+        ...inspection,
+        scope: inspection.scope ? templateId(inspection.scope) : null,
+      },
       observations: signals.map((s) => ({
         componentId: templateId(s.binding.component_id) || "invalid-component",
         metric: s.binding.metric,
@@ -180,6 +195,7 @@ export default function TwinViewer({
       templateId,
       theme,
       highlights,
+      inspection,
     ],
   );
   const command = useMemo<CommandRequest | null>(

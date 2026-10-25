@@ -5,6 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import RequireSession from "../../../components/require-session";
 import FeatureShell from "../../../components/feature-shell";
 import TwinSetup from "../../../components/twin-setup";
+import TwinInspectionControls, {
+  TwinExplosionControls,
+} from "../../../components/twin-inspection-controls";
+import {
+  DEFAULT_INSPECTION,
+  inspectionViewSchema,
+  type InspectionControls,
+} from "../../../lib/twin-viewer-contract";
 import {
   twin,
   type Detail,
@@ -50,6 +58,9 @@ function Workspace() {
     [transparent, setTransparent] = useState(false),
     [focus, setFocus] = useState(0),
     [savedCamera, setSavedCamera] = useState<number[] | null>(null);
+  const [inspection, setInspection] = useState<InspectionControls>({
+    ...DEFAULT_INSPECTION,
+  });
   const camera = useRef<number[]>([3, 2, 4, 0, 0.5, 0]),
     activeMutation = useRef(false);
   const [history, setHistory] = useState<History | null>(null),
@@ -188,6 +199,8 @@ function Workspace() {
     setIsolated(null);
     setSavedCamera(null);
     setSourceToken(null);
+    setInspection({ ...DEFAULT_INSPECTION });
+    setTransparent(false);
   }
   function timeWindow() {
     return {
@@ -276,8 +289,11 @@ function Workspace() {
               disabled={busy || !readiness?.ready}
               onClick={() =>
                 run(async () => {
-                  await twin("/demo", "POST");
-                  await reload();
+                  const result = await twin<{ assets: { id: string }[] }>(
+                    "/demo",
+                    "POST",
+                  );
+                  await reload(result.assets[0]?.id);
                   setSetup(false);
                 })
               }
@@ -304,37 +320,6 @@ function Workspace() {
         )}
         {asset && (
           <>
-            {readiness?.simulation_enabled && (
-              <section
-                className={styles.toolbar}
-                aria-label="Onesa local simulator"
-              >
-                <p>Onesa local simulated vibration · {component?.name}</p>
-                {["cycle", "normal", "alarm", "recovery", "disconnect"].map(
-                  (scenario) => (
-                    <button
-                      key={scenario}
-                      disabled={busy}
-                      onClick={() =>
-                        run(async () => {
-                          await twin(`/assets/${asset.id}/simulate`, "POST", {
-                            component_id: selectedId,
-                            scenario,
-                          });
-                          await reload(asset.id);
-                        })
-                      }
-                    >
-                      {scenario === "cycle"
-                        ? "Run local simulated cycle"
-                        : scenario === "disconnect"
-                          ? "Pause local simulated source"
-                          : `Simulate ${scenario}`}
-                    </button>
-                  ),
-                )}
-              </section>
-            )}
             <div
               className={styles.tabs}
               role="tablist"
@@ -383,20 +368,43 @@ function Workspace() {
               <aside className={styles.tree} aria-label="Equipment components">
                 <h2>{asset.name}</h2>
                 <p>{asset.serial}</p>
-                <ul>
-                  {components.map((c) => (
-                    <li key={c.id}>
-                      <button
-                        aria-pressed={selectedId === c.id}
-                        onClick={() => onSelect(c.id)}
-                        style={{ paddingInlineStart: c.parent_id ? 22 : 12 }}
-                      >
-                        {c.name}
-                        {hidden.includes(c.id) ? " · hidden" : ""}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {readiness?.simulation_enabled &&
+                  asset.definition.reference_version !== "2.0.0" && (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          const result = await twin<{
+                            assets: { id: string }[];
+                          }>("/demo", "POST");
+                          chooseAsset(result.assets[0].id);
+                          await reload(result.assets[0].id);
+                        })
+                      }
+                    >
+                      Add detailed reference
+                    </button>
+                  )}
+                <details open className={styles.bom}>
+                  <summary>Assembly / BOM · {components.length} items</summary>
+                  <ul>
+                    {components.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          aria-pressed={selectedId === c.id}
+                          onClick={() => onSelect(c.id)}
+                          style={{ paddingInlineStart: c.parent_id ? 22 : 12 }}
+                          title={[c.inventory, c.material, c.inventory_note]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        >
+                          {c.name}
+                          {hidden.includes(c.id) ? " · hidden" : ""}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
                 <p>
                   {asset.definition.stage === "active"
                     ? "Reviewed workspace active"
@@ -432,7 +440,9 @@ function Workspace() {
                   <button
                     aria-pressed={isolated === selectedId}
                     onClick={() =>
-                      setIsolated((value) => (value ? null : selectedId))
+                      setIsolated((value) =>
+                        value === selectedId ? null : selectedId,
+                      )
                     }
                   >
                     Isolate
@@ -465,6 +475,13 @@ function Workspace() {
                           kind: "viewpoint",
                           component_id: selectedId,
                           camera: camera.current,
+                          model_revision_id: model?.id,
+                          inspection_view: {
+                            ...inspection,
+                            hidden_component_ids: hidden,
+                            isolated_component_id: isolated,
+                            transparent_surroundings: transparent,
+                          },
                           text: "Saved equipment view",
                         });
                         await reload(asset.id);
@@ -474,6 +491,12 @@ function Workspace() {
                     Save viewpoint
                   </button>
                 </div>
+                {model?.definition.inspection && (
+                  <TwinExplosionControls
+                    value={inspection}
+                    onChange={setInspection}
+                  />
+                )}
                 <div className={styles.viewport}>
                   {model ? (
                     <Viewer
@@ -488,6 +511,7 @@ function Workspace() {
                       hidden={hidden}
                       isolated={isolated}
                       transparent={transparent}
+                      inspection={inspection}
                       focus={focus}
                       camera={savedCamera}
                       onCamera={onCamera}
@@ -500,6 +524,39 @@ function Workspace() {
                     </p>
                   )}
                 </div>
+                {model && (
+                  <TwinInspectionControls
+                    model={model}
+                    components={components}
+                    selected={selectedId}
+                    value={inspection}
+                    onChange={setInspection}
+                    hideCovers={() =>
+                      setHidden((current) => [
+                        ...new Set([
+                          ...current,
+                          ...(
+                            model.definition.inspection?.cover_components || []
+                          )
+                            .map(
+                              (id) =>
+                                components.find(
+                                  (c) => c.template_component_id === id,
+                                )?.id,
+                            )
+                            .filter((id): id is string => Boolean(id)),
+                        ]),
+                      ])
+                    }
+                    restore={() => {
+                      setHidden([]);
+                      setIsolated(null);
+                      setTransparent(false);
+                      setSavedCamera(null);
+                      setFocus((v) => -Math.abs(v) - 1);
+                    }}
+                  />
+                )}
                 {model && (
                   <p className={styles.caption}>
                     Illustrative geometry where stated by its source. Units:{" "}
@@ -514,9 +571,43 @@ function Workspace() {
                     .map((note, i) => (
                       <button
                         key={note.id}
+                        disabled={Boolean(
+                          note.payload.model_revision_id &&
+                          note.payload.model_revision_id !== model?.id,
+                        )}
+                        title={
+                          note.payload.model_revision_id &&
+                          note.payload.model_revision_id !== model?.id
+                            ? "Saved against a different model revision; retained for inspection"
+                            : undefined
+                        }
                         onClick={() => {
+                          const saved = note.payload.inspection_view;
+                          if (saved) {
+                            const controls = Object.fromEntries(
+                              Object.keys(DEFAULT_INSPECTION).map((key) => [
+                                key,
+                                saved[key as keyof typeof saved],
+                              ]),
+                            );
+                            const result = inspectionViewSchema.safeParse(
+                              controls,
+                              { jitless: true },
+                            );
+                            if (!result.success) {
+                              setError("Saved inspection controls are invalid");
+                              return;
+                            }
+                            setInspection(result.data);
+                            setHidden(saved.hidden_component_ids || []);
+                            setIsolated(saved.isolated_component_id || null);
+                            setTransparent(
+                              Boolean(saved.transparent_surroundings),
+                            );
+                          }
                           onSelect(note.component_id);
                           setSavedCamera(note.payload.camera || null);
+                          setFocus((v) => Math.abs(v) + 1);
                         }}
                       >
                         Viewpoint {i + 1}
@@ -533,6 +624,25 @@ function Workspace() {
               >
                 <h2>{component?.name}</h2>
                 <dl>
+                  <dt>BOM designation</dt>
+                  <dd>
+                    {component?.inventory || "part"} ·{" "}
+                    {component?.renderable === false
+                      ? "selectable assembly of children"
+                      : "selectable geometry"}
+                  </dd>
+                  {component?.material && (
+                    <>
+                      <dt>Material appearance</dt>
+                      <dd>{component.material}</dd>
+                    </>
+                  )}
+                  {component?.inventory_note && (
+                    <>
+                      <dt>Reference detail</dt>
+                      <dd>{component.inventory_note}</dd>
+                    </>
+                  )}
                   <dt>Equipment</dt>
                   <dd>{asset.name}</dd>
                   <dt>Serial</dt>
@@ -814,6 +924,37 @@ function Workspace() {
                 ))}
               </section>
             </div>
+            {readiness?.simulation_enabled && (
+              <section
+                className={styles.toolbar}
+                aria-label="Onesa local simulator"
+              >
+                <p>Onesa local simulated vibration · {component?.name}</p>
+                {["cycle", "normal", "alarm", "recovery", "disconnect"].map(
+                  (scenario) => (
+                    <button
+                      key={scenario}
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          await twin(`/assets/${asset.id}/simulate`, "POST", {
+                            component_id: selectedId,
+                            scenario,
+                          });
+                          await reload(asset.id);
+                        })
+                      }
+                    >
+                      {scenario === "cycle"
+                        ? "Run local simulated cycle"
+                        : scenario === "disconnect"
+                          ? "Pause local simulated source"
+                          : `Simulate ${scenario}`}
+                    </button>
+                  ),
+                )}
+              </section>
+            )}
             <div className={styles.investigation}>
               <section>
                 <h2>Equipment assistant</h2>

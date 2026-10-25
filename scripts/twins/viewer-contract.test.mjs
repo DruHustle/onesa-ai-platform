@@ -9,7 +9,12 @@ const state = {schemaVersion:"1.0.0",assetInstanceId:"pump-01",selectedComponent
 test("Onesa-owned fixture manifest and embedded GLB have matching nodes and bounds", () => {
   const checked = validateManifest(manifest), bytes = fs.readFileSync(new URL("pump.glb", directory));
   const result = inspectGlb(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
-  assert.equal(result.nodes.length, 5); assert.equal(result.triangles, 480);
+  assert.equal(result.nodes.length, 61); assert.equal(result.triangles, 98648);
+  assert.equal(checked.components.length,68);
+  const audit=JSON.parse(fs.readFileSync(new URL("topology-audit.json",directory)));
+  assert.equal(checked.inspection.closed_solids.length,60);
+  for(const id of checked.inspection.closed_solids) assert.deepEqual(audit[id],{boundaryEdges:0,orientationErrors:0,nonManifoldEdges:0});
+  for(const id of ["impeller","coupling-shaft","motor-rotor","motor-stator","motor-fan"]) assert.ok(checked.components.some(c=>c.id===id),id);
   assert.deepEqual(new Set(result.nodes), new Set(checked.mappings.map(m => m.sceneNode)));
 });
 test("model versions, units, hierarchy and explicit mappings fail closed", () => {

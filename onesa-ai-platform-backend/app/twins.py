@@ -368,7 +368,8 @@ def validate_mapping(body: ModelCreate, file: TwinFile, template: TwinTemplate) 
     if file.details.get("format") != "glb":
         fail(422, "prepared_glb_required", "A validated GLB is required for viewing")
     nodes = {n["ref"] for n in file.details["nodes"]}
-    components = {c["id"] for c in template.definition["components"]}
+    all_components = {c["id"] for c in template.definition["components"]}
+    components = {c["id"] for c in template.definition["components"] if c.get("renderable", True)}
     if (
         len({m.node for m in body.mappings}) != len(body.mappings)
         or {m.node for m in body.mappings} != nodes
@@ -386,6 +387,26 @@ def validate_mapping(body: ModelCreate, file: TwinFile, template: TwinTemplate) 
         3:16:4
     ] != [0, 0, 0, 1]:
         fail(422, "model_scale_invalid", "Confirm consistent model units and an affine transform")
+    if body.inspection:
+        inspection = body.inspection
+        if (
+            {str(m.component_id) for m in inspection.motions} != all_components
+            or not {str(v) for v in inspection.closed_solids}.issubset(components)
+            or not {str(v) for v in inspection.housing_components}.issubset(components)
+            or not {str(v) for v in inspection.cover_components}.issubset(components)
+        ):
+            fail(422, "inspection_mapping_invalid", "Review every authored motion and solid scope")
+        closed_nodes = set(file.details.get("closed_nodes", []))
+        if any(
+            m.node not in closed_nodes
+            for m in body.mappings
+            if m.component_id in inspection.closed_solids
+        ):
+            fail(
+                422,
+                "inspection_open_solid",
+                "Cut caps require validated closed, consistently oriented mesh surfaces",
+            )
 
 
 @router.post("/models", status_code=201, response_model=Identifier)
@@ -1061,13 +1082,27 @@ def save_note(
     enabled(request)
     row = asset(db, auth, identifier)
     component(row, body.component_id)
+    if body.model_revision_id:
+        model = owned(db, TwinModel, body.model_revision_id, auth[0].id)
+        if model.template_id != row.template_id:
+            fail(422, "viewpoint_model_mismatch", "A viewpoint must use this equipment's model")
+    if body.inspection_view:
+        view = body.inspection_view
+        for cid in [view.scope, view.isolated_component_id, *view.hidden_component_ids]:
+            if cid:
+                component(row, cid)
     quota(db, TwinNote, auth[0].id, 1000)
     note = TwinNote(
         user_id=auth[0].id,
         asset_id=row.id,
         component_id=body.component_id,
         kind=body.kind,
-        payload=body.model_dump(mode="json"),
+        payload={
+            **body.model_dump(mode="json"),
+            "model_revision_id": str(body.model_revision_id or row.active_model_id)
+            if body.model_revision_id or row.active_model_id
+            else None,
+        },
     )
     db.add(note)
     db.commit()

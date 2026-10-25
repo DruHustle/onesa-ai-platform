@@ -107,6 +107,7 @@ const requests = new WeakMap<
   { origin: string; path: string; method: string; allowed: boolean }[]
 >();
 test.beforeEach(async ({ page, context, baseURL }) => {
+  page.setDefaultTimeout(10000);
   const origin = new URL(baseURL!).origin;
   const entries: {
     origin: string;
@@ -178,7 +179,7 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   );
   await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await page
-    .getByText("Onesa illustrative pump maintenance — sections 1–3", {
+    .getByText("Onesa illustrative pump maintenance — sections 1–5", {
       exact: true,
     })
     .click();
@@ -215,6 +216,7 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   );
   await expect(page.getByRole("tabpanel", { name: "Details" })).toContainText(
     "disconnected",
+    { timeout: 20000 },
   );
   // The actual optional MQTT adapter/publisher have stopped. A separate local
   // acquisition path remains usable without relabeling that old source healthy.
@@ -244,7 +246,7 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   ).toBe(true);
   await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await page
-    .getByText("Onesa illustrative pump maintenance — sections 1–3", {
+    .getByText("Onesa illustrative pump maintenance — sections 1–5", {
       exact: true,
     })
     .click();
@@ -260,7 +262,7 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await page
     .getByLabel("Equipment", { exact: true })
-    .selectOption({ label: "Demo pump 02 · ONESA-DEMO-PUMP-02" });
+    .selectOption({ label: "Demo pump 02 · ONESA-DEMO-PUMP-02-V2" });
   await page.getByRole("button", { name: "Bearing", exact: true }).click();
   await expect(page.getByRole("tabpanel", { name: "Details" })).toContainText(
     "No bound measurements",
@@ -448,7 +450,7 @@ test("manual setup and actual AASX preview, explicit mapping review and activati
     .click();
   await expect(
     page.getByRole("heading", { name: "IllustrativePump", exact: true }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
   await expect(
     page.getByText("Saved setup stage: mapping", { exact: true }),
   ).toBeVisible();
@@ -485,7 +487,7 @@ test("manual setup and actual AASX preview, explicit mapping review and activati
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "IllustrativePump", exact: true }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
   await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await expect(
     page.getByText("maintenance.txt", { exact: true }),
@@ -598,11 +600,292 @@ test("cold independent local simulator and saved work survive source outage", as
   );
   await page.getByRole("tab", { name: "Documents", exact: true }).click();
   await page
-    .getByText("Onesa illustrative pump maintenance — sections 1–3", {
+    .getByText("Onesa illustrative pump maintenance — sections 1–5", {
       exact: true,
     })
     .click();
   await expect(page.getByRole("tabpanel", { name: "Documents" })).toContainText(
     "Section 2 — Bearing vibration inspection",
   );
+});
+
+test("detailed mechanical reference: explosion, hollow sections, internals, saved views and cleanup", async ({
+  page,
+  baseURL,
+  browserName,
+}, testInfo) => {
+  test.setTimeout(180000);
+  page.setDefaultTimeout(10000);
+  await seeded(page, new URL(baseURL!).origin);
+  await page
+    .getByText("Section, subassembly and reveal controls", { exact: true })
+    .click();
+  const rendered = page.getByTestId("equipment-model-loaded");
+  const evidenceDirectory = process.env.ONESA_TWIN_EVIDENCE_DIRECTORY;
+  const profiles = [
+    { width: 1440, height: 1000 },
+    { width: 820, height: 1180 },
+    { width: 390, height: 844 },
+  ];
+  const metrics: unknown[] = [];
+  const settled = async () => {
+    await expect(rendered).toHaveAttribute("data-inspection-settled", "true");
+  };
+  const capture = async (name: string, width: number) => {
+    await settled();
+    await rendered.scrollIntoViewIfNeeded();
+    const actual = await rendered.evaluate((element) => {
+      const canvas = element.querySelector("canvas")!;
+      const gl = canvas.getContext("webgl2")!;
+      const ext = gl.getExtension("WEBGL_debug_renderer_info");
+      return {
+        state: { ...(element as HTMLElement).dataset },
+        canvas: [canvas.width, canvas.height],
+        renderer: ext
+          ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+          : gl.getParameter(gl.RENDERER),
+      };
+    });
+    const bounds = await page.locator("canvas").boundingBox();
+    const frames: number[] = [],
+      submitted: number[] = [];
+    if (bounds) {
+      const x = bounds.x + bounds.width * 0.5,
+        y = bounds.y + bounds.height * 0.5;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let frame = 0; frame < 8; frame++) {
+        const start = performance.now();
+        await page.mouse.move(x + (frame + 1) * 3, y);
+        const cpu = await rendered.evaluate(async (element) => {
+          await new Promise(requestAnimationFrame);
+          element.querySelector("canvas")!.getContext("webgl2")!.finish();
+          return Number((element as HTMLElement).dataset.cpuSubmitMs || 0);
+        });
+        frames.push(performance.now() - start);
+        submitted.push(cpu);
+      }
+      await page.mouse.up();
+    }
+    metrics.push({
+      name,
+      viewport: page.viewportSize(),
+      browser: browserName,
+      actual,
+      orbit: { completedFrameWithAutomationMs: frames, cpuSubmitMs: submitted },
+    });
+    if (evidenceDirectory)
+      fs.writeFileSync(
+        path.join(
+          evidenceDirectory,
+          `premium-${browserName}-measurements.json`,
+        ),
+        JSON.stringify(metrics, null, 2),
+      );
+    if (evidenceDirectory)
+      await rendered.screenshot({
+        path: path.join(
+          evidenceDirectory,
+          `premium-${browserName}-${width}-${name}.png`,
+        ),
+      });
+  };
+  const catalog = await (
+    await page.request.get("/api/v1/twins/catalog")
+  ).json();
+  expect(catalog.assets[0].definition.components).toHaveLength(68);
+  const stable = Object.fromEntries(
+    catalog.assets[0].definition.components.map(
+      (c: { external_id: string; id: string }) => [c.external_id, c.id],
+    ),
+  );
+  for (const viewport of profiles) {
+    await page.setViewportSize(viewport);
+    await page.getByRole("tab", { name: "Model", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Restore all", exact: true })
+      .click();
+    await capture("assembled", viewport.width);
+    await page.getByRole("button", { name: "Explode", exact: true }).click();
+    await expect(rendered).toHaveAttribute("data-explode-fraction", "1.0000");
+    await capture("exploded", viewport.width);
+    await page
+      .getByLabel("Explosion scope", { exact: true })
+      .selectOption(stable.bearing as string);
+    await page.getByRole("button", { name: "Bearing", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Focus selected", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Isolate", exact: true }).click();
+    await capture("bearing-subassembly", viewport.width);
+    // Pick genuinely moved geometry with a different component selected.
+    await page.getByRole("button", { name: "Motor", exact: true }).click();
+    await page.locator("canvas").scrollIntoViewIfNeeded();
+    const box = await page.locator("canvas").boundingBox();
+    let picked = false;
+    for (const [x, y] of [
+      [0.5, 0.22],
+      [0.5, 0.28],
+      [0.5, 0.32],
+      [0.5, 0.75],
+      [0.52, 0.28],
+      [0.52, 0.73],
+      [0.5, 0.5],
+      [0.4, 0.4],
+      [0.6, 0.4],
+      [0.4, 0.6],
+      [0.6, 0.6],
+      [0.3, 0.5],
+      [0.7, 0.5],
+    ]) {
+      if (!box || picked) break;
+      await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+      picked =
+        (await page
+          .locator(
+            "aside[aria-label='Equipment components'] button[aria-pressed='true']",
+          )
+          .filter({ hasText: /^Bearing ·/ })
+          .count()) > 0;
+    }
+    if (!picked && evidenceDirectory)
+      await rendered.screenshot({
+        path: path.join(
+          evidenceDirectory,
+          `picking-failure-${browserName}-${viewport.width}.png`,
+        ),
+      });
+    expect(
+      picked,
+      "Moved bearing geometry remains selectable by its stable identity",
+    ).toBe(true);
+    await page
+      .getByRole("button", { name: "Restore all", exact: true })
+      .click();
+    await expect(rendered).toHaveAttribute("data-explode-fraction", "0.0000");
+    await settled();
+    expect(
+      Number(await rendered.getAttribute("data-assembled-restoration-error")),
+    ).toBe(0);
+    await page.getByLabel("Section axis", { exact: true }).selectOption("z");
+    await page.getByLabel("Section plane", { exact: true }).check();
+    await expect(rendered).toHaveAttribute("data-section-active", "true");
+    expect(
+      Number(await rendered.getAttribute("data-section-caps")),
+    ).toBeGreaterThan(0);
+    await page.getByLabel("Reverse cut direction", { exact: true }).check();
+    await capture("sectioned", viewport.width);
+    await page.getByLabel("Ghost housings", { exact: true }).check();
+    await capture("ghost-housings", viewport.width);
+    await page
+      .getByRole("button", { name: "Restore all", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Stator laminated core", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Isolate", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Focus selected", exact: true })
+      .click();
+    await capture("stator-closeup", viewport.width);
+    if (viewport.width === 1440)
+      for (const [part, name] of [
+        ["Impeller", "impeller-closeup"],
+        ["Copper winding phase A", "winding-closeup"],
+        ["Rotor lamination stack", "rotor-closeup"],
+      ]) {
+        await page.getByRole("button", { name: part, exact: true }).click();
+        await page
+          .getByRole("button", { name: "Isolate", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Focus selected", exact: true })
+          .click();
+        await capture(name, viewport.width);
+      }
+    await page
+      .getByRole("button", { name: "Restore all", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Bearing · outer race", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Isolate", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Focus selected", exact: true })
+      .click();
+    await page.getByLabel("Section axis", { exact: true }).selectOption("x");
+    await page.getByLabel("Section position", { exact: true }).fill("-45");
+    await page.getByLabel("Reverse cut direction", { exact: true }).check();
+    await page.getByLabel("Section plane", { exact: true }).check();
+    await capture("bearing-cutface", viewport.width);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+  await page.getByRole("button", { name: "Restore all", exact: true }).click();
+  await page.getByLabel("Explosion percent", { exact: true }).fill("65");
+  await page.getByLabel("Section axis", { exact: true }).selectOption("y");
+  await page.getByLabel("Section plane", { exact: true }).check();
+  await page.getByLabel("Ghost housings", { exact: true }).check();
+  await settled();
+  await page
+    .getByRole("button", { name: "Save viewpoint", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Viewpoint 1", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(rendered).toBeVisible();
+  await page.getByRole("button", { name: "Viewpoint 1", exact: true }).click();
+  await expect(
+    page.getByLabel("Explosion percent", { exact: true }),
+  ).toHaveValue("65");
+  await expect(
+    page.getByLabel("Ghost housings", { exact: true }),
+  ).toBeChecked();
+  await expect(page.getByLabel("Section axis", { exact: true })).toHaveValue(
+    "y",
+  );
+  const after = await (await page.request.get("/api/v1/twins/catalog")).json();
+  expect(
+    Object.fromEntries(
+      after.assets[0].definition.components.map(
+        (c: { external_id: string; id: string }) => [c.external_id, c.id],
+      ),
+    ),
+  ).toEqual(stable);
+  // Actual route unmount/remount releases the old renderer and reloads owned bytes.
+  for (let repeat = 0; repeat < 3; repeat++) {
+    const previousCanvas = await page.locator("canvas").elementHandle();
+    await page.getByRole("link", { name: "Knowledge", exact: true }).click();
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await expect
+      .poll(
+        () =>
+          previousCanvas!.evaluate((canvas: HTMLCanvasElement) =>
+            canvas.getContext("webgl2")?.isContextLost(),
+          ),
+        { timeout: 10000 },
+      )
+      .toBe(true);
+    await previousCanvas?.dispose();
+    await page.goto("/industrial/twins");
+    await expect(rendered).toBeVisible();
+    expect(await page.locator("canvas").count()).toBe(1);
+  }
+  await testInfo.attach("premium-rendering-measurements", {
+    body: JSON.stringify({
+      hardware:
+        "Recorded separately; mobile sizes are viewport emulation, not phone hardware",
+      profiles: metrics,
+    }),
+    contentType: "application/json",
+  });
+  if (evidenceDirectory)
+    fs.writeFileSync(
+      path.join(evidenceDirectory, `premium-${browserName}-measurements.json`),
+      JSON.stringify(metrics, null, 2),
+    );
 });

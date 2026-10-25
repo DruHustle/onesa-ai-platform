@@ -68,14 +68,66 @@ independent of bounded five-second state polling; scene resources are disposed o
 replacement/navigation. CSS system preference controls appearance; there is no stored
 theme override. Readings are never used to animate a fictional physical simulation.
 
-The illustrative pump has casing, motor, coupling/shaft, bearing and impeller. Geometry
-is self-authored, right-handed Y-up, in meters; it is not calibrated CAD. Gray markers
+The self-authored reference v2 is an illustrative end-suction pump and TEFC motor,
+right-handed Y-up in meters. Its 68-item hierarchy has 61 selectable geometry parts
+and seven logical subassemblies. It includes a growing volute/empty fluid passage,
+shrouded curved-vane impeller, shaft/sleeve, ceramic/carbon/elastomer mechanical seal,
+four bearings with races/rolling elements/open cages, flexible coupling, finned motor,
+slotted stator, copper winding assemblies, slotted rotor packs/conductor cage, fan,
+vented covers and fasteners. This is no manufacturer CAD or certified maintenance design.
+
+The viewport comes before advanced inspection and local-simulator controls; mobile
+Model places the viewport before the BOM. Use Explode/Reassemble or the continuous
+0–100% slider. Open Section, subassembly and reveal controls below the viewport. Whole-assembly motions are
+authored, not random radial displacement. Select an assembly in Explosion scope for
+relative subassembly separation; Isolate and Focus selected reveal its internals.
+Every pose derives from an immutable baseline, with authored offsets/rotations/pivots;
+logical parent transforms are never applied again to children. Reduced motion snaps
+to the same targets. Guide lines and bounded selected/assembly labels are optional.
+
+Section controls provide X/Y/Z axes, position, reversal, solid cut faces and reset.
+Reverse the direction to remove the side facing the camera. Per-part nonzero-winding
+stencils retain holes and cavities; server-side edge/winding audits reject cap claims
+for open or inconsistently oriented meshes. The open-ended seal spring is deliberately
+uncapped. Cap picking checks actual solid winding instead of selecting an infinite
+plane across a bore. Ghost housings are transparent and uncapped; Hide covers and
+Restore all support internal inspection. These reveal existing modeled geometry only.
+
+Saved viewpoints bind the model revision, camera, explosion/scope, section settings,
+labels/guides, housing ghosting, hidden/isolate/transparency state and installed part.
+Views against a different active revision remain retained but cannot silently apply.
+The BOM exposes each part's modeled/combined status, material appearance and intentional
+simplifications in Details. Seed v2 uses distinct template/instance identities and does
+not overwrite earlier v1 demo records. Add detailed reference upgrades by adding v2. Gray markers
 mean unknown, amber indicates a declared threshold rule, and stale/bad quality remains
 explicit in the textual details. Missing observations are null/unknown rather than zero.
 
 History is an end-exclusive window of at most seven days, bounded to 500 observations
 and 200 events. Truncated results are labeled; narrow the window. Replay reads/writes a
 separate dataset and never changes live current state, connectivity or alarms.
+
+## Reproducible source and rights
+
+`node scripts/twins/author_reference.mjs OUTPUT_DIRECTORY` authors GLB, BOM/motions and
+surface audit using this app's pinned Three.js. After frontend install, run
+`.venv/bin/python scripts/twins/generate_fixtures.py` to regenerate the complete hashed
+GLB/AAS/AASX/manual fixture package. No asset download, sibling code or peer artifact
+is involved. Parametric JavaScript is the editable native source; the GLB is its viewing
+derivative. The model is self-authored Onesa material under repository ownership; no
+manufacturer marks, borrowed CAD or new third-party asset license is represented.
+
+The declared mechanical scope intentionally combines rolling-element sets, rotor
+lamination packs, winding bundles and fastener head/washer/shank assemblies. Exact
+thread helices, individual wire strands and individual thin steel sheets are omitted
+with explicit per-component inventory notes. Terminal electrical internals/cables and
+CFD are outside this mechanical reference. The maintenance document sections 4–5
+explain inspection and the BOM limitations. No unavailable major mechanical interior
+is silently replaced with a texture or exterior shell.
+
+Generic GLB/AAS imports retain supplied surfaces/provenance and explicit node mappings.
+The supported AAS file profile does not infer an assembly/BOM or choreography from names;
+flat imported mesh components are honest about lacking authored explosion/cap metadata.
+The fully authored local template retains its own reviewed hierarchy and motions.
 
 ## Storage and data model
 
@@ -230,7 +282,7 @@ collision geometry, calibrated kinematics, a planning environment or actuation.
 ## Verification and release
 
 ```sh
-node --experimental-strip-types --test scripts/twins/viewer-contract.test.mjs
+node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs
 make check
 make openapi api-client contract-check
 make frontend-check
@@ -249,12 +301,42 @@ and inspect requests. Source-outage tests stop/block the isolated producer, keep
 running, and verify stale status plus local model/history/document/report continuity.
 Do not stop another project's running services for these tests.
 
-Performance budget: 38,040-byte/480-triangle local demo, at most 100,000 triangles for
+Performance budget: 2,913,496-byte/98,648-triangle detailed local reference; at most 100,000 triangles for
 accepted user models; DPR at most 1 on narrow viewports and 1.5 otherwise; demand rendering,
 no continuous frame-rate telemetry updates. Measure model transfer/parse and first actual
 render separately on a named observed device/browser/network. Loopback or software WebGL
 results are not physical-device or hosted network benchmarks. Record failures and unsupported
 graphics honestly; a loaded component or screenshot alone does not establish the full flow.
+
+Observed reference check on 2026-10-25: Mac15,13, Apple M3, 24 GiB RAM; own local
+production build, fresh browser contexts and loopback model delivery. The delivered
+GLB SHA256 is `8c929269cd592bd7641b70bbf3d119c3f34ac1bc88f426b8eaaa391327a25921`.
+Cold transfer/validation/parse was 37 ms (Chromium software) and 90 ms (WebKit/Apple
+GPU); first settled rendered frame was 223/282 ms. These are observed local samples.
+
+The table gives mean milliseconds for eight completed orbit samples per state. Each
+sample includes browser automation, a requested animation frame and `gl.finish()`;
+it is **not a native FPS benchmark**. Viewport heights were 1000/1180/844, DPR 1.
+Software rendering remains visibly slower and is not presented as accelerated desktop
+or phone performance. No physical phone or mobile GPU was measured.
+
+| Browser / renderer | Viewport width | Assembled ms | Exploded ms | Cutaway ms | Isolated stator ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Chromium / SwiftShader | 1440 | 172.5 | 124.8 | 254.0 | 49.6 |
+| Chromium / SwiftShader | 820 | 104.0 | 95.8 | 189.3 | 49.7 |
+| Chromium / SwiftShader | 390 | 158.1 | 126.8 | 200.0 | 47.4 |
+| WebKit / Apple GPU | 1440 | 20.0 | 20.3 | 16.6 | 29.3 |
+| WebKit / Apple GPU | 820 | 18.4 | 18.7 | 16.4 | 16.2 |
+| WebKit / Apple GPU | 390 | 20.8 | 16.2 | 16.8 | 24.3 |
+
+Review captures include assembled, whole/subassembly explosion, hollow-bearing cut
+faces, longitudinal cutaway, ghost housings, isolated stator/impeller/winding/rotor
+close-ups, both appearances and mobile viewport controls. Tests exercise moved-part
+picking, exact baseline restoration, saved view/source bindings, actual API restart
+and three route unmount/remount cycles with old WebGL context loss. Per-part bounded
+cap patches avoid full-screen overdraw; DPR and source complexity remain capped.
+Repeated shapes are merged within explicitly declared selectable BOM sets; no new
+remote decoder, texture service or identity-destroying shell fallback is introduced.
 
 Promote reviewable source through dev → staging → main with exact-source CI, isolated
 staging, genuine owner-run authorization and actual hosted verification. Production flags

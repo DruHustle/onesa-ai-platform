@@ -21,7 +21,66 @@ export const componentSchema = z.strictObject({
   id,
   label: z.string().min(1).max(120),
   parentId: id.nullable(),
+  renderable: z.boolean().optional(),
+  inventory: z.enum(["assembly", "part", "combined", "unavailable"]).optional(),
+  note: z.string().max(1000).optional(),
+  material: z.string().max(200).optional(),
+  housing: z.boolean().optional(),
 });
+export const inspectionSchema = z.strictObject({
+  version: z.literal("1.0.0"),
+  reference: z.string().min(1).max(160),
+  description: z.string().min(1).max(2000),
+  motions: z
+    .array(
+      z.strictObject({
+        component_id: id,
+        translation: z.tuple([
+          finite.min(-10).max(10),
+          finite.min(-10).max(10),
+          finite.min(-10).max(10),
+        ]),
+        rotation: z.tuple([
+          finite.min(-3.142).max(3.142),
+          finite.min(-3.142).max(3.142),
+          finite.min(-3.142).max(3.142),
+        ]),
+        pivot: vector3,
+      }),
+    )
+    .min(1)
+    .max(100),
+  closed_solids: z.array(id).max(100),
+  housing_components: z.array(id).max(100),
+  cover_components: z.array(id).max(100).optional(),
+  scope_notes: z.array(z.string().max(1000)).max(20),
+  unavailable: z.array(z.string().max(1000)).max(100),
+});
+export const inspectionViewSchema = z.strictObject({
+  explode: finite.min(0).max(1),
+  scope: id.nullable(),
+  section_enabled: z.boolean(),
+  section_axis: z.enum(["x", "y", "z"]),
+  section_position: finite.min(-1).max(1),
+  section_flip: z.boolean(),
+  section_caps: z.boolean(),
+  guides: z.boolean(),
+  labels: z.boolean(),
+  ghost_housings: z.boolean(),
+});
+export type InspectionControls = z.infer<typeof inspectionViewSchema>;
+export const DEFAULT_INSPECTION: InspectionControls = {
+  explode: 0,
+  scope: null,
+  section_enabled: false,
+  section_axis: "x",
+  section_position: 0,
+  section_flip: false,
+  section_caps: true,
+  guides: false,
+  labels: true,
+  ghost_housings: false,
+};
 export const manifestShape = z.strictObject({
   schemaVersion: z.literal(CONTRACT_VERSION),
   modelRevision: id,
@@ -49,6 +108,7 @@ export const manifestShape = z.strictObject({
     )
     .min(1)
     .max(100),
+  inspection: inspectionSchema.nullable().optional(),
 });
 export const observationSchema = z.strictObject({
   componentId: id,
@@ -77,6 +137,7 @@ export const stateShape = z.strictObject({
   hiddenComponentIds: z.array(id).max(100),
   isolatedComponentId: id.nullable(),
   transparentSurroundings: z.boolean(),
+  inspection: inspectionViewSchema.optional(),
   observations: z.array(observationSchema).max(640),
   annotations: z.array(annotationSchema).max(100),
   appearance: z.strictObject({
@@ -142,7 +203,13 @@ export function validateManifest(input: unknown): ModelManifest {
     new Set(result.mappings.map((m) => m.sceneNode)).size !==
       result.mappings.length ||
     result.mappings.some((m) => !ids.has(m.componentId)) ||
-    new Set(result.mappings.map((m) => m.componentId)).size !== ids.size
+    new Set(result.mappings.map((m) => m.componentId)).size !==
+      result.components.filter((c) => c.renderable !== false).length ||
+    result.mappings.some(
+      (m) =>
+        result.components.find((c) => c.id === m.componentId)?.renderable ===
+        false,
+    )
   )
     throw new Error("Ambiguous or unresolved model component mapping");
   const parents = new Map(result.components.map((c) => [c.id, c.parentId]));
@@ -163,6 +230,25 @@ export function validateManifest(input: unknown): ModelManifest {
     )
   )
     throw new Error("Model unit or affine transform mismatch");
+  if (result.inspection) {
+    const metadata = result.inspection;
+    if (
+      metadata.motions.length !== ids.size ||
+      new Set(metadata.motions.map((m) => m.component_id)).size !== ids.size ||
+      metadata.motions.some((m) => !ids.has(m.component_id)) ||
+      [
+        ...metadata.closed_solids,
+        ...metadata.housing_components,
+        ...(metadata.cover_components || []),
+      ].some(
+        (value) =>
+          !result.components.some(
+            (c) => c.id === value && c.renderable !== false,
+          ),
+      )
+    )
+      throw new Error("Authored inspection metadata crosses the model mapping");
+  }
   return result;
 }
 export function validateState(
@@ -174,6 +260,7 @@ export function validateState(
   for (const value of [
     result.selectedComponentId,
     result.isolatedComponentId,
+    result.inspection?.scope || null,
     ...result.hiddenComponentIds,
     ...result.highlightedComponentIds,
     ...result.observations.map((o) => o.componentId),

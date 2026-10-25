@@ -12,7 +12,9 @@ import type { ComponentType } from "react";
 type Template = {
   id: string;
   name: string;
-  definition: { components: { id: string; name: string }[] };
+  definition: {
+    components: { id: string; name: string; renderable?: boolean }[];
+  };
 };
 export default function TwinSetup({
   asset,
@@ -389,11 +391,13 @@ export default function TwinSetup({
                         }
                       >
                         <option value="">Choose stable component</option>
-                        {template.definition.components.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
+                        {template.definition.components
+                          .filter((c) => c.renderable !== false)
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
                       </select>
                     </label>
                   ))}

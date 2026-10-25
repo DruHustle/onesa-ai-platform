@@ -1537,6 +1537,32 @@ export interface components {
              * @default
              */
             semantic_reference: string;
+            /**
+             * Renderable
+             * @default true
+             */
+            renderable: boolean;
+            /**
+             * Inventory
+             * @default part
+             * @enum {string}
+             */
+            inventory: "assembly" | "part" | "combined" | "unavailable";
+            /**
+             * Inventory Note
+             * @default
+             */
+            inventory_note: string;
+            /**
+             * Material
+             * @default
+             */
+            material: string;
+            /**
+             * Housing
+             * @default false
+             */
+            housing: boolean;
         };
         /** ConversationCreate */
         ConversationCreate: {
@@ -1802,6 +1828,20 @@ export interface components {
             window: components["schemas"]["Window"];
             evidence: components["schemas"]["Evidence"];
         };
+        /** ExplodeMotion */
+        ExplodeMotion: {
+            /**
+             * Component Id
+             * Format: uuid
+             */
+            component_id: string;
+            /** Translation */
+            translation: number[];
+            /** Rotation */
+            rotation: number[];
+            /** Pivot */
+            pivot: number[];
+        };
         /** ExportConversation */
         ExportConversation: {
             conversation: components["schemas"]["ConversationOut"];
@@ -1991,6 +2031,90 @@ export interface components {
              */
             version: string;
         };
+        /** InspectionModel */
+        InspectionModel: {
+            /**
+             * Version
+             * @constant
+             */
+            version: "1.0.0";
+            /** Reference */
+            reference: string;
+            /** Description */
+            description: string;
+            /** Motions */
+            motions: components["schemas"]["ExplodeMotion"][];
+            /** Closed Solids */
+            closed_solids?: string[];
+            /** Housing Components */
+            housing_components?: string[];
+            /** Cover Components */
+            cover_components?: string[];
+            /** Scope Notes */
+            scope_notes?: string[];
+            /** Unavailable */
+            unavailable?: string[];
+        };
+        /** InspectionView */
+        InspectionView: {
+            /**
+             * Explode
+             * @default 0
+             */
+            explode: number;
+            /** Scope */
+            scope?: string | null;
+            /**
+             * Section Enabled
+             * @default false
+             */
+            section_enabled: boolean;
+            /**
+             * Section Axis
+             * @default x
+             * @enum {string}
+             */
+            section_axis: "x" | "y" | "z";
+            /**
+             * Section Position
+             * @default 0
+             */
+            section_position: number;
+            /**
+             * Section Flip
+             * @default false
+             */
+            section_flip: boolean;
+            /**
+             * Section Caps
+             * @default true
+             */
+            section_caps: boolean;
+            /**
+             * Guides
+             * @default false
+             */
+            guides: boolean;
+            /**
+             * Labels
+             * @default true
+             */
+            labels: boolean;
+            /**
+             * Ghost Housings
+             * @default false
+             */
+            ghost_housings: boolean;
+            /** Hidden Component Ids */
+            hidden_component_ids?: string[];
+            /** Isolated Component Id */
+            isolated_component_id?: string | null;
+            /**
+             * Transparent Surroundings
+             * @default false
+             */
+            transparent_surroundings: boolean;
+        };
         /** InvestigationList */
         InvestigationList: {
             /** Items */
@@ -2157,6 +2281,7 @@ export interface components {
             transform: number[];
             /** Provenance */
             provenance: string;
+            inspection?: components["schemas"]["InspectionModel"] | null;
         };
         /** ModelList */
         ModelList: {
@@ -2209,6 +2334,9 @@ export interface components {
             text: string;
             /** Camera */
             camera?: number[] | null;
+            /** Model Revision Id */
+            model_revision_id?: string | null;
+            inspection_view?: components["schemas"]["InspectionView"] | null;
         };
         /** PasswordChange */
         PasswordChange: {

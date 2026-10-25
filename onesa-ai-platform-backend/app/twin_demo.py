@@ -15,24 +15,6 @@ from app.twin_models import TwinAsset, TwinModel, TwinTemplate
 from app.twin_schemas import AssetCreate, ModelCreate, TemplateCreate
 
 PARTS = ("casing", "motor", "coupling-shaft", "bearing", "impeller")
-MANUAL = """Onesa illustrative pump maintenance procedure — revision 1
-Self-authored synthetic demonstration; not an equipment manufacturer's instruction.
-
-Section 1 — Identification
-Confirm the installed pump serial number and selected component before inspection.
-Geometry is illustrative, right-handed Y-up, in meters. It is not calibrated CAD.
-
-Section 2 — Bearing vibration inspection
-A vibration threshold is a rule output, not a confirmed fault or prediction.
-Review the bearing observation timestamp, quality and operating mode. A stale or bad
-reading cannot establish current condition. Compare the event with bounded history.
-Inspect the bearing mounting and coupling alignment only under the equipment owner's
-approved isolation and safe maintenance procedure. This workspace issues no commands.
-
-Section 3 — Recovery
-Review the hysteresis recovery event and subsequent good-quality readings. A recovery
-event alone does not prove mechanical repair. Record the evidence and inspection outcome.
-"""
 
 
 def fixture_bytes(name: str) -> bytes:
@@ -48,6 +30,9 @@ def fixture_bytes(name: str) -> bytes:
     return content
 
 
+MANUAL = fixture_bytes("maintenance.txt").decode("utf-8")
+
+
 def pump_glb() -> bytes:
     return fixture_bytes("pump.glb")
 
@@ -61,11 +46,11 @@ def aas_environment(*, external: bool = False) -> dict[str, Any]:
 
 
 def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
-    from app.twins import installation, output, quota, save_file
+    from app.twins import installation, output, quota, save_file, validate_mapping
 
     owner = auth[0].id
     quota(db, TwinTemplate, owner, 100)
-    template_id = uuid5(owner, "onesa-illustrative-pump-template-v1")
+    template_id = uuid5(owner, "onesa-detailed-pump-template-v2")
     existing = db.scalar(
         select(TwinTemplate).where(TwinTemplate.id == template_id, TwinTemplate.user_id == owner)
     )
@@ -81,22 +66,30 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
                 )
             ],
         }
+    manifest = json.loads(fixture_bytes("manifest.json"))
+    ids = {c["id"]: str(uuid5(template_id, c["id"])) for c in manifest["components"]}
     components = [
         {
-            "id": str(uuid5(template_id, name)),
-            "name": name.replace("-", " ").title(),
-            "external_id": name,
+            "id": ids[c["id"]],
+            "name": c["label"],
+            "external_id": c["id"],
+            "parent_id": ids.get(c["parentId"]),
+            "renderable": c["renderable"],
+            "inventory": c["inventory"],
+            "inventory_note": c.get("note", ""),
+            "material": c.get("material", ""),
+            "housing": c.get("housing", False),
         }
-        for name in PARTS
+        for c in manifest["components"]
     ]
     template_body = TemplateCreate.model_validate(
         {
-            "name": "Illustrative pump and motor",
+            "name": "Detailed illustrative pump and TEFC motor",
             "kind": "centrifugal pump",
             "components": components,
             "relationships": [
-                {"source": components[1]["id"], "target": components[2]["id"], "kind": "drives"},
-                {"source": components[2]["id"], "target": components[4]["id"], "kind": "drives"},
+                {"source": ids["motor"], "target": ids["coupling-shaft"], "kind": "drives"},
+                {"source": ids["coupling-shaft"], "target": ids["impeller"], "kind": "drives"},
             ],
         }
     )
@@ -114,7 +107,7 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
         request,
         db,
         auth,
-        "onesa-illustrative-pump-v1.glb",
+        "onesa-detailed-reference-pump-v2.glb",
         binary,
         {
             **glb(binary),
@@ -127,16 +120,30 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
             "file_id": str(file.id),
             "template_id": str(template.id),
             "mappings": [
-                {"node": f"node:{i}", "component_id": c["id"]} for i, c in enumerate(components)
+                {"node": m["sceneNode"], "component_id": ids[m["componentId"]]}
+                for m in manifest["mappings"]
             ],
             "unit": "m",
             "meters_per_unit": 1,
+            "inspection": {
+                **manifest["inspection"],
+                "motions": [
+                    {**m, "component_id": ids[m["component_id"]]}
+                    for m in manifest["inspection"]["motions"]
+                ],
+                "closed_solids": [ids[v] for v in manifest["inspection"]["closed_solids"]],
+                "cover_components": [ids[v] for v in manifest["inspection"]["cover_components"]],
+                "housing_components": [
+                    ids[v] for v in manifest["inspection"]["housing_components"]
+                ],
+            },
             "provenance": (
-                "Self-authored illustrative pump v1. Right-handed Y-up meters; no"
+                "Self-authored detailed mechanical reference v2. Right-handed Y-up meters; no"
                 " collision, calibration or engineering accuracy claim."
             ),
         }
     )
+    validate_mapping(model_body, file, template)
     model = TwinModel(
         user_id=owner,
         template_id=template.id,
@@ -145,22 +152,20 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
             **model_body.model_dump(mode="json"),
             "sha256": file.sha256,
             "byte_length": file.size,
-            "source_model_revision": "onesa-illustrative-pump:1.0.0",
-            "source_component_mapping": {
-                role: str(component["id"])
-                for role, component in zip(PARTS, components, strict=True)
-            },
+            "source_model_revision": manifest["modelRevision"],
+            "source_component_mapping": {role: identifier for role, identifier in ids.items()},
             "nodes": file.details["nodes"],
         },
     )
     db.add(model)
     db.flush()
+    manual = fixture_bytes("maintenance.txt").decode("utf-8")
     doc = Document(
         user_id=owner,
-        title="Onesa illustrative pump maintenance — sections 1–3",
+        title="Onesa illustrative pump maintenance — sections 1–5",
         media_type="text/plain",
-        text=MANUAL,
-        checksum=sha(MANUAL.encode()),
+        text=manual,
+        checksum=sha(manual.encode()),
         embedding_version=knowledge.version(request.app.state.settings),
     )
     db.add(doc)
@@ -171,7 +176,7 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
         body = AssetCreate(
             template_id=template.id,
             name=f"Demo pump {number:02}",
-            serial=f"ONESA-DEMO-PUMP-{number:02}",
+            serial=f"ONESA-DEMO-PUMP-{number:02}-V2",
         )
         row = installation(template, body, owner)
         row.active_model_id = model.id
@@ -179,6 +184,7 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
             **row.definition,
             "stage": "preview",
             "demo": True,
+            "reference_version": "2.0.0",
             "documents": [{"document_id": str(doc.id), "component_id": None}],
         }
         db.add(row)

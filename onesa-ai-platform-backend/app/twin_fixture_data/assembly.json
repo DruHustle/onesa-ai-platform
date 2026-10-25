@@ -1,0 +1,1992 @@
+{
+  "components": [
+    {
+      "id": "pump",
+      "inventory": "assembly",
+      "label": "Pump assembly",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": null,
+      "renderable": false
+    },
+    {
+      "id": "motor",
+      "inventory": "assembly",
+      "label": "Motor",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": null,
+      "renderable": false
+    },
+    {
+      "id": "coupling",
+      "inventory": "assembly",
+      "label": "Flexible coupling",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": null,
+      "renderable": false
+    },
+    {
+      "housing": false,
+      "id": "base",
+      "inventory": "combined",
+      "label": "Machined mounting base",
+      "material": "Dark steel / laminations",
+      "note": "Base plate and two mounting rails are intentionally combined.",
+      "parentId": null,
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "casing",
+      "inventory": "combined",
+      "label": "Casing",
+      "material": "Indigo enamel / cast housing",
+      "note": "Volute wall, back/front rims and mounting feet. The impeller chamber and flow passage remain empty.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "suction-cover",
+      "inventory": "combined",
+      "label": "Suction cover and inlet flange",
+      "material": "Indigo enamel / cast housing",
+      "note": "Cast inlet cover and neck; the inlet bore is open.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "discharge",
+      "inventory": "combined",
+      "label": "Tangential discharge neck and flange",
+      "material": "Indigo enamel / cast housing",
+      "note": "Hollow discharge neck and flange; illustrative volute/neck junction.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "cover-gasket",
+      "inventory": "part",
+      "label": "Pump cover gasket",
+      "material": "Elastomer seal / gasket / coupling insert",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "impeller",
+      "inventory": "combined",
+      "label": "Impeller",
+      "material": "Stainless impeller / sleeve",
+      "note": "One cast reference impeller: two shrouds and seven curved, separately surfaced vanes with open passages.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "coupling-shaft",
+      "inventory": "combined",
+      "label": "Coupling Shaft",
+      "material": "Machined steel",
+      "note": "Stepped pump shaft; the coupling hubs and insert are separate parts.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "shaft-sleeve",
+      "inventory": "part",
+      "label": "Pump shaft sleeve",
+      "material": "Stainless impeller / sleeve",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "seal-seat",
+      "inventory": "part",
+      "label": "Mechanical seal \u00b7 stationary ceramic seat",
+      "material": "Ceramic seal seat",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "seal-face",
+      "inventory": "part",
+      "label": "Mechanical seal \u00b7 rotating carbon face",
+      "material": "Carbon mechanical-seal ring",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "seal-o-ring",
+      "inventory": "part",
+      "label": "Mechanical seal \u00b7 elastomer O-ring",
+      "material": "Elastomer seal / gasket / coupling insert",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "seal-spring",
+      "inventory": "combined",
+      "label": "Mechanical seal \u00b7 spring and retainer",
+      "material": "Machined steel",
+      "note": "Helical spring and retainer, one selectable seal element. Spring end faces are open; this component does not receive section caps.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "bearing-frame",
+      "inventory": "combined",
+      "label": "Pump bearing frame",
+      "material": "Indigo enamel / cast housing",
+      "note": "Hollow bearing housing and mounting feet; races and rolling elements are separate.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "id": "bearing",
+      "inventory": "assembly",
+      "label": "Bearing",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": "pump",
+      "renderable": false
+    },
+    {
+      "housing": false,
+      "id": "bearing-outer",
+      "inventory": "part",
+      "label": "Bearing \u00b7 outer race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "bearing-inner",
+      "inventory": "part",
+      "label": "Bearing \u00b7 inner race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "bearing-balls",
+      "inventory": "combined",
+      "label": "Bearing \u00b7 rolling-element set",
+      "material": "Stainless impeller / sleeve",
+      "note": "Nine modeled balls intentionally combined as one selectable rolling-element set.",
+      "parentId": "bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "bearing-cage",
+      "inventory": "combined",
+      "label": "Bearing \u00b7 open-pocket cage",
+      "material": "Bearing cage / brass",
+      "note": "Open cage rails and pocket bridges form one cage; the ball spaces are empty.",
+      "parentId": "bearing",
+      "renderable": true
+    },
+    {
+      "id": "pump-outboard-bearing",
+      "inventory": "assembly",
+      "label": "Outboard bearing",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": "pump",
+      "renderable": false
+    },
+    {
+      "housing": false,
+      "id": "pump-outboard-bearing-outer",
+      "inventory": "part",
+      "label": "Outboard bearing \u00b7 outer race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump-outboard-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-outboard-bearing-inner",
+      "inventory": "part",
+      "label": "Outboard bearing \u00b7 inner race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump-outboard-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-outboard-bearing-balls",
+      "inventory": "combined",
+      "label": "Outboard bearing \u00b7 rolling-element set",
+      "material": "Stainless impeller / sleeve",
+      "note": "Nine modeled balls intentionally combined as one selectable rolling-element set.",
+      "parentId": "pump-outboard-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-outboard-bearing-cage",
+      "inventory": "combined",
+      "label": "Outboard bearing \u00b7 open-pocket cage",
+      "material": "Bearing cage / brass",
+      "note": "Open cage rails and pocket bridges form one cage; the ball spaces are empty.",
+      "parentId": "pump-outboard-bearing",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "bearing-cover",
+      "inventory": "part",
+      "label": "Bearing frame end cover",
+      "material": "Indigo enamel / cast housing",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "bearing-gasket",
+      "inventory": "part",
+      "label": "Bearing cover gasket",
+      "material": "Elastomer seal / gasket / coupling insert",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-spacer",
+      "inventory": "part",
+      "label": "Pump bearing spacer",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "coupling-pump-hub",
+      "inventory": "part",
+      "label": "Pump-side coupling hub",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "coupling",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "coupling-spider",
+      "inventory": "combined",
+      "label": "Elastomer coupling insert",
+      "material": "Elastomer seal / gasket / coupling insert",
+      "note": "One molded insert with six real lobes; not a coupling stress model.",
+      "parentId": "coupling",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "coupling-motor-hub",
+      "inventory": "part",
+      "label": "Motor-side coupling hub",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "coupling",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "coupling-guard",
+      "inventory": "part",
+      "label": "Coupling guard",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "coupling",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "motor-housing",
+      "inventory": "combined",
+      "label": "Motor finned housing",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Hollow finned cast housing with mounting feet; no internal rotor/stator substitute.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-stator",
+      "inventory": "combined",
+      "label": "Stator laminated core",
+      "material": "Dark steel / laminations",
+      "note": "One selectable slotted lamination-stack envelope. Individual sheet edges are visible on the separate rotor stack.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "winding-a",
+      "inventory": "combined",
+      "label": "Copper winding phase A",
+      "material": "Copper windings and rotor cage",
+      "note": "Four closed coils with two modeled conductor bundles each, grouped by illustrative phase. Individual wire strands are intentionally combined; not an electrical winding specification.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "winding-b",
+      "inventory": "combined",
+      "label": "Copper winding phase B",
+      "material": "Copper windings and rotor cage",
+      "note": "Four closed coils with two modeled conductor bundles each, grouped by illustrative phase. Individual wire strands are intentionally combined; not an electrical winding specification.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "winding-c",
+      "inventory": "combined",
+      "label": "Copper winding phase C",
+      "material": "Copper windings and rotor cage",
+      "note": "Four closed coils with two modeled conductor bundles each, grouped by illustrative phase. Individual wire strands are intentionally combined; not an electrical winding specification.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-rotor",
+      "inventory": "combined",
+      "label": "Rotor lamination stack",
+      "material": "Dark steel / laminations",
+      "note": "Twelve modeled slotted lamination packs share one selectable rotor-core identity. Individual thin sheets within each pack are intentionally combined. Actual cage-bar bores remain empty.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "rotor-cage",
+      "inventory": "combined",
+      "label": "Rotor conductor cage",
+      "material": "Copper windings and rotor cage",
+      "note": "Eighteen actual conductor bars and two end rings. Illustrative squirrel-cage geometry.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-shaft",
+      "inventory": "part",
+      "label": "Motor rotor shaft",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "id": "motor-de-bearing",
+      "inventory": "assembly",
+      "label": "Motor drive-end bearing",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": "motor",
+      "renderable": false
+    },
+    {
+      "housing": false,
+      "id": "motor-de-bearing-outer",
+      "inventory": "part",
+      "label": "Motor drive-end bearing \u00b7 outer race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor-de-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-de-bearing-inner",
+      "inventory": "part",
+      "label": "Motor drive-end bearing \u00b7 inner race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor-de-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-de-bearing-balls",
+      "inventory": "combined",
+      "label": "Motor drive-end bearing \u00b7 rolling-element set",
+      "material": "Stainless impeller / sleeve",
+      "note": "Nine modeled balls intentionally combined as one selectable rolling-element set.",
+      "parentId": "motor-de-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-de-bearing-cage",
+      "inventory": "combined",
+      "label": "Motor drive-end bearing \u00b7 open-pocket cage",
+      "material": "Bearing cage / brass",
+      "note": "Open cage rails and pocket bridges form one cage; the ball spaces are empty.",
+      "parentId": "motor-de-bearing",
+      "renderable": true
+    },
+    {
+      "id": "motor-nde-bearing",
+      "inventory": "assembly",
+      "label": "Motor non-drive-end bearing",
+      "note": "Selectable logical subassembly; inspect its separately modeled children.",
+      "parentId": "motor",
+      "renderable": false
+    },
+    {
+      "housing": false,
+      "id": "motor-nde-bearing-outer",
+      "inventory": "part",
+      "label": "Motor non-drive-end bearing \u00b7 outer race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor-nde-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-nde-bearing-inner",
+      "inventory": "part",
+      "label": "Motor non-drive-end bearing \u00b7 inner race",
+      "material": "Machined steel",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor-nde-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-nde-bearing-balls",
+      "inventory": "combined",
+      "label": "Motor non-drive-end bearing \u00b7 rolling-element set",
+      "material": "Stainless impeller / sleeve",
+      "note": "Nine modeled balls intentionally combined as one selectable rolling-element set.",
+      "parentId": "motor-nde-bearing",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-nde-bearing-cage",
+      "inventory": "combined",
+      "label": "Motor non-drive-end bearing \u00b7 open-pocket cage",
+      "material": "Bearing cage / brass",
+      "note": "Open cage rails and pocket bridges form one cage; the ball spaces are empty.",
+      "parentId": "motor-nde-bearing",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "motor-front-cover",
+      "inventory": "part",
+      "label": "Motor drive-end cover",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "motor-back-cover",
+      "inventory": "part",
+      "label": "Motor non-drive-end cover",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Individually selectable modeled part; illustrative reference designation.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-fan",
+      "inventory": "combined",
+      "label": "Motor cooling fan",
+      "material": "Elastomer seal / gasket / coupling insert",
+      "note": "Hub and ten real fan blades are one molded selectable component.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "fan-cover",
+      "inventory": "combined",
+      "label": "Ventilated fan cover",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Open rib guard and annular rim. Not a sealed motor end wall.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": true,
+      "id": "terminal-box",
+      "inventory": "combined",
+      "label": "Motor terminal enclosure",
+      "material": "Slate blue enamel / aluminium housing",
+      "note": "Terminal enclosure and lid retained as one component. Electrical terminals are outside this mechanical reference's declared internal scope.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-0",
+      "inventory": "combined",
+      "label": "Pump cover fastener 1",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-1",
+      "inventory": "combined",
+      "label": "Pump cover fastener 2",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-2",
+      "inventory": "combined",
+      "label": "Pump cover fastener 3",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-3",
+      "inventory": "combined",
+      "label": "Pump cover fastener 4",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-4",
+      "inventory": "combined",
+      "label": "Pump cover fastener 5",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-5",
+      "inventory": "combined",
+      "label": "Pump cover fastener 6",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-6",
+      "inventory": "combined",
+      "label": "Pump cover fastener 7",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "pump-cover-bolt-7",
+      "inventory": "combined",
+      "label": "Pump cover fastener 8",
+      "material": "Machined steel",
+      "note": "Hex head, washer and shank. Cosmetic thread helices are intentionally omitted.",
+      "parentId": "pump",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-tie-bolt-0",
+      "inventory": "combined",
+      "label": "Motor tie fastener 1",
+      "material": "Machined steel",
+      "note": "Tie-bolt head, washer and shank; threads are intentionally combined/omitted from the viewing derivative.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-tie-bolt-1",
+      "inventory": "combined",
+      "label": "Motor tie fastener 2",
+      "material": "Machined steel",
+      "note": "Tie-bolt head, washer and shank; threads are intentionally combined/omitted from the viewing derivative.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-tie-bolt-2",
+      "inventory": "combined",
+      "label": "Motor tie fastener 3",
+      "material": "Machined steel",
+      "note": "Tie-bolt head, washer and shank; threads are intentionally combined/omitted from the viewing derivative.",
+      "parentId": "motor",
+      "renderable": true
+    },
+    {
+      "housing": false,
+      "id": "motor-tie-bolt-3",
+      "inventory": "combined",
+      "label": "Motor tie fastener 4",
+      "material": "Machined steel",
+      "note": "Tie-bolt head, washer and shank; threads are intentionally combined/omitted from the viewing derivative.",
+      "parentId": "motor",
+      "renderable": true
+    }
+  ],
+  "inspection": {
+    "closedSolids": [
+      "base",
+      "casing",
+      "suction-cover",
+      "discharge",
+      "cover-gasket",
+      "impeller",
+      "coupling-shaft",
+      "shaft-sleeve",
+      "seal-seat",
+      "seal-face",
+      "seal-o-ring",
+      "bearing-frame",
+      "bearing-outer",
+      "bearing-inner",
+      "bearing-balls",
+      "bearing-cage",
+      "pump-outboard-bearing-outer",
+      "pump-outboard-bearing-inner",
+      "pump-outboard-bearing-balls",
+      "pump-outboard-bearing-cage",
+      "bearing-cover",
+      "bearing-gasket",
+      "pump-spacer",
+      "coupling-pump-hub",
+      "coupling-spider",
+      "coupling-motor-hub",
+      "coupling-guard",
+      "motor-housing",
+      "motor-stator",
+      "winding-a",
+      "winding-b",
+      "winding-c",
+      "motor-rotor",
+      "rotor-cage",
+      "motor-shaft",
+      "motor-de-bearing-outer",
+      "motor-de-bearing-inner",
+      "motor-de-bearing-balls",
+      "motor-de-bearing-cage",
+      "motor-nde-bearing-outer",
+      "motor-nde-bearing-inner",
+      "motor-nde-bearing-balls",
+      "motor-nde-bearing-cage",
+      "motor-front-cover",
+      "motor-back-cover",
+      "motor-fan",
+      "fan-cover",
+      "terminal-box",
+      "pump-cover-bolt-0",
+      "pump-cover-bolt-1",
+      "pump-cover-bolt-2",
+      "pump-cover-bolt-3",
+      "pump-cover-bolt-4",
+      "pump-cover-bolt-5",
+      "pump-cover-bolt-6",
+      "pump-cover-bolt-7",
+      "motor-tie-bolt-0",
+      "motor-tie-bolt-1",
+      "motor-tie-bolt-2",
+      "motor-tie-bolt-3"
+    ],
+    "coverComponents": [
+      "suction-cover",
+      "bearing-cover",
+      "coupling-guard",
+      "motor-front-cover",
+      "motor-back-cover",
+      "fan-cover"
+    ],
+    "description": "Engineering-informed illustrative single-stage end-suction pump and TEFC squirrel-cage motor. No manufacturer identity, dimensions, certification or validated maintenance sequence.",
+    "housingComponents": [
+      "casing",
+      "suction-cover",
+      "discharge",
+      "bearing-frame",
+      "bearing-cover",
+      "coupling-guard",
+      "motor-housing",
+      "motor-front-cover",
+      "motor-back-cover",
+      "fan-cover",
+      "terminal-box"
+    ],
+    "motions": [
+      {
+        "componentId": "pump",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.35,
+          0,
+          0
+        ]
+      },
+      {
+        "componentId": "motor",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          0,
+          0
+        ]
+      },
+      {
+        "componentId": "coupling",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.1,
+          0,
+          0
+        ]
+      },
+      {
+        "componentId": "base",
+        "pivot": [
+          0.3799999952316284,
+          0.08249999769032001,
+          -1.4901161193847656e-08
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0,
+          -0.12,
+          0
+        ]
+      },
+      {
+        "componentId": "casing",
+        "pivot": [
+          -0.7700000107288361,
+          0.6004999801516533,
+          -0.002624988555908203
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.35,
+          0,
+          0
+        ]
+      },
+      {
+        "componentId": "suction-cover",
+        "pivot": [
+          -1.0732499957084656,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0.12,
+          0
+        ],
+        "translation": [
+          -0.95,
+          0.12,
+          0
+        ]
+      },
+      {
+        "componentId": "discharge",
+        "pivot": [
+          -0.7700000107288361,
+          1.0917499959468842,
+          0.26999999582767487
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.35,
+          0.38,
+          0.12
+        ]
+      },
+      {
+        "componentId": "cover-gasket",
+        "pivot": [
+          -0.9270000159740448,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.7,
+          0.08,
+          0
+        ]
+      },
+      {
+        "componentId": "impeller",
+        "pivot": [
+          -0.8207499980926514,
+          0.6634172946214676,
+          0.0016827136278152466
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.68,
+          0.2,
+          0.05
+        ]
+      },
+      {
+        "componentId": "coupling-shaft",
+        "pivot": [
+          -0.3499999828636646,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.15,
+          0.05,
+          0.38
+        ]
+      },
+      {
+        "componentId": "shaft-sleeve",
+        "pivot": [
+          -0.5400000065565109,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.35,
+          0.12,
+          0.27
+        ]
+      },
+      {
+        "componentId": "seal-seat",
+        "pivot": [
+          -0.6100000143051147,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.5,
+          -0.1,
+          0
+        ]
+      },
+      {
+        "componentId": "seal-face",
+        "pivot": [
+          -0.5699999928474426,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.3,
+          -0.1,
+          0
+        ]
+      },
+      {
+        "componentId": "seal-o-ring",
+        "pivot": [
+          -0.625,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.6,
+          -0.12,
+          0.07
+        ]
+      },
+      {
+        "componentId": "seal-spring",
+        "pivot": [
+          -0.5140106976032257,
+          0.6600000262260437,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.13,
+          -0.12,
+          0.12
+        ]
+      },
+      {
+        "componentId": "bearing-frame",
+        "pivot": [
+          -0.13999999314546585,
+          0.4790000021457672,
+          -7.450580596923828e-09
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.28,
+          -0.1,
+          0
+        ]
+      },
+      {
+        "componentId": "bearing",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.24,
+          0.18,
+          0.24
+        ]
+      },
+      {
+        "componentId": "bearing-outer",
+        "pivot": [
+          -0.3400000035762787,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.24,
+          0.4,
+          0.24
+        ]
+      },
+      {
+        "componentId": "bearing-inner",
+        "pivot": [
+          -0.3400000035762787,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.24,
+          0.03999999999999998,
+          0.24
+        ]
+      },
+      {
+        "componentId": "bearing-balls",
+        "pivot": [
+          -0.3400000035762787,
+          0.6622012257575989,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.24,
+          0.18,
+          0.42
+        ]
+      },
+      {
+        "componentId": "bearing-cage",
+        "pivot": [
+          -0.3400000035762787,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.24,
+          0.18,
+          0.06
+        ]
+      },
+      {
+        "componentId": "pump-outboard-bearing",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.18,
+          -0.24
+        ]
+      },
+      {
+        "componentId": "pump-outboard-bearing-outer",
+        "pivot": [
+          0.07000000029802322,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.4,
+          -0.24
+        ]
+      },
+      {
+        "componentId": "pump-outboard-bearing-inner",
+        "pivot": [
+          0.07000000029802322,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.03999999999999998,
+          -0.24
+        ]
+      },
+      {
+        "componentId": "pump-outboard-bearing-balls",
+        "pivot": [
+          0.07000000029802322,
+          0.6622012257575989,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.18,
+          -0.06
+        ]
+      },
+      {
+        "componentId": "pump-outboard-bearing-cage",
+        "pivot": [
+          0.06999999843537807,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.18,
+          -0.42
+        ]
+      },
+      {
+        "componentId": "bearing-cover",
+        "pivot": [
+          0.12999999895691872,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.48,
+          0.05,
+          0
+        ]
+      },
+      {
+        "componentId": "bearing-gasket",
+        "pivot": [
+          0.11400000005960464,
+          0.6600000262260437,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.33,
+          0.05,
+          0
+        ]
+      },
+      {
+        "componentId": "pump-spacer",
+        "pivot": [
+          -0.12000000244006515,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.1,
+          -0.05,
+          -0.25
+        ]
+      },
+      {
+        "componentId": "coupling-pump-hub",
+        "pivot": [
+          0.2500000074505806,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -0.12,
+          0.13,
+          0
+        ]
+      },
+      {
+        "componentId": "coupling-spider",
+        "pivot": [
+          0.3400000035762787,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.12,
+          0.28,
+          0
+        ]
+      },
+      {
+        "componentId": "coupling-motor-hub",
+        "pivot": [
+          0.4399999976158142,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.33,
+          0.13,
+          0
+        ]
+      },
+      {
+        "componentId": "coupling-guard",
+        "pivot": [
+          0.309999980032444,
+          0.7150008082389832,
+          0
+        ],
+        "rotation": [
+          0.15,
+          0,
+          0
+        ],
+        "translation": [
+          0.1,
+          0.65,
+          0.12
+        ]
+      },
+      {
+        "componentId": "motor-housing",
+        "pivot": [
+          1.179999977350235,
+          0.5457499846816063,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          0.12,
+          0.1
+        ]
+      },
+      {
+        "componentId": "motor-stator",
+        "pivot": [
+          1.179999977350235,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          0.42,
+          0
+        ]
+      },
+      {
+        "componentId": "winding-a",
+        "pivot": [
+          1.1800000071525574,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          0.45,
+          0
+        ]
+      },
+      {
+        "componentId": "winding-b",
+        "pivot": [
+          1.1800000071525574,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          -0.2249999999999999,
+          0.38971143170299744
+        ]
+      },
+      {
+        "componentId": "winding-c",
+        "pivot": [
+          1.1800000071525574,
+          0.6599999964237213,
+          4.842877388000488e-07
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          -0.2250000000000002,
+          -0.3897114317029973
+        ]
+      },
+      {
+        "componentId": "motor-rotor",
+        "pivot": [
+          1.1825000047683716,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          0,
+          0.22
+        ]
+      },
+      {
+        "componentId": "rotor-cage",
+        "pivot": [
+          1.179999977350235,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.86,
+          0,
+          -0.14
+        ]
+      },
+      {
+        "componentId": "motor-shaft",
+        "pivot": [
+          1.179999977350235,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.15,
+          0,
+          0
+        ]
+      },
+      {
+        "componentId": "motor-de-bearing",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.22,
+          -0.2,
+          0.22
+        ]
+      },
+      {
+        "componentId": "motor-de-bearing-outer",
+        "pivot": [
+          0.7800000011920929,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.22,
+          0.01999999999999999,
+          0.22
+        ]
+      },
+      {
+        "componentId": "motor-de-bearing-inner",
+        "pivot": [
+          0.7800000011920929,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.22,
+          -0.34,
+          0.22
+        ]
+      },
+      {
+        "componentId": "motor-de-bearing-balls",
+        "pivot": [
+          0.7800000011920929,
+          0.6622012257575989,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.22,
+          -0.2,
+          0.4
+        ]
+      },
+      {
+        "componentId": "motor-de-bearing-cage",
+        "pivot": [
+          0.7800000011920929,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.22,
+          -0.2,
+          0.04000000000000001
+        ]
+      },
+      {
+        "componentId": "motor-nde-bearing",
+        "pivot": [
+          0,
+          0.66,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          -0.2,
+          -0.22
+        ]
+      },
+      {
+        "componentId": "motor-nde-bearing-outer",
+        "pivot": [
+          1.5799999833106995,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          0.01999999999999999,
+          -0.22
+        ]
+      },
+      {
+        "componentId": "motor-nde-bearing-inner",
+        "pivot": [
+          1.5799999833106995,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          -0.34,
+          -0.22
+        ]
+      },
+      {
+        "componentId": "motor-nde-bearing-balls",
+        "pivot": [
+          1.5799999833106995,
+          0.6622012257575989,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          -0.2,
+          -0.04000000000000001
+        ]
+      },
+      {
+        "componentId": "motor-nde-bearing-cage",
+        "pivot": [
+          1.5799999833106995,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.8,
+          -0.2,
+          -0.4
+        ]
+      },
+      {
+        "componentId": "motor-front-cover",
+        "pivot": [
+          0.7400000095367432,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.08,
+          0.08,
+          0.1
+        ]
+      },
+      {
+        "componentId": "motor-back-cover",
+        "pivot": [
+          1.612500011920929,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0.1,
+          0
+        ],
+        "translation": [
+          1.1,
+          0.08,
+          0
+        ]
+      },
+      {
+        "componentId": "motor-fan",
+        "pivot": [
+          1.75,
+          0.6599999964237213,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.35,
+          0.12,
+          0
+        ]
+      },
+      {
+        "componentId": "fan-cover",
+        "pivot": [
+          1.7829999923706055,
+          0.6600000113248825,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.6,
+          0.13,
+          0
+        ]
+      },
+      {
+        "componentId": "terminal-box",
+        "pivot": [
+          1.1800000071525574,
+          0.9974999725818634,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          0.4,
+          0.8,
+          0
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-0",
+        "pivot": [
+          -0.9355000257492065,
+          0.9370000064373016,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.24,
+          0
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-1",
+        "pivot": [
+          -0.9355000257492065,
+          0.8558685779571533,
+          0.195868581533432
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.2048528137423857,
+          0.0848528137423857
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-2",
+        "pivot": [
+          -0.9355000257492065,
+          0.6599999964237213,
+          0.27699999511241913
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.12000000000000001,
+          0.12
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-3",
+        "pivot": [
+          -0.9355000257492065,
+          0.4641314148902893,
+          0.195868581533432
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.0351471862576143,
+          0.08485281374238571
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-4",
+        "pivot": [
+          -0.9355000257492065,
+          0.3830000013113022,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0,
+          1.4695761589768237e-17
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-5",
+        "pivot": [
+          -0.9355000257492065,
+          0.4641314148902893,
+          -0.195868581533432
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.035147186257614274,
+          -0.0848528137423857
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-6",
+        "pivot": [
+          -0.9355000257492065,
+          0.6599999964237213,
+          -0.27699999511241913
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.11999999999999997,
+          -0.12
+        ]
+      },
+      {
+        "componentId": "pump-cover-bolt-7",
+        "pivot": [
+          -0.9355000257492065,
+          0.8558685779571533,
+          -0.195868581533432
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          -1.02,
+          0.20485281374238568,
+          -0.08485281374238572
+        ]
+      },
+      {
+        "componentId": "motor-tie-bolt-0",
+        "pivot": [
+          1.644499957561493,
+          0.8049568831920624,
+          0.14495688676834106
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.28,
+          0.1202081528017131,
+          0.12020815280171308
+        ]
+      },
+      {
+        "componentId": "motor-tie-bolt-1",
+        "pivot": [
+          1.644499957561493,
+          0.5150431096553802,
+          0.14495688676834106
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.28,
+          -0.12020815280171308,
+          0.1202081528017131
+        ]
+      },
+      {
+        "componentId": "motor-tie-bolt-2",
+        "pivot": [
+          1.644499957561493,
+          0.5150431096553802,
+          -0.14495688676834106
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.28,
+          -0.12020815280171311,
+          -0.12020815280171308
+        ]
+      },
+      {
+        "componentId": "motor-tie-bolt-3",
+        "pivot": [
+          1.644499957561493,
+          0.8049568831920624,
+          -0.14495688676834106
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "translation": [
+          1.28,
+          0.12020815280171306,
+          -0.12020815280171311
+        ]
+      }
+    ],
+    "reference": "onesa-end-suction-pump-tefc-motor-v2",
+    "scopeNotes": [
+      "Mechanical reference; terminal internals, cables and hydraulic CFD are outside the declared mechanical inspection scope.",
+      "Thread helices and exact surface finishes are intentionally simplified; fastener assemblies remain modeled/selectable.",
+      "Explosion is authored visualization, not an engineering-approved disassembly sequence.",
+      "Hollow flow regions, shaft bores, cage pockets and winding gaps contain no modeled solid and must remain empty when sectioned.",
+      "Open-ended seal spring does not receive cut caps."
+    ],
+    "unavailable": [],
+    "version": "1.0.0"
+  }
+}
