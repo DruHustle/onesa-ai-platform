@@ -652,6 +652,10 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
           : gl.getParameter(gl.RENDERER),
       };
     });
+    const selectedPart = page.locator(
+      "aside[aria-label='Equipment components'] button[aria-pressed='true']",
+    );
+    const selectedBeforeOrbit = await selectedPart.textContent();
     const bounds = await page.locator("canvas").boundingBox();
     const frames: number[] = [],
       submitted: number[] = [];
@@ -672,6 +676,7 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
         submitted.push(cpu);
       }
       await page.mouse.up();
+      await expect(selectedPart).toHaveText(selectedBeforeOrbit || "");
     }
     metrics.push({
       name,

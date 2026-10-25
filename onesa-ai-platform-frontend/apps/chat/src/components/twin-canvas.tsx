@@ -472,9 +472,10 @@ function Scene({
         onClick={(event: {
           object: THREE.Object3D;
           point: THREE.Vector3;
+          delta: number;
           stopPropagation: () => void;
         }) => {
-          if (!event.object.visible) return;
+          if (event.delta > 3 || !event.object.visible) return;
           const view = state.inspection;
           if (
             view?.section_enabled &&
@@ -538,7 +539,9 @@ function Scene({
                 else markerObjects.current.delete(point.id);
               }}
               position={point.position}
-              onClick={() => select(point.id)}
+              onClick={(event) => {
+                if (event.delta <= 3) select(point.id);
+              }}
             >
               <sphereGeometry args={[0.025, 10, 8]} />
               <meshBasicMaterial color={point.color} />
@@ -560,14 +563,15 @@ function Scene({
                 point.position[1] + 0.07,
                 point.position[2],
               ]}
-              onClick={() =>
+              onClick={(event) => {
+                if (event.delta > 3) return;
                 emit({
                   schemaVersion: "1.0.0",
                   type: "annotation_requested",
                   assetInstanceId: assetId,
                   componentId: point.id,
-                })
-              }
+                });
+              }}
             >
               <octahedronGeometry args={[0.025]} />
               <meshBasicMaterial color="#8265c9" />

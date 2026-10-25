@@ -399,6 +399,7 @@ export default function InspectionLayer({
               material={resources.capMaterials.get(id)}
               renderOrder={i * 3 + 2}
               onClick={(event) => {
+                if (event.delta > 3) return;
                 if (object.visible && solidContainsPoint(object, event.point)) {
                   event.stopPropagation();
                   onSelect(id);
