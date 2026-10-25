@@ -45,7 +45,11 @@ export const inspectionSchema = z.strictObject({
           finite.min(-3.142).max(3.142),
           finite.min(-3.142).max(3.142),
         ]),
-        pivot: vector3,
+        pivot: z.tuple([
+          finite.min(-1000).max(1000),
+          finite.min(-1000).max(1000),
+          finite.min(-1000).max(1000),
+        ]),
       }),
     )
     .min(1)

@@ -108,7 +108,10 @@ function disposeResources(resources: Resources) {
 function installEnvironment(scene: T.Scene, renderer: T.WebGLRenderer) {
   const room = new RoomEnvironment(),
     generator = new T.PMREMGenerator(renderer);
-  const environment = generator.fromScene(room, 0.04);
+  // The authored room contains broad light panels, not detailed HDR imagery.
+  // A bounded 64px cube retains the metal response without an expensive 256px
+  // GGX prefilter blocking initial interaction on software WebGL.
+  const environment = generator.fromScene(room, 0.04, 0.1, 100, { size: 64 });
   const previous = scene.environment;
   scene.environment = environment.texture;
   room.dispose();

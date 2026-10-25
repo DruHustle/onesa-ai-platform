@@ -286,7 +286,9 @@ function Workspace() {
               no customer records or physical equipment are connected.
             </p>
             <button
-              disabled={busy || !readiness?.ready}
+              disabled={
+                busy || !readiness?.ready || !readiness?.simulation_enabled
+              }
               onClick={() =>
                 run(async () => {
                   const result = await twin<{ assets: { id: string }[] }>(

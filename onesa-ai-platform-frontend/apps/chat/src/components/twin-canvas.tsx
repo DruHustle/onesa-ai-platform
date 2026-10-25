@@ -666,7 +666,7 @@ function ValidViewer({
         <Canvas
           frameloop="demand"
           gl={{ stencil: true, antialias: true }}
-          shadows
+          shadows={{ type: THREE.PCFShadowMap }}
           dpr={[BUDGET.mobileDpr, BUDGET.desktopDpr]}
           camera={{ fov: 42, position: [3, 2, 4] }}
           fallback={fallback}

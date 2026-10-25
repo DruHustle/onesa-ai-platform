@@ -36,15 +36,19 @@ async function seeded(page: Page, origin: string) {
     .click();
   await expect(
     page.getByRole("heading", { name: "Demo pump 01", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByTestId("equipment-model-loaded")).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId("equipment-model-loaded")).toBeVisible({
+    timeout: 30000,
+  });
   await expect
-    .poll(async () =>
-      Number(
-        await page
-          .getByTestId("equipment-model-loaded")
-          .getAttribute("data-draw-calls"),
-      ),
+    .poll(
+      async () =>
+        Number(
+          await page
+            .getByTestId("equipment-model-loaded")
+            .getAttribute("data-draw-calls"),
+        ),
+      { timeout: 30000 },
     )
     .toBeGreaterThan(0);
 }
@@ -477,7 +481,7 @@ test("manual setup and actual AASX preview, explicit mapping review and activati
       name: "Activate reviewed workspace",
       exact: true,
     }),
-  ).toBeEnabled();
+  ).toBeEnabled({ timeout: 15000 });
   await page
     .getByRole("button", { name: "Activate reviewed workspace", exact: true })
     .click();
@@ -575,7 +579,9 @@ test("cold independent local simulator and saved work survive source outage", as
     )
     .toBe(200);
   await page.reload();
-  await expect(page.getByTestId("equipment-model-loaded")).toBeVisible();
+  await expect(page.getByTestId("equipment-model-loaded")).toBeVisible({
+    timeout: 30000,
+  });
   await expect(
     page.getByText(/Equipment inspection checklist ·/),
   ).toBeVisible();

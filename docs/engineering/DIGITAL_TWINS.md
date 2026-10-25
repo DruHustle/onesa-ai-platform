@@ -334,7 +334,10 @@ faces, longitudinal cutaway, ghost housings, isolated stator/impeller/winding/ro
 close-ups, both appearances and mobile viewport controls. Tests exercise moved-part
 picking, exact baseline restoration, saved view/source bindings, actual API restart
 and three route unmount/remount cycles with old WebGL context loss. Per-part bounded
-cap patches avoid full-screen overdraw; DPR and source complexity remain capped.
+cap patches avoid full-screen overdraw. The broad-panel room lighting uses a bounded
+64-pixel procedural cube prefilter; no external HDR texture is fetched. First-frame
+browser assertions allow the bounded software shader setup while still requiring an
+actual nonzero rendered frame. DPR and source complexity remain capped.
 Repeated shapes are merged within explicitly declared selectable BOM sets; no new
 remote decoder, texture service or identity-destroying shell fallback is introduced.
 

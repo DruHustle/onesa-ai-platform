@@ -38,7 +38,7 @@ test("section orientation, position and winding caps preserve actual empty bores
   torus.geometry.dispose();torus.material.dispose();
 });
 test("foreign motions, cap scope, duplicate choreography and invalid saved controls fail closed",()=>{
-  for(const mutate of [m=>m.inspection.motions[0].component_id="foreign",m=>m.inspection.motions[0].translation[0]=11,m=>m.inspection.motions.push(m.inspection.motions[0]),m=>m.inspection.closed_solids.push("foreign")]){
+  for(const mutate of [m=>m.inspection.motions[0].component_id="foreign",m=>m.inspection.motions[0].translation[0]=11,m=>m.inspection.motions[0].pivot[0]=1001,m=>m.inspection.motions.push(m.inspection.motions[0]),m=>m.inspection.closed_solids.push("foreign")]){
     const m=structuredClone(manifest);mutate(m);assert.throws(()=>validateManifest(m));
   }
   const state={schemaVersion:"1.0.0",assetInstanceId:"pump-01",selectedComponentId:null,highlightedComponentIds:[],hiddenComponentIds:[],isolatedComponentId:null,transparentSurroundings:false,observations:[],annotations:[],appearance:{theme:"light",locale:"en"},capabilities:{selection:true,annotations:true,statusMarkers:true}};
