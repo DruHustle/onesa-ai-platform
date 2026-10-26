@@ -915,3 +915,38 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
       JSON.stringify(metrics, null, 2),
     );
 });
+
+
+test("slow rendered frames still settle exactly and return to demand idle", async ({ page, baseURL }) => {
+  await page.addInitScript(() => {
+    const frame = window.requestAnimationFrame.bind(window);
+    const cancel = window.cancelAnimationFrame.bind(window);
+    const pending = new Map<number, number>();
+    window.requestAnimationFrame = callback => {
+      const timer = window.setTimeout(() => {
+        pending.set(timer, frame(time => { pending.delete(timer); callback(time); }));
+      }, 750);
+      return timer;
+    };
+    window.cancelAnimationFrame = handle => {
+      window.clearTimeout(handle);
+      const native = pending.get(handle);
+      if (native !== undefined) cancel(native);
+      pending.delete(handle);
+    };
+  });
+  await seeded(page, new URL(baseURL!).origin);
+  await page.getByText("Section, subassembly and reveal controls", { exact: true }).click();
+  const rendered = page.getByTestId("equipment-model-loaded");
+  await page.getByLabel("Explosion percent", { exact: true }).fill("45");
+  await expect.poll(() => rendered.evaluate(element => [
+    element.getAttribute("data-explode-fraction"), element.getAttribute("data-inspection-settled"),
+  ])).toEqual(["0.4500", "true"]);
+  await page.getByRole("button", { name: "Restore all", exact: true }).click();
+  await expect.poll(() => rendered.evaluate(element => [
+    element.getAttribute("data-explode-fraction"), element.getAttribute("data-inspection-settled"), element.getAttribute("data-assembled-restoration-error"),
+  ])).toEqual(["0.0000", "true", "0"]);
+  const frames = Number(await rendered.getAttribute("data-render-count"));
+  await page.waitForTimeout(1100);
+  expect(Number(await rendered.getAttribute("data-render-count")) - frames).toBeLessThanOrEqual(2);
+});

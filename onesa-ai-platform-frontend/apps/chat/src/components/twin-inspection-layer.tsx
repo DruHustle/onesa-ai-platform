@@ -11,6 +11,7 @@ import {
 import {
   descendants,
   inspectionPose,
+  inspectionAnimationFrame,
   sectionPlane,
   solidContainsPoint,
 } from "../lib/twin-inspection";
@@ -188,7 +189,7 @@ function updateGeometry(
       object.position.copy(pose.position);
       object.quaternion.copy(pose.quaternion);
     } else {
-      const weight = 1 - Math.exp(-12 * Math.min(0.1, delta));
+      const weight = 1 - Math.exp(-12 * delta);
       object.position.lerp(pose.position, weight);
       object.quaternion.slerp(pose.quaternion, weight);
       settled = false;
@@ -311,7 +312,7 @@ export default function InspectionLayer({
   const resources = useMemo(() => createResources(loaded), [loaded]);
   const stencilGroups = useRef(new Map<T.Mesh, T.Group>()),
     capPlanes = useRef(new Map<T.Mesh, T.Mesh>());
-  const progress = useRef({ value: 0, target: 0, settled: true }),
+  const progress = useRef({ value: 0, target: 0, settled: true, startedAt: 0 }),
     reduced = useRef(false);
   const view = state.inspection || DEFAULT_INSPECTION;
   useEffect(() => installEnvironment(scene, gl), [scene, gl]);
@@ -329,16 +330,20 @@ export default function InspectionLayer({
   useEffect(() => {
     progress.current.target = loaded.manifest.inspection ? view.explode : 0;
     progress.current.settled = false;
+    progress.current.startedAt = performance.now();
+    metrics.current?.setAttribute("data-inspection-settled", "false");
     invalidate();
-  }, [view.explode, view.scope, loaded, invalidate]);
+  }, [view.explode, view.scope, loaded, invalidate, metrics]);
   useEffect(() => {
     invalidate();
   }, [view, invalidate]);
   useFrame((_frame, delta) => {
     const motion = progress.current;
-    motion.value = reduced.current
+    const animation = inspectionAnimationFrame(performance.now() - motion.startedAt, delta);
+    const snap = reduced.current || animation.snap;
+    motion.value = snap
       ? motion.target
-      : T.MathUtils.damp(motion.value, motion.target, 12, Math.min(0.1, delta));
+      : T.MathUtils.damp(motion.value, motion.target, 12, animation.seconds);
     if (Math.abs(motion.value - motion.target) < 0.0005)
       motion.value = motion.target;
     const posesSettled = updateGeometry(
@@ -350,8 +355,8 @@ export default function InspectionLayer({
       capPlanes.current,
       gl,
       metrics.current,
-      delta,
-      reduced.current,
+      animation.seconds,
+      snap,
     );
     updateLabels(loaded, metrics.current, camera, size, view.labels);
     if (motion.value !== motion.target || !posesSettled) invalidate();

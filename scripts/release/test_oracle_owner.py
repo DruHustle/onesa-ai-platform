@@ -519,7 +519,7 @@ class GitHubEvidenceTests(unittest.TestCase):
                 else [
                     {
                         "id": 1 if "verify.yml" in leaf else 2,
-                        "event": "push",
+                        "event": self.bad.get("listed_event", "push"),
                         "head_branch": "main",
                     }
                 ]
@@ -583,6 +583,30 @@ class GitHubEvidenceTests(unittest.TestCase):
         refs = self.github.qualify(self.binding)
         self.assertEqual([r["run_id"] for r in refs], [1, 2])
         self.assertEqual(refs[0]["artifacts"][0]["id"], 10)
+
+    def test_fresh_owner_dispatched_native_main_CI_can_refresh_without_changing_source(
+        self,
+    ):
+        self.bad = {
+            "listed_event": "workflow_dispatch",
+            "run": {"event": "workflow_dispatch", "actor": {"login": o.OWNER}},
+        }
+        refs = self.github.qualify(self.binding)
+        self.assertEqual(refs[0]["candidate_commit"], self.binding["candidate_commit"])
+        self.assertEqual(refs[0]["run_attempt"], 1)
+        for change in [
+            {"actor": {"login": "foreign"}},
+            {"run_attempt": 2},
+            {"conclusion": "failure"},
+            {"updated_at": (o.timestamp() - timedelta(hours=25)).isoformat()},
+        ]:
+            self.bad["run"].update(change)
+            with self.subTest(change=change), self.assertRaises(o.Rejected):
+                self.github.qualify(self.binding)
+            self.bad["run"] = {
+                "event": "workflow_dispatch",
+                "actor": {"login": o.OWNER},
+            }
 
     def test_source_review_and_failed_skipped_missing_CI_fail_closed(self):
         cases = [

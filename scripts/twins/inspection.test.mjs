@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as T from "../../onesa-ai-platform-frontend/apps/chat/node_modules/three/build/three.module.js";
-import { capturePose, descendants, inspectionPose, sectionPlane, solidContainsPoint } from "../../onesa-ai-platform-frontend/apps/chat/src/lib/twin-inspection.ts";
+import { capturePose, descendants, inspectionPose, inspectionAnimationFrame, sectionPlane, solidContainsPoint } from "../../onesa-ai-platform-frontend/apps/chat/src/lib/twin-inspection.ts";
 import { validateManifest, validateState, DEFAULT_INSPECTION } from "../../onesa-ai-platform-frontend/apps/chat/src/lib/twin-viewer-contract.ts";
 const manifest=JSON.parse(fs.readFileSync(new URL("../../onesa-ai-platform-backend/app/twin_fixture_data/manifest.json",import.meta.url)));
 
@@ -43,4 +43,20 @@ test("foreign motions, cap scope, duplicate choreography and invalid saved contr
   }
   const state={schemaVersion:"1.0.0",assetInstanceId:"pump-01",selectedComponentId:null,highlightedComponentIds:[],hiddenComponentIds:[],isolatedComponentId:null,transparentSurroundings:false,observations:[],annotations:[],appearance:{theme:"light",locale:"en"},capabilities:{selection:true,annotations:true,statusMarkers:true}};
   for(const patch of [{scope:"foreign"},{explode:1.1},{section_position:Infinity},{section_axis:"q"}])assert.throws(()=>validateState({...state,inspection:{...DEFAULT_INSPECTION,...patch}},manifest));
+});
+
+test("inspection reaches exact poses by elapsed time even at low frame rate, excluding prior idle time",()=>{
+  assert.deepEqual(inspectionAnimationFrame(0,30),{seconds:0,snap:false});
+  assert.deepEqual(inspectionAnimationFrame(16,30),{seconds:.016,snap:false});
+  for(const cadence of [16,250,1000]){
+    let value=0,now=0,frames=0;
+    while(now<600+cadence){
+      const step=inspectionAnimationFrame(now,cadence/1000);
+      value=step.snap?1:T.MathUtils.damp(value,1,12,step.seconds);
+      frames++;if(step.snap)break;now+=cadence;
+    }
+    assert.equal(value,1,`exact final pose at ${cadence} ms cadence`);
+    assert.ok(frames<=Math.ceil(600/cadence)+1);
+  }
+  assert.deepEqual(inspectionAnimationFrame(-1,NaN),{seconds:0,snap:false});
 });

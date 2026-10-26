@@ -418,3 +418,15 @@ new provider account, billing/visibility change or real-data activation follows 
 Deferred: numerical simulation, engineering-accurate drawing reconstruction, full factory
 authoring, validated predictive models, immersive training, conversion workers and physical
 actuation. This implementation does not advertise those as available.
+
+### Transition timing correction
+
+Inspection transitions use elapsed active wall time from the latest explosion/scope
+request and copy the exact authored target on the next rendered frame after 600 ms.
+Prior idle time is excluded. This avoids an indefinite animation tail on slow renderers;
+reduced motion still snaps immediately and settled scenes return to demand rendering.
+The regression delays actual browser frames by 750 ms and preserves the existing
+five-second settling assertion. This is a deterministic scheduling test, not a device
+performance benchmark. Earlier measured profiles remain historical observations of
+source 8bb4; refreshed final-source profiles and native-phone status belong in the
+protected evidence packet before any new performance or hosted-release claim.
