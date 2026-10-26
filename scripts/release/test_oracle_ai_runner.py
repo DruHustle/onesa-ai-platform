@@ -402,6 +402,35 @@ class OciDescriptorTests(unittest.TestCase):
             r.scanned_configuration_digest(digest, {})
 
 
+class ProbeCapacityTests(unittest.TestCase):
+    def test_probe_fits_existing_one_cpu_daemon_without_expanding_two_cpu_ceiling(self):
+        for observed, expected in [(b"1\n", "1"), (b"2\n", "2"), (b"8\n", "2")]:
+            with (
+                self.subTest(observed=observed),
+                patch.object(r, "docker", return_value=observed) as docker,
+            ):
+                self.assertEqual(r.probe_cpu_limit(), expected)
+                docker.assert_called_once_with(
+                    "info", "--format", "{{.NCPU}}", timeout=15
+                )
+
+    def test_missing_invalid_or_failed_daemon_observation_never_defaults_to_capacity(
+        self,
+    ):
+        for observed in [b"", b"0", b"-1", b"1.5", b"unknown", b"10000"]:
+            with (
+                self.subTest(observed=observed),
+                patch.object(r, "docker", return_value=observed),
+                self.assertRaises(r.Refused),
+            ):
+                r.probe_cpu_limit()
+        with (
+            patch.object(r, "docker", side_effect=r.Refused("DAEMON_UNAVAILABLE")),
+            self.assertRaises(r.Refused),
+        ):
+            r.probe_cpu_limit()
+
+
 class ComponentCheckScopeTests(unittest.TestCase):
     def test_cybersecurity_requires_its_own_checks_without_twins_or_skips(self):
         api = r.required_probe_checks(
