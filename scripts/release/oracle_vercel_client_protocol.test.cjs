@@ -43,8 +43,23 @@ async function fixture(mode){
 if(process.argv[2]==='--fixture')fixture(process.argv[3]).catch(e=>{console.error(e);process.exit(1)});
 else{
  const test=require('node:test'),{execFile}=require('node:child_process');
+ for(const environment of ['staging','production'])test(`full pinned CLI ${environment} starts with read-only owner custody`,{timeout:30000},async()=>{
+  const bootstrap=fs.readFileSync(path.join(__dirname,'oracle_ai_frontend.py'),'utf8').match(/CLI_BOOTSTRAP = r"""([\s\S]*?)"""/)[1];
+  const before=Object.fromEntries(['auth.json','config.json'].map(name=>[name,fs.readFileSync('/private/creds/'+name)]));
+  const transport='/private/transport';fs.mkdirSync(transport,{mode:0o700,recursive:true});
+  fs.writeFileSync(path.join(transport,'scope.json'),JSON.stringify({request_budget:1,operation_id:crypto.randomUUID(),repository:'DruHustle/onesa-ai-platform',component:'frontend',environment}),{mode:0o600});
+  assert.equal(fs.existsSync('/tmp/onesa-vercel-cli'),false);
+  try {
+   const args=['-e',bootstrap,'--','--require','/private/guard.cjs','/opt/onesa-vercel-tool/node_modules/vercel/dist/index.js','deploy','--prebuilt','--yes','--no-wait','--json','--global-config','/tmp/onesa-vercel-cli','--project','prj_fixture','--meta','githubCommitRef='+ (environment==='production'?'main':'staging'),...(environment==='production'?['--prod']:[]),'--help'];
+   const result=await new Promise((resolve,reject)=>execFile(process.execPath,args,{timeout:25000,env:{PATH:process.env.PATH,HOME:'/tmp',ONESA_ORACLE_VERIFIER_PRELOAD:'1'}},(error,stdout,stderr)=>error?reject(Error(stderr||error.message)):resolve({stdout,stderr})));
+   assert.match(result.stdout+result.stderr,/Deploy your project to Vercel/);
+   assert.doesNotMatch(result.stdout+result.stderr,/EROFS|EACCES|unexpected error/i);
+   for(const [name,bytes]of Object.entries(before))assert.deepEqual(fs.readFileSync('/private/creds/'+name),bytes);
+   assert.equal(fs.existsSync(path.join(transport,'create-request.json')),false);
+  } finally {fs.rmSync('/tmp/onesa-vercel-cli',{recursive:true,force:true});}
+ });
  for(const environment of ['staging','production'])for(const mode of ['cold','warm'])test(`pinned prebuilt client ${environment} ${mode} cache creates exactly one deployment`,{timeout:30000},async()=>{
-  const result=await new Promise((resolve,reject)=>execFile(process.execPath,[__filename,'--fixture',mode,environment],{timeout:25000,env:{PATH:process.env.PATH}},(error,stdout,stderr)=>error?reject(Error(stderr||error.message)):resolve(JSON.parse(stdout))));
+  const result=await new Promise((resolve,reject)=>execFile(process.execPath,[__filename,'--fixture',mode,environment],{timeout:25000,env:{PATH:process.env.PATH,HOME:'/tmp'}},(error,stdout,stderr)=>error?reject(Error(stderr||error.message)):resolve(JSON.parse(stdout))));
   assert.equal(result.actual_creates,1);assert.equal(result.provider_credentials,false);assert.equal(result.environment,environment);
  });
 }
