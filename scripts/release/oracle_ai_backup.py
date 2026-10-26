@@ -408,7 +408,9 @@ def run(*, inspect=False):
                 "ai", legacy.private_json(legacy.CONFIG)
             )
             require(
-                settings["ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY"]
+                settings.get(
+                    "ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY", "/var/lib/onesa/twins"
+                )
                 == "/var/lib/onesa/twins",
                 "BACKUP_STORAGE_CONFIGURATION",
             )
