@@ -4,8 +4,19 @@ import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 
 const root = path.resolve(__dirname, "../../../..");
+const { navigateInterface } = createRequire(__filename)(
+  path.join(root, "scripts/ui_navigation.cjs"),
+) as {
+  navigateInterface: (
+    page: Page,
+    origin: string,
+    route: string,
+    options?: { authentication?: boolean; timeout?: number },
+  ) => Promise<unknown>;
+};
 const password = "twin-synthetic-fixture-only-123!";
 const owned = new WeakMap<Page, string>();
 async function headers(page: Page, origin: string) {
@@ -156,6 +167,41 @@ test.afterEach(async ({ page, baseURL }, testInfo) => {
     data: { current_password: password, confirmation: "DELETE MY ACCOUNT" },
   });
   expect(result.status()).toBe(204);
+});
+
+test("hosted navigation requires actual account content and tolerates pending optional IO", async ({
+  page,
+  baseURL,
+}) => {
+  const origin = new URL(baseURL!).origin;
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
+  await expect(
+    navigateInterface(page, origin, "/", { timeout: 750 }),
+  ).rejects.toThrow();
+  await register(page, origin);
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let held = false;
+  await page.route("**/api/v1/industrial/assets", async (route) => {
+    held = true;
+    await pending;
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: '{"code":"industrial_demo_disabled"}',
+    });
+  });
+  try {
+    await navigateInterface(page, origin, "/");
+    await expect.poll(() => held).toBe(true);
+    await expect(page.getByLabel("Message Onesa AI", { exact: true })).toBeVisible();
+    await expect(page.locator("canvas")).toHaveCount(0);
+  } finally {
+    release();
+  }
 });
 
 test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and reload", async ({
