@@ -360,22 +360,22 @@ not proof of GPU stalls. CPU submission is sampled separately.
 
 | Renderer / width | Assembled orbit median / p95 ms | Explosion median / p95 ms | Section movement median / p95 ms | Ghost orbit median / p95 ms | Winding close-up median / p95 ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| WebKit / Apple GPU / 1440 | 17 / 19 | 16 / 21 | 50 / 80 | 17 / 18 | 17 / 18 |
-| WebKit / Apple GPU / 390 | 17 / 19 | 17 / 22 | 50 / 119 | 17 / 19 | 17 / 18 |
-| Chromium / SwiftShader / 1440 | 85.3 / 101.9 | 86.4 / 117.4 | 150.5 / 233.5 | 126 / 157.8 | 18.2 / 27 |
-| Chromium / SwiftShader / 390 | 64.8 / 83.5 | 63 / 77.7 | 117.2 / 284.5 | 96.2 / 117.5 | 16.6 / 18.2 |
+| WebKit / Apple GPU / 1440 | 17 / 19 | 17 / 21 | 51 / 102 | 17 / 19 | 17 / 19 |
+| WebKit / Apple GPU / 390 | 17 / 18 | 17 / 22 | 51 / 71 | 17 / 19 | 17 / 19 |
+| Chromium / SwiftShader / 1440 | 86.8 / 119.5 | 85.9 / 115.8 | 134 / 233.2 | 116.9 / 146.2 | 17.5 / 25.2 |
+| Chromium / SwiftShader / 390 | 72.9 / 112.1 | 58.4 / 78.8 | 116.7 / 162.4 | 97.6 / 131.4 | 16.7 / 18.6 |
 
 Fully exploded orbit was 17.0/19.0 ms on Apple GPU at 1440,
 and 17.0/18.0 ms at 390. SwiftShader measured
-63.8/84.3 and 52.6/64.8 ms respectively.
+63.7/84.8 and 52.5/67.3 ms respectively.
 Each distribution's sample count and raw observations are retained in the private
 packet. Software full-assembly interaction is visibly slower and does not qualify
 accelerated-desktop or mobile performance. Lists, details and deterministic evidence
 remain available on unsupported/slow graphics. Physical-phone qualification remains
 pending; viewport emulation is not hardware.
 
-Cold transfer / hash-and-geometry validation / GLTF parse was 65.00/2.00/7.00 ms on WebKit,
-and 35.00/2.60/8.40 ms on Chromium. First actual settled render was 246/250 ms. Total
+Cold transfer / hash-and-geometry validation / GLTF parse was 64.00/2.00/6.00 ms on WebKit,
+and 31.60/3.90/7.30 ms on Chromium. First actual settled render was 241/269 ms. Total
 preparation also includes mapping/material setup and is reported separately by the
 viewer, rather than attributed entirely to parsing. These are single cold-load
 observations, not percentile estimates.
@@ -428,5 +428,22 @@ reduced motion still snaps immediately and settled scenes return to demand rende
 The regression delays actual browser frames by 750 ms and preserves the existing
 five-second settling assertion. This is a deterministic scheduling test, not a device
 performance benchmark. Earlier measured profiles remain historical observations of
-source 8bb4; refreshed final-source profiles and native-phone status belong in the
-protected evidence packet before any new performance or hosted-release claim.
+source 8bb4. The table above was refreshed against application source
+`91b1507481c0f64d3663a8f9f375bf4ad5f5e249` with the corrected elapsed-time transition.
+Both raw profiles retain the exact source, model and functional file hashes plus
+the profiling-harness working-diff hash. The harness observes actual ordinary-Chat
+startup responses and a visible composer before a 500 ms Chat settle window; it
+does not make a disabled optional endpoint or global network-idle heuristic a
+viewer prerequisite. Model timing begins only when the owned model is requested.
+Browser exceptions retain their phase and message and prevent a successful profile;
+failed intermediate runs remain private evidence. Neither this measurement nor
+application-byte equivalence transfers release authorization to a later commit.
+Physical-phone qualification and exact-source hosted release acceptance remain
+separate pending checks in the protected packet.
+
+The AI-only `infra/deployment/oracle-private-twins.compose.yaml` overlay adds only
+explicit private host binds and refuses to create missing host paths. It does not
+enable Twins. The owner provisions separate UID/GID10001 mode0700 staging and
+production directories, validates the full root-owned Compose identity, coordinates
+DB/file backups and applies the additive schema before separately authorized
+activation. Existing ports, ingress, credentials and other workloads are preserved.
