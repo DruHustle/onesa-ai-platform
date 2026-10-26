@@ -54,6 +54,20 @@ browser tests before recording detailed-model acceptance.
 4. Exercise isolated PostgreSQL, actual local MQTT and actual browser journeys, including foreign-owner access, malicious imports, model replacement and persisted reports. Measure demo performance on the observed local environment.
 5. Regenerate contracts, update maintained user/engineering references, run required checks, commit/push a reviewable feature PR to dev. Qualify staging only through established source-bound authority. Keep production flags and independently deployed components unchanged until separately qualified.
 
+## Reference preparation follow-up — 2026-10-26
+
+Keep the embedded static/untextured 4 MiB/100-node/100,000-triangle pilot profile.
+The detailed reference exposed seat gaps, missing drilled bores and conductor/core
+intersections. Correct the local parametric source and use pinned offline Manifold
+3.5.4 solid booleans for real passages/unions, retaining the 61 geometry identities.
+Its separately locked authoring tool is absent from browser/API runtime images and
+adds no custom shared package or peer startup order. The 97,034-triangle derivative
+fits the existing boundary; larger/textured manufacturer models remain unsupported.
+Existing installed revisions and saved views are retained until explicit reviewed
+mapping/activation. Browser timing separates transfer, validation, parse and first
+actual render; sustained scripted profiles remain distinct from native FPS and phone
+hardware. See the current guide and protected evidence for observed outcomes.
+
 ## Consequences
 
 The first slice supports investigation, not numerical simulation, drawing reconstruction, factory authoring, validated predictive maintenance, immersive training or physical control. Unit and coordinate provenance travel with models; a visualization mesh is not planning geometry. Bounded core-format support deliberately rejects unsupported rendering features rather than loading untrusted remote decoders or assets. Hosted storage and real equipment acceptance remain explicit operational checks.

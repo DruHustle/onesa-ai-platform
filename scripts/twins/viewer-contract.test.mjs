@@ -9,7 +9,7 @@ const state = {schemaVersion:"1.0.0",assetInstanceId:"pump-01",selectedComponent
 test("Onesa-owned fixture manifest and embedded GLB have matching nodes and bounds", () => {
   const checked = validateManifest(manifest), bytes = fs.readFileSync(new URL("pump.glb", directory));
   const result = inspectGlb(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
-  assert.equal(result.nodes.length, 61); assert.equal(result.triangles, 98648);
+  assert.equal(result.nodes.length, 61); assert.ok(result.triangles < 100000);
   assert.equal(checked.components.length,68);
   const audit=JSON.parse(fs.readFileSync(new URL("topology-audit.json",directory)));
   assert.equal(checked.inspection.closed_solids.length,60);

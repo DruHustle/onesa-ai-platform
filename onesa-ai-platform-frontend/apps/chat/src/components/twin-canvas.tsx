@@ -51,6 +51,9 @@ export type Loaded = {
   gltf: GLTF;
   mapping: Map<THREE.Object3D, string>;
   loadMs: number;
+  transferMs: number;
+  validationMs: number;
+  parseMs: number;
   startedAt: number;
   triangles: number;
   manifest: ModelManifest;
@@ -89,6 +92,7 @@ export async function prepareModel(
 ): Promise<Loaded> {
   const started = performance.now(),
     buffer = await load(signal, progress);
+  const transferred = performance.now();
   if (signal.aborted) throw new Error("Model load cancelled");
   if (buffer.byteLength !== manifest.artifact.byteLength)
     throw new Error("Model byte identity mismatch");
@@ -105,7 +109,9 @@ export async function prepareModel(
     manifest.mappings.some((m) => !inspected.nodes.includes(m.sceneNode))
   )
     throw new Error("Model revision mapping is incomplete");
+  const validated = performance.now();
   const gltf = await new GLTFLoader().parseAsync(buffer, "");
+  const parsed = performance.now();
   try {
     const mapping = new Map<THREE.Object3D, string>(),
       bindings = new Map(
@@ -140,6 +146,9 @@ export async function prepareModel(
       gltf,
       mapping,
       loadMs: performance.now() - started,
+      transferMs: transferred - started,
+      validationMs: validated - transferred,
+      parseMs: parsed - validated,
       startedAt: started,
       triangles: inspected.triangles,
       manifest,
@@ -274,7 +283,10 @@ function recordRender(
     Number(element.dataset.renderCount || "0") + 1,
   );
   element.dataset.gpuGeometries = String(renderer.info.memory.geometries);
+  element.dataset.gpuTextures = String(renderer.info.memory.textures);
+  element.dataset.shaderPrograms = String(renderer.info.programs?.length || 0);
   element.dataset.drawCalls = String(renderer.info.render.calls);
+  element.dataset.renderedTriangles = String(renderer.info.render.triangles);
   const canvas = renderer.domElement;
   const settled =
     canvas.clientWidth > 0 &&
@@ -664,6 +676,9 @@ function ValidViewer({
         ref={metrics}
         data-testid="equipment-model-loaded"
         data-load-ms={Math.round(loaded.loadMs)}
+        data-transfer-ms={loaded.transferMs.toFixed(2)}
+        data-validation-ms={loaded.validationMs.toFixed(2)}
+        data-parse-ms={loaded.parseMs.toFixed(2)}
         data-triangles={loaded.triangles}
         style={{ height: "100%", minHeight: 300, position: "relative" }}
       >

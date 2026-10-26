@@ -7,6 +7,7 @@ import * as T from "../../onesa-ai-platform-frontend/apps/chat/node_modules/thre
 import { mergeGeometries, mergeVertices, toCreasedNormals } from "../../onesa-ai-platform-frontend/apps/chat/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js";
 import { GLTFExporter } from "../../onesa-ai-platform-frontend/apps/chat/node_modules/three/examples/jsm/exporters/GLTFExporter.js";
 import fs from "node:fs";
+import { booleanGeometry } from "./solid-tools/solids.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -54,16 +55,16 @@ function box(x,y,z,w,h,d) {
   const g = new T.ExtrudeGeometry(s,{depth:d,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.002,bevelThickness:.002,curveSegments:3});
   return g.translate(x,y,z-d/2);
 }
-function revolve(profile, x=0, y=Y, z=0, segments=48) {
+function revolve(profile, x=0, y=Y, z=0, segments=40) {
   const pts = profile.map(([axial,radius]) => new T.Vector2(radius,axial));
   return new T.LatheGeometry(pts,segments).rotateZ(-Math.PI/2).translate(x,y,z);
 }
-function ring(x,inner,outer,width,y=Y,z=0,segments=48) {
+function ring(x,inner,outer,width,y=Y,z=0,segments=40) {
   return revolve([[-width/2,inner],[-width/2,outer-.002],[-width/2+.002,outer],
     [width/2-.002,outer],[width/2,outer-.002],[width/2,inner],[-width/2,inner]],x,y,z,segments);
 }
 function torus(x,radius,tube,y=Y,z=0) { return new T.TorusGeometry(radius,tube,8,48).rotateY(Math.PI/2).translate(x,y,z); }
-function cylinder(x,radius,length,y=Y,z=0,segments=48) {
+function cylinder(x,radius,length,y=Y,z=0,segments=40) {
   return new T.CylinderGeometry(radius,radius,length,segments,1,false).rotateZ(Math.PI/2).translate(x,y,z);
 }
 function group(id,label,parent,offset) {
@@ -126,6 +127,7 @@ function bolt(x,y,z,axis="x") {
   const washer=new T.TorusGeometry(.013,.003,6,18).rotateX(Math.PI/2).translate(0,.026,0);
   const g=combine([shaft,head,washer]);
   if(axis==="x") g.rotateZ(-Math.PI/2);
+  if(axis==="-x") g.rotateZ(Math.PI/2);
   return g.translate(x,y,z);
 }
 function bearing(prefix,label,parent,x,shift) {
@@ -141,7 +143,7 @@ function bearing(prefix,label,parent,x,shift) {
   const balls=[],cage=[];
   for(let i=0;i<9;i++){
     const a=i*Math.PI*2/9, cy=Y+.073*Math.cos(a), cz=.073*Math.sin(a);
-    balls.push(new T.SphereGeometry(.016,16,10).translate(x,cy,cz));
+    balls.push(new T.SphereGeometry(.016,16,8).translate(x,cy,cz));
     // Open pockets: two narrow cage rails joined by actual posts between balls.
     const b=a+Math.PI/9;
     cage.push(cylinder(x,.003,.039,Y+.073*Math.cos(b),.073*Math.sin(b),8));
@@ -156,8 +158,8 @@ group("pump","Pump assembly",null,[-.35,0,0]);
 group("motor","Motor",null,[.4,0,0]);
 group("coupling","Flexible coupling",null,[.1,0,0]);
 part("base","Machined mounting base",null,
-  combine([box(.38,.055,0,3.2,.075,.8),box(.38,.12,-.31,3.0,.055,.08),box(.38,.12,.31,3.0,.055,.08)]),
-  materials.darkSteel,[0,-.12,0],{combined:"Base plate and two mounting rails are intentionally combined."});
+  booleanGeometry([box(.38,.055,0,3.2,.075,.8),box(.38,.12,-.20,3.0,.055,.18),box(.38,.12,.20,3.0,.055,.18)],[-.77,-.14,1.0,1.36].flatMap(x=>(x===-.14?[-.14,.14]:[-.20,.20]).map(z=>cylinder(0,.009,.3,0,0,16).rotateZ(Math.PI/2).translate(x,.10,z)))),
+  materials.darkSteel,[0,-.12,0],{combined:"Base and two mounting rails with eight through mounting bores, combined as one part. Illustrative feet placement, not an installation drawing."});
 
 // Volute: open central impeller chamber, a growing annular flow passage and a
 // tangential discharge. These surfaces are illustrative, not validated CFD geometry.
@@ -178,19 +180,23 @@ function voluteWall(){
   indices.push(0,2,1,0,3,2,steps*4,steps*4+1,steps*4+2,steps*4,steps*4+2,steps*4+3);
   const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return g;
 }
-part("casing","Casing","pump",combine([voluteWall(),ring(-.9,.102,.326,.035),ring(-.64,.042,.374,.035),
-  box(-.77,.27,-.19,.24,.25,.1),box(-.77,.27,.19,.24,.25,.1)]),materials.paint,[-.35,0,0],
-  {housing:true,combined:"Volute wall, back/front rims and mounting feet. The impeller chamber and flow passage remain empty."});
+part("casing","Casing","pump",booleanGeometry([voluteWall(),ring(-.9,.102,.326,.035),ring(-.64,.042,.374,.035),
+  box(-.77,.2765,-.20,.24,.25,.1),box(-.77,.2765,.20,.24,.25,.1)],
+  [cylinder(0,.068,.7,0,0,40).rotateZ(Math.PI/2).translate(-.77,1.10,.27),...Array.from({length:8},(_,i)=>cylinder(-.9,.0105,.10,Y+.277*Math.cos(i*Math.PI/4),.277*Math.sin(i*Math.PI/4),16)),...[-.20,.20].map(z=>cylinder(0,.009,.4,0,0,16).rotateZ(Math.PI/2).translate(-.77,.27,z))]),materials.paint,[-.35,0,0],
+  {housing:true,combined:"Boolean-unioned volute, rims and feet; open tangential discharge passage and eight cover bores. Illustrative passage proportions; no hydraulic validation."});
 part("suction-cover","Suction cover and inlet flange","pump",
-  combine([revolve([[-.18,.098],[-.18,.16],[-.15,.16],[-.15,.115],[-.04,.115],[.0,.30],[.026,.30],[.026,.098],[-.18,.098]],-.99),
-    ring(-1.17,.099,.17,.025)]),materials.paint,[-.95,.12,0],{housing:true,rotation:[0,.12,0],combined:"Cast inlet cover and neck; the inlet bore is open."});
+  booleanGeometry([revolve([[-.18,.098],[-.18,.16],[-.15,.16],[-.15,.115],[-.04,.115],[.0,.30],[.026,.30],[.026,.098],[-.18,.098]],-.949),
+    ring(-1.129,.099,.17,.025)],
+    [...Array.from({length:8},(_,i)=>cylinder(-.936,.0105,.07,Y+.277*Math.cos(i*Math.PI/4),.277*Math.sin(i*Math.PI/4),16)),
+     ...Array.from({length:4},(_,i)=>cylinder(-1.129,.0105,.07,Y+.14*Math.cos(Math.PI/4+i*Math.PI/2),.14*Math.sin(Math.PI/4+i*Math.PI/2),16))]),materials.paint,[-.95,.12,0],{housing:true,rotation:[0,.12,0],combined:"Cast inlet cover and neck; the inlet bore is open."});
 part("discharge","Tangential discharge neck and flange","pump",
-  combine([ring(0,.068,.088,.30,0,0,40).rotateZ(Math.PI/2).translate(-.77,1.08,.27),
-    ring(0,.068,.135,.027,0,0,40).rotateZ(Math.PI/2).translate(-.77,1.24,.27)]),
+  booleanGeometry([ring(0,.068,.088,.41,0,0,40).rotateZ(Math.PI/2).translate(-.77,1.035,.27),
+    ring(0,.068,.135,.027,0,0,40).rotateZ(Math.PI/2).translate(-.77,1.24,.27)],
+    Array.from({length:4},(_,i)=>cylinder(0,.01,.07,0,0,16).rotateZ(Math.PI/2).translate(-.77+.108*Math.cos(Math.PI/4+i*Math.PI/2),1.24,.27+.108*Math.sin(Math.PI/4+i*Math.PI/2)))),
   materials.paint,[-.35,.38,.12],{housing:true,combined:"Hollow discharge neck and flange; illustrative volute/neck junction."});
-part("cover-gasket","Pump cover gasket","pump",ring(-.927,.105,.306,.006),materials.rubber,[-.7,.08,0]);
+part("cover-gasket","Pump cover gasket","pump",booleanGeometry([ring(-.9205,.105,.306,.006)],Array.from({length:8},(_,i)=>cylinder(-.9205,.0105,.04,Y+.277*Math.cos(i*Math.PI/4),.277*Math.sin(i*Math.PI/4),16))),materials.rubber,[-.7,.08,0]);
 part("impeller","Impeller","pump",(()=>{
-  const items=[ring(-.79,.043,.254,.022),ring(-.855,.103,.245,.015)];
+  const items=[ring(-.79,.043,.254,.022),ring(-.855,.103,.245,.015),ring(-.803,.031,.065,.082)];
   for(let i=0;i<7;i++){
     const s=new T.Shape();
     s.moveTo(.07,0);s.bezierCurveTo(.12,-.01,.19,-.04,.245,-.08);
@@ -200,9 +206,9 @@ part("impeller","Impeller","pump",(()=>{
   } return combine(items);
 })(),materials.stainless,[-.68,.2,.05],{combined:"One cast reference impeller: two shrouds and seven curved, separately surfaced vanes with open passages."});
 part("coupling-shaft","Coupling Shaft","pump",
-  revolve([[-.64,0],[-.64,.031],[-.48,.031],[-.48,.038],[.02,.038],[.02,.028],[.24,.028],[.24,0],[-.64,0]],-.15),
+  revolve([[-.85,0],[-.85,.031],[-.67,.031],[-.67,.035],[.10,.035],[.10,.028],[.30,.028],[.30,0],[-.85,0]],0),
   materials.steel,[-.15,.05,.38],{combined:"Stepped pump shaft; the coupling hubs and insert are separate parts."});
-part("shaft-sleeve","Pump shaft sleeve","pump",ring(-.54,.032,.048,.17),materials.stainless,[-.35,.12,.27]);
+part("shaft-sleeve","Pump shaft sleeve","pump",ring(-.54,.0355,.048,.17),materials.stainless,[-.35,.12,.27]);
 part("seal-seat","Mechanical seal · stationary ceramic seat","pump",ring(-.61,.049,.071,.025),materials.ceramic,[-.5,-.1,0]);
 part("seal-face","Mechanical seal · rotating carbon face","pump",ring(-.57,.049,.07,.03),materials.carbon,[-.3,-.1,0]);
 part("seal-o-ring","Mechanical seal · elastomer O-ring","pump",torus(-.625,.066,.004),materials.rubber,[-.6,-.12,.07]);
@@ -210,8 +216,8 @@ part("seal-spring","Mechanical seal · spring and retainer","pump",(()=>{
   const pts=[];for(let i=0;i<=240;i++){const a=i/240*Math.PI*12;pts.push(new T.Vector3(-.55+i/240*.07,Y+.055*Math.cos(a),.055*Math.sin(a)));}
   const curve=new T.CatmullRomCurve3(pts);return combine([new T.TubeGeometry(curve,240,.0025,5,false),ring(-.48,.045,.065,.008)]);
 })(),materials.steel,[-.13,-.12,.12],{combined:"Helical spring and retainer, one selectable seal element. Spring end faces are open; this component does not receive section caps."});
-part("bearing-frame","Pump bearing frame","pump",combine([ring(-.14,.113,.145,.52),
-  box(-.14,.27,-.12,.42,.23,.07),box(-.14,.27,.12,.42,.23,.07)]),materials.paint,[-.28,-.1,0],
+part("bearing-frame","Pump bearing frame","pump",booleanGeometry([ring(-.14,.1102,.145,.52),
+  box(-.14,.3365,-.10,.42,.37,.15),box(-.14,.3365,.10,.42,.37,.15)],[-.14,.14].map(z=>cylinder(0,.009,.5,0,0,16).rotateZ(Math.PI/2).translate(-.14,.33,z))),materials.paint,[-.28,-.1,0],
   {housing:true,combined:"Hollow bearing housing and mounting feet; races and rolling elements are separate."});
 bearing("bearing","Bearing","pump",-.34,[-.24,.18,.24]);
 bearing("pump-outboard-bearing","Outboard bearing","pump",.07,[.12,.18,-.24]);
@@ -219,43 +225,48 @@ part("bearing-cover","Bearing frame end cover","pump",ring(.13,.03,.14,.025),mat
 part("bearing-gasket","Bearing cover gasket","pump",ring(.114,.035,.13,.004),materials.rubber,[.33,.05,0]);
 part("pump-spacer","Pump bearing spacer","pump",ring(-.12,.039,.052,.26),materials.steel,[-.1,-.05,-.25]);
 
-part("coupling-pump-hub","Pump-side coupling hub","coupling",ring(.25,.028,.09,.105),materials.steel,[-.12,.13,0]);
+part("coupling-pump-hub","Pump-side coupling hub","coupling",booleanGeometry([ring(.25,.028,.09,.105),...Array.from({length:3},(_,i)=>cylinder(.33,.012,.065,Y+.07*Math.cos(i*Math.PI*2/3),.07*Math.sin(i*Math.PI*2/3),16))]),materials.steel,[-.12,.13,0]);
 part("coupling-spider","Elastomer coupling insert","coupling",(()=>{
-  const parts=[ring(.34,.032,.067,.055)];
-  for(let i=0;i<6;i++){const a=i*Math.PI/3;parts.push(box(.34,Y+.067*Math.cos(a),.067*Math.sin(a),.055,.032,.032));}
+  const parts=[ring(.345,.032,.048,.055)];
+  for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;parts.push(box(0,.061,0,.055,.026,.025).rotateX(a).translate(.345,Y,0));}
   return combine(parts);
 })(),materials.rubber,[.12,.28,0],{combined:"One molded insert with six real lobes; not a coupling stress model."});
-part("coupling-motor-hub","Motor-side coupling hub","coupling",ring(.44,.028,.09,.105),materials.steel,[.33,.13,0]);
+part("coupling-motor-hub","Motor-side coupling hub","coupling",booleanGeometry([ring(.44,.028,.09,.105),...Array.from({length:3},(_,i)=>cylinder(.36,.012,.065,Y+.07*Math.cos(Math.PI/3+i*Math.PI*2/3),.07*Math.sin(Math.PI/3+i*Math.PI*2/3),16))]),materials.steel,[.33,.13,0]);
 part("coupling-guard","Coupling guard","coupling",(()=>{
   const shape=new T.Shape();shape.absarc(0,0,.15,0,Math.PI,false);
-  shape.lineTo(-.115,0);shape.absarc(0,0,.115,Math.PI,0,true);shape.closePath();
-  return new T.ExtrudeGeometry(shape,{depth:.38,bevelEnabled:true,bevelSize:.003,bevelThickness:.003,bevelSegments:2,curveSegments:24}).rotateY(Math.PI/2).translate(.12,Y-.02,0);
+  shape.lineTo(-.143,0);shape.absarc(0,0,.143,Math.PI,0,true);shape.closePath();
+  return booleanGeometry([new T.ExtrudeGeometry(shape,{depth:.38,bevelEnabled:true,bevelSize:.001,bevelThickness:.001,bevelSegments:1,curveSegments:24}).rotateY(Math.PI/2).translate(.12,Y-.02,0),...[-.146,.146].map(z=>box(.31,.3965,z,.38,.49,.008))]);
 })(),materials.motor,[.1,.65,.12],{housing:true,rotation:[.15,0,0]});
 
 const MX=1.18;
 part("motor-housing","Motor finned housing","motor",(()=>{
-  const items=[ring(MX,.24,.262,.70),box(MX,.25,-.22,.56,.22,.13),box(MX,.25,.22,.56,.22,.13)];
+  const items=[ring(MX,.2332,.262,.78),box(MX,.2615,-.20,.56,.22,.13),box(MX,.2615,.20,.56,.22,.13)];
   for(let i=0;i<20;i++){const a=i*Math.PI*2/20;items.push(box(0,0,0,.65,.035,.008).rotateX(a).translate(MX,Y+.274*Math.cos(a),.274*Math.sin(a)));}
-  return combine(items);
+  return booleanGeometry(items,[1.0,1.36].flatMap(x=>[-.20,.20].map(z=>cylinder(0,.009,.4,0,0,16).rotateZ(Math.PI/2).translate(x,.27,z))));
 })(),materials.motor,[.4,.12,.1],{housing:true,combined:"Hollow finned cast housing with mounting feet; no internal rotor/stator substitute."});
 part("motor-stator","Stator laminated core","motor",(()=>{
   const outer=new T.Shape();outer.absarc(0,0,.233,0,Math.PI*2,false);
-  const hole=new T.Path();for(let i=0;i<96;i++){const a=-i/96*Math.PI*2,r=i%8<3?.128:.183;
-    if(!i)hole.moveTo(r*Math.cos(a),r*Math.sin(a));else hole.lineTo(r*Math.cos(a),r*Math.sin(a));}
+  // Slot centers are authored in the same Y/Z frame as the conductors below.
+  const hole=new T.Path();for(let i=0;i<192;i++){const theta=-i/192*Math.PI*2;
+    const off=Math.abs(Math.atan2(Math.sin(theta*12),Math.cos(theta*12)))/12;
+    const r=off<=.10?.195:.128, u=-r*Math.sin(theta),v=r*Math.cos(theta);
+    if(!i)hole.moveTo(u,v);else hole.lineTo(u,v);}
   hole.closePath();outer.holes.push(hole);
   return new T.ExtrudeGeometry(outer,{depth:.46,bevelEnabled:false,curveSegments:48,steps:1}).rotateY(Math.PI/2).translate(.95,Y,0);
 })(),materials.darkSteel,[.4,.42,0],{combined:"One selectable slotted lamination-stack envelope. Individual sheet edges are visible on the separate rotor stack."});
 for(let phase=0;phase<3;phase++){
   const coils=[];
   for(let slot=phase;slot<12;slot+=3)for(let turn=0;turn<2;turn++){
-    const a=slot*Math.PI*2/12, tangent=new T.Vector3(0,-Math.sin(a),Math.cos(a)), radial=new T.Vector3(0,Math.cos(a),Math.sin(a));
-    const pts=[];for(let k=0;k<80;k++){
-      const t=k/80*Math.PI*2;
-      const axial=.28*Math.sign(Math.cos(t))*Math.pow(Math.abs(Math.cos(t)),.35);
-      const lateral=(.028+turn*.006)*Math.sin(t);
-      pts.push(new T.Vector3(MX+axial,Y,0).addScaledVector(radial,.174+turn*.003).addScaledVector(tangent,lateral));
-    }
-    coils.push(new T.TubeGeometry(new T.CatmullRomCurve3(pts,true),48,.004,8,true));
+    const a=slot*Math.PI*2/12,b=a+Math.PI/2,r0=.150+turn*.011,r1=.177+turn*.011;
+    const point=(x,theta,r)=>new T.Vector3(MX+x,Y+r*Math.cos(theta),r*Math.sin(theta));
+    const pts=[];
+    // Four axial legs fit each slot at distinct radial seats. End turns cross
+    // between slots strictly outside the laminated stack's +/- .23 end faces.
+    for(let k=0;k<9;k++)pts.push(point(-.245+k/8*.49,a,r0));
+    for(let k=1;k<=24;k++){const t=k/24;pts.push(point(.245+(.035+phase*.011+turn*.008)*Math.sin(Math.PI*t),a+(b-a)*t,r0+(r1-r0)*t));}
+    for(let k=1;k<=8;k++)pts.push(point(.245-k/8*.49,b,r1));
+    for(let k=1;k<24;k++){const t=k/24;pts.push(point(-.245-(.035+phase*.011+turn*.008)*Math.sin(Math.PI*t),b+(a-b)*t,r1+(r0-r1)*t));}
+    coils.push(new T.TubeGeometry(new T.CatmullRomCurve3(pts,true),56,.0035,8,true));
   }
   part("winding-"+String.fromCharCode(97+phase),"Copper winding phase "+String.fromCharCode(65+phase),"motor",combine(coils),materials.copper,
     [.4,.45*Math.cos(phase*Math.PI*2/3),.45*Math.sin(phase*Math.PI*2/3)],
@@ -269,7 +280,7 @@ part("motor-rotor","Rotor lamination stack","motor",(()=>{
   const hole=(cx,cy,r,n)=>{const p=new T.Path();for(let i=0;i<n;i++){const a=-i/n*Math.PI*2;
     if(!i)p.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a));else p.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}p.closePath();return p;};
   shape.holes.push(hole(0,0,.035,24));
-  for(let i=0;i<18;i++){const a=i*Math.PI*2/18;shape.holes.push(hole(.117*Math.cos(a),.117*Math.sin(a),.0064,10));}
+  for(let i=0;i<18;i++){const a=i*Math.PI*2/18;shape.holes.push(hole(.117*Math.cos(a),.117*Math.sin(a),.0064,8));}
   const pack=new T.ExtrudeGeometry(shape,{depth:.031,bevelEnabled:false,curveSegments:4,steps:1}).rotateY(Math.PI/2);
   const slices=[];for(let i=0;i<12;i++)slices.push(pack.clone().translate(MX-.20+i*.034,Y,0));pack.dispose();return combine(slices);
 })(),materials.darkSteel,[.8,0,.22],{combined:"Twelve modeled slotted lamination packs share one selectable rotor-core identity. Individual thin sheets within each pack are intentionally combined. Actual cage-bar bores remain empty."});
@@ -277,12 +288,12 @@ part("rotor-cage","Rotor conductor cage","motor",(()=>{
   const bars=[ring(MX-.24,.112,.132,.016),ring(MX+.24,.112,.132,.016)];
   for(let i=0;i<18;i++){const a=i*Math.PI*2/18;bars.push(cylinder(MX,.0054,.48,Y+.117*Math.cos(a),.117*Math.sin(a),8));}return combine(bars);
 })(),materials.copper,[.86,0,-.14],{combined:"Eighteen actual conductor bars and two end rings. Illustrative squirrel-cage geometry."});
-part("motor-shaft","Motor rotor shaft","motor",revolve([[-.61,0],[-.61,.028],[-.28,.028],[-.28,.035],[.28,.035],[.28,.025],[.61,.025],[.61,0],[-.61,0]],MX),
+part("motor-shaft","Motor rotor shaft","motor",revolve([[-.76,0],[-.76,.028],[-.38,.028],[-.38,.035],[.38,.035],[.38,.025],[.61,.025],[.61,0],[-.76,0]],MX),
   materials.steel,[1.15,0,0]);
-bearing("motor-de-bearing","Motor drive-end bearing","motor",.78,[.22,-.2,.22]);
-bearing("motor-nde-bearing","Motor non-drive-end bearing","motor",1.58,[.8,-.2,-.22]);
-part("motor-front-cover","Motor drive-end cover","motor",combine([ring(.72,.04,.26,.05),ring(.765,.036,.113,.04)]),materials.motor,[.08,.08,.1],{housing:true});
-part("motor-back-cover","Motor non-drive-end cover","motor",combine([ring(1.63,.029,.26,.05),ring(1.59,.028,.113,.04)]),materials.motor,[1.1,.08,0],{housing:true,rotation:[0,.1,0]});
+bearing("motor-de-bearing","Motor drive-end bearing","motor",.84,[.22,-.2,.22]);
+bearing("motor-nde-bearing","Motor non-drive-end bearing","motor",1.52,[.8,-.2,-.22]);
+part("motor-front-cover","Motor drive-end cover","motor",booleanGeometry([ring(.765,.0355,.262,.05),ring(.84,.1102,.132,.11)]),materials.motor,[.08,.08,.1],{housing:true});
+part("motor-back-cover","Motor non-drive-end cover","motor",booleanGeometry([ring(1.595,.0255,.262,.05),ring(1.52,.1102,.132,.11)],Array.from({length:4},(_,i)=>cylinder(1.595,.0105,.08,Y+.205*Math.cos(Math.PI/4+i*Math.PI/2),.205*Math.sin(Math.PI/4+i*Math.PI/2),16))),materials.motor,[1.1,.08,0],{housing:true,rotation:[0,.1,0]});
 part("motor-fan","Motor cooling fan","motor",(()=>{
   const items=[ring(1.75,.026,.07,.035)];for(let i=0;i<10;i++){const a=i*Math.PI*2/10;
     items.push(box(0,.13,0,.022,.13,.04).rotateX(a).translate(1.75,Y,0));}return combine(items);
@@ -300,18 +311,18 @@ part("terminal-box","Motor terminal enclosure","motor",combine([
   materials.motor,[.4,.8,0],{housing:true,combined:"Terminal enclosure and lid retained as one component. Electrical terminals are outside this mechanical reference's declared internal scope."});
 for(let i=0;i<8;i++){
   const a=i*Math.PI/4;
-  part("pump-cover-bolt-"+i,"Pump cover fastener "+(i+1),"pump",bolt(-.94,Y+.277*Math.cos(a),.277*Math.sin(a)),
+  part("pump-cover-bolt-"+i,"Pump cover fastener "+(i+1),"pump",bolt(-.923,Y+.277*Math.cos(a),.277*Math.sin(a),"-x"),
     materials.steel,[-1.02,.12+.12*Math.cos(a),.12*Math.sin(a)],{combined:"Hex head, washer and shank. Cosmetic thread helices are intentionally omitted."});
 }
 for(let i=0;i<4;i++){
   const a=Math.PI/4+i*Math.PI/2;
-  part("motor-tie-bolt-"+i,"Motor tie fastener "+(i+1),"motor",bolt(1.64,Y+.205*Math.cos(a),.205*Math.sin(a)),
+  part("motor-tie-bolt-"+i,"Motor tie fastener "+(i+1),"motor",bolt(1.6,Y+.205*Math.cos(a),.205*Math.sin(a)),
     materials.steel,[1.28,.17*Math.cos(a),.17*Math.sin(a)],{combined:"Tie-bolt head, washer and shank; threads are intentionally combined/omitted from the viewing derivative."});
 }
 scene.updateMatrixWorld(true);
 const closedSolids=components.filter(c=>c.renderable&&topology[c.id].boundaryEdges===0&&topology[c.id].orientationErrors===0&&topology[c.id].nonManifoldEdges===0).map(c=>c.id);
 const inspector={
-  version:"1.0.0",reference:"onesa-end-suction-pump-tefc-motor-v2",
+  version:"1.0.0",reference:"onesa-end-suction-pump-tefc-motor-v2.1",
   description:"Engineering-informed illustrative single-stage end-suction pump and TEFC squirrel-cage motor. No manufacturer identity, dimensions, certification or validated maintenance sequence.",
   motions,closedSolids,housingComponents:components.filter(c=>c.housing).map(c=>c.id),
   coverComponents:components.filter(c=>c.housing && /cover|guard|enclosure/.test(c.id)).map(c=>c.id),

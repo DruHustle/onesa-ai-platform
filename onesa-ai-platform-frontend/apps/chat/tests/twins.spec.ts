@@ -301,6 +301,7 @@ test("actual pump: GLB, MQTT, history, grounded tools, saved inspection and relo
   });
   expect(pixels.webgl).toBe(true);
   const evidenceDirectory = process.env.ONESA_TWIN_EVIDENCE_DIRECTORY;
+  if(evidenceDirectory)fs.mkdirSync(evidenceDirectory,{recursive:true,mode:0o700});
   if (evidenceDirectory) {
     fs.mkdirSync(evidenceDirectory, { recursive: true });
     await page.screenshot({
@@ -388,6 +389,7 @@ test("actual viewer controls, context loss, responsive themes and navigation", a
       );
       expect(violations).toEqual([]);
       const evidenceDirectory = process.env.ONESA_TWIN_EVIDENCE_DIRECTORY;
+  if(evidenceDirectory)fs.mkdirSync(evidenceDirectory,{recursive:true,mode:0o700});
       if (evidenceDirectory)
         await page.screenshot({
           path: path.join(
@@ -620,7 +622,7 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
   baseURL,
   browserName,
 }, testInfo) => {
-  test.setTimeout(180000);
+  test.setTimeout(300000);
   page.setDefaultTimeout(10000);
   await seeded(page, new URL(baseURL!).origin);
   await page
@@ -628,6 +630,7 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
     .click();
   const rendered = page.getByTestId("equipment-model-loaded");
   const evidenceDirectory = process.env.ONESA_TWIN_EVIDENCE_DIRECTORY;
+  if(evidenceDirectory)fs.mkdirSync(evidenceDirectory,{recursive:true,mode:0o700});
   const profiles = [
     { width: 1440, height: 1000 },
     { width: 820, height: 1180 },
@@ -700,6 +703,8 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
           `premium-${browserName}-${width}-${name}.png`,
         ),
       });
+    if (evidenceDirectory && (name === "assembled" || name.startsWith("theme-")))
+      await page.screenshot({path:path.join(evidenceDirectory,`workspace-${browserName}-${width}-${name}.png`),fullPage:true});
   };
   const catalog = await (
     await page.request.get("/api/v1/twins/catalog")
@@ -717,7 +722,9 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
       .getByRole("button", { name: "Restore all", exact: true })
       .click();
     await capture("assembled", viewport.width);
-    await page.getByRole("button", { name: "Explode", exact: true }).click();
+    await page.getByLabel("Explosion percent", {exact:true}).fill("45");
+    await capture("partly-exploded", viewport.width);
+    await page.getByLabel("Explosion percent", {exact:true}).fill("100");
     await expect(rendered).toHaveAttribute("data-explode-fraction", "1.0000");
     await capture("exploded", viewport.width);
     await page
@@ -834,6 +841,14 @@ test("detailed mechanical reference: explosion, hollow sections, internals, save
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+  }
+  for(const theme of ["light","dark"] as const){
+    await page.emulateMedia({colorScheme:theme});
+    for(const viewport of [profiles[0],profiles[2]]){
+      await page.setViewportSize(viewport);
+      await page.getByRole("button",{name:"Restore all",exact:true}).click();
+      await capture(`theme-${theme}`,viewport.width);
+    }
   }
   await page.getByRole("button", { name: "Restore all", exact: true }).click();
   await page.getByLabel("Explosion percent", { exact: true }).fill("65");

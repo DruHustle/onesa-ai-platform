@@ -1,8 +1,8 @@
 {
   "artifact": {
-    "byteLength": 2913496,
+    "byteLength": 2779092,
     "mediaType": "model/gltf-binary",
-    "sha256": "8c929269cd592bd7641b70bbf3d119c3f34ac1bc88f426b8eaaa391327a25921"
+    "sha256": "114320d3f1b48fa11f46b8681bb360ae8c79d85c02b032030482ce0b6ac102de"
   },
   "components": [
     {
@@ -35,7 +35,7 @@
       "inventory": "combined",
       "label": "Machined mounting base",
       "material": "Dark steel / laminations",
-      "note": "Base plate and two mounting rails are intentionally combined.",
+      "note": "Base and two mounting rails with eight through mounting bores, combined as one part. Illustrative feet placement, not an installation drawing.",
       "parentId": null,
       "renderable": true
     },
@@ -45,7 +45,7 @@
       "inventory": "combined",
       "label": "Casing",
       "material": "Indigo enamel / cast housing",
-      "note": "Volute wall, back/front rims and mounting feet. The impeller chamber and flow passage remain empty.",
+      "note": "Boolean-unioned volute, rims and feet; open tangential discharge passage and eight cover bores. Illustrative passage proportions; no hydraulic validation.",
       "parentId": "pump",
       "renderable": true
     },
@@ -817,8 +817,8 @@
         "component_id": "base",
         "pivot": [
           0.3799999952316284,
-          0.08249999769032001,
-          -1.4901161193847656e-08
+          0.08249999862164259,
+          0
         ],
         "rotation": [
           0,
@@ -835,7 +835,7 @@
         "component_id": "casing",
         "pivot": [
           -0.7700000107288361,
-          0.6004999801516533,
+          0.6037499830126762,
           -0.002624988555908203
         ],
         "rotation": [
@@ -852,8 +852,8 @@
       {
         "component_id": "suction-cover",
         "pivot": [
-          -1.0732499957084656,
-          0.6600000113248825,
+          -1.0322499871253967,
+          0.6599999964237213,
           0
         ],
         "rotation": [
@@ -870,9 +870,9 @@
       {
         "component_id": "discharge",
         "pivot": [
-          -0.7700000107288361,
-          1.0917499959468842,
-          0.26999999582767487
+          -0.7699999809265137,
+          1.0417499840259552,
+          0.27000000327825546
         ],
         "rotation": [
           0,
@@ -888,7 +888,7 @@
       {
         "component_id": "cover-gasket",
         "pivot": [
-          -0.9270000159740448,
+          -0.9205000102519989,
           0.6600000113248825,
           0
         ],
@@ -906,7 +906,7 @@
       {
         "component_id": "impeller",
         "pivot": [
-          -0.8207499980926514,
+          -0.812250018119812,
           0.6634172946214676,
           0.0016827136278152466
         ],
@@ -924,7 +924,7 @@
       {
         "component_id": "coupling-shaft",
         "pivot": [
-          -0.3499999828636646,
+          -0.2750000059604645,
           0.6599999964237213,
           0
         ],
@@ -1032,9 +1032,9 @@
       {
         "component_id": "bearing-frame",
         "pivot": [
-          -0.13999999314546585,
-          0.4790000021457672,
-          -7.450580596923828e-09
+          -0.14000000432133675,
+          0.47725000232458115,
+          0
         ],
         "rotation": [
           0,
@@ -1284,7 +1284,7 @@
       {
         "component_id": "coupling-pump-hub",
         "pivot": [
-          0.2500000074505806,
+          0.2800000086426735,
           0.6599999964237213,
           0
         ],
@@ -1302,7 +1302,7 @@
       {
         "component_id": "coupling-spider",
         "pivot": [
-          0.3400000035762787,
+          0.3449999988079071,
           0.6599999964237213,
           0
         ],
@@ -1320,7 +1320,7 @@
       {
         "component_id": "coupling-motor-hub",
         "pivot": [
-          0.4399999976158142,
+          0.4099999964237213,
           0.6599999964237213,
           0
         ],
@@ -1338,8 +1338,8 @@
       {
         "component_id": "coupling-guard",
         "pivot": [
-          0.309999980032444,
-          0.7150008082389832,
+          0.3099999874830246,
+          0.470250241458416,
           0
         ],
         "rotation": [
@@ -1357,7 +1357,7 @@
         "component_id": "motor-housing",
         "pivot": [
           1.179999977350235,
-          0.5457499846816063,
+          0.5514999851584435,
           0
         ],
         "rotation": [
@@ -1392,7 +1392,7 @@
       {
         "component_id": "winding-a",
         "pivot": [
-          1.1800000071525574,
+          1.1798257231712341,
           0.6600000113248825,
           0
         ],
@@ -1410,8 +1410,8 @@
       {
         "component_id": "winding-b",
         "pivot": [
-          1.1800000071525574,
-          0.6600000113248825,
+          1.1796973049640656,
+          0.6599999964237213,
           0
         ],
         "rotation": [
@@ -1428,9 +1428,9 @@
       {
         "component_id": "winding-c",
         "pivot": [
-          1.1800000071525574,
+          1.1798259913921356,
           0.6599999964237213,
-          4.842877388000488e-07
+          0
         ],
         "rotation": [
           0,
@@ -1482,7 +1482,7 @@
       {
         "component_id": "motor-shaft",
         "pivot": [
-          1.179999977350235,
+          1.104999989271164,
           0.6599999964237213,
           0
         ],
@@ -1518,7 +1518,7 @@
       {
         "component_id": "motor-de-bearing-outer",
         "pivot": [
-          0.7800000011920929,
+          0.8400000035762787,
           0.6599999964237213,
           0
         ],
@@ -1536,7 +1536,7 @@
       {
         "component_id": "motor-de-bearing-inner",
         "pivot": [
-          0.7800000011920929,
+          0.8400000035762787,
           0.6599999964237213,
           0
         ],
@@ -1554,7 +1554,7 @@
       {
         "component_id": "motor-de-bearing-balls",
         "pivot": [
-          0.7800000011920929,
+          0.8400000035762787,
           0.6622012257575989,
           0
         ],
@@ -1572,7 +1572,7 @@
       {
         "component_id": "motor-de-bearing-cage",
         "pivot": [
-          0.7800000011920929,
+          0.8400000035762787,
           0.6599999964237213,
           0
         ],
@@ -1608,7 +1608,7 @@
       {
         "component_id": "motor-nde-bearing-outer",
         "pivot": [
-          1.5799999833106995,
+          1.5199999809265137,
           0.6599999964237213,
           0
         ],
@@ -1626,7 +1626,7 @@
       {
         "component_id": "motor-nde-bearing-inner",
         "pivot": [
-          1.5799999833106995,
+          1.5199999809265137,
           0.6599999964237213,
           0
         ],
@@ -1644,7 +1644,7 @@
       {
         "component_id": "motor-nde-bearing-balls",
         "pivot": [
-          1.5799999833106995,
+          1.5199999809265137,
           0.6622012257575989,
           0
         ],
@@ -1662,7 +1662,7 @@
       {
         "component_id": "motor-nde-bearing-cage",
         "pivot": [
-          1.5799999833106995,
+          1.5199999809265137,
           0.6599999964237213,
           0
         ],
@@ -1680,8 +1680,8 @@
       {
         "component_id": "motor-front-cover",
         "pivot": [
-          0.7400000095367432,
-          0.6600000113248825,
+          0.8174999952316284,
+          0.6599999964237213,
           0
         ],
         "rotation": [
@@ -1698,8 +1698,8 @@
       {
         "component_id": "motor-back-cover",
         "pivot": [
-          1.612500011920929,
-          0.6600000113248825,
+          1.5425000190734863,
+          0.6599999964237213,
           0
         ],
         "rotation": [
@@ -1770,7 +1770,7 @@
       {
         "component_id": "pump-cover-bolt-0",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.9370000064373016,
           0
         ],
@@ -1788,7 +1788,7 @@
       {
         "component_id": "pump-cover-bolt-1",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.8558685779571533,
           0.195868581533432
         ],
@@ -1806,7 +1806,7 @@
       {
         "component_id": "pump-cover-bolt-2",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.6599999964237213,
           0.27699999511241913
         ],
@@ -1824,7 +1824,7 @@
       {
         "component_id": "pump-cover-bolt-3",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.4641314148902893,
           0.195868581533432
         ],
@@ -1842,7 +1842,7 @@
       {
         "component_id": "pump-cover-bolt-4",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.3830000013113022,
           0
         ],
@@ -1860,7 +1860,7 @@
       {
         "component_id": "pump-cover-bolt-5",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.4641314148902893,
           -0.195868581533432
         ],
@@ -1878,7 +1878,7 @@
       {
         "component_id": "pump-cover-bolt-6",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.6599999964237213,
           -0.27699999511241913
         ],
@@ -1896,7 +1896,7 @@
       {
         "component_id": "pump-cover-bolt-7",
         "pivot": [
-          -0.9355000257492065,
+          -0.9275000095367432,
           0.8558685779571533,
           -0.195868581533432
         ],
@@ -1914,7 +1914,7 @@
       {
         "component_id": "motor-tie-bolt-0",
         "pivot": [
-          1.644499957561493,
+          1.6044999957084656,
           0.8049568831920624,
           0.14495688676834106
         ],
@@ -1932,7 +1932,7 @@
       {
         "component_id": "motor-tie-bolt-1",
         "pivot": [
-          1.644499957561493,
+          1.6044999957084656,
           0.5150431096553802,
           0.14495688676834106
         ],
@@ -1950,7 +1950,7 @@
       {
         "component_id": "motor-tie-bolt-2",
         "pivot": [
-          1.644499957561493,
+          1.6044999957084656,
           0.5150431096553802,
           -0.14495688676834106
         ],
@@ -1968,7 +1968,7 @@
       {
         "component_id": "motor-tie-bolt-3",
         "pivot": [
-          1.644499957561493,
+          1.6044999957084656,
           0.8049568831920624,
           -0.14495688676834106
         ],
@@ -1984,7 +1984,7 @@
         ]
       }
     ],
-    "reference": "onesa-end-suction-pump-tefc-motor-v2",
+    "reference": "onesa-end-suction-pump-tefc-motor-v2.1",
     "scope_notes": [
       "Mechanical reference; terminal internals, cables and hydraulic CFD are outside the declared mechanical inspection scope.",
       "Thread helices and exact surface finishes are intentionally simplified; fastener assemblies remain modeled/selectable.",
@@ -2242,7 +2242,7 @@
     }
   ],
   "metersPerUnit": 1,
-  "modelRevision": "onesa-end-suction-pump-tefc-motor:2.0.0",
+  "modelRevision": "onesa-end-suction-pump-tefc-motor:2.1.0",
   "provenance": {
     "description": "Onesa-authored detailed mechanical reference with modeled internals; illustrative, not calibrated CAD or planning geometry",
     "illustrative": true,

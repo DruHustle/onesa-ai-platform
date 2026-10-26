@@ -137,7 +137,7 @@ jobs:
       run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Validate the application-owned viewer contract and fixtures
-      run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs
+      run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs
     - run: 'cd onesa-ai-platform-frontend/apps/chat
 
         python3 ../../../scripts/ci/analyze.py eslint -- node_modules/.bin/eslint --format json .

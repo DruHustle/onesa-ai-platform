@@ -184,7 +184,7 @@ def seed(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
             **row.definition,
             "stage": "preview",
             "demo": True,
-            "reference_version": "2.0.0",
+            "reference_version": "2.1.0",
             "documents": [{"document_id": str(doc.id), "component_id": None}],
         }
         db.add(row)

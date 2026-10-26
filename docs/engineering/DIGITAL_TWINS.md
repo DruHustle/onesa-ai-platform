@@ -68,7 +68,7 @@ independent of bounded five-second state polling; scene resources are disposed o
 replacement/navigation. CSS system preference controls appearance; there is no stored
 theme override. Readings are never used to animate a fictional physical simulation.
 
-The self-authored reference v2 is an illustrative end-suction pump and TEFC motor,
+The self-authored reference v2.1 is an illustrative end-suction pump and TEFC motor,
 right-handed Y-up in meters. Its 68-item hierarchy has 61 selectable geometry parts
 and seven logical subassemblies. It includes a growing volute/empty fluid passage,
 shrouded curved-vane impeller, shaft/sleeve, ceramic/carbon/elastomer mechanical seal,
@@ -109,7 +109,7 @@ separate dataset and never changes live current state, connectivity or alarms.
 ## Reproducible source and rights
 
 `node scripts/twins/author_reference.mjs OUTPUT_DIRECTORY` authors GLB, BOM/motions and
-surface audit using this app's pinned Three.js. After frontend install, run
+surface audit using this app's pinned Three.js. The offline solid-authoring dependency is Manifold 3.5.4 (Apache-2.0), locked separately under `scripts/twins/solid-tools`; install it with `npm ci --ignore-scripts --prefix scripts/twins/solid-tools`. It is an ordinary third-party library, never an application/peer package. It is not installed in API or browser images. After both tool installs, run
 `.venv/bin/python scripts/twins/generate_fixtures.py` to regenerate the complete hashed
 GLB/AAS/AASX/manual fixture package. No asset download, sibling code or peer artifact
 is involved. Parametric JavaScript is the editable native source; the GLB is its viewing
@@ -123,6 +123,23 @@ with explicit per-component inventory notes. Terminal electrical internals/cable
 CFD are outside this mechanical reference. The maintenance document sections 4–5
 explain inspection and the BOM limitations. No unavailable major mechanical interior
 is silently replaced with a texture or exterior shell.
+
+Reference 2.1 corrects the cast passage opening, drilled mating flange/gasket bores,
+shaft/sleeve/bearing seats, connected supports, end-shield fit, coupling jaws/insert
+and conductor placement. Offline solid booleans remove overlapping internal faces;
+the viewing derivative retains all 61 selectable geometry identities. The delivered
+winding legs occupy actual core slots, and end turns cross teeth outside the core.
+Geometry tests check the actual delivered surfaces/bores and seat relationships.
+These checks do not certify dimensions, clearances, flow or an electrical winding.
+Keyway/retention details, exact threads, individual wire strands and sheets remain
+illustrative simplifications, rather than validated service or installation geometry.
+
+The source template namespace/component IDs remain stable. Existing equipment keeps
+its original model, files, documents, signals and saved views when the fixture source
+changes. A fresh demonstration uses reference 2.1. To adopt a new derivative on an
+existing installation, attach it through Equipment setup, explicitly review its node
+mapping and activate that new revision. Old saved views remain revision-bound; the
+seed action never silently replaces an existing active model.
 
 Generic GLB/AAS imports retain supplied surfaces/provenance and explicit node mappings.
 The supported AAS file profile does not infer an assembly/BOM or choreography from names;
@@ -179,6 +196,18 @@ triangle meshes, at most 100 nodes, 100,000 triangles and 200,000 VEC3 accessor 
 (including normals). Skins, animation, textures and extensions/remote decoders are
 rejected with a preparation message. External buffers/images are never fetched.
 Model bytes, hash, transforms, scene reachability and mappings are validated before use.
+
+This ceiling is a small equipment-inspection pilot, not a general manufacturer-CAD
+viewer. Reference 2.1 uses 97,054 triangles (97.0% of the ceiling) and 2,779,092 bytes
+(66.2% of the file ceiling). Larger/textured assemblies remain unsupported. The
+measured preparation improvement here is an Onesa-owned offline viewing derivative:
+editable parametric solids, real boolean openings/unions, bounded curve tessellation
+and stable per-part mappings. It fits the existing gateway and validation profile
+without deleting major internals or adding a network decoder. It is not a generic
+CAD converter or automatic simplifier. Preserve source/native originals and their
+hashes in approved engineering custody; a file rejected by the upload boundary has
+not been retained by the app. Do not send larger payloads through the Vercel gateway.
+STEP/drawing preservation below is attachment support, distinct from rendering.
 STEP/STP, drawings (PDF/PNG/JPG) and TXT can remain original source attachments; this
 does not render CAD or reconstruct geometry. No automatic converter is installed.
 
@@ -282,7 +311,7 @@ collision geometry, calibrated kinematics, a planning environment or actuation.
 ## Verification and release
 
 ```sh
-node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs
+node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs
 make check
 make openapi api-client contract-check
 make frontend-check
@@ -301,33 +330,70 @@ and inspect requests. Source-outage tests stop/block the isolated producer, keep
 running, and verify stale status plus local model/history/document/report continuity.
 Do not stop another project's running services for these tests.
 
-Performance budget: 2,913,496-byte/98,648-triangle detailed local reference; at most 100,000 triangles for
+Performance budget: 2,779,092-byte/97,054-triangle detailed local reference; at most 100,000 triangles for
 accepted user models; DPR at most 1 on narrow viewports and 1.5 otherwise; demand rendering,
 no continuous frame-rate telemetry updates. Measure model transfer/parse and first actual
 render separately on a named observed device/browser/network. Loopback or software WebGL
 results are not physical-device or hosted network benchmarks. Record failures and unsupported
 graphics honestly; a loaded component or screenshot alone does not establish the full flow.
 
-Observed reference check on 2026-10-25: Mac15,13, Apple M3, 24 GiB RAM; own local
-production build, fresh browser contexts and loopback model delivery. The delivered
-GLB SHA256 is `8c929269cd592bd7641b70bbf3d119c3f34ac1bc88f426b8eaaa391327a25921`.
-Cold transfer/validation/parse was 37 ms (Chromium software) and 90 ms (WebKit/Apple
-GPU); first settled rendered frame was 223/282 ms. These are observed local samples.
+Observed reference check on 2026-10-26: Mac15,13, Apple M3, 24 GiB RAM;
+production Docker build, fresh browser contexts, loopback delivery, viewport/DPR
+1440×1000/1 and 390×844/1. PCF shadows, antialiasing, stencil and the 64-pixel room
+prefilter stayed enabled. No major interior or inspection feature was removed.
+The final GLB SHA256 is
+`114320d3f1b48fa11f46b8681bb360ae8c79d85c02b032030482ce0b6ac102de`.
+Browser versions were WebKit 27.2 and Chromium 156.0.8078.4. These are local samples,
+not hosted-network or physical-phone acceptance. Other users' host workloads were
+preserved. The protected evidence records exact source and configuration identities.
 
-The table gives mean milliseconds for eight completed orbit samples per state. Each
-sample includes browser automation, a requested animation frame and `gl.finish()`;
-it is **not a native FPS benchmark**. Viewport heights were 1000/1180/844, DPR 1.
-Software rendering remains visibly slower and is not presented as accelerated desktop
-or phone performance. No physical phone or mobile GPU was measured.
+`scripts/twins/profile.mjs PRIVATE_OUTPUT_DIRECTORY webkit` (or `chromium`) is an
+explicit loopback-only experiment after starting the production build. It creates
+and password-deletes one disposable account, blocks non-owned origins and checks
+that cold ordinary Chat has no canvas or registered Three engine. Each state has
+2 seconds warm-up and 8 seconds sustained browser-rAF-driven input. No per-frame
+automation round trip or `gl.finish()` is used. The samples below are render-completion
+callback intervals, **not native FPS, GPU duration or presentation latency**. Section
+inputs are dispatched at most every 50 ms, and repeated rounded values require no
+new frame; their intervals therefore include that input cadence. Discrete tails are
+not proof of GPU stalls. CPU submission is sampled separately.
 
-| Browser / renderer | Viewport width | Assembled ms | Exploded ms | Cutaway ms | Isolated stator ms |
+| Renderer / width | Assembled orbit median / p95 ms | Explosion median / p95 ms | Section movement median / p95 ms | Ghost orbit median / p95 ms | Winding close-up median / p95 ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Chromium / SwiftShader | 1440 | 172.5 | 124.8 | 254.0 | 49.6 |
-| Chromium / SwiftShader | 820 | 104.0 | 95.8 | 189.3 | 49.7 |
-| Chromium / SwiftShader | 390 | 158.1 | 126.8 | 200.0 | 47.4 |
-| WebKit / Apple GPU | 1440 | 20.0 | 20.3 | 16.6 | 29.3 |
-| WebKit / Apple GPU | 820 | 18.4 | 18.7 | 16.4 | 16.2 |
-| WebKit / Apple GPU | 390 | 20.8 | 16.2 | 16.8 | 24.3 |
+| WebKit / Apple GPU / 1440 | 17 / 19 | 16 / 21 | 50 / 80 | 17 / 18 | 17 / 18 |
+| WebKit / Apple GPU / 390 | 17 / 19 | 17 / 22 | 50 / 119 | 17 / 19 | 17 / 18 |
+| Chromium / SwiftShader / 1440 | 85.3 / 101.9 | 86.4 / 117.4 | 150.5 / 233.5 | 126 / 157.8 | 18.2 / 27 |
+| Chromium / SwiftShader / 390 | 64.8 / 83.5 | 63 / 77.7 | 117.2 / 284.5 | 96.2 / 117.5 | 16.6 / 18.2 |
+
+Fully exploded orbit was 17.0/19.0 ms on Apple GPU at 1440,
+and 17.0/18.0 ms at 390. SwiftShader measured
+63.8/84.3 and 52.6/64.8 ms respectively.
+Each distribution's sample count and raw observations are retained in the private
+packet. Software full-assembly interaction is visibly slower and does not qualify
+accelerated-desktop or mobile performance. Lists, details and deterministic evidence
+remain available on unsupported/slow graphics. Physical-phone qualification remains
+pending; viewport emulation is not hardware.
+
+Cold transfer / hash-and-geometry validation / GLTF parse was 65.00/2.00/7.00 ms on WebKit,
+and 35.00/2.60/8.40 ms on Chromium. First actual settled render was 246/250 ms. Total
+preparation also includes mapping/material setup and is reported separately by the
+viewer, rather than attributed entirely to parsing. These are single cold-load
+observations, not percentile estimates.
+
+The delivered scene uses 125 draw calls assembled, including shadows; section
+movement reached 272, and isolated windings used five. Median CPU submission was
+0–2 ms on Apple GPU and 0.1–1 ms on SwiftShader, with higher section cost recorded
+in the full sample. Geometry allocations remained at 64 before first section and
+65 afterward; textures stayed at four. Shader program count rose from five to eleven
+as section/ghost variants were first used, then remained bounded. The profiler
+retains these counts and available browser heap samples; heap snapshots alone are
+not a leak proof. Tests separately verify route-unmount context/resource cleanup.
+Settled scenes rendered only two additional frames in each 12-second interval,
+spanning five-second data polling, rather than a continuous idle loop.
+
+The earlier eight-sample, automation-plus-`gl.finish()` figures belonged to reference
+2.0 and are retained in the historical private packet. They are not transferred to
+this derivative or used as native FPS evidence.
 
 Review captures include assembled, whole/subassembly explosion, hollow-bearing cut
 faces, longitudinal cutaway, ghost housings, isolated stator/impeller/winding/rotor

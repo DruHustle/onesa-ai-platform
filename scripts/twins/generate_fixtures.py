@@ -10,7 +10,7 @@ from basyx.aas.adapter import aasx
 from basyx.aas.adapter import json as aas_json
 
 PARTS = ("casing", "motor", "coupling-shaft", "bearing", "impeller")
-MANUAL = """Onesa illustrative pump maintenance procedure — revision 2
+MANUAL = """Onesa illustrative pump maintenance procedure — revision 2.1
 Self-authored synthetic demonstration; not an equipment manufacturer's instruction.
 
 Section 1 — Identification
@@ -364,7 +364,7 @@ def generate() -> None:
     }
     manifest = {
         "schemaVersion": "1.0.0",
-        "modelRevision": "onesa-end-suction-pump-tefc-motor:2.0.0",
+        "modelRevision": "onesa-end-suction-pump-tefc-motor:2.1.0",
         "artifact": {
             "sha256": hashlib.sha256(model).hexdigest(),
             "byteLength": len(model),
@@ -442,7 +442,7 @@ def generate() -> None:
     (target / "integrity.json").write_text(
         json.dumps(
             {
-                "fixtureVersion": "2.0.0",
+                "fixtureVersion": "2.1.0",
                 "source": "scripts/twins/generate_fixtures.py",
                 "files": {
                     name: hashlib.sha256(content).hexdigest()
