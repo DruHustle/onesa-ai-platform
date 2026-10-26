@@ -328,3 +328,75 @@ class ImageEvidenceTests(unittest.TestCase):
         ]:
             with self.subTest(changed=changed), self.assertRaises(r.Refused):
                 r.image_security(changed, "fixture")
+
+
+class OciDescriptorTests(unittest.TestCase):
+    def proof(self, value):
+        raw = json.dumps(value).encode()
+        digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+        return digest, {digest: r.base64.b64encode(raw).decode()}
+
+    def test_scanner_config_is_cryptographically_linked_to_actual_manifest(self):
+        config = "sha256:" + "a" * 64
+        manifest, proof = self.proof(
+            {
+                "schemaVersion": 2,
+                "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                "config": {"digest": config},
+            }
+        )
+        self.assertEqual(r.scanned_configuration_digest(manifest, proof), config)
+        index, parent = self.proof(
+            {
+                "schemaVersion": 2,
+                "manifests": [
+                    {
+                        "digest": manifest,
+                        "platform": {"os": "linux", "architecture": "arm64"},
+                    }
+                ],
+            }
+        )
+        self.assertEqual(
+            r.scanned_configuration_digest(index, {**proof, **parent}), config
+        )
+        scan = {
+            "Metadata": {"ImageID": config},
+            "CreatedAt": r.now().isoformat(),
+            "ArtifactName": "fixture",
+            "Results": [{}],
+        }
+        with patch.object(r, "read", return_value=proof):
+            r.image_security(scan, manifest)
+            with self.assertRaises(r.Refused):
+                r.image_security(
+                    {**scan, "Metadata": {"ImageID": "sha256:" + "b" * 64}}, manifest
+                )
+
+    def test_modified_or_foreign_platform_proof_cannot_relabel_a_scan(self):
+        digest, proof = self.proof(
+            {
+                "schemaVersion": 2,
+                "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                "config": {"digest": "sha256:" + "a" * 64},
+            }
+        )
+        with self.assertRaises(r.Refused):
+            r.scanned_configuration_digest(
+                digest, {digest: r.base64.b64encode(b"{}").decode()}
+            )
+        index, parent = self.proof(
+            {
+                "schemaVersion": 2,
+                "manifests": [
+                    {
+                        "digest": digest,
+                        "platform": {"os": "linux", "architecture": "amd64"},
+                    }
+                ],
+            }
+        )
+        with self.assertRaises(r.Refused):
+            r.scanned_configuration_digest(index, {**parent, **proof})
+        with self.assertRaises(r.Refused):
+            r.scanned_configuration_digest(digest, {})

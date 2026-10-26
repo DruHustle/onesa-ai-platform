@@ -320,9 +320,70 @@ def trusted_toolchain(plan):
     return tool
 
 
-def image_security(scan, identity):
+def scanned_configuration_digest(identity, proof):
+    # OCI metadata is a content-addressed proof, never caller authorization.
+    # The starting identity is independently pinned/observed from Docker.
     require(
-        scan["Metadata"]["ImageID"] == identity
+        re.fullmatch("sha256:[a-f0-9]{64}", identity) and isinstance(proof, dict),
+        "OCI_DESCRIPTOR_PROOF_REQUIRED",
+    )
+    current, visited = identity, set()
+    for _ in range(5):
+        require(current not in visited, "OCI_DESCRIPTOR_CYCLE")
+        visited.add(current)
+        encoded = proof.get(current)
+        require(
+            isinstance(encoded, str) and len(encoded) <= 1024 * 1024,
+            "OCI_DESCRIPTOR_BOUND",
+        )
+        raw = base64.b64decode(encoded, validate=True)
+        require(
+            "sha256:" + hashlib.sha256(raw).hexdigest() == current,
+            "OCI_DESCRIPTOR_HASH_MISMATCH",
+        )
+        item = json.loads(raw)
+        require(item.get("schemaVersion") == 2, "OCI_DESCRIPTOR_SCHEMA")
+        if "manifests" in item:
+            native = [
+                row
+                for row in item["manifests"]
+                if row.get("platform", {}).get("os") == "linux"
+                and row.get("platform", {}).get("architecture") == "arm64"
+            ]
+            require(len(native) == 1, "SINGLE_NATIVE_ARM64_MANIFEST_REQUIRED")
+            current = native[0]["digest"]
+            require(re.fullmatch("sha256:[a-f0-9]{64}", current), "OCI_CHILD_DIGEST")
+            continue
+        require(
+            item.get("mediaType")
+            in [
+                "application/vnd.oci.image.manifest.v1+json",
+                "application/vnd.docker.distribution.manifest.v2+json",
+            ],
+            "OCI_IMAGE_MANIFEST_REQUIRED",
+        )
+        result = item.get("config", {}).get("digest", "")
+        require(re.fullmatch("sha256:[a-f0-9]{64}", result), "OCI_CONFIGURATION_DIGEST")
+        return result
+    raise Refused("OCI_DESCRIPTOR_DEPTH")
+
+
+def image_security(scan, identity):
+    configuration = identity
+    if scan["Metadata"]["ImageID"] != identity:
+        require(
+            re.fullmatch("sha256:[a-f0-9]{64}", identity),
+            "EXACT_IMAGE_IDENTITY_REQUIRED",
+        )
+        configuration = scanned_configuration_digest(
+            identity,
+            read(
+                Path("/var/lib/onesa/release-verification/image-descriptors")
+                / (identity[7:] + ".json")
+            ),
+        )
+    require(
+        scan["Metadata"]["ImageID"] == configuration
         and scan.get("Results")
         and scan.get("ArtifactName")
         and scan.get("CreatedAt"),
