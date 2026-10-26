@@ -96,7 +96,7 @@ def hardened(uri):
     u = urlsplit(uri)
     return urlunsplit(
         (
-            u.scheme,
+            "postgresql+psycopg",
             u.netloc,
             u.path,
             urlencode(
