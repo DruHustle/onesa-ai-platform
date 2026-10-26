@@ -13,6 +13,23 @@ submitted values/passwords. Common statuses: 401 auth, 403 Origin/CSRF/permissio
 [openapi.json](openapi.json) is the implemented machine-readable contract. Regenerate with
 `make openapi`; inspect `/docs` on the internal/local API for schema details.
 
+## Optional Digital Twins v1
+
+`/api/v1/twins` is default-off and independently owned. Its OpenAPI schemas define
+template/asset creation, private file preview and import commit, explicit model mappings,
+revision-fenced activation, source bindings, time-window history, documents, annotations,
+viewpoints, scoped evidence tools and saved inspection snapshots. Owner sessions and
+existing grants authorize every indirect resource. Mutations retain Origin/CSRF.
+`POST /sources/{id}/readings` instead requires a hashed, revocable ingestion-only
+`X-Onesa-Source-Token`; it grants no read access or tenant choice.
+
+The locally owned v1 observation body is `{mode, samples}`. Samples identify message,
+tag, finite value, unit, timezone timestamp and quality. The source's reviewed mapping
+selects the installed asset/component. Duplicate identities are idempotent; conflicting
+content fails. Replay cannot overwrite live state. No shared executable schema SDK or
+peer service is required. The [Digital Twins guide](../engineering/DIGITAL_TWINS.md)
+documents supported formats, bounds, optional MQTT translation and field ownership.
+
 ## Implemented endpoints
 
 | Method/route | Purpose | Authentication | Request schema | Success |

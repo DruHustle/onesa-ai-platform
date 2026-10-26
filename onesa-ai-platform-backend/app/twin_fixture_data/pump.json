@@ -1,0 +1,71 @@
+{
+  "assetAdministrationShells": [
+    {
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:onesa:demo:pump:1"
+      },
+      "id": "urn:onesa:demo:pump:aas:1",
+      "idShort": "IllustrativePump",
+      "modelType": "AssetAdministrationShell",
+      "submodels": [
+        {
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:onesa:demo:pump:models:1"
+            }
+          ],
+          "type": "ModelReference"
+        }
+      ]
+    }
+  ],
+  "conceptDescriptions": [],
+  "submodels": [
+    {
+      "id": "urn:onesa:demo:pump:models:1",
+      "idShort": "Models3D",
+      "modelType": "Submodel",
+      "semanticId": {
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/Models3D/1/0"
+          }
+        ],
+        "type": "ExternalReference"
+      },
+      "submodelElements": [
+        {
+          "contentType": "model/gltf-binary",
+          "idShort": "IllustrativeModel",
+          "modelType": "File",
+          "value": "/aasx/files/pump.glb"
+        },
+        {
+          "contentType": "text/plain",
+          "idShort": "MaintenanceProcedure",
+          "modelType": "File",
+          "value": "/aasx/files/maintenance.txt"
+        },
+        {
+          "idShort": "GeometryPurpose",
+          "modelType": "Property",
+          "value": "Illustrative visualization only",
+          "valueType": "xs:string"
+        },
+        {
+          "idShort": "PreservedUnknownProjection",
+          "modelType": "MultiLanguageProperty",
+          "value": [
+            {
+              "language": "en",
+              "text": "Preserved in original package and source environment"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

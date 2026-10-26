@@ -572,6 +572,8 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .feature-card, .auth-card, .input-wrap { background: var(--onesa-surface); border-radius: calc(var(--onesa-radius) * 2); }
 .feature-shell > header { gap: 1rem; flex-wrap: wrap; }
 .feature-shell > section { max-width: 60rem; }
+.feature-shell-wide { max-width: 1600px; }
+.feature-shell-wide > section { max-width: none; }
 .feature-shell .locale-select { margin: 0; }
 .error { overflow-wrap: anywhere; }
 .environment-context { padding: .4rem 1rem; font-size: .75rem; font-weight: 700; background: var(--onesa-info-surface); color: var(--onesa-info); border-bottom: 1px solid var(--onesa-divider); }

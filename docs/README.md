@@ -121,3 +121,5 @@ models/features and unverified GPU/production acceptance.
 - [EVALUATION](training/EVALUATION.md)
 - [FINE_TUNING](training/FINE_TUNING.md)
 - [MODEL_RELEASE](training/MODEL_RELEASE.md)
+- [Digital Twins](engineering/DIGITAL_TWINS.md)
+- [Digital Twins architecture decision](adr/0004-digital-twin-workspace.md)

@@ -12,7 +12,7 @@ export default function RequireSession({
   children,
 }: {
   title: string;
-  destination: "/travel" | "/knowledge" | "/industrial" | "/agents";
+  destination: "/travel" | "/knowledge" | "/industrial" | "/industrial/twins" | "/agents";
   children: React.ReactNode;
 }) {
   const { locale } = useLocale(),

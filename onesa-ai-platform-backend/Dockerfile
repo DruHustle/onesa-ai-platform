@@ -25,6 +25,7 @@ COPY start.sh ./
 COPY migrations ./migrations
 # Build tooling is not part of the runtime; remove vulnerable vendored copies too.
 RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/bin/pip* && adduser -D -u 10001 onesa
+RUN mkdir -p /var/lib/onesa/twins && chown 10001:10001 /var/lib/onesa/twins && chmod 700 /var/lib/onesa/twins
 RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/python3.11/site-packages/pkg_resources* /usr/local/lib/python3.11/site-packages/_distutils_hack* /usr/local/lib/python3.11/site-packages/distutils-precedence.pth /usr/local/lib/python3.11/site-packages/wheel* /usr/local/lib/python3.11/site-packages/pip* \
     && python -c "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pip','setuptools','wheel'))"
 USER onesa

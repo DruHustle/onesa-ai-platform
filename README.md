@@ -184,6 +184,12 @@ change the smallest local path.
 
 ## Verification and contributions
 
+The app-owned Digital Twin Workspace candidate lives at Industrial AI → Digital Twins.
+Its optional local pilot uses this repository's models, storage, simulator and authentication;
+Smart Factory and any custom shared SDK are not dependencies. See the
+[local setup, formats, telemetry and rollback guide](docs/engineering/DIGITAL_TWINS.md).
+Production exposure remains unchanged until the established release process qualifies it.
+
 ```sh
 make install check
 npm --prefix onesa-ai-platform-frontend run ci
