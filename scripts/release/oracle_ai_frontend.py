@@ -27,6 +27,31 @@ ROOT = Path("/var/lib/onesa/release-verification/ai-frontend")
 PROVIDER = Path("/etc/onesa/oracle-ai-vercel-observer.json")
 CLI_AUTH = Path("/etc/onesa/oracle-vercel-cli")
 
+# The pinned CLI atomically updates preferences and its cache during startup.
+# Keep owner custody read-only; all CLI writes belong to this container's tmpfs.
+CLI_BOOTSTRAP = r"""
+const fs=require('node:fs'),{spawn}=require('node:child_process');
+const target='/tmp/onesa-vercel-cli';
+try {
+ fs.mkdirSync(target,{mode:0o700});
+ for(const name of ['auth.json','config.json']) {
+  const source='/private/creds/'+name,stat=fs.lstatSync(source);
+  if(!stat.isFile()||stat.isSymbolicLink()||(stat.mode&0o077)||stat.size>131072)throw Error();
+  JSON.parse(fs.readFileSync(source,'utf8'));
+  fs.copyFileSync(source,target+'/'+name,fs.constants.COPYFILE_EXCL);
+  fs.chmodSync(target+'/'+name,0o600);
+ }
+ const child=spawn(process.execPath,process.argv.slice(1),{
+  stdio:'inherit',env:{...process.env,HOME:'/tmp',VERCEL_TELEMETRY_DISABLED:'1'}
+ });
+ child.once('error',()=>process.exit(71));
+ child.once('exit',code=>process.exit(code??1));
+} catch {
+ process.stderr.write('Oracle CLI private runtime configuration unavailable; no deployment allowed.\n');
+ process.exit(71);
+}
+"""
+
 
 def provider(path, *, data=None):
     cfg = r.read(PROVIDER)
@@ -383,6 +408,7 @@ def create(binding, env, operation, folder, plan):
     before = protection(plan)
     r.private(CLI_AUTH, directory=True)
     r.private(CLI_AUTH / "auth.json")
+    r.private(CLI_AUTH / "config.json")
     r.write(
         op / "intent.json",
         {
@@ -442,6 +468,9 @@ def create(binding, env, operation, folder, plan):
         "-w",
         "/workspace",
         plan["cli_image"],
+        "-e",
+        CLI_BOOTSTRAP,
+        "--",
         "--require",
         "/private/guard.cjs",
         "/opt/onesa-vercel-tool/node_modules/vercel/dist/index.js",
@@ -451,7 +480,7 @@ def create(binding, env, operation, folder, plan):
         "--no-wait",
         "--json",
         "--global-config",
-        "/private/creds",
+        "/tmp/onesa-vercel-cli",
         "--project",
         plan["project_id"],
         "--meta",
