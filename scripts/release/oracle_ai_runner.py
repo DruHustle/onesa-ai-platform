@@ -930,6 +930,7 @@ def migration_prerequisites(plan):
 def preflight(binding):
     folder, plan = validate_plan(binding)
     migration_prerequisites(plan)
+    cpus = probe_cpu_limit()
     require(shutil.disk_usage("/").free > 12 * 1024**3, "DISK_BUDGET")
     return {
         "state": "PREREQUISITES_READY_NOT_QUALIFIED",
@@ -938,6 +939,7 @@ def preflight(binding):
         "records_issued": 0,
         "plan_sha256": sha(PLAN),
         "artifact_folder": str(folder),
+        "hosted_probe_cpu_limit": cpus,
     }
 
 
@@ -1636,7 +1638,15 @@ def required_probe_checks(binding, env, mode):
     return mandatory
 
 
+def probe_cpu_limit():
+    """Fit the bounded probe to the actual daemon; never request new capacity."""
+    value = docker("info", "--format", "{{.NCPU}}", timeout=15).strip()
+    require(re.fullmatch(rb"[1-9][0-9]{0,3}", value), "PROBE_HOST_CPU_UNVERIFIED")
+    return str(min(2, int(value)))
+
+
 def probe(binding, env, operation, folder, plan):
+    cpus = probe_cpu_limit()
     name = TARGET[env]
     current = inventory()
     actual = current[name]
@@ -1702,7 +1712,7 @@ def probe(binding, env, operation, folder, plan):
         "--memory",
         "2g",
         "--cpus",
-        "2",
+        cpus,
         "--cap-drop",
         "ALL",
         "--security-opt",

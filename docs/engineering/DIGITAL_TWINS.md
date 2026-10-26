@@ -447,3 +447,14 @@ enable Twins. The owner provisions separate UID/GID10001 mode0700 staging and
 production directories, validates the full root-owned Compose identity, coordinates
 DB/file backups and applies the additive schema before separately authorized
 activation. Existing ports, ingress, credentials and other workloads are preserved.
+
+### Read-only Robot context export
+
+The equipment workspace downloads its existing owned `robotics/v1` response as
+JSON through the current authenticated AI session. Export always retains the live
+source provenance, including when the viewer displays a simulated mode. It sends
+no request to Robot and supplies no shared operator authority. Robot optionally
+imports a bounded file with explicit tag mapping, P-101 reference units and an
+immutable approval-bound snapshot; its default configuration keeps import off.
+No service credential exchange, factory write, hardware command or live acceptance
+is implied by a file export. Empty or stale live evidence remains empty or stale.
