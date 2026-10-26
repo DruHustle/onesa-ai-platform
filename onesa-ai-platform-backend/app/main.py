@@ -29,6 +29,7 @@ from app import (
     industrial,
     knowledge,
     observability,
+    release_identity,
     travel,
     twins,
 )
@@ -179,7 +180,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
 
     @api.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", **release_identity.identity(config.environment)}
 
     @api.get("/core-ready", responses={503: {"description": "Core database unavailable"}})
     @api.get("/ready", responses={503: {"description": "Model backend unavailable"}})

@@ -137,7 +137,7 @@ jobs:
       run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Validate the application-owned viewer contract and fixtures
-      run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs
+      run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs scripts/release/oracle_twin_backup_crypto.test.mjs scripts/release/oracle_vercel_transport_guard.test.cjs
     - run: 'cd onesa-ai-platform-frontend/apps/chat
 
         python3 ../../../scripts/ci/analyze.py eslint -- node_modules/.bin/eslint --format json .
@@ -150,6 +150,10 @@ jobs:
     - run: node scripts/test_backend_proxy.cjs
     - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs
     - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
+    - name: Audit the isolated owner CLI dependency lock
+      run: |
+        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/vercel-tools
+        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/npm-runtime
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
     env:
