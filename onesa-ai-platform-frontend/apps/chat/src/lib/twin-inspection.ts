@@ -1,6 +1,14 @@
 import * as THREE from "three";
 import type { ModelManifest } from "./twin-viewer-contract";
 
+// Measure active wall time from the requested transition, excluding idle time.
+// A slow renderer must reach an exact pose on its next frame after this bound.
+export function inspectionAnimationFrame(elapsedMs: number, frameSeconds: number) {
+  const elapsed = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  const frame = Number.isFinite(frameSeconds) ? Math.max(0, frameSeconds) : 0;
+  return { seconds: Math.min(frame, elapsed / 1000, 0.6), snap: elapsed >= 600 };
+}
+
 export function descendants(
   manifest: ModelManifest,
   parent: string | null,
