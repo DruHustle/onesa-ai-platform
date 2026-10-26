@@ -39,3 +39,8 @@ workflow checks and coordinated encrypted database/file recovery remain gates.
 Their presence in source does not mean a host installation, qualification or
 production deployment has completed. The protected evidence index records each
 observed outcome separately.
+
+The pinned uploader distinguishes a complete provider missing-file rejection from
+an uncertain create response. Only the former permits one identical file-upload
+continuation; lost, ambiguous or successful responses remain inspect-only.
+Credential-free tests exercise the real pinned client against a loopback fixture.

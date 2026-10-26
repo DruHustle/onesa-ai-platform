@@ -16,6 +16,12 @@ class CustodyTests(unittest.TestCase):
         self.assertEqual(query["sslmode"], ["verify-full"])
         self.assertEqual(query["channel_binding"], ["require"])
         self.assertEqual(query["sslrootcert"], ["/etc/ssl/cert.pem"])
+        for scheme in ["postgresql", "postgresql+psycopg"]:
+            normalized = urlsplit(
+                c.hardened(OWNER.replace("postgresql:", scheme + ":"))
+            )
+            self.assertEqual(normalized.scheme, "postgresql+psycopg")
+            self.assertEqual(normalized.netloc, urlsplit(OWNER).netloc)
         self.assertEqual(
             c.validate_target(
                 OWNER.replace("ai-staging.invalid", "ep-staging.neon.invalid"),

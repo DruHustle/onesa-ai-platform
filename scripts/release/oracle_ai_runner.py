@@ -1228,20 +1228,25 @@ def inspect_database_backup(receipt, plan):
     }
 
 
-MIGRATION_PROGRAM = r"""import json,sys,re
+MIGRATION_PROGRAM = r"""import json,sys,re,os
 from sqlalchemy import create_engine,text
+from sqlalchemy.engine import make_url
 from alembic.config import Config
 from alembic import command
 from urllib.parse import urlsplit
 request=json.load(sys.stdin)
 role=urlsplit(request['runtime']).username
 assert re.fullmatch('[a-z_][a-z0-9_]{0,62}',role)
-engine=create_engine(request['owner'],connect_args={'connect_timeout':10,'sslmode':'verify-full','sslrootcert':'/etc/ssl/cert.pem','channel_binding':'require'})
+owner=make_url(request['owner']).set(drivername='postgresql+psycopg')
+engine=create_engine(owner,connect_args={'connect_timeout':10,'sslmode':'verify-full','sslrootcert':'/etc/ssl/cert.pem','channel_binding':'require'})
 with engine.begin() as connection:
  revision=connection.scalar(text('SELECT version_num FROM alembic_version'))
  assert revision in ['20261010_capacity','20261021_industrial','20261025_twins']
  assert connection.scalar(text("SELECT has_schema_privilege(current_user,'public','CREATE') AND pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass"))
  config=Config('alembic.ini');config.attributes['connection']=connection
+ # env.py requires the URL even when the already verified connection is supplied.
+ # This stays inside this short-lived process; it is not a Docker argument/env-file.
+ os.environ['ONESA_DATABASE_URL']=owner.render_as_string(hide_password=False)
  command.upgrade(config,'20261025_twins')
  tables=['industrial_investigations','twin_files','twin_templates','twin_assets','twin_models','twin_notes','twin_sources','twin_readings','twin_events']
  connection.execute(text('GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE '+','.join('public.'+table for table in tables)+' TO "'+role+'"'))

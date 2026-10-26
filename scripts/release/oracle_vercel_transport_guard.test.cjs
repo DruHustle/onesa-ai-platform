@@ -17,3 +17,47 @@ for(const kind of ['fetch','http'])test(`${kind} transport cannot send a second 
  assert.equal(await child(code),73);assert.equal(count,1);
  }finally{await new Promise(resolve=>server.close(resolve));fs.rmSync(p,{recursive:true});}
 });
+
+async function serverFixture(first,action,{interrupt=false,repeatMissing=false}={}){
+ const p=fixture();let count=0;
+ const server=http.createServer((req,res)=>{req.resume();if(req.url.startsWith('/v2/files')){res.writeHead(200);res.end('{}');return;}count++;
+  if(interrupt){res.writeHead(400,{'Content-Type':'application/json','Content-Length':'500'});res.write('{"error":');setTimeout(()=>res.destroy(),20);return;}
+  res.writeHead(count===1||repeatMissing?first.status:201,{'Content-Type':'application/json'});res.end(count===1||repeatMissing?first.body:'{"id":"dpl_fixture"}');
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
+ const setup=`require(${JSON.stringify(modulePath)}).install(${JSON.stringify(p)},${JSON.stringify(origin)});`;
+ const request=(body='{}',query='')=>`await fetch(${JSON.stringify(origin+'/v13/deployments'+query)},{method:'POST',body:${JSON.stringify(body)}})`;
+ try{return await action({p,origin,setup,request,count:()=>count});}
+ finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));fs.rmSync(p,{recursive:true});}
+}
+const missing={status:400,body:JSON.stringify({error:{code:'missing_files',missing:['a'.repeat(40)]}})};
+test('a complete non-creating missing-file response permits one identical continuation, never a third create',async()=>{
+ await serverFixture(missing,async({p,origin,setup,request,count})=>{
+  const code=setup+`(async()=>{${request()};await fetch(${JSON.stringify(origin+'/v2/files')},{method:'POST',body:'synthetic'});${request()};${request()}})().catch(()=>process.exit(2));`;
+  assert.equal(await child(code),73);assert.equal(count(),2);
+  const ack=JSON.parse(fs.readFileSync(path.join(p,'missing-files-response.json')));assert.equal(ack.deployment_created,false);assert.equal(ack.status,400);assert.equal(ack.missing_count,1);
+  assert.ok(fs.existsSync(path.join(p,'create-continuation-request.json')));
+ });
+});
+for(const [name,first] of [
+ ['server failure',{status:500,body:missing.body}],
+ ['malformed JSON',{status:400,body:'{"error":'}],
+ ['different error',{status:400,body:'{"error":{"code":"not_allowed","missing":["'+ 'a'.repeat(40)+'"]}}'}],
+ ['malformed file identity',{status:400,body:'{"error":{"code":"missing_files","missing":["unbound"]}}'}],
+ ['empty missing list',{status:400,body:'{"error":{"code":"missing_files","missing":[]}}'}],
+ ['ambiguous deployment identity',{status:400,body:JSON.stringify({id:'dpl_possible',error:{code:'missing_files',missing:['a'.repeat(40)]}})}],
+])test(`${name} cannot authorize a continuation`,async()=>{
+ await serverFixture(first,async({setup,request,count})=>{assert.equal(await child(setup+`(async()=>{${request()};${request()}})().catch(()=>process.exit(2));`),73);assert.equal(count(),1);});
+});
+for(const [name,body,query] of [['body','{"changed":true}',''],['team','{}','?teamId=changed']])test(`a changed ${name} cannot continue the file probe`,async()=>{
+ await serverFixture(missing,async({setup,request,count})=>{assert.equal(await child(setup+`(async()=>{${request()};${request(body,query)}})().catch(()=>process.exit(2));`),73);assert.equal(count(),1);});
+});
+test('an acknowledged file probe cannot be resumed by a new process',async()=>{
+ await serverFixture(missing,async({setup,request,count})=>{assert.equal(await child(setup+`(async()=>{${request()};process.exit(0)})().catch(()=>process.exit(2));`),0);assert.equal(await child(setup+`(async()=>{${request()}})().catch(()=>process.exit(2));`),73);assert.equal(count(),1);});
+});
+test('an interrupted response never resets the durable create budget',async()=>{
+ await serverFixture(missing,async({p,setup,request,count})=>{assert.equal(await child(setup+`(async()=>{${request()}})().catch(()=>process.exit(2));`),2);assert.equal(fs.existsSync(path.join(p,'missing-files-response.json')),false);assert.equal(await child(setup+`(async()=>{${request()}})().catch(()=>process.exit(2));`),73);assert.equal(count(),1);},{interrupt:true});
+});
+test('repeated missing-file responses never expand the one-continuation allowance',async()=>{
+ await serverFixture(missing,async({setup,request,count})=>{assert.equal(await child(setup+`(async()=>{${request()};${request()};${request()}})().catch(()=>process.exit(2));`),73);assert.equal(count(),2);},{repeatMissing:true});
+});

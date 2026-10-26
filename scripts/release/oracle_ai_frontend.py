@@ -503,6 +503,15 @@ def create(binding, env, operation, folder, plan):
         "cli_exit": exit_code,
         "provider_state": dep["readyState"],
         "artifact_sha256": plan["builds"][env]["archive_sha256"],
+        "transport_receipts": {
+            name: r.sha(r.private(transport / name))
+            for name in [
+                "create-request.json",
+                "missing-files-response.json",
+                "create-continuation-request.json",
+            ]
+            if (transport / name).exists()
+        },
         "observed_at": r.now().isoformat(),
     }
     r.write(op / "provider-receipt.json", receipt)
