@@ -299,6 +299,41 @@ function Workspace() {
                   : `${mode === "simulated" ? "Simulated" : "Live"} data · resynchronizes every 5 seconds`}
           </p>
         </fieldset>
+        {safeDetail && (
+          <details>
+            <summary>Read-only robotics context</summary>
+            <p>
+              Export this asset’s identity, model revision and live telemetry
+              snapshot for separate operator review in Onesa Robot. Source
+              timestamps, units and freshness are retained. This grants no Robot
+              access or execution permission; the Robot demonstration remains
+              synthetic and its file import is separately configured.
+            </p>
+            <button
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  const id = safeDetail.asset.id;
+                  const value = await twin<unknown>(
+                    `/assets/${id}/robotics/v1`,
+                  );
+                  const url = URL.createObjectURL(
+                    new Blob([JSON.stringify(value, null, 2) + "\n"], {
+                      type: "application/json",
+                    }),
+                  );
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `robotics-context-${id}.json`;
+                  link.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                })
+              }
+            >
+              Export live robotics context
+            </button>
+          </details>
+        )}
         {loaded && catalog.assets.length === 0 && (
           <section className={styles.empty}>
             <h2>Your equipment workspace</h2>

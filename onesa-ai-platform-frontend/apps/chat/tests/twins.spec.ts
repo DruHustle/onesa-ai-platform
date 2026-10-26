@@ -63,6 +63,45 @@ async function seeded(page: Page, origin: string) {
     )
     .toBeGreaterThan(0);
 }
+test("owned robotics context exports live provenance without Robot authentication or commands", async ({
+  page,
+  baseURL,
+}) => {
+  await seeded(page, baseURL!);
+  await page.getByText("Read-only robotics context", { exact: true }).click();
+  const external: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).origin !== new URL(baseURL!).origin)
+      external.push(request.url());
+  });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page
+      .getByRole("button", {
+        name: "Export live robotics context",
+        exact: true,
+      })
+      .click(),
+  ]);
+  const file = await download.path();
+  expect(file).toBeTruthy();
+  const value = JSON.parse(await fs.promises.readFile(file!, "utf8"));
+  expect(download.suggestedFilename()).toBe(
+    `robotics-context-${value.asset.id}.json`,
+  );
+  expect(value.contract_version).toBe(1);
+  expect(value.capabilities.read_only).toBe(true);
+  expect(value.capabilities.actuation).toBe(false);
+  expect(Array.isArray(value.operating_state)).toBe(true);
+  expect(
+    value.operating_state.every(
+      (source: { reading: { mode: string } | null }) =>
+        !source.reading || source.reading.mode === "live",
+    ),
+  ).toBe(true);
+  expect(value.authentication).toContain("no shared Robot SSO");
+  expect(external).toEqual([]);
+});
 async function mqtt(page: Page, origin: string) {
   const catalog = await (
     await page.request.get("/api/v1/twins/catalog")
