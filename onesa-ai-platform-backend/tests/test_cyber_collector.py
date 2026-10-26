@@ -49,7 +49,12 @@ class Transport:
         if status == "outage":
             raise httpx.ConnectError("synthetic outage")
         return httpx.Response(
-            status, json={"inserted": 1, "duplicates": 0, "event_ids": ["synthetic-id"]}
+            status,
+            json={
+                "inserted": 1,
+                "duplicates": 0,
+                "event_ids": ["00000000-0000-4000-8000-000000000001"],
+            },
         )
 
 
@@ -122,3 +127,41 @@ def test_interrupted_after_receiver_acceptance_retries_identical_evidence(outbox
     monkeypatch.setattr(cyber_collector.os, "replace", replace)
     # Receiver's own unique source/event IDs make this redelivery idempotent.
     assert drain(config, client=Transport([200]))["accepted"] == 1
+
+
+@pytest.mark.parametrize(
+    "receipt",
+    [
+        {"inserted": 0, "duplicates": 0, "event_ids": []},
+        {"inserted": -1, "duplicates": 2, "event_ids": []},
+        {"inserted": True, "duplicates": 0, "event_ids": []},
+        {"inserted": 1, "duplicates": 0, "event_ids": []},
+        {"inserted": 1, "duplicates": 0, "event_ids": ["not-a-receiver-uuid"]},
+        {"inserted": 1, "duplicates": 0, "event_ids": [{}]},
+        {"inserted": 0, "duplicates": 2, "event_ids": []},
+    ],
+)
+def test_incomplete_success_acknowledgement_never_discards_pending_evidence(outbox, receipt):
+    config, box, payload = outbox
+    original = payload.read_bytes()
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, json=receipt))
+    ) as client:
+        result = drain(config, client=client, pause=lambda _: None)
+    assert result == {"accepted": 0, "rejected": 0, "pending": 1, "requests": 3}
+    assert payload.read_bytes() == original
+    assert not list((box / "accepted").iterdir())
+
+
+def test_complete_idempotent_acknowledgement_archives_the_exact_pending_batch(outbox):
+    config, box, payload = outbox
+    original = payload.read_bytes()
+    with httpx.Client(
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json={"inserted": 0, "duplicates": 1, "event_ids": []})
+        )
+    ) as client:
+        result = drain(config, client=client)
+    assert result == {"accepted": 1, "rejected": 0, "pending": 0, "requests": 1}
+    assert not payload.exists()
+    assert next((box / "accepted").iterdir()).read_bytes() == original

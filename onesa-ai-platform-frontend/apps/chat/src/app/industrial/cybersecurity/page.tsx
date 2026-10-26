@@ -1618,10 +1618,28 @@ function WorkspacePage() {
                             throw new Error("Select source, asset and report");
                           if (file.size > 2097152)
                             throw new Error("Inventory report exceeds 2 MiB");
-                          await call(
-                            `/cybersecurity/sources/${sourceId}/reports?asset_id=${f.get("asset")}&mode=${mode}${mode !== "live" ? `&run_id=${encodeURIComponent(String(f.get("run")))}` : ""}`,
-                            "POST",
-                            JSON.parse(await file.text()),
+                          const response = await fetch(
+                            `/api/v1/cybersecurity/sources/${sourceId}/reports?asset_id=${f.get("asset")}&mode=${mode}${mode !== "live" ? `&run_id=${encodeURIComponent(String(f.get("run")))}` : ""}`,
+                            {
+                              method: "POST",
+                              credentials: "same-origin",
+                              headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-Token": csrf(),
+                              },
+                              body: file,
+                            },
+                          );
+                          if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(
+                              error.error?.message ||
+                                "Inventory import rejected",
+                            );
+                          }
+                          const receipt = await response.json();
+                          setNotice(
+                            `Inventory imported. Original input SHA-256 ${receipt.sha256}.`,
                           );
                         })
                       }

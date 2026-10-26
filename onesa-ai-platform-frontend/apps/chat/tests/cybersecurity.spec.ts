@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 const password = "security-synthetic-fixture-only-123!";
 const root = "/api/v1/cybersecurity";
@@ -106,6 +106,110 @@ test.afterEach(async ({ page, baseURL }) => {
   });
   expect(response.status()).toBe(204);
   identities.delete(page);
+});
+
+test("inventory file bytes retain their source hash through posture inspection and reload", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  const { asset, source } = await prepared(page, baseURL!);
+  const raw = Buffer.from(
+    "\n" +
+      JSON.stringify(
+        {
+          bomFormat: "CycloneDX",
+          specVersion: "1.6",
+          version: 1,
+          metadata: {
+            timestamp: new Date().toISOString(),
+            tools: {
+              components: [
+                {
+                  type: "application",
+                  name: "Browser inventory producer",
+                  version: "1.0",
+                },
+              ],
+            },
+          },
+          components: [
+            {
+              type: "library",
+              "bom-ref": "browser-package",
+              name: "synthetic-inventory-package",
+              version: "1.2",
+            },
+          ],
+          vulnerabilities: [
+            {
+              id: "SYNTHETIC-BROWSER-ADVISORY",
+              ratings: [{ severity: "high", score: 7.5, method: "CVSSv31" }],
+              affects: [{ ref: "browser-package" }],
+            },
+          ],
+        },
+        null,
+        4,
+      ) +
+      "\n",
+  );
+  const digest = createHash("sha256").update(raw).digest("hex");
+  await page.goto("/industrial/cybersecurity?mode=simulated&view=Sources");
+  await page
+    .getByRole("combobox", { name: "Reviewed source", exact: true })
+    .selectOption(source.id);
+  const form = page
+    .locator("form")
+    .filter({ has: page.getByLabel("CycloneDX JSON", { exact: true }) });
+  await form
+    .getByRole("combobox", { name: "Reviewed affected asset", exact: true })
+    .selectOption(asset.id);
+  await form
+    .getByLabel("Scenario or replay run ID", { exact: true })
+    .fill("inventory-browser-qualification");
+  await form.getByLabel("CycloneDX JSON", { exact: true }).setInputFiles({
+    name: "synthetic-reviewed-inventory.json",
+    mimeType: "application/json",
+    buffer: raw,
+  });
+  const pending = page.waitForResponse(
+    (r) =>
+      r.request().method() === "POST" &&
+      new URL(r.url()).pathname.endsWith("/reports"),
+  );
+  await form
+    .getByRole("button", { name: "Import reviewed inventory", exact: true })
+    .click();
+  const imported = await pending;
+  expect(imported.status()).toBe(201);
+  expect((await imported.json()).sha256).toBe(digest);
+  await expect(
+    page.getByRole("button", { name: "Refresh evidence", exact: true }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Assets", exact: true }).click();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await page.reload();
+    await page.getByRole("button", { name: asset.name, exact: true }).click();
+    await page
+      .getByRole("button", { name: /Browser inventory producer/ })
+      .click();
+    const inspector = page.getByRole("region", {
+      name: "Selected asset",
+      exact: true,
+    });
+    await expect(
+      inspector.getByRole("cell", { name: /synthetic-inventory-package/ }),
+    ).toBeVisible();
+    await expect(inspector.getByText(digest, { exact: false })).toBeVisible();
+    await expect(
+      inspector.getByText(/SYNTHETIC-BROWSER-ADVISORY/),
+    ).toBeVisible();
+    await expect(page.getByText(/exploitability unverified/)).toBeVisible();
+  }
+  await page.screenshot({
+    path: testInfo.outputPath("cybersecurity-inventory-posture.png"),
+    fullPage: true,
+  });
 });
 
 test("actual setup import asset finding decisions and reload are independent of models", async ({

@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 
@@ -79,7 +79,7 @@ def drain(config_path: Path, *, client: Any = None, pause: Any = time.sleep) -> 
             try:
                 if not raw:
                     raise ValueError("empty or oversized")
-                parse_batch(raw, file.suffix == ".ndjson")
+                expected_count = len(parse_batch(raw, file.suffix == ".ndjson"))
             except (ValueError, UnicodeError):
                 os.replace(file, rejected / (str(uuid4()) + file.suffix))
                 counts["rejected"] += 1
@@ -106,6 +106,15 @@ def drain(config_path: Path, *, client: Any = None, pause: Any = time.sleep) -> 
                             or type(receipt["inserted"]) is not int
                             or type(receipt["duplicates"]) is not int
                             or not isinstance(receipt["event_ids"], list)
+                            or receipt["inserted"] < 0
+                            or receipt["duplicates"] < 0
+                            or receipt["inserted"] + receipt["duplicates"] != expected_count
+                            or len(receipt["event_ids"]) != receipt["inserted"]
+                            or not all(
+                                isinstance(identifier, str) and str(UUID(identifier)) == identifier
+                                for identifier in receipt["event_ids"]
+                            )
+                            or len(set(receipt["event_ids"])) != receipt["inserted"]
                         ):
                             raise ValueError("Incomplete receiver acknowledgement")
                         os.replace(file, accepted / (str(uuid4()) + file.suffix))

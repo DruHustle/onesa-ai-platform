@@ -189,6 +189,8 @@ Unsupported profiles/fields receive a preparation message; this is not a full ar
 SBOM parser. Original input SHA-256, producer/version, import time, report snapshot,
 source/mode/run and matching method are retained. Unversioned inventory is an
 unconfirmed applicability candidate, not a verified affected firmware instance.
+The browser uploads the selected file's original bytes, preserving whitespace and
+its input checksum; the import receipt and persisted posture inspector show that hash.
 CVSS/advisory severity, local priority and verified exploitability remain separate.
 There is no external catalog freshness or empty-feed claim.
 
@@ -234,6 +236,10 @@ bounded `.json`/`.ndjson` files with a single local lock and three bounded attem
 Transient outage/backpressure retains pending data; permanent rejection quarantines
 it rather than retrying forever. Interrupted acknowledgement/archive can safely resend
 the identical immutable IDs. Accepted/rejected private archives count against the
+archive cap. Successful acknowledgements must account for every submitted event,
+with nonnegative inserted/duplicate counts and unique canonical receiver IDs for
+new records. Incomplete acknowledgements retain the pending batch for bounded retry.
+Archives count against the
 128-file/8-MiB cap; inspect and apply an approved local retention decision before
 requeuing or extending capacity. There is no default scheduler or endpoint discovery.
 
@@ -278,8 +284,11 @@ unknown and stale separate. Evidence quality, expiry, source revocation and deli
 freshness affect coverage; a complete denominator does not establish security.
 
 Local acceptance on October 26 observed 496 passing backend tests and four explicit
-local platform/provider skips, plus eight passing Chromium/WebKit journeys including
-mobile themes, inert hostile text and optional installed-component Twin focus.
+local platform/provider skips before the final targeted regressions. The final focused
+security/collector suite passed 80 tests; ten Chromium/WebKit journeys include original
+inventory-file hashes, persisted posture, mobile themes, inert hostile text and optional
+installed-component Twin focus. A later Linux CI backend run observed 499 passes and
+three explicit provider/service skips at `8348c5b`; this is historical after further fixes.
 These observations are not current-source CI, Linux seccomp, real provider, hosted,
 production, live OT or Smart Factory consumer acceptance. Release evidence records
 subsequent results against their exact source rather than transferring this statement.
