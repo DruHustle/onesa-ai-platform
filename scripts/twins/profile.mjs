@@ -14,7 +14,7 @@ const output=process.argv[2];if(!output)throw Error('Private output directory re
 const engine=process.argv[3]||'webkit',launcher={chromium,webkit}[engine];if(!launcher)throw Error('Unknown engine');
 const browser=await launcher.launch(),context=await browser.newContext({baseURL:origin,viewport:{width:1440,height:1000},deviceScaleFactor:1});
 const requests=[],errors=[];await context.route('**/*',r=>{const u=new URL(r.request().url()),ok=!['http:','https:'].includes(u.protocol)||u.origin===origin;requests.push({origin:u.origin,path:u.pathname,allowed:ok});return ok?r.continue():r.abort();});
-const page=await context.newPage();page.on('pageerror',e=>errors.push(e.name));page.setDefaultTimeout(30000);
+const page=await context.newPage();let phase='cold-chat';page.on('pageerror',e=>errors.push({phase,name:e.name,message:e.message}));page.setDefaultTimeout(30000);
 const email=`twin-profile-${randomUUID()}@example.com`,password='twin-synthetic-profile-only-123!';
 const source=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const dirty=execFileSync('git',['diff','--binary'],{encoding:'buffer',maxBuffer:32*1024*1024});
@@ -27,7 +27,7 @@ const view=page.getByTestId('equipment-model-loaded');
 async function settled(){await page.waitForFunction(()=>document.querySelector('[data-testid="equipment-model-loaded"]')?.getAttribute('data-inspection-settled')==='true');}
 async function button(name){await page.getByRole('button',{name,exact:true}).click();}
 async function profile(name,control='orbit'){
- await settled();await view.scrollIntoViewIfNeeded();
+ phase=name;await settled();await view.scrollIntoViewIfNeeded();
  const box=await page.locator('canvas').boundingBox();
  if(control==='orbit'){await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();}
  const value=await view.evaluate(async (el,{control})=>{
@@ -54,9 +54,12 @@ async function profile(name,control='orbit'){
 }
 try{
  const reg=await page.request.post('/api/v1/auth/register',{headers:{Origin:origin},data:{email,password,display_name:'Disposable performance fixture'}});if(reg.status()!==201)throw Error('Fixture registration');
- await page.goto('/');await page.waitForLoadState('networkidle');summary.coldChat={canvasCount:await page.locator('canvas').count(),threeRegistered:await page.evaluate(()=>typeof window.__THREE__!=='undefined'),requests:requests.slice()};
+ // Observe the actual startup responses before leaving Chat; optional 404 is
+ // allowed, and an unread response cannot hold a global network-idle heuristic.
+ const startup=['auth/me','models','conversations','knowledge/documents','twins/readiness','industrial/assets','documentation/access'].map(path=>page.waitForResponse(r=>new URL(r.url()).pathname==='/api/v1/'+path).then(r=>{if(r.status()!==200&&!(path==='industrial/assets'&&r.status()===404))throw Error('Chat startup response: '+path);}));
+ await page.goto('/');await page.getByRole('textbox',{name:'Message Onesa AI',exact:true}).waitFor();await Promise.all(startup);await page.waitForTimeout(500);summary.coldChat={canvasCount:await page.locator('canvas').count(),threeRegistered:await page.evaluate(()=>typeof window.__THREE__!=='undefined'),requests:requests.slice()};
  if(summary.coldChat.canvasCount||summary.coldChat.threeRegistered)throw Error('Ordinary Chat loaded engine');
- await page.goto('/industrial/twins');await button('Load isolated pump demonstration');await view.waitFor();await page.waitForFunction(()=>Number(document.querySelector('[data-testid="equipment-model-loaded"]')?.getAttribute('data-draw-calls'))>0);summary.coldLoad=await view.evaluate(el=>({...el.dataset}));
+ phase='cold-model';await page.goto('/industrial/twins');await button('Load isolated pump demonstration');await view.waitFor();await page.waitForFunction(()=>Number(document.querySelector('[data-testid="equipment-model-loaded"]')?.getAttribute('data-draw-calls'))>0);summary.coldLoad=await view.evaluate(el=>({...el.dataset}));
  await page.getByText('Section, subassembly and reveal controls',{exact:true}).click();
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   await page.setViewportSize(viewport);await page.getByRole('tab',{name:'Model',exact:true}).click();

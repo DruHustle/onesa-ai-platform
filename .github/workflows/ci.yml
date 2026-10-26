@@ -157,7 +157,16 @@ jobs:
     - name: Verify the pinned owner CLI prebuilt upload protocol offline
       run: |
         docker build -f infra/oracle/vercel.Dockerfile -t onesa-owner-cli-protocol:ci .
-        docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges -v "$PWD/scripts/release:/tests:ro" --entrypoint node onesa-owner-cli-protocol:ci --test /tests/oracle_vercel_client_protocol.test.cjs
+        fixture=$(mktemp -d "$RUNNER_TEMP/onesa-cli-fixture-XXXXXX")
+        python3 - "$fixture" <<'PY'
+        import json, os, pathlib, sys
+        folder = pathlib.Path(sys.argv[1])
+        for name, value in [('auth.json', {'token': 'synthetic-startup-only'}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
+            target = folder / name
+            target.write_text(json.dumps(value))
+            os.chmod(target, 0o600)
+        PY
+        docker run --rm --network none --read-only --user "$(id -u):$(id -g)" --tmpfs /tmp --tmpfs "/private/transport:rw,mode=700,uid=$(id -u),gid=$(id -g)" --cap-drop ALL --security-opt no-new-privileges -v "$fixture:/private/creds:ro" -v "$PWD/scripts/release/oracle_vercel_transport_guard.cjs:/private/guard.cjs:ro" -v "$PWD/scripts/release:/tests:ro" --entrypoint node onesa-owner-cli-protocol:ci --test /tests/oracle_vercel_client_protocol.test.cjs
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
     env:
