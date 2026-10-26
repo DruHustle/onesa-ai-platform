@@ -1,5 +1,20 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Optional Digital Twins configuration — 2026-10-25 candidate
+
+These app-local Settings are nonsecret, server-only and default off. No external
+application URL, account, token or package is required. They are not production activation.
+
+| Exact key | Default | Purpose |
+| --- | --- | --- |
+| `ONESA_DIGITAL_TWINS_ENABLED` | `false` | Enable owned Twin routes and require the additive Twin schema |
+| `ONESA_DIGITAL_TWINS_DEMO_ENABLED` | `false` | Permit explicit synthetic fixtures/local simulator outside production |
+| `ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY` | empty | Absolute private durable file root; never a temporary fallback |
+| `ONESA_DIGITAL_TWINS_PERSISTENT_MOUNT` | `false` | Hosted operator declaration after verifying mount ownership, backup/recovery |
+
+Optional MQTT credentials remain in separate private operator configuration/environment,
+outside browsers and this Settings inventory. See [Digital Twins](DIGITAL_TWINS.md).
+
 ## Current supported Cloudflare release profile — 2026-10-12
 
 The implemented model selectors include `ONESA_MODEL_BACKEND=cloudflare` and

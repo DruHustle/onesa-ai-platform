@@ -23,8 +23,13 @@ COPY app ./app
 COPY alembic.ini ./
 COPY start.sh ./
 COPY migrations ./migrations
+ARG SOURCE_COMMIT=""
+ARG SOURCE_ARCHIVE_SHA256=""
+LABEL org.opencontainers.image.revision=$SOURCE_COMMIT org.onesa.source-archive-sha256=$SOURCE_ARCHIVE_SHA256
+RUN SOURCE_COMMIT="$SOURCE_COMMIT" SOURCE_ARCHIVE_SHA256="$SOURCE_ARCHIVE_SHA256" python -c "import json,os,pathlib; pathlib.Path('/app/source-identity.json').write_text(json.dumps({'source_commit':os.environ['SOURCE_COMMIT'],'source_archive_sha256':os.environ['SOURCE_ARCHIVE_SHA256']}))"
 # Build tooling is not part of the runtime; remove vulnerable vendored copies too.
 RUN rm -rf /usr/local/lib/python3.11/ensurepip /usr/local/bin/pip* && adduser -D -u 10001 onesa
+RUN mkdir -p /var/lib/onesa/twins && chown 10001:10001 /var/lib/onesa/twins && chmod 700 /var/lib/onesa/twins
 RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/python3.11/site-packages/pkg_resources* /usr/local/lib/python3.11/site-packages/_distutils_hack* /usr/local/lib/python3.11/site-packages/distutils-precedence.pth /usr/local/lib/python3.11/site-packages/wheel* /usr/local/lib/python3.11/site-packages/pip* \
     && python -c "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in ('pip','setuptools','wheel'))"
 USER onesa

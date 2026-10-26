@@ -30,3 +30,17 @@ commissioned, pinned external verifier and owner-controlled signing custody.
 Repository code or an unsigned JSON file supplies no release authority.
 The protected guide contains installation, qualification and recovery instructions;
 source implementation alone does not establish commissioning or deployment.
+
+The AI component runners, reviewed installer and credential-free prebuilt builder
+now accompany the adapter. They keep candidate application bytes separate from
+commissioned verification tools and record deployment intent before a provider
+request. Source identity readback, additive-schema rollback, scoped synthetic
+workflow checks and coordinated encrypted database/file recovery remain gates.
+Their presence in source does not mean a host installation, qualification or
+production deployment has completed. The protected evidence index records each
+observed outcome separately.
+
+The pinned uploader distinguishes a complete provider missing-file rejection from
+an uncertain create response. Only the former permits one identical file-upload
+continuation; lost, ambiguous or successful responses remain inspect-only.
+Credential-free tests exercise the real pinned client against a loopback fixture.

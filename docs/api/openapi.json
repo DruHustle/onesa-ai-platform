@@ -2648,6 +2648,1337 @@
         }
       }
     },
+    "/api/v1/twins/readiness": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Readiness",
+        "operationId": "readiness_api_v1_twins_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Readiness Api V1 Twins Readiness Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/catalog": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Catalog",
+        "operationId": "catalog_api_v1_twins_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Catalog Api V1 Twins Catalog Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/templates": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Create Template",
+        "operationId": "create_template_api_v1_twins_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identifier"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/assets": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Create Asset",
+        "operationId": "create_asset_api_v1_twins_assets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identifier"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/files": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Upload File",
+        "operationId": "upload_file_api_v1_twins_files_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_api_v1_twins_files_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Upload File Api V1 Twins Files Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/files/{identifier}": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "File Info",
+        "operationId": "file_info_api_v1_twins_files__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response File Info Api V1 Twins Files  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/files/{identifier}/content": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "File Content",
+        "operationId": "file_content_api_v1_twins_files__identifier__content_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/models": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Create Model",
+        "operationId": "create_model_api_v1_twins_models_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identifier"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/assets/{identifier}": {
+      "patch": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Update Asset",
+        "operationId": "update_asset_api_v1_twins_assets__identifier__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Update Asset Api V1 Twins Assets  Identifier  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Get Asset",
+        "operationId": "get_asset_api_v1_twins_assets__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(live|simulated|replay)$",
+              "default": "simulated",
+              "title": "Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Asset Api V1 Twins Assets  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/imports/{identifier}/commit": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Commit Import",
+        "operationId": "commit_import_api_v1_twins_imports__identifier__commit_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCommit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Commit Import Api V1 Twins Imports  Identifier  Commit Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/documents": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Link Document",
+        "operationId": "link_document_api_v1_twins_assets__identifier__documents_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentLink"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Link Document Api V1 Twins Assets  Identifier  Documents Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/files/{file_id}/index-document": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Index File",
+        "operationId": "index_file_api_v1_twins_assets__identifier__files__file_id__index_document_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Index File Api V1 Twins Assets  Identifier  Files  File Id  Index Document Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/sources": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Create Source",
+        "operationId": "create_source_api_v1_twins_assets__identifier__sources_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Create Source Api V1 Twins Assets  Identifier  Sources Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/sources/{identifier}": {
+      "delete": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Revoke Source",
+        "operationId": "revoke_source_api_v1_twins_sources__identifier__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/sources/{identifier}/readings": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Ingest Readings",
+        "operationId": "ingest_readings_api_v1_twins_sources__identifier__readings_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Batch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Ingest Readings Api V1 Twins Sources  Identifier  Readings Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/history": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Get History",
+        "operationId": "get_history_api_v1_twins_assets__identifier__history_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeWindow"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get History Api V1 Twins Assets  Identifier  History Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/notes/{identifier}": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Get Note",
+        "operationId": "get_note_api_v1_twins_notes__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Note Api V1 Twins Notes  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/notes": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Save Note",
+        "operationId": "save_note_api_v1_twins_assets__identifier__notes_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Save Note Api V1 Twins Assets  Identifier  Notes Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/viewer-actions": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Viewer Action",
+        "operationId": "viewer_action_api_v1_twins_assets__identifier__viewer_actions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViewerAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Viewer Action Api V1 Twins Assets  Identifier  Viewer Actions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/tools/evidence": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Equipment Evidence",
+        "operationId": "equipment_evidence_api_v1_twins_assets__identifier__tools_evidence_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Equipment Evidence Api V1 Twins Assets  Identifier  Tools Evidence Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/inspections": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Inspection",
+        "operationId": "inspection_api_v1_twins_assets__identifier__inspections_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Inspection Api V1 Twins Assets  Identifier  Inspections Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/robotics/v1": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Robotics",
+        "operationId": "robotics_api_v1_twins_assets__identifier__robotics_v1_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Robotics Api V1 Twins Assets  Identifier  Robotics V1 Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/demo": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Demo",
+        "operationId": "demo_api_v1_twins_demo_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Demo Api V1 Twins Demo Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/demo-fixtures/{kind}": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Demo Fixture",
+        "operationId": "demo_fixture_api_v1_twins_demo_fixtures__kind__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/twins/assets/{identifier}/simulate": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Simulate",
+        "operationId": "simulate_api_v1_twins_assets__identifier__simulate_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Simulation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Simulate Api V1 Twins Assets  Identifier  Simulate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -2774,6 +4105,11 @@
             "type": "array",
             "title": "Industrial Investigations"
           },
+          "digital_twins": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Digital Twins"
+          },
           "scope": {
             "type": "string",
             "title": "Scope"
@@ -2789,6 +4125,7 @@
           "agent_runs",
           "trips",
           "industrial_investigations",
+          "digital_twins",
           "scope"
         ],
         "title": "AccountExport"
@@ -2903,6 +4240,209 @@
         ],
         "title": "AgentRunOut"
       },
+      "AssetChange": {
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Revision"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "identity",
+              "model",
+              "mapping",
+              "documents",
+              "signals",
+              "preview",
+              "active"
+            ],
+            "title": "Stage"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision",
+          "stage"
+        ],
+        "title": "AssetChange"
+      },
+      "AssetCreate": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "serial": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Serial"
+          },
+          "external_id": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "External Id",
+            "default": ""
+          },
+          "aas_id": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Aas Id",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "template_id",
+          "name",
+          "serial"
+        ],
+        "title": "AssetCreate"
+      },
+      "Batch": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated",
+              "replay"
+            ],
+            "title": "Mode"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/Sample"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Samples"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "samples"
+        ],
+        "title": "Batch"
+      },
+      "Binding": {
+        "properties": {
+          "tag": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "title": "Tag"
+          },
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "external_component_id": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "External Component Id",
+            "default": ""
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "temperature",
+              "vibration",
+              "pressure",
+              "rpm",
+              "power",
+              "humidity"
+            ],
+            "title": "Metric"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "Cel",
+              "K",
+              "mm/s",
+              "m/s",
+              "bar",
+              "Pa",
+              "rpm",
+              "W",
+              "%"
+            ],
+            "title": "Unit"
+          },
+          "sample_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 1.0,
+            "title": "Sample Seconds",
+            "default": 10
+          },
+          "stale_seconds": {
+            "type": "integer",
+            "maximum": 604800.0,
+            "minimum": 2.0,
+            "title": "Stale Seconds",
+            "default": 60
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000000000.0,
+                "minimum": -1000000000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "hysteresis": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Hysteresis",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tag",
+          "component_id",
+          "metric",
+          "unit"
+        ],
+        "title": "Binding"
+      },
       "Body_upload_api_v1_knowledge_documents_post": {
         "properties": {
           "file": {
@@ -2916,6 +4456,20 @@
           "file"
         ],
         "title": "Body_upload_api_v1_knowledge_documents_post"
+      },
+      "Body_upload_file_api_v1_twins_files_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_api_v1_twins_files_post"
       },
       "CancelGeneration": {
         "properties": {
@@ -3023,6 +4577,85 @@
           "result"
         ],
         "title": "CompletedToolStep"
+      },
+      "Component": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "external_id": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "External Id",
+            "default": ""
+          },
+          "semantic_reference": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Semantic Reference",
+            "default": ""
+          },
+          "renderable": {
+            "type": "boolean",
+            "title": "Renderable",
+            "default": true
+          },
+          "inventory": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "part",
+              "combined",
+              "unavailable"
+            ],
+            "title": "Inventory",
+            "default": "part"
+          },
+          "inventory_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Inventory Note",
+            "default": ""
+          },
+          "material": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Material",
+            "default": ""
+          },
+          "housing": {
+            "type": "boolean",
+            "title": "Housing",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Component"
       },
       "ConversationCreate": {
         "properties": {
@@ -3311,6 +4944,33 @@
           "text"
         ],
         "title": "DocumentDetail"
+      },
+      "DocumentLink": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "component_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_id"
+        ],
+        "title": "DocumentLink"
       },
       "DocumentList": {
         "properties": {
@@ -3617,6 +5277,57 @@
         "title": "EvidenceBundle",
         "description": "Data-only JSON, never a URL/file/SQL/instruction connector or rights approval."
       },
+      "ExplodeMotion": {
+        "properties": {
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "translation": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Translation"
+          },
+          "rotation": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Rotation"
+          },
+          "pivot": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Pivot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "component_id",
+          "translation",
+          "rotation",
+          "pivot"
+        ],
+        "title": "ExplodeMotion"
+      },
       "ExportConversation": {
         "properties": {
           "conversation": {
@@ -3670,6 +5381,61 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Identifier": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Identifier"
+      },
+      "ImportCommit": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "serial": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Serial"
+          },
+          "geometry_file_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry File Id"
+          },
+          "include_documents": {
+            "type": "boolean",
+            "title": "Include Documents",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "serial"
+        ],
+        "title": "ImportCommit"
       },
       "ImportPreview": {
         "properties": {
@@ -4000,6 +5766,187 @@
         ],
         "title": "ImportedSignal"
       },
+      "InspectionModel": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "1.0.0",
+            "title": "Version"
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Reference"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description"
+          },
+          "motions": {
+            "items": {
+              "$ref": "#/components/schemas/ExplodeMotion"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Motions"
+          },
+          "closed_solids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Closed Solids"
+          },
+          "housing_components": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Housing Components"
+          },
+          "cover_components": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Cover Components"
+          },
+          "scope_notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Scope Notes"
+          },
+          "unavailable": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Unavailable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "reference",
+          "description",
+          "motions"
+        ],
+        "title": "InspectionModel"
+      },
+      "InspectionView": {
+        "properties": {
+          "explode": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Explode",
+            "default": 0
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "section_enabled": {
+            "type": "boolean",
+            "title": "Section Enabled",
+            "default": false
+          },
+          "section_axis": {
+            "type": "string",
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "title": "Section Axis",
+            "default": "x"
+          },
+          "section_position": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Section Position",
+            "default": 0
+          },
+          "section_flip": {
+            "type": "boolean",
+            "title": "Section Flip",
+            "default": false
+          },
+          "section_caps": {
+            "type": "boolean",
+            "title": "Section Caps",
+            "default": true
+          },
+          "guides": {
+            "type": "boolean",
+            "title": "Guides",
+            "default": false
+          },
+          "labels": {
+            "type": "boolean",
+            "title": "Labels",
+            "default": true
+          },
+          "ghost_housings": {
+            "type": "boolean",
+            "title": "Ghost Housings",
+            "default": false
+          },
+          "hidden_component_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Hidden Component Ids"
+          },
+          "isolated_component_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isolated Component Id"
+          },
+          "transparent_surroundings": {
+            "type": "boolean",
+            "title": "Transparent Surroundings",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InspectionView"
+      },
       "InvestigationList": {
         "properties": {
           "items": {
@@ -4198,6 +6145,28 @@
         ],
         "title": "KnowledgeSource"
       },
+      "Mapping": {
+        "properties": {
+          "node": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Node"
+          },
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node",
+          "component_id"
+        ],
+        "title": "Mapping"
+      },
       "MessageOut": {
         "properties": {
           "id": {
@@ -4233,6 +6202,107 @@
           "sequence"
         ],
         "title": "MessageOut"
+      },
+      "ModelCreate": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "File Id"
+          },
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Id"
+          },
+          "mappings": {
+            "items": {
+              "$ref": "#/components/schemas/Mapping"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Mappings"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "m",
+              "mm",
+              "cm"
+            ],
+            "title": "Unit"
+          },
+          "meters_per_unit": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Meters Per Unit"
+          },
+          "frame": {
+            "type": "string",
+            "const": "right-handed-y-up",
+            "title": "Frame",
+            "default": "right-handed-y-up"
+          },
+          "transform": {
+            "items": {
+              "type": "number",
+              "maximum": 1000000000000.0,
+              "minimum": -1000000000000.0
+            },
+            "type": "array",
+            "maxItems": 16,
+            "minItems": 16,
+            "title": "Transform",
+            "default": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "provenance": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Provenance"
+          },
+          "inspection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InspectionModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file_id",
+          "template_id",
+          "mappings",
+          "unit",
+          "meters_per_unit",
+          "provenance"
+        ],
+        "title": "ModelCreate"
       },
       "ModelList": {
         "properties": {
@@ -4333,6 +6403,76 @@
           "real_inference"
         ],
         "title": "ModelOut"
+      },
+      "NoteCreate": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "annotation",
+              "viewpoint"
+            ],
+            "title": "Kind"
+          },
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Text",
+            "default": ""
+          },
+          "camera": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": -1000000000000.0
+                },
+                "type": "array",
+                "maxItems": 6,
+                "minItems": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Camera"
+          },
+          "model_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Revision Id"
+          },
+          "inspection_view": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InspectionView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "component_id"
+        ],
+        "title": "NoteCreate"
       },
       "PasswordChange": {
         "properties": {
@@ -4696,6 +6836,38 @@
         ],
         "title": "Register"
       },
+      "Relationship": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "drives",
+              "contains",
+              "connected_to",
+              "measures"
+            ],
+            "title": "Kind"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "kind"
+        ],
+        "title": "Relationship"
+      },
       "Rename": {
         "properties": {
           "title": {
@@ -4852,6 +7024,59 @@
           "display_name"
         ],
         "title": "SafeUser"
+      },
+      "Sample": {
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Message Id"
+          },
+          "tag": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Tag"
+          },
+          "value": {
+            "type": "number",
+            "maximum": 1000000000000.0,
+            "minimum": -1000000000000.0,
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "title": "Unit"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "bad",
+              "unknown"
+            ],
+            "title": "Quality",
+            "default": "good"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message_id",
+          "tag",
+          "value",
+          "unit",
+          "observed_at"
+        ],
+        "title": "Sample"
       },
       "Search": {
         "properties": {
@@ -5034,6 +7259,81 @@
         ],
         "title": "Signal"
       },
+      "Simulation": {
+        "properties": {
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "cycle",
+              "normal",
+              "alarm",
+              "recovery",
+              "disconnect"
+            ],
+            "title": "Scenario",
+            "default": "cycle"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "component_id"
+        ],
+        "title": "Simulation"
+      },
+      "SourceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "title": "Mode"
+          },
+          "external_system": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "External System",
+            "default": "manual"
+          },
+          "external_asset_id": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "External Asset Id",
+            "default": ""
+          },
+          "bindings": {
+            "items": {
+              "$ref": "#/components/schemas/Binding"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Bindings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "mode",
+          "bindings"
+        ],
+        "title": "SourceCreate"
+      },
       "Start": {
         "properties": {
           "filename": {
@@ -5069,6 +7369,78 @@
           "sha256"
         ],
         "title": "Start"
+      },
+      "TemplateCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Kind"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/Component"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Components"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Relationships"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "components"
+        ],
+        "title": "TemplateCreate"
+      },
+      "TimeWindow": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated",
+              "replay"
+            ],
+            "title": "Mode",
+            "default": "simulated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "TimeWindow"
       },
       "ToolCall": {
         "properties": {
@@ -5139,6 +7511,55 @@
           "items"
         ],
         "title": "ToolList"
+      },
+      "ToolRequest": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated",
+              "replay"
+            ],
+            "title": "Mode",
+            "default": "simulated"
+          },
+          "component_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Component Id"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question",
+            "default": "Inspect this equipment"
+          },
+          "use_model": {
+            "type": "boolean",
+            "title": "Use Model",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "component_id"
+        ],
+        "title": "ToolRequest"
       },
       "TripList": {
         "properties": {
@@ -5314,6 +7735,35 @@
         ],
         "title": "ValidationError"
       },
+      "ViewerAction": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "focus_component",
+              "highlight_components"
+            ],
+            "title": "Action"
+          },
+          "component_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Component Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action",
+          "component_ids"
+        ],
+        "title": "ViewerAction"
+      },
       "Window": {
         "properties": {
           "start": {
@@ -5341,6 +7791,11 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "onesa_session"
+      },
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Onesa-Source-Token"
       }
     }
   }

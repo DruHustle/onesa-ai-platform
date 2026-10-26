@@ -172,7 +172,13 @@ async def upload(
 
 
 async def ingest(
-    request: Request, db: DB, auth: Auth, file: UploadFile, *, commit: bool = True
+    request: Request,
+    db: DB,
+    auth: Auth,
+    file: UploadFile,
+    *,
+    commit: bool = True,
+    reuse_existing: bool = False,
 ) -> dict[str, Any]:
     data = await file.read(5 * 1024 * 1024 + 1)
     await file.close()
@@ -180,15 +186,15 @@ async def ingest(
         fail(413, "document_too_large", "Document upload limit is 5 MiB")
     filename = (file.filename or "document").replace("\\", "/").rsplit("/", 1)[-1][:200]
     text = await run_in_threadpool(extract, data, filename, file.content_type or "")
-    if (
-        db.scalar(
-            select(Document.id).where(
-                Document.user_id == auth[0].id,
-                Document.checksum == hashlib.sha256(text.encode()).hexdigest(),
-            )
+    existing_id = db.scalar(
+        select(Document.id).where(
+            Document.user_id == auth[0].id,
+            Document.checksum == hashlib.sha256(text.encode()).hexdigest(),
         )
-        is not None
-    ):
+    )
+    if existing_id is not None:
+        if reuse_existing:
+            return metadata(owned_document(db, existing_id, auth[0].id))
         fail(409, "duplicate_document", "This document is already indexed")
     from sqlalchemy import func
     from sqlalchemy import text as sql_text
