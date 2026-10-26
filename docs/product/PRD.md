@@ -1,5 +1,22 @@
 # Product requirements baseline
 
+## Independent Cybersecurity workspace — 2026-10-26 source scope
+
+An opt-in native `/industrial/cybersecurity` workspace adds owned security sources,
+reviewed asset mappings, strict JSON/NDJSON evidence, deterministic versioned findings,
+offline inventory/advisory imports and persistent human investigations. Real native
+application decisions use a separate explicitly configured operator boundary;
+ordinary owners cannot inspect global authentication events. Source credentials grant
+bounded ingestion only. Optional evidence-grounded assistance is read-only and
+default-off; deterministic investigations require no model.
+
+This source implementation is separate from hosted qualification and production
+activation. It does not implement the portal's planned AI code review/threat modelling,
+certification, autonomous remediation or a live OT integration. Smart Factory and
+Digital Twins are not prerequisites. An optional owned Twin association is reviewed
+and revision-bound. See [Cybersecurity](../engineering/CYBERSECURITY.md) for the audit
+matrix, supported profiles, limits, privacy and remaining acceptance.
+
 ## Current interpretation and release status
 
 The platform is pre-commercial, with implemented application capabilities and

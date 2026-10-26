@@ -23,6 +23,8 @@ class BodyLimit:
             "/api/v1/industrial/investigations": 516 * 1024,
         }
         maximum = min(self.maximum, bounded.get(scope.get("path", ""), self.maximum))
+        if scope.get("path", "").startswith("/api/v1/cybersecurity/"):
+            maximum = 2 * 1048576 if scope["path"].endswith("/reports") else 1048576
         size = 0
         expires = time.monotonic() + self.deadline
         while True:

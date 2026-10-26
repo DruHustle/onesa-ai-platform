@@ -22,7 +22,7 @@ PROGRAM = r"""import json,os,secrets
 from fastapi.testclient import TestClient
 from app.main import create_app
 from app.config import Settings
-settings=Settings(environment='test',database_url=os.environ['ONESA_DATABASE_URL'],model_backend='mock',embedding_backend='lexical',digital_twins_enabled=False,industrial_demo_enabled=False,secure_cookies=False,registration_mode='open',public_origin='http://localhost:3100')
+settings=Settings(environment='test',database_url=os.environ['ONESA_DATABASE_URL'],model_backend='mock',embedding_backend='lexical',digital_twins_enabled=False,cybersecurity_enabled=False,cybersecurity_demo_enabled=False,cybersecurity_ai_enabled=False,industrial_demo_enabled=False,secure_cookies=False,registration_mode='open',public_origin='http://localhost:3100')
 with TestClient(create_app(settings),base_url="http://localhost:3100") as client:
  assert client.get('/core-ready').status_code==200
  password=secrets.token_urlsafe(32)
@@ -33,7 +33,9 @@ with TestClient(create_app(settings),base_url="http://localhost:3100") as client
  assert created.status_code==201
  assert client.get('/api/v1/conversations/'+created.json()['id']).status_code==200
  assert client.get('/api/v1/twins/readiness').status_code==404
- print(json.dumps({'core_ready':'PASS','authentication':'PASS','owned_conversation_persistence':'PASS','twins_disabled':'PASS','model_backend':'mock'}))
+ assert client.get('/api/v1/cybersecurity/readiness').status_code==404
+ assert client.get('/api/v1/cybersecurity/workspace').status_code==404
+ print(json.dumps({'core_ready':'PASS','authentication':'PASS','owned_conversation_persistence':'PASS','twins_disabled':'PASS','cybersecurity_disabled':'PASS','model_backend':'mock'}))
 """
 
 
@@ -61,7 +63,7 @@ def check(folder, binding, operation):
         "alembic",
         binding["artifact_digest"],
         "upgrade",
-        "20261025_twins",
+        "20261026_cybersecurity",
         "--sql",
         timeout=60,
     )
@@ -186,6 +188,7 @@ def check(folder, binding, operation):
                     "authentication",
                     "owned_conversation_persistence",
                     "twins_disabled",
+                    "cybersecurity_disabled",
                 ]
             ),
             "FUTURE_SCHEMA_ROLLBACK_NOT_COMPATIBLE",
@@ -242,9 +245,10 @@ def check(folder, binding, operation):
             "status": "PASS",
             "binding": binding,
             "operation_id": operation,
-            "schema_revision": "20261025_twins",
+            "schema_revision": "20261026_cybersecurity",
             "candidate_image": binding["artifact_digest"],
             "twins_disabled": True,
+            "cybersecurity_disabled": True,
             "checks": checks,
             "synthetic_database_restore": "PASS",
             "restored_tables": manifest,
