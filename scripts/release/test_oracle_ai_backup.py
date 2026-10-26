@@ -12,6 +12,34 @@ import oracle_ai_backup as b
 
 
 class BackupTests(unittest.TestCase):
+    def test_snapshot_revision_comes_from_the_same_dump_and_fails_closed(self):
+        def copy(value):
+            return (
+                "-- pg_restore output\nCOPY public.alembic_version (version_num) FROM stdin;\n"
+                + value
+                + "\n\\.\n"
+            ).encode()
+
+        for revision in [
+            "20261010_capacity",
+            "20261021_industrial",
+            "20261025_twins",
+            "20261026_cybersecurity",
+        ]:
+            self.assertEqual(b.snapshot_revision(copy(revision)), revision)
+        value = copy("20261026_cybersecurity")
+        for invalid in [
+            b"-- no revision table",
+            copy(""),
+            copy("unknown"),
+            copy("20261025_twins\n20261026_cybersecurity"),
+            value + value,
+            value.replace(b"\n\\.\n", b"\n"),
+            value.replace(b"(version_num)", b"(other)"),
+        ]:
+            with self.subTest(invalid=invalid), self.assertRaises(b.custody.Refused):
+                b.snapshot_revision(invalid)
+
     def test_copy_rows_are_parsed_without_executing_sql(self):
         owner = str(uuid4())
         digest = "a" * 64

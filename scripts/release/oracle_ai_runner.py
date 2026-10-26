@@ -434,7 +434,10 @@ def validate_plan(binding):
     require(
         sha(private(COMPOSE)) == plan["compose_sha256"], "COMPOSE_CONFIGURATION_CHANGED"
     )
-    require(plan.get("mode") in ["foundation", "twins"], "EXPLICIT_API_RELEASE_MODE")
+    require(
+        plan.get("mode") in ["foundation", "twins", "cybersecurity"],
+        "EXPLICIT_API_RELEASE_MODE",
+    )
     for env, envpath in ENV.items():
         prepared = private(candidate_environment(binding, env))
         require(
@@ -454,6 +457,7 @@ def validate_plan(binding):
             "ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY",
             "ONESA_DIGITAL_TWINS_PERSISTENT_MOUNT",
             "ONESA_INDUSTRIAL_DEMO_ENABLED",
+            "ONESA_CYBERSECURITY_ENABLED",
         }
         if env == "staging":
             allowed.add("ONESA_PUBLIC_ORIGIN")
@@ -472,10 +476,31 @@ def validate_plan(binding):
             require(
                 values.get("ONESA_DIGITAL_TWINS_ENABLED", "false") == "false"
                 and values.get("ONESA_DIGITAL_TWINS_DEMO_ENABLED", "false") == "false"
-                and values.get("ONESA_INDUSTRIAL_DEMO_ENABLED", "false") == "false",
+                and values.get("ONESA_INDUSTRIAL_DEMO_ENABLED", "false") == "false"
+                and values.get("ONESA_CYBERSECURITY_ENABLED", "false") == "false"
+                and values.get("ONESA_CYBERSECURITY_DEMO_ENABLED", "false") == "false"
+                and values.get("ONESA_CYBERSECURITY_AI_ENABLED", "false") == "false",
                 "FOUNDATION_MUST_REMAIN_FEATURE_OFF",
             )
+        elif plan["mode"] == "cybersecurity":
+            require(
+                values.get("ONESA_CYBERSECURITY_ENABLED") == "true"
+                and values.get("ONESA_CYBERSECURITY_DEMO_ENABLED", "false") == "false"
+                and values.get("ONESA_CYBERSECURITY_AI_ENABLED", "false") == "false"
+                and plan["migration_revision"] == "20261026_cybersecurity"
+                and all(
+                    values.get(k) == current.get(k)
+                    for k in allowed
+                    if k not in {"ONESA_CYBERSECURITY_ENABLED", "ONESA_PUBLIC_ORIGIN"}
+                ),
+                "CYBERSECURITY_INDEPENDENT_ACTIVATION_PROFILE",
+            )
         else:
+            require(
+                values.get("ONESA_CYBERSECURITY_ENABLED", "false")
+                == current.get("ONESA_CYBERSECURITY_ENABLED", "false"),
+                "INDEPENDENT_CYBERSECURITY_CONFIGURATION_CHANGED",
+            )
             require(
                 values.get("ONESA_DIGITAL_TWINS_ENABLED") == "true"
                 and values.get("ONESA_DIGITAL_TWINS_DEMO_ENABLED", "false") == "false"
@@ -896,7 +921,10 @@ def migration_prerequisites(plan):
             != runtime_values(ENV[env])["ONESA_DATABASE_URL"],
             "SEPARATE_MIGRATION_OWNER_REQUIRED",
         )
-    require(plan["migration_revision"] == "20261025_twins", "ADDITIVE_MIGRATION_SCOPE")
+    require(
+        plan["migration_revision"] in ["20261025_twins", "20261026_cybersecurity"],
+        "ADDITIVE_MIGRATION_SCOPE",
+    )
 
 
 def preflight(binding):
@@ -939,6 +967,13 @@ def accepted_rollback_proof(plan):
         and proof["status"] == "PASS"
         and proof["synthetic_database_restore"] == "PASS"
         and proof["twins_disabled"] is True
+        and (
+            plan["mode"] != "cybersecurity"
+            or (
+                proof.get("cybersecurity_disabled") is True
+                and proof.get("schema_revision") == "20261026_cybersecurity"
+            )
+        )
         and proof["production_writes"] == 0,
         "ACCEPTED_FUTURE_SCHEMA_ROLLBACK_REQUIRED",
     )
@@ -998,6 +1033,8 @@ def operational_observations(binding, plan):
             and proof["status"] == "PASS"
             and proof["synthetic_database_restore"] == "PASS"
             and proof["twins_disabled"] is True
+            and proof["cybersecurity_disabled"] is True
+            and proof["schema_revision"] == "20261026_cybersecurity"
             and proof["production_writes"] == 0,
             "FORWARD_COMPATIBLE_ROLLBACK_NOT_PROVEN",
         )
@@ -1007,7 +1044,8 @@ def operational_observations(binding, plan):
             and hosted["controlled_replacement"] == replacement
             and hosted["status"] == "PASS"
             and hosted["binding"] == binding
-            and hosted["checks"]["twins_disabled"] == "PASS",
+            and hosted["checks"]["twins_disabled"] == "PASS"
+            and hosted["checks"]["cybersecurity_disabled"] == "PASS",
             "FOUNDATION_HOSTED_PRESERVATION_NOT_PROVEN",
         )
         old = plan["rollback"]
@@ -1029,6 +1067,51 @@ def operational_observations(binding, plan):
             ),
             "metrics_checked_at": metrics["checked_at"],
             "backup_verified_at": backup["verified_at"],
+            "physical_hardware_authorized": False,
+        }
+    if plan["mode"] == "cybersecurity":
+        observed = inspect_database_backup(backup, plan)
+        output = (
+            Path(plan["artifact_folder"])
+            / "observations"
+            / plan["qualification_context_id"]
+        )
+        restored = read(output / "restore-receipt.json")
+        replacement = read(output / "replacement-ok.json")
+        hosted = read(output / "receipt.json")
+        require(
+            restored["binding"] == binding
+            and restored["operation_id"] == plan["qualification_context_id"]
+            and restored["status"] == "PASS"
+            and restored["profile"] == "cybersecurity"
+            and restored["schema_revision"] == "20261026_cybersecurity"
+            and restored["production_writes"] == 0
+            and restored["database_manifest_matches"] is True
+            and restored["encrypted_fixture_recovery"] == "PASS"
+            and restored["fixture_owners"] == 2
+            and replacement["restore_receipt_sha256"]
+            == sha(output / "restore-receipt.json")
+            and hosted["controlled_replacement"] == replacement
+            and hosted["binding"] == binding
+            and hosted["status"] == "PASS"
+            and hosted["fixture_identities_disabled"] is True
+            and hosted["existing_records_preserved"] is True,
+            "CYBERSECURITY_HOSTED_RESTORE_CHAIN_REQUIRED",
+        )
+        rollback = accepted_rollback_proof(plan)
+        require(
+            json.loads(docker("image", "inspect", plan["rollback"]["image"]))[0]["Id"]
+            == plan["rollback"]["image"]
+            and plan["rollback"]["retain_additive_schema_and_files"] is True,
+            "CYBERSECURITY_ROLLBACK_IMAGE_MISSING",
+        )
+        return {
+            "checks": {k: "PASS" for k in CHECKS["operations"]},
+            "mode": "cybersecurity",
+            "backup_readback": observed,
+            "restore_receipt_sha256": sha(output / "restore-receipt.json"),
+            "accepted_rollback_proof_sha256": rollback,
+            "metrics_checked_at": metrics["checked_at"],
             "physical_hardware_authorized": False,
         }
     registration = read(Path("/etc/onesa/ai-twin-backup-registration.json"))
@@ -1235,35 +1318,40 @@ from alembic.config import Config
 from alembic import command
 from urllib.parse import urlsplit
 request=json.load(sys.stdin)
+target=request.get('target_revision','20261025_twins')
+assert target in ['20261025_twins','20261026_cybersecurity']
 role=urlsplit(request['runtime']).username
 assert re.fullmatch('[a-z_][a-z0-9_]{0,62}',role)
 owner=make_url(request['owner']).set(drivername='postgresql+psycopg')
 engine=create_engine(owner,connect_args={'connect_timeout':10,'sslmode':'verify-full','sslrootcert':'/etc/ssl/cert.pem','channel_binding':'require'})
 with engine.begin() as connection:
  revision=connection.scalar(text('SELECT version_num FROM alembic_version'))
- assert revision in ['20261010_capacity','20261021_industrial','20261025_twins']
+ assert revision in ['20261010_capacity','20261021_industrial','20261025_twins','20261026_cybersecurity']
+ assert revision!='20261026_cybersecurity' or target=='20261026_cybersecurity'
  assert connection.scalar(text("SELECT has_schema_privilege(current_user,'public','CREATE') AND pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass"))
  config=Config('alembic.ini');config.attributes['connection']=connection
  # env.py requires the URL even when the already verified connection is supplied.
  # This stays inside this short-lived process; it is not a Docker argument/env-file.
  os.environ['ONESA_DATABASE_URL']=owner.render_as_string(hide_password=False)
- command.upgrade(config,'20261025_twins')
+ command.upgrade(config,target)
  tables=['industrial_investigations','twin_files','twin_templates','twin_assets','twin_models','twin_notes','twin_sources','twin_readings','twin_events']
+ if target=='20261026_cybersecurity':tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
  connection.execute(text('GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE '+','.join('public.'+table for table in tables)+' TO "'+role+'"'))
  assert not connection.scalar(text("SELECT has_schema_privilege(:role,'public','CREATE') OR has_table_privilege(:role,'alembic_version','INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')"),{'role':role})
- assert connection.scalar(text('SELECT version_num FROM alembic_version'))=='20261025_twins'
-print(json.dumps({'migration_revision':'20261025_twins','runtime_DDL_granted':False,'runtime_new_tables_DML_granted':len(tables)}))
+ assert connection.scalar(text('SELECT version_num FROM alembic_version'))==target
+print(json.dumps({'migration_revision':target,'runtime_DDL_granted':False,'runtime_new_tables_DML_granted':len(tables)}))
 """
 
 
-def migrate(binding, env, operation):
-    # Exact reviewed forward migrations plus DML on their nine new tables. No
+def migrate(binding, env, operation, plan):
+    # Exact reviewed forward migrations and scoped table DML. No
     # runtime CREATE, role membership or migration-table permission is granted.
     owner = runtime_values(Path("/etc/onesa/backends/ai-" + env + "-migration.env"))
     current = runtime_values(ENV[env])
     request = {
         "owner": owner["ONESA_DATABASE_URL"],
         "runtime": current["ONESA_DATABASE_URL"],
+        "target_revision": plan["migration_revision"],
     }
     raw = docker(
         "run",
@@ -1290,9 +1378,11 @@ def migrate(binding, env, operation):
     require(
         result
         == {
-            "migration_revision": "20261025_twins",
+            "migration_revision": plan["migration_revision"],
             "runtime_DDL_granted": False,
-            "runtime_new_tables_DML_granted": 9,
+            "runtime_new_tables_DML_granted": 21
+            if plan["migration_revision"] == "20261026_cybersecurity"
+            else 9,
         },
         "ADDITIVE_MIGRATION_OR_ROLE_SCOPE_FAILED",
     )
@@ -1317,7 +1407,7 @@ def update_backup_runtime_binding(binding, env, operation, op, plan):
 
 
 def activate(binding, env, operation, folder, plan):
-    if env == "production" and plan["mode"] == "twins":
+    if env == "production" and plan["mode"] != "foundation":
         with backup_lock():
             return _activate(binding, env, operation, folder, plan)
     return _activate(binding, env, operation, folder, plan)
@@ -1367,8 +1457,8 @@ def _activate(binding, env, operation, folder, plan):
         f.write(old_runtime)
         f.flush()
         os.fsync(f.fileno())
-    if plan["mode"] == "twins":
-        migrate(binding, env, operation)
+    if plan["mode"] != "foundation":
+        migrate(binding, env, operation, plan)
     next_runtime = ENV[env].with_name(ENV[env].name + "." + operation)
     with os.fdopen(
         os.open(
@@ -1382,7 +1472,7 @@ def _activate(binding, env, operation, folder, plan):
     sync_directory(op)
     os.replace(next_runtime, ENV[env])
     sync_directory(ENV[env].parent)
-    if env == "production" and plan["mode"] == "twins":
+    if env == "production" and plan["mode"] != "foundation":
         update_backup_runtime_binding(binding, env, operation, op, plan)
     with os.fdopen(
         os.open(
@@ -1525,8 +1615,22 @@ def required_probe_checks(binding, env, mode):
             "optional_sources_absent",
             "file_persistence",
         }
+    elif mode == "cybersecurity":
+        mandatory |= {
+            "cybersecurity_scoped_readiness",
+            "cybersecurity_ingestion",
+            "cybersecurity_findings",
+            "cybersecurity_decisions",
+            "cybersecurity_native_configuration",
+            "cybersecurity_revocation",
+            "cybersecurity_export",
+            "optional_sources_absent",
+        }
+        if binding["component"] == "frontend" or env == "staging":
+            mandatory.add("cybersecurity_ui")
     else:
-        mandatory |= {"twins_disabled", "ordinary_workflows"}
+        require(mode == "foundation", "UNKNOWN_PROBE_MODE")
+        mandatory |= {"twins_disabled", "cybersecurity_disabled", "ordinary_workflows"}
     if env == "staging" and mode == "twins" and binding["component"] == "frontend":
         mandatory.add("twins_inspection")
     return mandatory
@@ -1676,10 +1780,11 @@ def probe(binding, env, operation, folder, plan):
                     sys.path.insert(0, str(Path(__file__).resolve().parent))
                     import oracle_twin_restore
 
-                    if plan["mode"] == "twins":
-                        oracle_twin_restore.capture_fixture_files(
-                            output, binding, operation, plan["storage"][env]
-                        )
+                    if plan["mode"] in ["twins", "cybersecurity"]:
+                        if plan["mode"] == "twins":
+                            oracle_twin_restore.capture_fixture_files(
+                                output, binding, operation, plan["storage"][env]
+                            )
                         oracle_twin_restore.restore(output, binding, operation)
                     else:
                         import oracle_forward_check
@@ -1738,7 +1843,7 @@ def probe(binding, env, operation, folder, plan):
                                 output
                                 / (
                                     "restore-receipt.json"
-                                    if plan["mode"] == "twins"
+                                    if plan["mode"] != "foundation"
                                     else "forward-check-receipt.json"
                                 )
                             ),
@@ -1851,7 +1956,7 @@ def observe_production(binding, operation, folder, plan):
         >= dt.datetime.fromisoformat(receipt["observed_at"]),
         "WORKFLOWS_PREDATE_DEPLOYMENT",
     )
-    if plan["mode"] == "twins":
+    if plan["mode"] != "foundation":
         operational_observations(binding, plan)
     require(
         observed["backend_identity"] == backend_identity(binding, "production"),

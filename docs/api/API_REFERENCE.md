@@ -1,5 +1,14 @@
 # API reference
 
+The optional `/api/v1/cybersecurity` domain has independent scoped readiness, owned
+assets/sources/mappings/policies/baselines, bounded JSON/NDJSON ingestion, event search,
+findings, persistent human investigations/decisions, exports and read-only assistance.
+Collector ingestion uses its own source credential, not the session as global source
+authority. All retrieval and administration retain current owner/operator checks.
+See [the versioned event/report profiles](../engineering/CYBERSECURITY.md#wire-contract-and-imports)
+and generated OpenAPI for exact fields and limits. Disabled routes do not establish
+production availability or grant global authentication-log access.
+
 All business routes use `/api/v1`. Session-cookie authentication is declared in OpenAPI;
 mutations also require exact Origin and X-CSRF-Token. Register/login are unauthenticated
 but Origin checked and throttled. Probes are public; metrics use an independent private bearer token.

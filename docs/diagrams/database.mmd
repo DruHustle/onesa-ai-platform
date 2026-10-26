@@ -43,6 +43,154 @@ erDiagram
     UUID id PK
     TIMESTAMP_WITH_TIME_ZONE created_at
   }
+  cyber_actions {
+    UUID investigation_id FK
+    VARCHAR_48_ kind
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_assets {
+    VARCHAR_120_ name
+    VARCHAR_128_ identity
+    VARCHAR_80_ zone
+    VARCHAR_16_ criticality
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_baselines {
+    UUID source_id FK
+    VARCHAR_128_ revision
+    JSONB config
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_events {
+    UUID source_id FK
+    VARCHAR_128_ source_event_id
+    UUID asset_id FK
+    UUID mapping_id FK
+    VARCHAR_64_ event_type
+    VARCHAR_16_ mode
+    VARCHAR_128_ run_id
+    TIMESTAMP_WITH_TIME_ZONE occurred_at
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    VARCHAR_64_ sha256
+    JSONB wire
+    JSONB provenance
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_findings {
+    UUID source_id FK
+    UUID asset_id FK
+    VARCHAR_64_ dedupe_key UK
+    VARCHAR_64_ rule
+    VARCHAR_32_ rule_version
+    VARCHAR_16_ mode
+    VARCHAR_128_ run_id
+    VARCHAR_16_ severity
+    VARCHAR_16_ confidence
+    INTEGER priority
+    TIMESTAMP_WITH_TIME_ZONE first_seen
+    TIMESTAMP_WITH_TIME_ZONE last_seen
+    INTEGER occurrences
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_investigations {
+    VARCHAR_160_ title
+    UUID finding_id FK
+    VARCHAR_24_ status
+    INTEGER priority
+    INTEGER revision
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    TIMESTAMP_WITH_TIME_ZONE acceptance_until
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_mappings {
+    UUID source_id FK
+    UUID asset_id FK
+    VARCHAR_128_ external_namespace
+    VARCHAR_128_ external_asset
+    VARCHAR_128_ external_component
+    JSONB review
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_policies {
+    UUID source_id FK
+    INTEGER version
+    JSONB config
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_reports {
+    UUID asset_id FK
+    VARCHAR_64_ sha256
+    VARCHAR_48_ profile
+    VARCHAR_160_ producer
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_results {
+    UUID finding_id FK
+    VARCHAR_64_ evidence_key
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_sources {
+    VARCHAR_120_ name
+    VARCHAR_64_ namespace
+    VARCHAR_64_ token_hash UK
+    VARCHAR_16_ scope
+    JSONB config
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    TIMESTAMP_WITH_TIME_ZONE last_seen_at
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_summaries {
+    UUID investigation_id FK
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    JSONB result
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
   document_chunks {
     UUID document_id FK
     INTEGER position
@@ -245,6 +393,32 @@ erDiagram
   users ||--o{ auth_sessions : "user_id"
   users ||--o{ bounded_uploads : "user_id"
   users ||--o{ conversations : "user_id"
+  cyber_investigations ||--o{ cyber_actions : "investigation_id"
+  users ||--o{ cyber_actions : "user_id"
+  users ||--o{ cyber_assets : "user_id"
+  cyber_sources ||--o{ cyber_baselines : "source_id"
+  users ||--o{ cyber_baselines : "user_id"
+  cyber_sources ||--o{ cyber_events : "source_id"
+  cyber_assets ||--o{ cyber_events : "asset_id"
+  cyber_mappings ||--o{ cyber_events : "mapping_id"
+  users ||--o{ cyber_events : "user_id"
+  cyber_sources ||--o{ cyber_findings : "source_id"
+  cyber_assets ||--o{ cyber_findings : "asset_id"
+  users ||--o{ cyber_findings : "user_id"
+  cyber_findings ||--o{ cyber_investigations : "finding_id"
+  users ||--o{ cyber_investigations : "user_id"
+  cyber_sources ||--o{ cyber_mappings : "source_id"
+  cyber_assets ||--o{ cyber_mappings : "asset_id"
+  users ||--o{ cyber_mappings : "user_id"
+  cyber_sources ||--o{ cyber_policies : "source_id"
+  users ||--o{ cyber_policies : "user_id"
+  cyber_assets ||--o{ cyber_reports : "asset_id"
+  users ||--o{ cyber_reports : "user_id"
+  cyber_findings ||--o{ cyber_results : "finding_id"
+  users ||--o{ cyber_results : "user_id"
+  users ||--o{ cyber_sources : "user_id"
+  cyber_investigations ||--o{ cyber_summaries : "investigation_id"
+  users ||--o{ cyber_summaries : "user_id"
   documents ||--o{ document_chunks : "document_id"
   users ||--o{ documents : "user_id"
   users ||--o{ identity_audit : "actor_id"

@@ -10,6 +10,23 @@ export default function IndustrialNav() {
   const pathname = usePathname();
   const [available, setAvailable] = useState(false);
   const [twins, setTwins] = useState(false);
+  const [security, setSecurity] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/v1/cybersecurity/readiness", {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        if (!controller.signal.aborted) setSecurity(result?.enabled === true);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setSecurity(false);
+      });
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/v1/twins/readiness", {
@@ -65,6 +82,16 @@ export default function IndustrialNav() {
   }, []);
   return (
     <>
+      {security && (
+        <Link
+          href="/industrial/cybersecurity"
+          aria-current={
+            pathname === "/industrial/cybersecurity" ? "page" : undefined
+          }
+        >
+          Cybersecurity
+        </Link>
+      )}
       {available && (
         <Link
           href="/industrial"

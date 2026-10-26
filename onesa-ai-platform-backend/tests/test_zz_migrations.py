@@ -32,6 +32,7 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
     owner = pg.url.set(drivername=driver).render_as_string(hide_password=False)
     request = {
         "owner": owner,
+        "target_revision": REQUIRED_SCHEMA_REVISION,
         "runtime": "postgresql+psycopg://" + role + ":synthetic@localhost/onesa_test",
     }
 
@@ -55,9 +56,9 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
         observed = capsys.readouterr().out
         assert owner not in observed
         assert json.loads(observed) == {
-            "migration_revision": "20261025_twins",
+            "migration_revision": REQUIRED_SCHEMA_REVISION,
             "runtime_DDL_granted": False,
-            "runtime_new_tables_DML_granted": 9,
+            "runtime_new_tables_DML_granted": 21,
         }
         assert os.environ["ONESA_DATABASE_URL"] == pg.url.set(
             drivername="postgresql+psycopg"
@@ -67,6 +68,17 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
                 text("SELECT has_table_privilege(:role,'twin_assets',:permissions)"),
                 {"role": role, "permissions": "SELECT,INSERT,UPDATE,DELETE"},
             )
+            for table in [
+                "cyber_sources",
+                "cyber_events",
+                "cyber_findings",
+                "cyber_investigations",
+                "cyber_actions",
+            ]:
+                assert connection.scalar(
+                    text("SELECT has_table_privilege(:role,:table,:permissions)"),
+                    {"role": role, "table": table, "permissions": "SELECT,INSERT,UPDATE,DELETE"},
+                )
             assert not connection.scalar(
                 text("SELECT has_schema_privilege(:role,'public','CREATE')"), {"role": role}
             )

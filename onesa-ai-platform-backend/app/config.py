@@ -66,6 +66,10 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "staging", "production"] = "development"
     industrial_demo_enabled: bool = False
     industrial_import_enabled: bool = False
+    cybersecurity_enabled: bool = False
+    cybersecurity_demo_enabled: bool = False
+    cybersecurity_ai_enabled: bool = False
+    cybersecurity_operator_user_ids: list[str] = Field(default_factory=list, max_length=10)
     digital_twins_enabled: bool = False
     digital_twins_demo_enabled: bool = False
     digital_twins_storage_directory: str = ""
@@ -78,6 +82,12 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def production_defaults(self) -> Self:
+        from uuid import UUID
+
+        if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
+            raise ValueError("Security operators require canonical configured user UUIDs")
+        if self.cybersecurity_demo_enabled and self.environment == "production":
+            raise ValueError("Cybersecurity demonstrations cannot seed production")
         if os.environ.get("RENDER") == "true" and self.environment not in {
             "staging",
             "production",

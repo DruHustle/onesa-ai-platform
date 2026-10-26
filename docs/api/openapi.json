@@ -2761,7 +2761,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssetCreate"
+                "$ref": "#/components/schemas/app__twin_schemas__AssetCreate"
               }
             }
           },
@@ -3314,7 +3314,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SourceCreate"
+                "$ref": "#/components/schemas/app__twin_schemas__SourceCreate"
               }
             }
           }
@@ -3979,6 +3979,3369 @@
         }
       }
     },
+    "/api/v1/cybersecurity/readiness": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Readiness",
+        "operationId": "readiness_api_v1_cybersecurity_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Readiness Api V1 Cybersecurity Readiness Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Source Detail",
+        "operationId": "source_detail_api_v1_cybersecurity_sources__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Source Detail Api V1 Cybersecurity Sources  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/policies/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Policy Detail",
+        "operationId": "policy_detail_api_v1_cybersecurity_policies__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Policy Detail Api V1 Cybersecurity Policies  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/baselines/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Baseline Detail",
+        "operationId": "baseline_detail_api_v1_cybersecurity_baselines__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Baseline Detail Api V1 Cybersecurity Baselines  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/workspace": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Workspace",
+        "operationId": "workspace_api_v1_cybersecurity_workspace_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "live",
+                "simulated",
+                "replay"
+              ],
+              "type": "string",
+              "default": "live",
+              "title": "Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Workspace Api V1 Cybersecurity Workspace Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/assets": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Asset",
+        "operationId": "create_asset_api_v1_cybersecurity_assets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__cyber_schemas__AssetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Asset Api V1 Cybersecurity Assets Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/sources": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Source",
+        "operationId": "create_source_api_v1_cybersecurity_sources_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__cyber_schemas__SourceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Source Api V1 Cybersecurity Sources Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/revoke": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Revoke Source",
+        "operationId": "revoke_source_api_v1_cybersecurity_sources__identifier__revoke_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Revoke Source Api V1 Cybersecurity Sources  Identifier  Revoke Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/mappings": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Mapping",
+        "operationId": "create_mapping_api_v1_cybersecurity_sources__identifier__mappings_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Create Mapping Api V1 Cybersecurity Sources  Identifier  Mappings Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/policies": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Policy",
+        "operationId": "create_policy_api_v1_cybersecurity_sources__identifier__policies_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Create Policy Api V1 Cybersecurity Sources  Identifier  Policies Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/baselines": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Baseline",
+        "operationId": "create_baseline_api_v1_cybersecurity_sources__identifier__baselines_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BaselineCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Create Baseline Api V1 Cybersecurity Sources  Identifier  Baselines Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/imports": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Import Events",
+        "operationId": "import_events_api_v1_cybersecurity_sources__identifier__imports_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Import Events Api V1 Cybersecurity Sources  Identifier  Imports Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "events"
+                ],
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "schemaVersion": {
+                          "const": "ot-security-evidence/v1",
+                          "title": "Schemaversion",
+                          "type": "string"
+                        },
+                        "producerNamespace": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Producernamespace",
+                          "type": "string"
+                        },
+                        "sourceEventId": {
+                          "maxLength": 128,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Sourceeventid",
+                          "type": "string"
+                        },
+                        "occurredAt": {
+                          "title": "Occurredat",
+                          "type": "string"
+                        },
+                        "mode": {
+                          "enum": [
+                            "live",
+                            "simulated",
+                            "replay"
+                          ],
+                          "title": "Mode",
+                          "type": "string"
+                        },
+                        "eventType": {
+                          "type": "string",
+                          "enum": [
+                            "auth.authentication_failed",
+                            "auth.authorization_denied",
+                            "tls.certificate_observed",
+                            "config.changed",
+                            "config.drift_observed",
+                            "identity.unrecognized",
+                            "collector.health",
+                            "software.inventory_observed",
+                            "integrity.change_observed"
+                          ]
+                        },
+                        "assetRef": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "namespace": {
+                                  "maxLength": 128,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Namespace",
+                                  "type": "string"
+                                },
+                                "assetId": {
+                                  "maxLength": 128,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Assetid",
+                                  "type": "string"
+                                },
+                                "componentId": {
+                                  "anyOf": [
+                                    {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Componentid"
+                                }
+                              },
+                              "required": [
+                                "namespace",
+                                "assetId",
+                                "componentId"
+                              ],
+                              "title": "AssetRef",
+                              "type": "object"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "summary": {
+                          "maxLength": 512,
+                          "title": "Summary",
+                          "type": "string"
+                        },
+                        "quality": {
+                          "enum": [
+                            "good",
+                            "uncertain",
+                            "bad",
+                            "unknown"
+                          ],
+                          "title": "Quality",
+                          "type": "string"
+                        },
+                        "producerVersion": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Producerversion",
+                          "type": "string"
+                        },
+                        "attributes": {
+                          "additionalProperties": true,
+                          "title": "Attributes",
+                          "type": "object"
+                        },
+                        "scenarioRunId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Scenariorunid"
+                        },
+                        "replayRunId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Replayrunid"
+                        },
+                        "producerReceivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Producerreceivedat"
+                        },
+                        "sessionId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Sessionid"
+                        },
+                        "sequence": {
+                          "anyOf": [
+                            {
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Sequence"
+                        },
+                        "correlationId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Correlationid"
+                        }
+                      },
+                      "required": [
+                        "schemaVersion",
+                        "producerNamespace",
+                        "sourceEventId",
+                        "occurredAt",
+                        "mode",
+                        "eventType",
+                        "assetRef",
+                        "summary",
+                        "quality",
+                        "producerVersion",
+                        "attributes"
+                      ],
+                      "title": "SecurityEvent",
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "auth.authentication_failed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "service": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Service",
+                                      "type": "string"
+                                    },
+                                    "outcome": {
+                                      "enum": [
+                                        "denied",
+                                        "rejected",
+                                        "failed"
+                                      ],
+                                      "title": "Outcome",
+                                      "type": "string"
+                                    },
+                                    "reasonCode": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Reasoncode",
+                                      "type": "string"
+                                    },
+                                    "principalRef": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Principalref"
+                                    }
+                                  },
+                                  "required": [
+                                    "service",
+                                    "outcome",
+                                    "reasonCode"
+                                  ],
+                                  "title": "AuthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "auth.authorization_denied"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "service": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Service",
+                                      "type": "string"
+                                    },
+                                    "outcome": {
+                                      "enum": [
+                                        "denied",
+                                        "rejected",
+                                        "failed"
+                                      ],
+                                      "title": "Outcome",
+                                      "type": "string"
+                                    },
+                                    "reasonCode": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Reasoncode",
+                                      "type": "string"
+                                    },
+                                    "principalRef": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Principalref"
+                                    }
+                                  },
+                                  "required": [
+                                    "service",
+                                    "outcome",
+                                    "reasonCode"
+                                  ],
+                                  "title": "AuthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "tls.certificate_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endpointRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Endpointref",
+                                      "type": "string"
+                                    },
+                                    "notBefore": {
+                                      "title": "Notbefore",
+                                      "type": "string"
+                                    },
+                                    "notAfter": {
+                                      "title": "Notafter",
+                                      "type": "string"
+                                    },
+                                    "fingerprintSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Fingerprintsha256",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "endpointRef",
+                                    "notBefore",
+                                    "notAfter",
+                                    "fingerprintSha256"
+                                  ],
+                                  "title": "CertificateAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "config.changed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "configRevision": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Configrevision",
+                                      "type": "string"
+                                    },
+                                    "baselineRevision": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Baselinerevision"
+                                    },
+                                    "changedKeys": {
+                                      "items": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      },
+                                      "maxItems": 32,
+                                      "minItems": 1,
+                                      "title": "Changedkeys",
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [
+                                    "configRevision",
+                                    "changedKeys"
+                                  ],
+                                  "title": "ConfigAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "config.drift_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "configRevision": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Configrevision",
+                                      "type": "string"
+                                    },
+                                    "baselineRevision": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Baselinerevision"
+                                    },
+                                    "changedKeys": {
+                                      "items": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      },
+                                      "maxItems": 32,
+                                      "minItems": 1,
+                                      "title": "Changedkeys",
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [
+                                    "configRevision",
+                                    "changedKeys"
+                                  ],
+                                  "title": "ConfigAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "identity.unrecognized"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "inputRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Inputref",
+                                      "type": "string"
+                                    },
+                                    "observedIdentityRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Observedidentityref",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "inputRef",
+                                    "observedIdentityRef"
+                                  ],
+                                  "title": "IdentityAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "collector.health"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "state": {
+                                      "enum": [
+                                        "online",
+                                        "offline",
+                                        "degraded",
+                                        "paused"
+                                      ],
+                                      "title": "State",
+                                      "type": "string"
+                                    },
+                                    "expectedIntervalSeconds": {
+                                      "anyOf": [
+                                        {
+                                          "maximum": 86400,
+                                          "minimum": 1,
+                                          "type": "integer"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Expectedintervalseconds"
+                                    }
+                                  },
+                                  "required": [
+                                    "state"
+                                  ],
+                                  "title": "HealthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "software.inventory_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "inventoryRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Inventoryref",
+                                      "type": "string"
+                                    },
+                                    "sha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Sha256",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "inventoryRef",
+                                    "sha256"
+                                  ],
+                                  "title": "SoftwareAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "integrity.change_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "previousSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Previoussha256",
+                                      "type": "string"
+                                    },
+                                    "currentSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Currentsha256",
+                                      "type": "string"
+                                    },
+                                    "evidenceBasis": {
+                                      "enum": [
+                                        "self_reported",
+                                        "collector_observed",
+                                        "verified_artifact"
+                                      ],
+                                      "title": "Evidencebasis",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "previousSha256",
+                                    "currentSha256",
+                                    "evidenceBasis"
+                                  ],
+                                  "title": "IntegrityAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-ndjson": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1048576,
+                "description": "One event per line; 1\u2013100 events, at most 8192 UTF-8 bytes per event and 1048576 bytes total"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/ingest": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Credential Ingest",
+        "operationId": "credential_ingest_api_v1_cybersecurity_ingest_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Credential Ingest Api V1 Cybersecurity Ingest Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "events"
+                ],
+                "properties": {
+                  "events": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "schemaVersion": {
+                          "const": "ot-security-evidence/v1",
+                          "title": "Schemaversion",
+                          "type": "string"
+                        },
+                        "producerNamespace": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Producernamespace",
+                          "type": "string"
+                        },
+                        "sourceEventId": {
+                          "maxLength": 128,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Sourceeventid",
+                          "type": "string"
+                        },
+                        "occurredAt": {
+                          "title": "Occurredat",
+                          "type": "string"
+                        },
+                        "mode": {
+                          "enum": [
+                            "live",
+                            "simulated",
+                            "replay"
+                          ],
+                          "title": "Mode",
+                          "type": "string"
+                        },
+                        "eventType": {
+                          "type": "string",
+                          "enum": [
+                            "auth.authentication_failed",
+                            "auth.authorization_denied",
+                            "tls.certificate_observed",
+                            "config.changed",
+                            "config.drift_observed",
+                            "identity.unrecognized",
+                            "collector.health",
+                            "software.inventory_observed",
+                            "integrity.change_observed"
+                          ]
+                        },
+                        "assetRef": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "namespace": {
+                                  "maxLength": 128,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Namespace",
+                                  "type": "string"
+                                },
+                                "assetId": {
+                                  "maxLength": 128,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Assetid",
+                                  "type": "string"
+                                },
+                                "componentId": {
+                                  "anyOf": [
+                                    {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "title": "Componentid"
+                                }
+                              },
+                              "required": [
+                                "namespace",
+                                "assetId",
+                                "componentId"
+                              ],
+                              "title": "AssetRef",
+                              "type": "object"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "summary": {
+                          "maxLength": 512,
+                          "title": "Summary",
+                          "type": "string"
+                        },
+                        "quality": {
+                          "enum": [
+                            "good",
+                            "uncertain",
+                            "bad",
+                            "unknown"
+                          ],
+                          "title": "Quality",
+                          "type": "string"
+                        },
+                        "producerVersion": {
+                          "maxLength": 64,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Producerversion",
+                          "type": "string"
+                        },
+                        "attributes": {
+                          "additionalProperties": true,
+                          "title": "Attributes",
+                          "type": "object"
+                        },
+                        "scenarioRunId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Scenariorunid"
+                        },
+                        "replayRunId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Replayrunid"
+                        },
+                        "producerReceivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Producerreceivedat"
+                        },
+                        "sessionId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Sessionid"
+                        },
+                        "sequence": {
+                          "anyOf": [
+                            {
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Sequence"
+                        },
+                        "correlationId": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Correlationid"
+                        }
+                      },
+                      "required": [
+                        "schemaVersion",
+                        "producerNamespace",
+                        "sourceEventId",
+                        "occurredAt",
+                        "mode",
+                        "eventType",
+                        "assetRef",
+                        "summary",
+                        "quality",
+                        "producerVersion",
+                        "attributes"
+                      ],
+                      "title": "SecurityEvent",
+                      "type": "object",
+                      "allOf": [
+                        {
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "auth.authentication_failed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "service": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Service",
+                                      "type": "string"
+                                    },
+                                    "outcome": {
+                                      "enum": [
+                                        "denied",
+                                        "rejected",
+                                        "failed"
+                                      ],
+                                      "title": "Outcome",
+                                      "type": "string"
+                                    },
+                                    "reasonCode": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Reasoncode",
+                                      "type": "string"
+                                    },
+                                    "principalRef": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Principalref"
+                                    }
+                                  },
+                                  "required": [
+                                    "service",
+                                    "outcome",
+                                    "reasonCode"
+                                  ],
+                                  "title": "AuthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "auth.authorization_denied"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "service": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Service",
+                                      "type": "string"
+                                    },
+                                    "outcome": {
+                                      "enum": [
+                                        "denied",
+                                        "rejected",
+                                        "failed"
+                                      ],
+                                      "title": "Outcome",
+                                      "type": "string"
+                                    },
+                                    "reasonCode": {
+                                      "maxLength": 64,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Reasoncode",
+                                      "type": "string"
+                                    },
+                                    "principalRef": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Principalref"
+                                    }
+                                  },
+                                  "required": [
+                                    "service",
+                                    "outcome",
+                                    "reasonCode"
+                                  ],
+                                  "title": "AuthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "tls.certificate_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endpointRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Endpointref",
+                                      "type": "string"
+                                    },
+                                    "notBefore": {
+                                      "title": "Notbefore",
+                                      "type": "string"
+                                    },
+                                    "notAfter": {
+                                      "title": "Notafter",
+                                      "type": "string"
+                                    },
+                                    "fingerprintSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Fingerprintsha256",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "endpointRef",
+                                    "notBefore",
+                                    "notAfter",
+                                    "fingerprintSha256"
+                                  ],
+                                  "title": "CertificateAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "config.changed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "configRevision": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Configrevision",
+                                      "type": "string"
+                                    },
+                                    "baselineRevision": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Baselinerevision"
+                                    },
+                                    "changedKeys": {
+                                      "items": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      },
+                                      "maxItems": 32,
+                                      "minItems": 1,
+                                      "title": "Changedkeys",
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [
+                                    "configRevision",
+                                    "changedKeys"
+                                  ],
+                                  "title": "ConfigAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "config.drift_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "configRevision": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Configrevision",
+                                      "type": "string"
+                                    },
+                                    "baselineRevision": {
+                                      "anyOf": [
+                                        {
+                                          "maxLength": 128,
+                                          "minLength": 1,
+                                          "pattern": "\\S",
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Baselinerevision"
+                                    },
+                                    "changedKeys": {
+                                      "items": {
+                                        "maxLength": 64,
+                                        "minLength": 1,
+                                        "pattern": "\\S",
+                                        "type": "string"
+                                      },
+                                      "maxItems": 32,
+                                      "minItems": 1,
+                                      "title": "Changedkeys",
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [
+                                    "configRevision",
+                                    "changedKeys"
+                                  ],
+                                  "title": "ConfigAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "identity.unrecognized"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "inputRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Inputref",
+                                      "type": "string"
+                                    },
+                                    "observedIdentityRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Observedidentityref",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "inputRef",
+                                    "observedIdentityRef"
+                                  ],
+                                  "title": "IdentityAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "collector.health"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "state": {
+                                      "enum": [
+                                        "online",
+                                        "offline",
+                                        "degraded",
+                                        "paused"
+                                      ],
+                                      "title": "State",
+                                      "type": "string"
+                                    },
+                                    "expectedIntervalSeconds": {
+                                      "anyOf": [
+                                        {
+                                          "maximum": 86400,
+                                          "minimum": 1,
+                                          "type": "integer"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "title": "Expectedintervalseconds"
+                                    }
+                                  },
+                                  "required": [
+                                    "state"
+                                  ],
+                                  "title": "HealthAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "software.inventory_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "inventoryRef": {
+                                      "maxLength": 128,
+                                      "minLength": 1,
+                                      "pattern": "\\S",
+                                      "title": "Inventoryref",
+                                      "type": "string"
+                                    },
+                                    "sha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Sha256",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "inventoryRef",
+                                    "sha256"
+                                  ],
+                                  "title": "SoftwareAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "eventType": {
+                                  "const": "integrity.change_observed"
+                                },
+                                "attributes": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "previousSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Previoussha256",
+                                      "type": "string"
+                                    },
+                                    "currentSha256": {
+                                      "pattern": "^[a-f0-9]{64}$",
+                                      "title": "Currentsha256",
+                                      "type": "string"
+                                    },
+                                    "evidenceBasis": {
+                                      "enum": [
+                                        "self_reported",
+                                        "collector_observed",
+                                        "verified_artifact"
+                                      ],
+                                      "title": "Evidencebasis",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "previousSha256",
+                                    "currentSha256",
+                                    "evidenceBasis"
+                                  ],
+                                  "title": "IntegrityAttributes",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "eventType",
+                                "attributes"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-ndjson": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1048576,
+                "description": "One event per line; 1\u2013100 events, at most 8192 UTF-8 bytes per event and 1048576 bytes total"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/events": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Events",
+        "operationId": "events_api_v1_cybersecurity_events_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "live",
+                "simulated",
+                "replay"
+              ],
+              "type": "string",
+              "default": "live",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Events Api V1 Cybersecurity Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/findings/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Finding Detail",
+        "operationId": "finding_detail_api_v1_cybersecurity_findings__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Finding Detail Api V1 Cybersecurity Findings  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/investigations": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Create Investigation",
+        "operationId": "create_investigation_api_v1_cybersecurity_investigations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvestigationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Investigation Api V1 Cybersecurity Investigations Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/investigations/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Investigation Detail",
+        "operationId": "investigation_detail_api_v1_cybersecurity_investigations__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Investigation Detail Api V1 Cybersecurity Investigations  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/investigations/{identifier}/actions": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Decisions Page",
+        "operationId": "decisions_page_api_v1_cybersecurity_investigations__identifier__actions_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Decisions Page Api V1 Cybersecurity Investigations  Identifier  Actions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/actions/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Decision Snapshot",
+        "operationId": "decision_snapshot_api_v1_cybersecurity_actions__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Decision Snapshot Api V1 Cybersecurity Actions  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/events/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Event Detail",
+        "operationId": "event_detail_api_v1_cybersecurity_events__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Event Detail Api V1 Cybersecurity Events  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/investigations/{identifier}/decisions": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Decision",
+        "operationId": "decision_api_v1_cybersecurity_investigations__identifier__decisions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Decision Api V1 Cybersecurity Investigations  Identifier  Decisions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/export": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Export Events",
+        "operationId": "export_events_api_v1_cybersecurity_export_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "live",
+                "simulated",
+                "replay"
+              ],
+              "type": "string",
+              "default": "live",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "ndjson"
+              ],
+              "type": "string",
+              "default": "json",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/assets/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Asset Detail",
+        "operationId": "asset_detail_api_v1_cybersecurity_assets__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Asset Detail Api V1 Cybersecurity Assets  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/reports/{identifier}": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Report Detail",
+        "operationId": "report_detail_api_v1_cybersecurity_reports__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Report Detail Api V1 Cybersecurity Reports  Identifier  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/twins/{identifier}/summary": {
+      "get": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Twin Summary",
+        "operationId": "twin_summary_api_v1_cybersecurity_twins__identifier__summary_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Twin Summary Api V1 Cybersecurity Twins  Identifier  Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/assess": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Assess",
+        "description": "Explicit receiver-clock assessment. Coverage loss is never called compromise.",
+        "operationId": "assess_api_v1_cybersecurity_assess_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Assess Api V1 Cybersecurity Assess Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/demo": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Demonstration",
+        "operationId": "demonstration_api_v1_cybersecurity_demo_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Demonstration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Demonstration Api V1 Cybersecurity Demo Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/sources/{identifier}/reports": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Import Report",
+        "operationId": "import_report_api_v1_cybersecurity_sources__identifier__reports_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Asset Id"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "live",
+                "simulated",
+                "replay"
+              ],
+              "type": "string",
+              "default": "live",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 128,
+              "default": "",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Import Report Api V1 Cybersecurity Sources  Identifier  Reports Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "bomFormat": {
+                    "const": "CycloneDX",
+                    "title": "Bomformat",
+                    "type": "string"
+                  },
+                  "specVersion": {
+                    "const": "1.6",
+                    "title": "Specversion",
+                    "type": "string"
+                  },
+                  "version": {
+                    "maximum": 1000000,
+                    "minimum": 1,
+                    "title": "Version",
+                    "type": "integer"
+                  },
+                  "serialNumber": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Serialnumber"
+                  },
+                  "metadata": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "tools": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "components": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "type": {
+                                  "const": "application",
+                                  "title": "Type",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "maxLength": 64,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Name",
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "maxLength": 64,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Version",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "name",
+                                "version"
+                              ],
+                              "title": "ToolComponent",
+                              "type": "object"
+                            },
+                            "maxItems": 5,
+                            "minItems": 1,
+                            "title": "Components",
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "components"
+                        ],
+                        "title": "Tools",
+                        "type": "object"
+                      },
+                      "timestamp": {
+                        "title": "Timestamp",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tools",
+                      "timestamp"
+                    ],
+                    "title": "Metadata",
+                    "type": "object"
+                  },
+                  "components": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "application",
+                            "library",
+                            "operating-system",
+                            "firmware",
+                            "device"
+                          ],
+                          "title": "Type",
+                          "type": "string"
+                        },
+                        "bom-ref": {
+                          "maxLength": 128,
+                          "minLength": 1,
+                          "title": "Bom-Ref",
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 128,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Name",
+                          "type": "string"
+                        },
+                        "version": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Version"
+                        },
+                        "group": {
+                          "anyOf": [
+                            {
+                              "maxLength": 128,
+                              "minLength": 1,
+                              "pattern": "\\S",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Group"
+                        },
+                        "purl": {
+                          "anyOf": [
+                            {
+                              "maxLength": 512,
+                              "pattern": "^pkg:",
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Purl"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "bom-ref",
+                        "name"
+                      ],
+                      "title": "Component",
+                      "type": "object"
+                    },
+                    "maxItems": 250,
+                    "minItems": 1,
+                    "title": "Components",
+                    "type": "array"
+                  },
+                  "vulnerabilities": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "maxLength": 128,
+                          "minLength": 1,
+                          "pattern": "\\S",
+                          "title": "Id",
+                          "type": "string"
+                        },
+                        "source": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "name": {
+                                  "maxLength": 128,
+                                  "minLength": 1,
+                                  "pattern": "\\S",
+                                  "title": "Name",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ],
+                              "title": "AdvisorySource",
+                              "type": "object"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "ratings": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "severity": {
+                                "enum": [
+                                  "none",
+                                  "info",
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "critical",
+                                  "unknown"
+                                ],
+                                "title": "Severity",
+                                "type": "string"
+                              },
+                              "score": {
+                                "anyOf": [
+                                  {
+                                    "maximum": 10,
+                                    "minimum": 0,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "title": "Score"
+                              },
+                              "method": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "CVSSv2",
+                                      "CVSSv3",
+                                      "CVSSv31",
+                                      "CVSSv4",
+                                      "OWASP",
+                                      "other"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "title": "Method"
+                              }
+                            },
+                            "required": [
+                              "severity"
+                            ],
+                            "title": "Rating",
+                            "type": "object"
+                          },
+                          "maxItems": 5,
+                          "title": "Ratings",
+                          "type": "array"
+                        },
+                        "affects": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "ref": {
+                                "maxLength": 128,
+                                "minLength": 1,
+                                "pattern": "\\S",
+                                "title": "Ref",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "ref"
+                            ],
+                            "title": "Affect",
+                            "type": "object"
+                          },
+                          "maxItems": 100,
+                          "minItems": 1,
+                          "title": "Affects",
+                          "type": "array"
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "maxLength": 2000,
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "title": "Description"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "affects"
+                      ],
+                      "title": "Vulnerability",
+                      "type": "object"
+                    },
+                    "maxItems": 100,
+                    "title": "Vulnerabilities",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "bomFormat",
+                  "specVersion",
+                  "version",
+                  "metadata",
+                  "components"
+                ],
+                "title": "CycloneDX",
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cybersecurity/tools/evidence": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Evidence Tool",
+        "operationId": "evidence_tool_api_v1_cybersecurity_tools_evidence_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Evidence Tool Api V1 Cybersecurity Tools Evidence Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cybersecurity/summaries": {
+      "post": {
+        "tags": [
+          "cybersecurity v1"
+        ],
+        "summary": "Summary",
+        "operationId": "summary_api_v1_cybersecurity_summaries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SummaryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Summary Api V1 Cybersecurity Summaries Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -4110,6 +7473,11 @@
             "type": "object",
             "title": "Digital Twins"
           },
+          "cybersecurity": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Cybersecurity"
+          },
           "scope": {
             "type": "string",
             "title": "Scope"
@@ -4126,6 +7494,7 @@
           "trips",
           "industrial_investigations",
           "digital_twins",
+          "cybersecurity",
           "scope"
         ],
         "title": "AccountExport"
@@ -4281,46 +7650,62 @@
         ],
         "title": "AssetChange"
       },
-      "AssetCreate": {
+      "BaselineCreate": {
         "properties": {
-          "template_id": {
+          "revision": {
             "type": "string",
-            "format": "uuid",
-            "title": "Template Id"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 120,
+            "maxLength": 128,
             "minLength": 1,
-            "title": "Name"
+            "pattern": "\\S",
+            "title": "Revision"
           },
-          "serial": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 1,
-            "title": "Serial"
+          "relevant_keys": {
+            "items": {
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Relevant Keys"
           },
-          "external_id": {
-            "type": "string",
-            "maxLength": 200,
-            "title": "External Id",
-            "default": ""
+          "allowed_identities": {
+            "items": {
+              "type": "string",
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Allowed Identities"
           },
-          "aas_id": {
+          "input_refs": {
+            "items": {
+              "type": "string",
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Input Refs"
+          },
+          "review_note": {
             "type": "string",
-            "maxLength": 400,
-            "title": "Aas Id",
-            "default": ""
+            "maxLength": 1000,
+            "minLength": 8,
+            "title": "Review Note"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "template_id",
-          "name",
-          "serial"
+          "revision",
+          "review_note"
         ],
-        "title": "AssetCreate"
+        "title": "BaselineCreate"
       },
       "Batch": {
         "properties": {
@@ -4882,6 +8267,63 @@
         ],
         "title": "Day"
       },
+      "Decision": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "note",
+              "acknowledge",
+              "investigate",
+              "resolve",
+              "dismiss",
+              "accept_risk",
+              "reopen"
+            ],
+            "title": "Action"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 8,
+            "pattern": "\\S",
+            "title": "Note"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Evidence Ids"
+          },
+          "acceptance_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Until"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "action",
+          "note"
+        ],
+        "title": "Decision"
+      },
       "DeleteAccount": {
         "properties": {
           "current_password": {
@@ -4903,6 +8345,32 @@
           "confirmation"
         ],
         "title": "DeleteAccount"
+      },
+      "Demonstration": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "simulated",
+              "replay"
+            ],
+            "title": "Mode"
+          },
+          "run_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mode",
+          "run_id"
+        ],
+        "title": "Demonstration"
       },
       "DocumentDetail": {
         "properties": {
@@ -5276,6 +8744,27 @@
         ],
         "title": "EvidenceBundle",
         "description": "Data-only JSON, never a URL/file/SQL/instruction connector or rights approval."
+      },
+      "EvidenceRequest": {
+        "properties": {
+          "investigation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Investigation Id"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Expected Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "investigation_id",
+          "expected_sha256"
+        ],
+        "title": "EvidenceRequest"
       },
       "ExplodeMotion": {
         "properties": {
@@ -5947,6 +9436,29 @@
         "type": "object",
         "title": "InspectionView"
       },
+      "InvestigationCreate": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Finding Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Title"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "finding_id",
+          "title"
+        ],
+        "title": "InvestigationCreate"
+      },
       "InvestigationList": {
         "properties": {
           "items": {
@@ -6166,6 +9678,58 @@
           "component_id"
         ],
         "title": "Mapping"
+      },
+      "MappingCreate": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Asset Id"
+          },
+          "namespace": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Namespace"
+          },
+          "external_asset": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "External Asset"
+          },
+          "external_component": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Component"
+          },
+          "review_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 8,
+            "title": "Review Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_id",
+          "namespace",
+          "external_asset",
+          "review_note"
+        ],
+        "title": "MappingCreate"
       },
       "MessageOut": {
         "properties": {
@@ -6559,6 +10123,50 @@
           "backend"
         ],
         "title": "PlannedItinerary"
+      },
+      "PolicyCreate": {
+        "properties": {
+          "auth_threshold": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 2.0,
+            "title": "Auth Threshold",
+            "default": 5
+          },
+          "denial_threshold": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 2.0,
+            "title": "Denial Threshold",
+            "default": 3
+          },
+          "window_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 30.0,
+            "title": "Window Seconds",
+            "default": 300
+          },
+          "certificate_warning_days": {
+            "type": "integer",
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Certificate Warning Days",
+            "default": 30
+          },
+          "review_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 8,
+            "title": "Review Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "review_note"
+        ],
+        "title": "PolicyCreate"
       },
       "Preferences": {
         "properties": {
@@ -7286,54 +10894,6 @@
         ],
         "title": "Simulation"
       },
-      "SourceCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 1,
-            "title": "Name"
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "live",
-              "simulated"
-            ],
-            "title": "Mode"
-          },
-          "external_system": {
-            "type": "string",
-            "maxLength": 80,
-            "minLength": 1,
-            "title": "External System",
-            "default": "manual"
-          },
-          "external_asset_id": {
-            "type": "string",
-            "maxLength": 160,
-            "title": "External Asset Id",
-            "default": ""
-          },
-          "bindings": {
-            "items": {
-              "$ref": "#/components/schemas/Binding"
-            },
-            "type": "array",
-            "maxItems": 32,
-            "minItems": 1,
-            "title": "Bindings"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "name",
-          "mode",
-          "bindings"
-        ],
-        "title": "SourceCreate"
-      },
       "Start": {
         "properties": {
           "filename": {
@@ -7369,6 +10929,47 @@
           "sha256"
         ],
         "title": "Start"
+      },
+      "SummaryRequest": {
+        "properties": {
+          "investigation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Investigation Id"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Expected Sha256"
+          },
+          "assist": {
+            "type": "boolean",
+            "title": "Assist",
+            "default": false
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Question",
+            "default": "Prepare a review checklist from this evidence"
+          },
+          "document_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Document Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "investigation_id",
+          "expected_sha256"
+        ],
+        "title": "SummaryRequest"
       },
       "TemplateCreate": {
         "properties": {
@@ -7784,6 +11385,235 @@
           "end"
         ],
         "title": "Window"
+      },
+      "app__cyber_schemas__AssetCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name"
+          },
+          "identity": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Identity"
+          },
+          "zone": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Zone"
+          },
+          "criticality": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "unknown"
+            ],
+            "title": "Criticality",
+            "default": "unknown"
+          },
+          "review_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 8,
+            "title": "Review Note"
+          },
+          "twin_asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twin Asset Id"
+          },
+          "twin_component_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twin Component Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "identity",
+          "zone",
+          "review_note"
+        ],
+        "title": "AssetCreate"
+      },
+      "app__cyber_schemas__SourceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name"
+          },
+          "namespace": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Namespace"
+          },
+          "modes": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "live",
+                "simulated",
+                "replay"
+              ]
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Modes"
+          },
+          "endpoint_refs": {
+            "items": {
+              "type": "string",
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Endpoint Refs"
+          },
+          "expected_interval_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 10.0,
+            "title": "Expected Interval Seconds",
+            "default": 300
+          },
+          "review_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 8,
+            "title": "Review Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "namespace",
+          "modes",
+          "review_note"
+        ],
+        "title": "SourceCreate"
+      },
+      "app__twin_schemas__AssetCreate": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "serial": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Serial"
+          },
+          "external_id": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "External Id",
+            "default": ""
+          },
+          "aas_id": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Aas Id",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "template_id",
+          "name",
+          "serial"
+        ],
+        "title": "AssetCreate"
+      },
+      "app__twin_schemas__SourceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "title": "Mode"
+          },
+          "external_system": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "External System",
+            "default": "manual"
+          },
+          "external_asset_id": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "External Asset Id",
+            "default": ""
+          },
+          "bindings": {
+            "items": {
+              "$ref": "#/components/schemas/Binding"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Bindings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "mode",
+          "bindings"
+        ],
+        "title": "SourceCreate"
       }
     },
     "securitySchemes": {

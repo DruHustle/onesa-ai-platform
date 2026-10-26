@@ -123,3 +123,7 @@ models/features and unverified GPU/production acceptance.
 - [MODEL_RELEASE](training/MODEL_RELEASE.md)
 - [Digital Twins](engineering/DIGITAL_TWINS.md)
 - [Digital Twins architecture decision](adr/0004-digital-twin-workspace.md)
+
+## Independent Industrial workspaces
+
+- [Cybersecurity capability matrix and engineering contract](engineering/CYBERSECURITY.md)
