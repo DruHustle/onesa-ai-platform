@@ -111,6 +111,8 @@ reviewed target and grants only DML on the nine preceding Industrial/Twin tables
 the twelve cybersecurity tables for this target. Runtime CREATE, migration-table
 writes, ownership and role escalation remain forbidden. Legacy migration targets
 remain explicit; a newer schema is never silently downgraded or relabelled.
+Coordinated backups read the exact Alembic revision from the same immutable dump;
+the existence of Twin tables does not imply that the database is still at the Twin head.
 
 Core readiness and the disabled-feature rollback remain compatible with the preceding
 capacity/Industrial/Twin schemas. Cybersecurity has separate authenticated readiness;
@@ -235,12 +237,11 @@ No secret belongs in arguments, browser storage, URLs or logs. Drain at most fiv
 bounded `.json`/`.ndjson` files with a single local lock and three bounded attempts.
 Transient outage/backpressure retains pending data; permanent rejection quarantines
 it rather than retrying forever. Interrupted acknowledgement/archive can safely resend
-the identical immutable IDs. Accepted/rejected private archives count against the
-archive cap. Successful acknowledgements must account for every submitted event,
+the identical immutable IDs. Successful acknowledgements must account for every submitted event,
 with nonnegative inserted/duplicate counts and unique canonical receiver IDs for
 new records. Incomplete acknowledgements retain the pending batch for bounded retry.
-Archives count against the
-128-file/8-MiB cap; inspect and apply an approved local retention decision before
+Accepted/rejected private archives count against the 128-file/8-MiB cap; inspect
+and apply an approved local retention decision before
 requeuing or extending capacity. There is no default scheduler or endpoint discovery.
 
 ## Verification and release boundary

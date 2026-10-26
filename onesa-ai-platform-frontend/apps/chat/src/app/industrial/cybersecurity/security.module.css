@@ -75,6 +75,10 @@
   vertical-align: top;
   overflow-wrap: anywhere;
 }
+.table th {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
 .scroll {
   overflow: auto;
 }
