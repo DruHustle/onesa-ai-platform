@@ -183,6 +183,10 @@ def persistent_fingerprints(engine, exclude):
     # Only this operation's two owners are excluded. Existing sessions, MFA,
     # content and grants remain in the preservation baseline. Capacity/rate
     # counters are transient controls, not persisted user work.
+    from app import (  # noqa: F401 — register optional table metadata
+        cyber_models,
+        twin_models,
+    )
     from app.models import Base
     from sqlalchemy import text
 

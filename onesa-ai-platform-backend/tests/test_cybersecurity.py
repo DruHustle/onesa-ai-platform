@@ -1038,3 +1038,37 @@ def test_opaque_uri_mapping_and_certificate_refs_never_fetch_or_relabel(cyber):
         ).status_code
         == 422
     )
+
+
+def test_standalone_release_observer_knows_migrated_optional_table_ownership(pg):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    program = """
+import json, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / 'scripts/release'))
+sys.path.insert(0, str(root / 'onesa-ai-platform-backend'))
+from sqlalchemy import create_engine
+from oracle_ai_probe import persistent_fingerprints
+engine = create_engine(sys.stdin.read())
+try:
+    records = persistent_fingerprints(engine, [])
+    assert 'cyber_investigations' in records and 'twin_models' in records
+    assert len([name for name in records if name.startswith('cyber_')]) == 12
+    print('STANDALONE_MIGRATED_PRESERVATION_PASS')
+finally:
+    engine.dispose()
+"""
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", program, str(root)],
+        input=pg.url.render_as_string(hide_password=False),
+        text=True,
+        capture_output=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "STANDALONE_MIGRATED_PRESERVATION_PASS"
