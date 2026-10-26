@@ -12,6 +12,37 @@ import oracle_twin_restore as t
 
 
 class FixtureFileTests(unittest.TestCase):
+    def test_cybersecurity_restore_excludes_foreign_owners_and_requires_real_workflow(
+        self,
+    ):
+        owners = [str(uuid4()), str(uuid4())]
+        binding, operation = {"candidate_commit": "a" * 40}, str(uuid4())
+        tables = {name: [{"user_id": owners[0]}] for name in t.CYBER_TABLES}
+        tables["users"] = [
+            {"id": owner, "email": "release-audit-123-" + str(i) * 24 + "@example.com"}
+            for i, owner in enumerate(owners)
+        ]
+        bundle = {
+            "binding": binding,
+            "operation_id": operation,
+            "scope": "new-owned-release-fixtures-only",
+            "profile": "cybersecurity",
+            "tables": tables,
+        }
+        self.assertEqual(t.validate(bundle, binding, operation), [])
+        for invalid in ["foreign_owner", "incomplete", "wrong_profile", "wrong_source"]:
+            value = json.loads(json.dumps(bundle))
+            if invalid == "foreign_owner":
+                value["tables"]["cyber_events"][0]["user_id"] = str(uuid4())
+            elif invalid == "incomplete":
+                value["tables"]["cyber_summaries"] = []
+            elif invalid == "wrong_profile":
+                value["profile"] = "other"
+            else:
+                value["binding"]["candidate_commit"] = "b" * 40
+            with self.subTest(invalid=invalid), self.assertRaises(t.r.Refused):
+                t.validate(value, binding, operation)
+
     def setup_files(self, folder):
         storage = folder / "storage"
         storage.mkdir()

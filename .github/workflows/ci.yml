@@ -222,7 +222,7 @@ jobs:
     - name: Fetch pinned fixture database with bounded registry-read recovery
       timeout-minutes: 4
       run: python3 scripts/ci/pull_image.py --database
-    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.twins-demo.yaml up --build --wait
+    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.twins-demo.yaml -f compose.cybersecurity-demo.yaml up --build --wait
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install application browsers and system dependencies
       timeout-minutes: 10
@@ -260,7 +260,7 @@ jobs:
 
         '
     - if: always()
-      run: docker compose -f compose.yaml -f compose.twins-demo.yaml down
+      run: docker compose -f compose.yaml -f compose.twins-demo.yaml -f compose.cybersecurity-demo.yaml down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.browser == 'true') }}
     timeout-minutes: 45
     needs:

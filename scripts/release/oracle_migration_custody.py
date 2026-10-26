@@ -199,7 +199,13 @@ def observe(env, uri, plan):
             ]
         )
         and result.get("SQL_writes") == 0
-        and result.get("schema") in ["20261010_capacity", "20261025_twins"],
+        and result.get("schema")
+        in [
+            "20261010_capacity",
+            "20261021_industrial",
+            "20261025_twins",
+            "20261026_cybersecurity",
+        ],
         "OWNER_MIGRATION_PRIVILEGES_OR_SCHEMA_MISMATCH",
     )
     return result

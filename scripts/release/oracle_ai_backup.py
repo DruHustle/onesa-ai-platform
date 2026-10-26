@@ -34,6 +34,39 @@ def require(value, code):
     custody.require(value, code)
 
 
+def snapshot_revision(sql):
+    """Observe the exact Alembic head from this dump; never infer it from tables."""
+    require(len(sql) <= MAX, "COPY_OUTPUT_BOUND")
+    rows, active, seen = [], False, False
+    for line in sql.decode("utf-8").splitlines():
+        if line.startswith("COPY public.alembic_version "):
+            require(
+                not seen
+                and line == "COPY public.alembic_version (version_num) FROM stdin;",
+                "REVISION_COPY_HEADER",
+            )
+            active = seen = True
+        elif active and line == "\\.":
+            active = False
+        elif active:
+            rows.append(line)
+            require(len(rows) == 1, "EXACTLY_ONE_MIGRATION_HEAD_REQUIRED")
+    require(
+        seen
+        and not active
+        and len(rows) == 1
+        and rows[0]
+        in [
+            "20261010_capacity",
+            "20261021_industrial",
+            "20261025_twins",
+            "20261026_cybersecurity",
+        ],
+        "UNKNOWN_OR_INCOMPLETE_MIGRATION_HEAD",
+    )
+    return rows[0]
+
+
 def references(sql):
     """Read only pg_restore's bounded twin_files COPY; execute no dump SQL."""
     require(len(sql) <= MAX, "COPY_OUTPUT_BOUND")
@@ -433,10 +466,12 @@ def run(*, inspect=False):
                 PG,
                 "--data-only",
                 "--table=twin_files",
+                "--table=alembic_version",
                 "--file=-",
                 data=dump,
                 timeout=30,
             )
+            revision = snapshot_revision(rows)
             refs = (
                 references(rows)
                 if any(row["table"] == "twin_files" for row in manifest)
@@ -491,9 +526,7 @@ def run(*, inspect=False):
                 "coordinated_snapshot": True,
                 "encrypted": True,
                 "automatic_deletion": False,
-                "schema_revision": "20261025_twins"
-                if any(row["table"] == "twin_files" for row in manifest)
-                else "pre-twins-additive-schema",
+                "schema_revision": revision,
                 "database": db,
                 "file_references": refs,
                 "file_receipts": result["files"],

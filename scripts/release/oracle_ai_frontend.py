@@ -632,7 +632,10 @@ def main():
     folder, plan = validate(binding)
     api_plan = r.read(r.PLAN)
     api_binding = api_plan["binding"]
-    r.require(api_plan["mode"] == "twins", "API_DEPENDENCY_TWINS_NOT_QUALIFIED")
+    r.require(
+        api_plan["mode"] in ["twins", "cybersecurity"],
+        "API_DEPENDENCY_FEATURE_NOT_QUALIFIED",
+    )
     store = r.private(Path(api_plan["verifier_store"]), directory=True)
     db = sqlite3.connect("file:" + str(store / "records.sqlite") + "?mode=ro", uri=True)
     try:
@@ -660,9 +663,10 @@ def main():
         api_binding, api_operation, Path(api_plan["artifact_folder"]), api_plan
     )
     plan["api_binding"] = api_binding
-    plan["storage"] = api_plan["storage"]
-    plan["mode"] = "twins"
-    plan["expected_schema_revision"] = "20261025_twins"
+    if api_plan["mode"] == "twins":
+        plan["storage"] = api_plan["storage"]
+    plan["mode"] = api_plan["mode"]
+    plan["expected_schema_revision"] = api_plan["expected_schema_revision"]
     plan["preview_receipt_path"] = str(
         ROOT
         / "artifacts"

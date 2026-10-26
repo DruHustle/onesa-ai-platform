@@ -25,6 +25,7 @@ from app import (
     capacity,
     chat,
     conversations,
+    cybersecurity,
     documentation,
     industrial,
     knowledge,
@@ -88,6 +89,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     api.include_router(documentation.router)
     api.include_router(industrial.router)
     api.include_router(twins.router)
+    api.include_router(cybersecurity.router)
     api.include_router(observability.router)
 
     @api.exception_handler(HTTPException)
@@ -172,6 +174,15 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 stream.body_iterator = bounded_stream()
             else:
                 await run_in_threadpool(capacity.end, request, lease_id)
+        if config.cybersecurity_enabled and engine is not None:
+            try:
+                await run_in_threadpool(
+                    cybersecurity.capture_decision, request, response.status_code
+                )
+            except Exception:
+                # Optional monitoring must not turn an auth decision into an outage.
+                # Fixed diagnostic only; never include request, credentials or exceptions.
+                logging.getLogger("onesa.requests").error("security_capture_unavailable")
         observability.record(request, response.status_code, time.monotonic() - started)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -192,13 +203,18 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
                 valid = revision in {
                     REQUIRED_SCHEMA_REVISION,
+                    "20261025_twins",
                     "20261021_industrial",
                     "20261010_capacity",
                 }
                 if config.industrial_demo_enabled:
-                    valid = revision in {REQUIRED_SCHEMA_REVISION, "20261021_industrial"}
+                    valid = revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261025_twins",
+                        "20261021_industrial",
+                    }
                 if config.digital_twins_enabled:
-                    valid = revision == REQUIRED_SCHEMA_REVISION
+                    valid = revision in {REQUIRED_SCHEMA_REVISION, "20261025_twins"}
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(

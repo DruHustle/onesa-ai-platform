@@ -31,6 +31,27 @@ TABLES = [
     "twin_readings",
     "twin_events",
 ]
+CYBER_TABLES = [
+    "users",
+    "cyber_assets",
+    "cyber_sources",
+    "cyber_mappings",
+    "cyber_policies",
+    "cyber_baselines",
+    "cyber_events",
+    "cyber_findings",
+    "cyber_results",
+    "cyber_investigations",
+    "cyber_actions",
+    "cyber_reports",
+    "cyber_summaries",
+]
+
+
+def fixture_tables(bundle):
+    profile = bundle.get("profile", "twins")
+    r.require(profile in ["twins", "cybersecurity"], "UNKNOWN_RESTORE_PROFILE")
+    return CYBER_TABLES if profile == "cybersecurity" else TABLES
 
 
 def validate(bundle, binding, operation):
@@ -41,7 +62,8 @@ def validate(bundle, binding, operation):
         "RESTORE_FIXTURE_BINDING",
     )
     r.require(
-        set(bundle["tables"]) == set(TABLES) and len(bundle["tables"]["users"]) == 2,
+        set(bundle["tables"]) == set(fixture_tables(bundle))
+        and len(bundle["tables"]["users"]) == 2,
         "RESTORE_FIXTURE_TABLE_SCOPE",
     )
     users = bundle["tables"]["users"]
@@ -57,7 +79,7 @@ def validate(bundle, binding, operation):
         ),
         "RESTORE_IDENTITY_SCOPE",
     )
-    assets = {row["id"] for row in bundle["tables"]["twin_assets"]}
+    assets = {row["id"] for row in bundle["tables"].get("twin_assets", [])}
     for name, rows in bundle["tables"].items():
         r.require(len(rows) <= 1000, "RESTORE_ROW_BOUND")
         if name == "users":
@@ -69,6 +91,23 @@ def validate(bundle, binding, operation):
                 else row.get("asset_id") in assets,
                 "FOREIGN_RECORD_IN_RESTORE_FIXTURE",
             )
+    if bundle.get("profile") == "cybersecurity":
+        r.require(
+            all(
+                bundle["tables"][name]
+                for name in [
+                    "cyber_assets",
+                    "cyber_sources",
+                    "cyber_events",
+                    "cyber_findings",
+                    "cyber_investigations",
+                    "cyber_actions",
+                    "cyber_summaries",
+                ]
+            ),
+            "INCOMPLETE_CYBERSECURITY_RESTORE_FIXTURE",
+        )
+        return []
     refs = bundle["tables"]["twin_files"]
     r.require(
         refs
@@ -111,9 +150,9 @@ def query(container, database, sql):
     )
 
 
-def manifest(container, database):
+def manifest(container, database, tables=TABLES):
     result = {}
-    for table in TABLES:
+    for table in tables:
         sql = (
             "SELECT json_build_object('count',count(*),'sha256',encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\\n' ORDER BY to_jsonb(t)::text),''),'UTF8')),'hex')) FROM public."
             + table
@@ -185,6 +224,12 @@ def restore(folder, binding, operation):
     r.require(bundle_path.stat().st_size <= 16 * 1024 * 1024, "RESTORE_BUNDLE_BOUND")
     bundle = r.read(bundle_path)
     refs = validate(bundle, binding, operation)
+    tables = fixture_tables(bundle)
+    revision = (
+        "20261026_cybersecurity"
+        if bundle.get("profile") == "cybersecurity"
+        else "20261025_twins"
+    )
     tool = r.trusted_toolchain(r.read(r.PLAN))
     container = "onesa-twin-restore-" + UUID(operation).hex
     sql = r.docker(
@@ -205,7 +250,7 @@ def restore(folder, binding, operation):
         "alembic",
         binding["artifact_digest"],
         "upgrade",
-        "20261025_twins",
+        revision,
         "--sql",
         timeout=60,
     )
@@ -268,7 +313,7 @@ def restore(folder, binding, operation):
                 r.require(time.monotonic() < deadline, "DISPOSABLE_DATABASE_STARTUP")
                 time.sleep(0.5)
         query(container, "onesa_fixture_test", sql.decode())
-        for table in TABLES:
+        for table in tables:
             payload = json.dumps(bundle["tables"][table], allow_nan=False).replace(
                 "'", "''"
             )
@@ -283,7 +328,7 @@ def restore(folder, binding, operation):
                 + payload
                 + "'::json);",
             )
-        before = manifest(container, "onesa_fixture_test")
+        before = manifest(container, "onesa_fixture_test", tables)
         dump = r.docker(
             "exec",
             container,
@@ -301,6 +346,8 @@ def restore(folder, binding, operation):
             dump.startswith(b"PGDMP") and len(dump) <= 16 * 1024 * 1024,
             "DISPOSABLE_DUMP_BOUND",
         )
+        if bundle.get("profile") == "cybersecurity":
+            dump = recover_encrypted_file(dump, tool["cli_image"])
         r.docker(
             "exec",
             container,
@@ -325,7 +372,7 @@ def restore(folder, binding, operation):
             data=dump,
             timeout=60,
         )
-        after = manifest(container, "onesa_fixture_test_restore")
+        after = manifest(container, "onesa_fixture_test_restore", tables)
         r.require(after == before, "RESTORED_DATABASE_MANIFEST_DIFFERS")
         restored = folder / "restored-fixture-files"
         restored.mkdir(mode=0o700)
@@ -359,7 +406,8 @@ def restore(folder, binding, operation):
             "status": "PASS",
             "binding": binding,
             "operation_id": operation,
-            "schema_revision": "20261025_twins",
+            "schema_revision": revision,
+            "profile": bundle.get("profile", "twins"),
             "database_manifest_matches": True,
             "file_hashes_match": True,
             "encrypted_fixture_recovery": "PASS",

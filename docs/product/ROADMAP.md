@@ -1,5 +1,13 @@
 # Roadmap and milestone evidence
 
+The independent Cybersecurity source module adds bounded evidence ingestion, owned
+asset posture, versioned deterministic findings, human investigations and optional
+read-only assistance. It defaults off and has no required peer, feed, 3D or model
+service. Local synthetic checks and source availability do not establish hosted,
+production, live OT or actual Smart Factory consumer acceptance. The
+[capability matrix](../engineering/CYBERSECURITY.md#audit-and-capability-matrix)
+separates these outcomes and retains the broader planned application-security scope.
+
 Industrial Investigation V1.1 has a separately accepted protected synthetic demo;
 normal AI production keeps it disabled. Current serving component identities and
 qualified source scopes are maintained in README/CHANGELOG and protected release

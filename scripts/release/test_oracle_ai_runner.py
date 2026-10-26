@@ -403,6 +403,33 @@ class OciDescriptorTests(unittest.TestCase):
 
 
 class ComponentCheckScopeTests(unittest.TestCase):
+    def test_cybersecurity_requires_its_own_checks_without_twins_or_skips(self):
+        api = r.required_probe_checks(
+            {"component": "api"}, "production", "cybersecurity"
+        )
+        stage = r.required_probe_checks(
+            {"component": "api"}, "staging", "cybersecurity"
+        )
+        front = r.required_probe_checks(
+            {"component": "frontend"}, "production", "cybersecurity"
+        )
+        self.assertTrue(
+            {
+                "cybersecurity_ingestion",
+                "cybersecurity_findings",
+                "cybersecurity_decisions",
+                "cybersecurity_native_configuration",
+                "cybersecurity_revocation",
+                "cybersecurity_export",
+            }
+            <= api
+        )
+        self.assertNotIn("twins_model_delivery", api)
+        self.assertEqual(stage - api, {"cybersecurity_ui"})
+        self.assertEqual(front - api, {"cybersecurity_ui"})
+        with self.assertRaises(r.Refused):
+            r.required_probe_checks({"component": "api"}, "staging", "unknown")
+
     def test_api_and_frontend_qualification_keep_their_actual_affected_scope(self):
         api = r.required_probe_checks({"component": "api"}, "staging", "twins")
         frontend = r.required_probe_checks(
