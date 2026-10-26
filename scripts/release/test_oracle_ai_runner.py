@@ -400,3 +400,28 @@ class OciDescriptorTests(unittest.TestCase):
             r.scanned_configuration_digest(index, {**parent, **proof})
         with self.assertRaises(r.Refused):
             r.scanned_configuration_digest(digest, {})
+
+
+class ComponentCheckScopeTests(unittest.TestCase):
+    def test_api_and_frontend_qualification_keep_their_actual_affected_scope(self):
+        api = r.required_probe_checks({"component": "api"}, "staging", "twins")
+        frontend = r.required_probe_checks(
+            {"component": "frontend"}, "staging", "twins"
+        )
+        self.assertNotIn("twins_inspection", api)
+        self.assertEqual(frontend - api, {"twins_inspection"})
+        self.assertTrue(
+            {
+                "authentication",
+                "owner_isolation",
+                "database_persistence",
+                "file_persistence",
+                "twins_model_delivery",
+            }
+            <= api
+        )
+        foundation = r.required_probe_checks(
+            {"component": "api"}, "staging", "foundation"
+        )
+        self.assertTrue({"twins_disabled", "ordinary_workflows"} <= foundation)
+        self.assertNotIn("twins_model_delivery", foundation)

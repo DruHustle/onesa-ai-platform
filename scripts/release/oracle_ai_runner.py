@@ -1504,6 +1504,29 @@ def extract_reference(folder, destination, binding):
                 f.write(data)
 
 
+def required_probe_checks(binding, env, mode):
+    mandatory = {
+        "authentication",
+        "owner_isolation",
+        "tls",
+        "chat_knowledge_retained",
+        "database_persistence",
+        "session_persistence",
+    }
+    if mode == "twins":
+        mandatory |= {
+            "twins_model_delivery",
+            "twins_saved_state",
+            "optional_sources_absent",
+            "file_persistence",
+        }
+    else:
+        mandatory |= {"twins_disabled", "ordinary_workflows"}
+    if env == "staging" and mode == "twins" and binding["component"] == "frontend":
+        mandatory.add("twins_inspection")
+    return mandatory
+
+
 def probe(binding, env, operation, folder, plan):
     name = TARGET[env]
     current = inventory()
@@ -1586,8 +1609,6 @@ def probe(binding, env, operation, folder, plan):
         *(
             [
                 "-v",
-                str(plan["storage"][env]) + ":/private/twin-files:ro",
-                "-v",
                 str(output / "reference") + ":/private/reference:ro",
             ]
             if plan["mode"] == "twins"
@@ -1651,6 +1672,9 @@ def probe(binding, env, operation, folder, plan):
                     import oracle_twin_restore
 
                     if plan["mode"] == "twins":
+                        oracle_twin_restore.capture_fixture_files(
+                            output, binding, operation, plan["storage"][env]
+                        )
                         oracle_twin_restore.restore(output, binding, operation)
                     else:
                         import oracle_forward_check
@@ -1736,25 +1760,7 @@ def probe(binding, env, operation, folder, plan):
         "HOSTED_PROBE_BINDING_MISMATCH",
     )
     required = set(plan["mandatory_probe_checks"][env])
-    mandatory = {
-        "authentication",
-        "owner_isolation",
-        "tls",
-        "chat_knowledge_retained",
-        "database_persistence",
-        "session_persistence",
-    }
-    if plan["mode"] == "twins":
-        mandatory |= {
-            "twins_model_delivery",
-            "twins_saved_state",
-            "optional_sources_absent",
-            "file_persistence",
-        }
-    else:
-        mandatory |= {"twins_disabled", "ordinary_workflows"}
-    if env == "staging" and plan["mode"] == "twins":
-        mandatory.add("twins_inspection")
+    mandatory = required_probe_checks(binding, env, plan["mode"])
     require(mandatory <= required, "INCOMPLETE_HOSTED_POLICY")
     require(
         set(observed["checks"]) >= required

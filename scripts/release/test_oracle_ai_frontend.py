@@ -148,3 +148,35 @@ class FrontendArtifactTests(unittest.TestCase):
             self.assertRaisesRegex(f.r.Refused, "DUPLICATE_PROVIDER"),
         ):
             f.deployments_for("fixture", {"project_id": "prj_fixture"})
+
+
+class IndependentPreviewTests(unittest.TestCase):
+    def test_changed_frontend_uses_its_reserved_context_without_redeploying_api(self):
+        api = {
+            "candidate_commit": "a" * 40,
+            "source_tree": "b" * 40,
+            "source_sha256": "c" * 64,
+        }
+        frontend = {**api, "candidate_commit": "d" * 40}
+        chain = [{"kind": "context", "id": "synthetic-context"}]
+        folder = Path("/synthetic/frontend")
+        plan = {"preview_receipt_path": "/synthetic/api-preview"}
+        with patch.object(f, "create") as create:
+            path = f.select_preview(frontend, api, chain, "staging", folder, plan)
+            self.assertEqual(
+                path,
+                "/synthetic/frontend/operations/synthetic-context/provider-receipt.json",
+            )
+            create.assert_called_once_with(
+                frontend, "staging", "synthetic-context", folder, plan
+            )
+        with patch.object(f, "create") as create:
+            f.select_preview(frontend, api, chain, "operations", folder, plan)
+            create.assert_not_called()
+        with patch.object(f, "create") as create:
+            plan = {"preview_receipt_path": "/synthetic/api-preview"}
+            self.assertEqual(
+                f.select_preview(api, api, chain, "staging", folder, plan),
+                "/synthetic/api-preview",
+            )
+            create.assert_not_called()

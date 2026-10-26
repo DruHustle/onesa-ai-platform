@@ -372,33 +372,9 @@ def export_owned_restore(engine, users, binding, operation):
     }
     from oracle_twin_restore import validate
 
-    refs = validate(bundle, binding, operation)
-    root = OUTPUT / "restore-files"
-    root.mkdir(mode=0o700)
-    for row in refs:
-        source = Path("/private/twin-files") / row["user_id"] / row["sha256"]
-        require(
-            not any(p.is_symlink() for p in [source, source.parent])
-            and source.is_file()
-            and source.stat().st_size == row["size"],
-            "OWNED_RESTORE_FILE_CUSTODY",
-        )
-        data = source.read_bytes()
-        require(
-            hashlib.sha256(data).hexdigest() == row["sha256"],
-            "OWNED_RESTORE_FILE_DIGEST",
-        )
-        target = root / row["user_id"]
-        target.mkdir(mode=0o700, exist_ok=True)
-        path = target / row["sha256"]
-        if not path.exists():
-            with os.fdopen(
-                os.open(
-                    path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
-                ),
-                "wb",
-            ) as f:
-                f.write(data)
+    validate(bundle, binding, operation)
+    # Export only these two fixtures' rows. The pinned host copies their exact
+    # referenced blobs; this browser container never mounts other owners' files.
     require(len(json.dumps(bundle)) <= 16 * 1024 * 1024, "RESTORE_FIXTURE_BOUND")
     write(OUTPUT / "restore-fixtures.json", bundle)
 

@@ -556,6 +556,22 @@ def prepare_preview(api_binding, context):
     return folder / "operations" / operation / "provider-receipt.json"
 
 
+def select_preview(binding, api_binding, chain, phase, folder, plan):
+    if any(
+        binding[key] != api_binding[key]
+        for key in ["candidate_commit", "source_tree", "source_sha256"]
+    ):
+        qualification_context = next(
+            row["id"] for row in chain if row["kind"] == "context"
+        )
+        plan["preview_receipt_path"] = str(
+            folder / "operations" / qualification_context / "provider-receipt.json"
+        )
+        if phase == "staging":
+            create(binding, "staging", qualification_context, folder, plan)
+    return plan["preview_receipt_path"]
+
+
 def main():
     r.require(
         os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS"),
@@ -626,6 +642,7 @@ def main():
     plan["observed_ci_run_id"] = next(
         row["run_id"] for row in ci if row["workflow"] == "ci.yml"
     )
+    select_preview(binding, api_binding, chain, phase, folder, plan)
     if phase == "staging":
         with _probe_plan(plan):
             details = r.probe(binding, "staging", context["context_id"], folder, plan)

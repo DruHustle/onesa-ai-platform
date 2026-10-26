@@ -123,6 +123,29 @@ def manifest(container, database):
     return result
 
 
+def capture_fixture_files(folder, binding, operation, storage):
+    bundle = r.read(folder / "restore-fixtures.json")
+    refs = validate(bundle, binding, operation)
+    r.private(Path(storage), uid=10001, directory=True)
+    root = folder / "restore-files"
+    root.mkdir(mode=0o700)
+    for row in refs:
+        source = Path(storage) / row["user_id"] / row["sha256"]
+        r.private(source, uid=10001)
+        with os.fdopen(os.open(source, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+            data = stream.read(4 * 1024 * 1024 + 1)
+        r.require(
+            len(data) == row["size"]
+            and hashlib.sha256(data).hexdigest() == row["sha256"],
+            "OWNED_FIXTURE_FILE_CHANGED",
+        )
+        owner = root / row["user_id"]
+        owner.mkdir(mode=0o700, exist_ok=True)
+        target = owner / row["sha256"]
+        if not target.exists():
+            r.write_raw(target, data)
+
+
 def recover_encrypted_file(data, tool_image):
     # Temporary recovery keys exist only in this network-isolated process.
     # Exercise the exact new envelope without requesting production private keys.
