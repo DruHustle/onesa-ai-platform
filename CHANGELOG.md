@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Source candidate: use database-free Oracle staging liveness while retaining real database,
+  schema and model readiness in release qualification. The full middleware regression
+  proves no database checkout even with a configured failing engine. Deployment and
+  CU-hour savings remain separately unverified.
+
 ## 2026-10-23 — V1.1 application and isolated demo components accepted
 
 - Normal AI frontend `69b7a21ec3d5a6cd477170473e8538ba6894c0d4`, Vercel
