@@ -26,6 +26,7 @@ PLAN = Path("/etc/onesa/oracle-ai-frontend-release.json")
 ROOT = Path("/var/lib/onesa/release-verification/ai-frontend")
 PROVIDER = Path("/etc/onesa/oracle-ai-vercel-observer.json")
 CLI_AUTH = Path("/etc/onesa/oracle-vercel-cli")
+APP_ROOT = "onesa-ai-platform-frontend/apps/chat"
 
 # The pinned CLI atomically updates preferences and its cache during startup.
 # Keep owner custody read-only; all CLI writes belong to this container's tmpfs.
@@ -282,6 +283,13 @@ def unpack(folder, build, destination):
         and project["orgId"] == cfg["team_id"],
         "PREBUILT_PROJECT_SCOPE",
     )
+    r.require(
+        project.get("settings", {}).get("rootDirectory") == APP_ROOT,
+        "PREBUILT_APPLICATION_ROOT_SCOPE",
+    )
+    # The CLI resolves the provider's monorepo root even for --prebuilt.
+    # Only its empty directory is needed; candidate source is never executed.
+    (destination / APP_ROOT).mkdir(mode=0o700, parents=True, exist_ok=False)
 
 
 def deployments_for(operation, plan):
