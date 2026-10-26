@@ -1,0 +1,307 @@
+{
+  "base": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "casing": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "suction-cover": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "discharge": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "cover-gasket": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "impeller": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "coupling-shaft": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "shaft-sleeve": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "seal-seat": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "seal-face": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "seal-o-ring": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "seal-spring": {
+    "boundaryEdges": 10,
+    "orientationErrors": 10,
+    "nonManifoldEdges": 10
+  },
+  "bearing-frame": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-outer": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-inner": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-balls": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-cage": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-outboard-bearing-outer": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-outboard-bearing-inner": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-outboard-bearing-balls": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-outboard-bearing-cage": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-cover": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "bearing-gasket": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-spacer": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "coupling-pump-hub": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "coupling-spider": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "coupling-motor-hub": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "coupling-guard": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-housing": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-stator": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "winding-a": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "winding-b": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "winding-c": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-rotor": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "rotor-cage": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-shaft": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-de-bearing-outer": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-de-bearing-inner": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-de-bearing-balls": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-de-bearing-cage": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-nde-bearing-outer": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-nde-bearing-inner": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-nde-bearing-balls": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-nde-bearing-cage": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-front-cover": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-back-cover": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-fan": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "fan-cover": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "terminal-box": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-0": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-1": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-2": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-3": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-4": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-5": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-6": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "pump-cover-bolt-7": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-tie-bolt-0": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-tie-bolt-1": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-tie-bolt-2": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  },
+  "motor-tie-bolt-3": {
+    "boundaryEdges": 0,
+    "orientationErrors": 0,
+    "nonManifoldEdges": 0
+  }
+}

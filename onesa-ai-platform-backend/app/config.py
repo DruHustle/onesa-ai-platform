@@ -66,6 +66,10 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "staging", "production"] = "development"
     industrial_demo_enabled: bool = False
     industrial_import_enabled: bool = False
+    digital_twins_enabled: bool = False
+    digital_twins_demo_enabled: bool = False
+    digital_twins_storage_directory: str = ""
+    digital_twins_persistent_mount: bool = False
 
     @field_validator("model_quantization", "model_revision", mode="before")
     @classmethod

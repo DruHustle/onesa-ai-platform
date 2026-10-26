@@ -145,6 +145,87 @@ erDiagram
     UUID id PK
     TIMESTAMP_WITH_TIME_ZONE created_at
   }
+  twin_assets {
+    UUID template_id FK
+    VARCHAR_120_ name
+    VARCHAR_120_ serial
+    JSONB definition
+    UUID active_model_id
+    INTEGER revision
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_events {
+    UUID asset_id FK
+    UUID source_id FK
+    UUID component_id
+    UUID reading_id FK
+    JSONB details
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_files {
+    VARCHAR_200_ filename
+    VARCHAR_64_ sha256
+    INTEGER size
+    JSONB details
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_models {
+    UUID template_id FK
+    UUID file_id FK
+    JSONB definition
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_notes {
+    UUID asset_id FK
+    UUID component_id
+    VARCHAR_20_ kind
+    JSONB payload
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_readings {
+    UUID source_id FK
+    UUID asset_id FK
+    UUID component_id
+    VARCHAR_160_ message_id
+    VARCHAR_80_ tag
+    VARCHAR_16_ mode
+    VARCHAR_24_ unit
+    FLOAT value
+    VARCHAR_16_ quality
+    TIMESTAMP_WITH_TIME_ZONE observed_at
+    JSONB provenance
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_sources {
+    UUID asset_id FK
+    VARCHAR_120_ name
+    VARCHAR_64_ token_hash UK
+    JSONB definition
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    TIMESTAMP_WITH_TIME_ZONE last_seen_at
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_templates {
+    VARCHAR_120_ name
+    VARCHAR_80_ kind
+    JSONB definition
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
   upload_chunks {
     UUID upload_id PK
     INTEGER sequence PK
@@ -175,4 +256,20 @@ erDiagram
   conversations ||--o{ messages : "conversation_id"
   users ||--o{ model_leases : "user_id"
   users ||--o{ trips : "user_id"
+  twin_templates ||--o{ twin_assets : "template_id"
+  users ||--o{ twin_assets : "user_id"
+  twin_assets ||--o{ twin_events : "asset_id"
+  twin_sources ||--o{ twin_events : "source_id"
+  twin_readings ||--o{ twin_events : "reading_id"
+  users ||--o{ twin_files : "user_id"
+  twin_templates ||--o{ twin_models : "template_id"
+  twin_files ||--o{ twin_models : "file_id"
+  users ||--o{ twin_models : "user_id"
+  twin_assets ||--o{ twin_notes : "asset_id"
+  users ||--o{ twin_notes : "user_id"
+  twin_sources ||--o{ twin_readings : "source_id"
+  twin_assets ||--o{ twin_readings : "asset_id"
+  twin_assets ||--o{ twin_sources : "asset_id"
+  users ||--o{ twin_sources : "user_id"
+  users ||--o{ twin_templates : "user_id"
   bounded_uploads ||--o{ upload_chunks : "upload_id"

@@ -9,18 +9,78 @@ export default function IndustrialNav() {
   const { copy } = useLocale();
   const pathname = usePathname();
   const [available, setAvailable] = useState(false);
+  const [twins, setTwins] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/v1/twins/readiness", {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((result) => {
+        if (!controller.signal.aborted) setTwins(result?.enabled === true);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setTwins(false);
+      });
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
     const deadline = setTimeout(() => controller.abort(), 8000);
     fetch("/api/v1/industrial/assets", {
-      credentials: "same-origin", cache: "no-store", signal: controller.signal,
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller.signal,
     })
-      .then(response => response.status === 200 ? response.json() : null)
-      .then(result => { if (active) setAvailable(Array.isArray(result?.items) && result.items.every((item: unknown) => typeof item === "object" && item !== null && "id" in item && typeof item.id === "string" && item.id.length > 0 && "name" in item && typeof item.name === "string" && item.name.length > 0)); })
-      .catch(() => { if (active) setAvailable(false); })
+      .then((response) => (response.status === 200 ? response.json() : null))
+      .then((result) => {
+        if (active)
+          setAvailable(
+            Array.isArray(result?.items) &&
+              result.items.every(
+                (item: unknown) =>
+                  typeof item === "object" &&
+                  item !== null &&
+                  "id" in item &&
+                  typeof item.id === "string" &&
+                  item.id.length > 0 &&
+                  "name" in item &&
+                  typeof item.name === "string" &&
+                  item.name.length > 0,
+              ),
+          );
+      })
+      .catch(() => {
+        if (active) setAvailable(false);
+      })
       .finally(() => clearTimeout(deadline));
-    return () => { active = false; controller.abort(); clearTimeout(deadline); };
+    return () => {
+      active = false;
+      controller.abort();
+      clearTimeout(deadline);
+    };
   }, []);
-  return available ? <Link href="/industrial" aria-current={pathname === "/industrial" ? "page" : undefined}>{copy.industrial}</Link> : null;
+  return (
+    <>
+      {available && (
+        <Link
+          href="/industrial"
+          aria-current={pathname === "/industrial" ? "page" : undefined}
+        >
+          {copy.industrial}
+        </Link>
+      )}
+      {twins && (
+        <Link
+          href="/industrial/twins"
+          aria-current={pathname === "/industrial/twins" ? "page" : undefined}
+        >
+          {available ? "Digital Twins" : `${copy.industrial} · Digital Twins`}
+        </Link>
+      )}
+    </>
+  );
 }

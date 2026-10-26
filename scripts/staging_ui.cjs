@@ -5,6 +5,7 @@ const { createRequire } = require("node:module");
 const { createHash } = require("node:crypto");
 const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
 const { withTemporaryDraft } = require("./usability-draft.cjs");
+const { navigateInterface } = require("./ui_navigation.cjs");
 const requireChat = createRequire(
   path.resolve("onesa-ai-platform-frontend/apps/chat/package.json"),
 );
@@ -336,7 +337,7 @@ async function main() {
               elapsed_ms: Math.round(performance.now() - authenticationStarted),
             });
         });
-        await page.goto(origin, { waitUntil: "networkidle" });
+        await navigateInterface(page, origin, "/", { authentication: true });
         if (!identityIcons) {
           phase = "metadata-and-icons";
           identityIcons = await verifyIcons(page, origin, bypass);
@@ -360,9 +361,7 @@ async function main() {
           "/invitation",
         ]) {
           phase = "layout:" + name + ":" + route + ":" + mode;
-          const response = await page.goto(origin + route, {
-            waitUntil: "networkidle",
-          });
+          const response = await navigateInterface(page, origin, route);
           if (!response || response.status() !== 200)
             throw new Error("Interface route failed");
           await expect(page.locator("main")).toBeVisible();
@@ -404,7 +403,7 @@ async function main() {
         ]) {
           phase = "live-draft:" + name + ":" + route + ":" + mode;
           observeDraftCheck("navigate");
-          await page.goto(origin + route, { waitUntil: "networkidle" });
+          await navigateInterface(page, origin, route);
           const field = page.getByLabel(label, { exact: true });
           observeDraftCheck("field_visible");
           await expect(field).toBeVisible();
@@ -489,7 +488,7 @@ async function main() {
     });
     const page = await context.newPage();
     page.on("pageerror", () => pageErrors.push("pageerror"));
-    await page.goto(origin, { waitUntil: "networkidle" });
+    await navigateInterface(page, origin, "/", { authentication: true });
     await page.getByLabel("Email", { exact: true }).fill(accounts[1].email);
     await page
       .getByLabel("Password", { exact: true })
