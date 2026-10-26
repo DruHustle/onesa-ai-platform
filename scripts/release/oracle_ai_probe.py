@@ -693,6 +693,15 @@ def execute(environment, request):
             )
             verify = private_json(OUTPUT / "twins-verify-ui.json")
             require(verify["status"] == "PASS", "TWINS_RELOAD_OR_PERSISTENCE_FAILED")
+            record["browser_observations"] = [
+                {
+                    "phase": phase,
+                    "browser_version": result.get("browser_version"),
+                    "graphics": result.get("graphics"),
+                    "scope": result.get("scope"),
+                }
+                for phase, result in [("prepare", prepare), ("verify", verify)]
+            ]
             record["checks"] = {**prepare["checks"], **verify["checks"]}
             record["checks"]["chat_knowledge_retained"] = "PASS"
             require(

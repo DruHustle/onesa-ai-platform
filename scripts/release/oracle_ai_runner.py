@@ -116,7 +116,9 @@ def private(path, *, uid=0, directory=False):
     )
     require(
         all(
-            p.stat().st_uid == 0 and p.stat().st_mode & 0o022 == 0 for p in path.parents
+            (p.stat().st_uid == 0 and p.stat().st_mode & 0o022 == 0)
+            or (uid != 0 and p.stat().st_uid == uid and p.stat().st_mode & 0o077 == 0)
+            for p in path.parents
         ),
         "CUSTODY_ANCESTOR",
     )

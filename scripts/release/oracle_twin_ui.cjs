@@ -20,6 +20,7 @@ const savedFile=path.join(output,'twins-prepared.json');
 async function main(){
  const browser=await chromium.launch({headless:true});let context;
  try{
+  report.browser_version=await browser.version();
   context=await browser.newContext({baseURL:origin,viewport:{width:1440,height:1000},extraHTTPHeaders:ctx.bypass?{'x-vercel-protection-bypass':ctx.bypass}:{},...(phase==='verify'?{storageState:path.join(output,'twins-browser-state.json')}:{})});
   const errors=[];const page=await context.newPage();page.setDefaultTimeout(30000);page.on('pageerror',e=>errors.push(e.name));
   await context.route('**/*',r=>{const u=new URL(r.request().url()),allowed=!['http:','https:'].includes(u.protocol)||u.origin===origin;report.network.push({origin:u.origin,path:u.pathname,allowed});return allowed?r.continue():r.abort();});
@@ -61,6 +62,7 @@ async function main(){
   await page.goto('/industrial/twins');await expect(page.getByRole('heading',{name:'Qualification pump',exact:true})).toBeVisible();
   const view=page.getByTestId('equipment-model-loaded');await view.waitFor();await expect.poll(async()=>Number(await view.getAttribute('data-draw-calls')),{timeout:60000}).toBeGreaterThan(0);
   need(Number(await view.getAttribute('data-triangles'))>90000,'ACTUAL_INTERIOR_MODEL_RENDER');
+  report.graphics=await page.locator('canvas').first().evaluate(canvas=>{const gl=canvas.getContext('webgl2');if(!gl)return null;const debug=gl.getExtension('WEBGL_debug_renderer_info');return {version:gl.getParameter(gl.VERSION),renderer:gl.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:gl.RENDERER)}});need(report.graphics,'ACTUAL_WEBGL2_CONTEXT_REQUIRED');
   const fileResponse=await page.request.get(`/api/v1/twins/files/${owned.file_id}/content`);need(fileResponse.status()===200&&crypto.createHash('sha256').update(await fileResponse.body()).digest('hex')===owned.model_sha256,'AUTHENTICATED_FILE_DELIVERY');report.checks.twins_model_delivery='PASS';
   const button=name=>page.getByRole('button',{name,exact:true}).click();
   if(phase==='prepare'){
