@@ -15,6 +15,7 @@ import re
 import sys
 from pathlib import Path, PurePosixPath
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import oracle_owner as verifier
 
 INSTALL_PARENT = Path("/usr/local/lib/onesa-release")

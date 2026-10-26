@@ -4,6 +4,7 @@ import base64
 import hashlib
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -230,3 +231,15 @@ class InstallTests(unittest.TestCase):
             )
             self.assertEqual(result["state"], "INSTALLATION_READY")
             self.assertFalse(installer.INSTALL_PARENT.exists())
+
+
+class IsolatedInstallerEntryTests(unittest.TestCase):
+    def test_isolated_python_resolves_the_bundled_verifier(self):
+        result = subprocess.run(
+            [sys.executable, "-I", str(Path(installer.__file__)), "--help"],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertIn(b"--manifest-pin", result.stdout)
