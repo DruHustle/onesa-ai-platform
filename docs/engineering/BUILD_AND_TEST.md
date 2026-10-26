@@ -1,5 +1,14 @@
 # Separate application builds and tests
 
+Frequent backend container probes use database-free `/health`. The middleware
+regression in `tests/test_foundation.py` installs a failing connection hook on a
+configured PostgreSQL engine, includes a session cookie and verifies repeated
+liveness requests acquire no connection. `/core-ready` still attempts real database
+readiness and fails on the unavailable engine; `/ready` retains model readiness.
+Deployment qualification must continue to check schema, restricted runtime identity,
+authentication and affected workflows. Container health establishes process liveness;
+hosted application acceptance and measured compute savings require separate evidence.
+
 CI and hosted artifact-build workflows pin Node 24.22.1 explicitly; a cached
 `24` major selector can otherwise select an older vulnerable patch. Runtime images
 and provider-managed runtimes require their own source-bound verification.
