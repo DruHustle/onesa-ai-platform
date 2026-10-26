@@ -51,6 +51,16 @@
         "org.onesa.product": "ai",
         "org.onesa.environment": "staging",
         "org.onesa.source-commit": "${ORACLE_STAGING_COMMIT:?Exact source commit required}"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "python -c \"import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/health', timeout=5)\""
+        ],
+        "interval": "15s",
+        "timeout": "6s",
+        "start_period": "20s",
+        "retries": 5
       }
     },
     "production": {

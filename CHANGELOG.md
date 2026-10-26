@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Source candidate: use database-free container liveness while retaining real database,
+- Source candidate: use database-free Oracle staging liveness while retaining real database,
   schema and model readiness in release qualification. The full middleware regression
   proves no database checkout even with a configured failing engine. Deployment and
   CU-hour savings remain separately unverified.

@@ -1,6 +1,7 @@
 # Separate application builds and tests
 
-Frequent backend container probes use database-free `/health`. The middleware
+Oracle staging container probes use database-free `/health`. The image default
+retains `/core-ready` for existing production dependency monitoring. The middleware
 regression in `tests/test_foundation.py` installs a failing connection hook on a
 configured PostgreSQL engine, includes a session cookie and verifies repeated
 liveness requests acquire no connection. `/core-ready` still attempts real database
