@@ -45,13 +45,27 @@ def scoped_registry(request: Request, user_id: UUID) -> ToolRegistry:
     """Bind authority in server context, never in model-supplied arguments."""
     from app.industrial import owned
 
-    if not (
+    if not request.app.state.settings.cybersecurity_enabled and not (
         request.app.state.settings.industrial_demo_enabled
         and request.app.state.settings.industrial_import_enabled
     ):
         return registry
     current = ToolRegistry()
     current.tools.update(registry.tools)
+    if request.app.state.settings.cybersecurity_enabled:
+        from app.cyber_schemas import EvidenceRequest
+        from app.cybersecurity import read_evidence
+
+        async def security_facts(arguments: Any) -> dict[str, Any]:
+            body = EvidenceRequest.model_validate(arguments.model_dump())
+
+            def read() -> dict[str, Any]:
+                with Session(request.app.state.engine) as check:
+                    return read_evidence(request, check, user_id, body)
+
+            return await run_in_threadpool(read)
+
+        current.register("cybersecurity_evidence_v1", Tool(EvidenceRequest, security_facts))
     if (
         request.app.state.settings.industrial_demo_enabled
         and request.app.state.settings.industrial_import_enabled
@@ -110,7 +124,7 @@ def tools(request: Request, auth: Auth) -> dict[str, Any]:
                 "name": name,
                 "schema": tool.schema.model_json_schema(),
                 "effect": "read-only owned evidence"
-                if name == "industrial_facts"
+                if name in {"industrial_facts", "cybersecurity_evidence_v1"}
                 else "local computation",
             }
             for name, tool in scoped_registry(request, auth[0].id).tools.items()

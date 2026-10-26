@@ -333,15 +333,16 @@ def run_node(script, env, *, args=(), timeout=1200):
     require(r.returncode == 0, "PINNED_BROWSER_PROBE_FAILED")
 
 
-def export_owned_restore(engine, users, binding, operation):
-    from oracle_twin_restore import TABLES
+def export_owned_restore(engine, users, binding, operation, profile="twins"):
+    from oracle_twin_restore import CYBER_TABLES, TABLES
     from sqlalchemy import text
 
     owners = [u["id"] for u in users]
     tables = {}
     with engine.connect() as db, db.begin():
         db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
-        for table in TABLES:
+        require(profile in ["twins", "cybersecurity"], "RESTORE_EXPORT_PROFILE")
+        for table in CYBER_TABLES if profile == "cybersecurity" else TABLES:
             if table == "users":
                 where = "id = ANY(CAST(:owners AS uuid[]))"
             elif table in ["twin_readings", "twin_events"]:
@@ -369,6 +370,7 @@ def export_owned_restore(engine, users, binding, operation):
         "operation_id": operation,
         "scope": "new-owned-release-fixtures-only",
         "tables": tables,
+        "profile": profile,
     }
     from oracle_twin_restore import validate
 
@@ -569,6 +571,8 @@ def execute(environment, request):
             )["id"]
             clients[0].call("GET", "/api/v1/twins/readiness", expected=404)
             clients[0].call("GET", "/api/v1/twins/catalog", expected=404)
+            clients[0].call("GET", "/api/v1/cybersecurity/readiness", expected=404)
+            clients[0].call("GET", "/api/v1/cybersecurity/workspace", expected=404)
             write(
                 OUTPUT / "prepared-for-replacement.json",
                 {
@@ -611,11 +615,81 @@ def execute(environment, request):
                     "database_persistence",
                     "session_persistence",
                     "twins_disabled",
+                    "cybersecurity_disabled",
                     "chat_knowledge_retained",
                 ]
             }
             record["status"] = "PASS"
+        elif plan["mode"] == "cybersecurity":
+            context_path = OUTPUT / "private-cybersecurity-context.json"
+            write(
+                context_path,
+                {
+                    "binding": binding,
+                    "operation_id": operation,
+                    "environment": environment,
+                    "origin": origin,
+                    "users": users,
+                    "output_dir": str(OUTPUT),
+                    "bypass": bypass,
+                },
+            )
+            env["ONESA_ORACLE_CYBERSECURITY_CONTEXT"] = str(context_path)
+            flags = (
+                ["--api-only"]
+                if environment == "production" and binding["component"] == "api"
+                else []
+            )
+            script = "scripts/release/oracle_cybersecurity_ui.cjs"
+            run_node(script, env, args=flags)
+            prepared = private_json(OUTPUT / "cybersecurity-prepare-ui.json")
+            require(prepared["status"] == "PASS", "CYBERSECURITY_PREPARE_FAILED")
+            if environment == "staging" and binding["component"] == "api":
+                export_owned_restore(engine, users, binding, operation, "cybersecurity")
+                write(
+                    OUTPUT / "prepared-for-replacement.json",
+                    {
+                        "binding": binding,
+                        "operation_id": operation,
+                        "environment": environment,
+                        "mode": "cybersecurity",
+                    },
+                )
+                deadline = time.monotonic() + 240
+                while not (OUTPUT / "replacement-ok.json").exists():
+                    require(
+                        time.monotonic() < deadline,
+                        "CYBERSECURITY_REPLACEMENT_NOT_OBSERVED",
+                    )
+                    time.sleep(0.2)
+                replacement = private_json(OUTPUT / "replacement-ok.json")
+                require(
+                    replacement["binding"] == binding
+                    and replacement["operation_id"] == operation
+                    and replacement["old_container"] != replacement["new_container"]
+                    and replacement["image_digest"] == binding["artifact_digest"],
+                    "CYBERSECURITY_REPLACEMENT_BINDING",
+                )
+                record["controlled_replacement"] = replacement
+                record["backend_identity"] = served_backend_identity(
+                    origin, bypass, replacement["backend_identity"]
+                )
+            run_node(script, env, args=[*flags, "--verify"])
+            verified = private_json(OUTPUT / "cybersecurity-verify-ui.json")
+            require(verified["status"] == "PASS", "CYBERSECURITY_PERSISTENCE_FAILED")
+            record["checks"] = {
+                **prepared["checks"],
+                **verified["checks"],
+                "chat_knowledge_retained": "PASS",
+            }
+            require(
+                all(v == "PASS" for v in record["checks"].values()),
+                "CYBERSECURITY_CHECK_FAILED",
+            )
+            record["browser_observations"] = [prepared["scope"], verified["scope"]]
+            record["status"] = "PASS"
         else:
+            require(plan["mode"] == "twins", "UNKNOWN_FEATURE_PROBE_MODE")
             twin_context = {
                 "binding": binding,
                 "operation_id": operation,
@@ -706,6 +780,8 @@ def execute(environment, request):
                 "private-fixtures.json",
                 "private-twin-context.json",
                 "twins-browser-state.json",
+                "private-cybersecurity-context.json",
+                "cybersecurity-browser-state.json",
                 "oracle-context.json",
             ]:
                 (OUTPUT / name).unlink(missing_ok=True)

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import RequireSession from "../../../components/require-session";
 import FeatureShell from "../../../components/feature-shell";
 import TwinSetup from "../../../components/twin-setup";
+import TwinSecurityOverlay from "../../../components/twin-security-overlay";
 import TwinInspectionControls, {
   TwinExplosionControls,
 } from "../../../components/twin-inspection-controls";
@@ -53,6 +54,8 @@ function Workspace() {
     [loaded, setLoaded] = useState(false),
     [setup, setSetup] = useState(false),
     [connected, setConnected] = useState(true);
+  const [securityHighlights, setSecurityHighlights] = useState<string[]>([]);
+  const linkedFocus = useRef(false);
   const [hidden, setHidden] = useState<string[]>([]),
     [isolated, setIsolated] = useState<string | null>(null),
     [transparent, setTransparent] = useState(false),
@@ -121,7 +124,14 @@ function Workspace() {
       .then(([result, status]) => {
         setCatalog(result);
         setReadiness(status);
-        setSelectedAsset(result.assets[0]?.id || "");
+        const requested = new URL(window.location.href).searchParams.get(
+          "asset",
+        );
+        setSelectedAsset(
+          result.assets.some((a) => a.id === requested)
+            ? requested!
+            : result.assets[0]?.id || "",
+        );
         setSetup(!result.assets.length);
       })
       .catch((reason) => {
@@ -148,6 +158,18 @@ function Workspace() {
         if (alive) {
           setDetail(value);
           setConnected(true);
+          if (!linkedFocus.current) {
+            linkedFocus.current = true;
+            const params = new URL(window.location.href).searchParams;
+            const desired = params.get("component");
+            if (
+              params.get("asset") === value.asset.id &&
+              value.asset.definition.components.some((c) => c.id === desired)
+            ) {
+              setSelected(desired!);
+              setFocus((count) => count + 1);
+            }
+          }
         }
       } catch {
         if (alive) {
@@ -493,6 +515,16 @@ function Workspace() {
                     Save viewpoint
                   </button>
                 </div>
+                <TwinSecurityOverlay
+                  assetId={asset.id}
+                  onHighlights={setSecurityHighlights}
+                  onFocus={(id) => {
+                    if (components.some((component) => component.id === id)) {
+                      onSelect(id);
+                      setFocus((count) => count + 1);
+                    }
+                  }}
+                />
                 {model?.definition.inspection && (
                   <TwinExplosionControls
                     value={inspection}
@@ -506,6 +538,7 @@ function Workspace() {
                       model={model}
                       assetId={asset.id}
                       signals={safeDetail?.state || []}
+                      highlights={securityHighlights}
                       annotations={safeDetail?.notes || []}
                       components={components}
                       selected={selectedId}

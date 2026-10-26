@@ -1,5 +1,17 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Independent Cybersecurity settings — 2026-10-26 candidate
+
+The server-only flags `ONESA_CYBERSECURITY_ENABLED`,
+`ONESA_CYBERSECURITY_DEMO_ENABLED` and `ONESA_CYBERSECURITY_AI_ENABLED` default
+to `false`. `ONESA_CYBERSECURITY_OPERATOR_USER_IDS` defaults to `[]` and accepts
+only canonical explicitly configured user UUIDs; an email or source payload cannot
+grant operator scope. No existing inference provider, peer account, collector or
+external endpoint is enabled by these settings. Production rejects demonstrations.
+See [Cybersecurity](CYBERSECURITY.md#configuration-and-migration) for independent
+readiness, additive schema, data policy and isolated test setup. These settings
+are implementation configuration, not a production activation record.
+
 ## Optional Digital Twins configuration — 2026-10-25 candidate
 
 These app-local Settings are nonsecret, server-only and default off. No external

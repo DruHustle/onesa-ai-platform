@@ -1239,6 +1239,519 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cybersecurity/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness */
+        get: operations["readiness_api_v1_cybersecurity_readiness_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Source Detail */
+        get: operations["source_detail_api_v1_cybersecurity_sources__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/policies/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policy Detail */
+        get: operations["policy_detail_api_v1_cybersecurity_policies__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/baselines/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Baseline Detail */
+        get: operations["baseline_detail_api_v1_cybersecurity_baselines__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workspace */
+        get: operations["workspace_api_v1_cybersecurity_workspace_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Asset */
+        post: operations["create_asset_api_v1_cybersecurity_assets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Source */
+        post: operations["create_source_api_v1_cybersecurity_sources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Source */
+        post: operations["revoke_source_api_v1_cybersecurity_sources__identifier__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Mapping */
+        post: operations["create_mapping_api_v1_cybersecurity_sources__identifier__mappings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Policy */
+        post: operations["create_policy_api_v1_cybersecurity_sources__identifier__policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/baselines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Baseline */
+        post: operations["create_baseline_api_v1_cybersecurity_sources__identifier__baselines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Events */
+        post: operations["import_events_api_v1_cybersecurity_sources__identifier__imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/ingest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Credential Ingest */
+        post: operations["credential_ingest_api_v1_cybersecurity_ingest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Events */
+        get: operations["events_api_v1_cybersecurity_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/findings/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finding Detail */
+        get: operations["finding_detail_api_v1_cybersecurity_findings__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/investigations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Investigation */
+        post: operations["create_investigation_api_v1_cybersecurity_investigations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/investigations/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Investigation Detail */
+        get: operations["investigation_detail_api_v1_cybersecurity_investigations__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/investigations/{identifier}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decisions Page */
+        get: operations["decisions_page_api_v1_cybersecurity_investigations__identifier__actions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/actions/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision Snapshot */
+        get: operations["decision_snapshot_api_v1_cybersecurity_actions__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/events/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Event Detail */
+        get: operations["event_detail_api_v1_cybersecurity_events__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/investigations/{identifier}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decision */
+        post: operations["decision_api_v1_cybersecurity_investigations__identifier__decisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Events */
+        get: operations["export_events_api_v1_cybersecurity_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/assets/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Asset Detail */
+        get: operations["asset_detail_api_v1_cybersecurity_assets__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/reports/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report Detail */
+        get: operations["report_detail_api_v1_cybersecurity_reports__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/twins/{identifier}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Twin Summary */
+        get: operations["twin_summary_api_v1_cybersecurity_twins__identifier__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/assess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assess
+         * @description Explicit receiver-clock assessment. Coverage loss is never called compromise.
+         */
+        post: operations["assess_api_v1_cybersecurity_assess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Demonstration */
+        post: operations["demonstration_api_v1_cybersecurity_demo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/sources/{identifier}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Report */
+        post: operations["import_report_api_v1_cybersecurity_sources__identifier__reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/tools/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evidence Tool */
+        post: operations["evidence_tool_api_v1_cybersecurity_tools_evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cybersecurity/summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Summary */
+        post: operations["summary_api_v1_cybersecurity_summaries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1330,6 +1843,10 @@ export interface components {
             digital_twins: {
                 [key: string]: unknown;
             };
+            /** Cybersecurity */
+            cybersecurity: {
+                [key: string]: unknown;
+            };
             /** Scope */
             scope: string;
         };
@@ -1381,27 +1898,18 @@ export interface components {
             /** Model Id */
             model_id?: string | null;
         };
-        /** AssetCreate */
-        AssetCreate: {
-            /**
-             * Template Id
-             * Format: uuid
-             */
-            template_id: string;
-            /** Name */
-            name: string;
-            /** Serial */
-            serial: string;
-            /**
-             * External Id
-             * @default
-             */
-            external_id: string;
-            /**
-             * Aas Id
-             * @default
-             */
-            aas_id: string;
+        /** BaselineCreate */
+        BaselineCreate: {
+            /** Revision */
+            revision: string;
+            /** Relevant Keys */
+            relevant_keys?: string[];
+            /** Allowed Identities */
+            allowed_identities?: string[];
+            /** Input Refs */
+            input_refs?: string[];
+            /** Review Note */
+            review_note: string;
         };
         /** Batch */
         Batch: {
@@ -1662,6 +2170,22 @@ export interface components {
             /** Activities */
             activities: components["schemas"]["Activity"][];
         };
+        /** Decision */
+        Decision: {
+            /** Revision */
+            revision: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "note" | "acknowledge" | "investigate" | "resolve" | "dismiss" | "accept_risk" | "reopen";
+            /** Note */
+            note: string;
+            /** Evidence Ids */
+            evidence_ids?: string[];
+            /** Acceptance Until */
+            acceptance_until?: string | null;
+        };
         /** DeleteAccount */
         DeleteAccount: {
             /** Current Password */
@@ -1671,6 +2195,16 @@ export interface components {
              * @constant
              */
             confirmation: "DELETE MY ACCOUNT";
+        };
+        /** Demonstration */
+        Demonstration: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "simulated" | "replay";
+            /** Run Id */
+            run_id: string;
         };
         /** DocumentDetail */
         DocumentDetail: {
@@ -1827,6 +2361,16 @@ export interface components {
             asset: components["schemas"]["ImportedAsset"];
             window: components["schemas"]["Window"];
             evidence: components["schemas"]["Evidence"];
+        };
+        /** EvidenceRequest */
+        EvidenceRequest: {
+            /**
+             * Investigation Id
+             * Format: uuid
+             */
+            investigation_id: string;
+            /** Expected Sha256 */
+            expected_sha256: string;
         };
         /** ExplodeMotion */
         ExplodeMotion: {
@@ -2115,6 +2659,16 @@ export interface components {
              */
             transparent_surroundings: boolean;
         };
+        /** InvestigationCreate */
+        InvestigationCreate: {
+            /**
+             * Finding Id
+             * Format: uuid
+             */
+            finding_id: string;
+            /** Title */
+            title: string;
+        };
         /** InvestigationList */
         InvestigationList: {
             /** Items */
@@ -2211,6 +2765,22 @@ export interface components {
              * Format: uuid
              */
             component_id: string;
+        };
+        /** MappingCreate */
+        MappingCreate: {
+            /**
+             * Asset Id
+             * Format: uuid
+             */
+            asset_id: string;
+            /** Namespace */
+            namespace: string;
+            /** External Asset */
+            external_asset: string;
+            /** External Component */
+            external_component?: string | null;
+            /** Review Note */
+            review_note: string;
         };
         /** MessageOut */
         MessageOut: {
@@ -2363,6 +2933,31 @@ export interface components {
              * @enum {string}
              */
             backend: "mock" | "ollama" | "vllm" | "cloudflare";
+        };
+        /** PolicyCreate */
+        PolicyCreate: {
+            /**
+             * Auth Threshold
+             * @default 5
+             */
+            auth_threshold: number;
+            /**
+             * Denial Threshold
+             * @default 3
+             */
+            denial_threshold: number;
+            /**
+             * Window Seconds
+             * @default 300
+             */
+            window_seconds: number;
+            /**
+             * Certificate Warning Days
+             * @default 30
+             */
+            certificate_warning_days: number;
+            /** Review Note */
+            review_note: string;
         };
         /** Preferences */
         Preferences: {
@@ -2689,28 +3284,6 @@ export interface components {
              */
             scenario: "cycle" | "normal" | "alarm" | "recovery" | "disconnect";
         };
-        /** SourceCreate */
-        SourceCreate: {
-            /** Name */
-            name: string;
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "live" | "simulated";
-            /**
-             * External System
-             * @default manual
-             */
-            external_system: string;
-            /**
-             * External Asset Id
-             * @default
-             */
-            external_asset_id: string;
-            /** Bindings */
-            bindings: components["schemas"]["Binding"][];
-        };
         /** Start */
         Start: {
             /** Filename */
@@ -2721,6 +3294,28 @@ export interface components {
             size: number;
             /** Sha256 */
             sha256: string;
+        };
+        /** SummaryRequest */
+        SummaryRequest: {
+            /**
+             * Investigation Id
+             * Format: uuid
+             */
+            investigation_id: string;
+            /** Expected Sha256 */
+            expected_sha256: string;
+            /**
+             * Assist
+             * @default false
+             */
+            assist: boolean;
+            /**
+             * Question
+             * @default Prepare a review checklist from this evidence
+             */
+            question: string;
+            /** Document Ids */
+            document_ids?: string[];
         };
         /** TemplateCreate */
         TemplateCreate: {
@@ -2912,6 +3507,89 @@ export interface components {
              * Format: date-time
              */
             end: string;
+        };
+        /** AssetCreate */
+        app__cyber_schemas__AssetCreate: {
+            /** Name */
+            name: string;
+            /** Identity */
+            identity: string;
+            /** Zone */
+            zone: string;
+            /**
+             * Criticality
+             * @default unknown
+             * @enum {string}
+             */
+            criticality: "low" | "medium" | "high" | "unknown";
+            /** Review Note */
+            review_note: string;
+            /** Twin Asset Id */
+            twin_asset_id?: string | null;
+            /** Twin Component Id */
+            twin_component_id?: string | null;
+        };
+        /** SourceCreate */
+        app__cyber_schemas__SourceCreate: {
+            /** Name */
+            name: string;
+            /** Namespace */
+            namespace: string;
+            /** Modes */
+            modes: ("live" | "simulated" | "replay")[];
+            /** Endpoint Refs */
+            endpoint_refs?: string[];
+            /**
+             * Expected Interval Seconds
+             * @default 300
+             */
+            expected_interval_seconds: number;
+            /** Review Note */
+            review_note: string;
+        };
+        /** AssetCreate */
+        app__twin_schemas__AssetCreate: {
+            /**
+             * Template Id
+             * Format: uuid
+             */
+            template_id: string;
+            /** Name */
+            name: string;
+            /** Serial */
+            serial: string;
+            /**
+             * External Id
+             * @default
+             */
+            external_id: string;
+            /**
+             * Aas Id
+             * @default
+             */
+            aas_id: string;
+        };
+        /** SourceCreate */
+        app__twin_schemas__SourceCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "live" | "simulated";
+            /**
+             * External System
+             * @default manual
+             */
+            external_system: string;
+            /**
+             * External Asset Id
+             * @default
+             */
+            external_asset_id: string;
+            /** Bindings */
+            bindings: components["schemas"]["Binding"][];
         };
     };
     responses: never;
@@ -4757,7 +5435,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssetCreate"];
+                "application/json": components["schemas"]["app__twin_schemas__AssetCreate"];
             };
         };
         responses: {
@@ -5104,7 +5782,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SourceCreate"];
+                "application/json": components["schemas"]["app__twin_schemas__SourceCreate"];
             };
         };
         responses: {
@@ -5517,6 +6195,1456 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readiness_api_v1_cybersecurity_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    source_detail_api_v1_cybersecurity_sources__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policy_detail_api_v1_cybersecurity_policies__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    baseline_detail_api_v1_cybersecurity_baselines__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workspace_api_v1_cybersecurity_workspace_get: {
+        parameters: {
+            query?: {
+                mode?: "live" | "simulated" | "replay";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_asset_api_v1_cybersecurity_assets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__cyber_schemas__AssetCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_source_api_v1_cybersecurity_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__cyber_schemas__SourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_source_api_v1_cybersecurity_sources__identifier__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_mapping_api_v1_cybersecurity_sources__identifier__mappings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MappingCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_policy_api_v1_cybersecurity_sources__identifier__policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_baseline_api_v1_cybersecurity_sources__identifier__baselines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaselineCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_events_api_v1_cybersecurity_sources__identifier__imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    events: ({
+                        /**
+                         * Schemaversion
+                         * @constant
+                         */
+                        schemaVersion: "ot-security-evidence/v1";
+                        /** Producernamespace */
+                        producerNamespace: string;
+                        /** Sourceeventid */
+                        sourceEventId: string;
+                        /** Occurredat */
+                        occurredAt: string;
+                        /**
+                         * Mode
+                         * @enum {string}
+                         */
+                        mode: "live" | "simulated" | "replay";
+                        /** @enum {string} */
+                        eventType: "auth.authentication_failed" | "auth.authorization_denied" | "tls.certificate_observed" | "config.changed" | "config.drift_observed" | "identity.unrecognized" | "collector.health" | "software.inventory_observed" | "integrity.change_observed";
+                        assetRef: {
+                            /** Namespace */
+                            namespace: string;
+                            /** Assetid */
+                            assetId: string;
+                            /** Componentid */
+                            componentId: string | null;
+                        } | null;
+                        /** Summary */
+                        summary: string;
+                        /**
+                         * Quality
+                         * @enum {string}
+                         */
+                        quality: "good" | "uncertain" | "bad" | "unknown";
+                        /** Producerversion */
+                        producerVersion: string;
+                        /** Attributes */
+                        attributes: {
+                            [key: string]: unknown;
+                        };
+                        /** Scenariorunid */
+                        scenarioRunId?: string | null;
+                        /** Replayrunid */
+                        replayRunId?: string | null;
+                        /** Producerreceivedat */
+                        producerReceivedAt?: string | null;
+                        /** Sessionid */
+                        sessionId?: string | null;
+                        /** Sequence */
+                        sequence?: number | null;
+                        /** Correlationid */
+                        correlationId?: string | null;
+                    } & ({
+                        /** @constant */
+                        eventType: "auth.authentication_failed";
+                        /** AuthAttributes */
+                        attributes: {
+                            /** Service */
+                            service: string;
+                            /**
+                             * Outcome
+                             * @enum {string}
+                             */
+                            outcome: "denied" | "rejected" | "failed";
+                            /** Reasoncode */
+                            reasonCode: string;
+                            /** Principalref */
+                            principalRef?: string | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "auth.authorization_denied";
+                        /** AuthAttributes */
+                        attributes: {
+                            /** Service */
+                            service: string;
+                            /**
+                             * Outcome
+                             * @enum {string}
+                             */
+                            outcome: "denied" | "rejected" | "failed";
+                            /** Reasoncode */
+                            reasonCode: string;
+                            /** Principalref */
+                            principalRef?: string | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "tls.certificate_observed";
+                        /** CertificateAttributes */
+                        attributes: {
+                            /** Endpointref */
+                            endpointRef: string;
+                            /** Notbefore */
+                            notBefore: string;
+                            /** Notafter */
+                            notAfter: string;
+                            /** Fingerprintsha256 */
+                            fingerprintSha256: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "config.changed";
+                        /** ConfigAttributes */
+                        attributes: {
+                            /** Configrevision */
+                            configRevision: string;
+                            /** Baselinerevision */
+                            baselineRevision?: string | null;
+                            /** Changedkeys */
+                            changedKeys: string[];
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "config.drift_observed";
+                        /** ConfigAttributes */
+                        attributes: {
+                            /** Configrevision */
+                            configRevision: string;
+                            /** Baselinerevision */
+                            baselineRevision?: string | null;
+                            /** Changedkeys */
+                            changedKeys: string[];
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "identity.unrecognized";
+                        /** IdentityAttributes */
+                        attributes: {
+                            /** Inputref */
+                            inputRef: string;
+                            /** Observedidentityref */
+                            observedIdentityRef: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "collector.health";
+                        /** HealthAttributes */
+                        attributes: {
+                            /**
+                             * State
+                             * @enum {string}
+                             */
+                            state: "online" | "offline" | "degraded" | "paused";
+                            /** Expectedintervalseconds */
+                            expectedIntervalSeconds?: number | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "software.inventory_observed";
+                        /** SoftwareAttributes */
+                        attributes: {
+                            /** Inventoryref */
+                            inventoryRef: string;
+                            /** Sha256 */
+                            sha256: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "integrity.change_observed";
+                        /** IntegrityAttributes */
+                        attributes: {
+                            /** Previoussha256 */
+                            previousSha256: string;
+                            /** Currentsha256 */
+                            currentSha256: string;
+                            /**
+                             * Evidencebasis
+                             * @enum {string}
+                             */
+                            evidenceBasis: "self_reported" | "collector_observed" | "verified_artifact";
+                        };
+                    }))[];
+                };
+                "application/x-ndjson": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    credential_ingest_api_v1_cybersecurity_ingest_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    events: ({
+                        /**
+                         * Schemaversion
+                         * @constant
+                         */
+                        schemaVersion: "ot-security-evidence/v1";
+                        /** Producernamespace */
+                        producerNamespace: string;
+                        /** Sourceeventid */
+                        sourceEventId: string;
+                        /** Occurredat */
+                        occurredAt: string;
+                        /**
+                         * Mode
+                         * @enum {string}
+                         */
+                        mode: "live" | "simulated" | "replay";
+                        /** @enum {string} */
+                        eventType: "auth.authentication_failed" | "auth.authorization_denied" | "tls.certificate_observed" | "config.changed" | "config.drift_observed" | "identity.unrecognized" | "collector.health" | "software.inventory_observed" | "integrity.change_observed";
+                        assetRef: {
+                            /** Namespace */
+                            namespace: string;
+                            /** Assetid */
+                            assetId: string;
+                            /** Componentid */
+                            componentId: string | null;
+                        } | null;
+                        /** Summary */
+                        summary: string;
+                        /**
+                         * Quality
+                         * @enum {string}
+                         */
+                        quality: "good" | "uncertain" | "bad" | "unknown";
+                        /** Producerversion */
+                        producerVersion: string;
+                        /** Attributes */
+                        attributes: {
+                            [key: string]: unknown;
+                        };
+                        /** Scenariorunid */
+                        scenarioRunId?: string | null;
+                        /** Replayrunid */
+                        replayRunId?: string | null;
+                        /** Producerreceivedat */
+                        producerReceivedAt?: string | null;
+                        /** Sessionid */
+                        sessionId?: string | null;
+                        /** Sequence */
+                        sequence?: number | null;
+                        /** Correlationid */
+                        correlationId?: string | null;
+                    } & ({
+                        /** @constant */
+                        eventType: "auth.authentication_failed";
+                        /** AuthAttributes */
+                        attributes: {
+                            /** Service */
+                            service: string;
+                            /**
+                             * Outcome
+                             * @enum {string}
+                             */
+                            outcome: "denied" | "rejected" | "failed";
+                            /** Reasoncode */
+                            reasonCode: string;
+                            /** Principalref */
+                            principalRef?: string | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "auth.authorization_denied";
+                        /** AuthAttributes */
+                        attributes: {
+                            /** Service */
+                            service: string;
+                            /**
+                             * Outcome
+                             * @enum {string}
+                             */
+                            outcome: "denied" | "rejected" | "failed";
+                            /** Reasoncode */
+                            reasonCode: string;
+                            /** Principalref */
+                            principalRef?: string | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "tls.certificate_observed";
+                        /** CertificateAttributes */
+                        attributes: {
+                            /** Endpointref */
+                            endpointRef: string;
+                            /** Notbefore */
+                            notBefore: string;
+                            /** Notafter */
+                            notAfter: string;
+                            /** Fingerprintsha256 */
+                            fingerprintSha256: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "config.changed";
+                        /** ConfigAttributes */
+                        attributes: {
+                            /** Configrevision */
+                            configRevision: string;
+                            /** Baselinerevision */
+                            baselineRevision?: string | null;
+                            /** Changedkeys */
+                            changedKeys: string[];
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "config.drift_observed";
+                        /** ConfigAttributes */
+                        attributes: {
+                            /** Configrevision */
+                            configRevision: string;
+                            /** Baselinerevision */
+                            baselineRevision?: string | null;
+                            /** Changedkeys */
+                            changedKeys: string[];
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "identity.unrecognized";
+                        /** IdentityAttributes */
+                        attributes: {
+                            /** Inputref */
+                            inputRef: string;
+                            /** Observedidentityref */
+                            observedIdentityRef: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "collector.health";
+                        /** HealthAttributes */
+                        attributes: {
+                            /**
+                             * State
+                             * @enum {string}
+                             */
+                            state: "online" | "offline" | "degraded" | "paused";
+                            /** Expectedintervalseconds */
+                            expectedIntervalSeconds?: number | null;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "software.inventory_observed";
+                        /** SoftwareAttributes */
+                        attributes: {
+                            /** Inventoryref */
+                            inventoryRef: string;
+                            /** Sha256 */
+                            sha256: string;
+                        };
+                    } | {
+                        /** @constant */
+                        eventType: "integrity.change_observed";
+                        /** IntegrityAttributes */
+                        attributes: {
+                            /** Previoussha256 */
+                            previousSha256: string;
+                            /** Currentsha256 */
+                            currentSha256: string;
+                            /**
+                             * Evidencebasis
+                             * @enum {string}
+                             */
+                            evidenceBasis: "self_reported" | "collector_observed" | "verified_artifact";
+                        };
+                    }))[];
+                };
+                "application/x-ndjson": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    events_api_v1_cybersecurity_events_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                mode?: "live" | "simulated" | "replay";
+                before?: string | null;
+                source_id?: string | null;
+                asset_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finding_detail_api_v1_cybersecurity_findings__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_investigation_api_v1_cybersecurity_investigations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestigationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    investigation_detail_api_v1_cybersecurity_investigations__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decisions_page_api_v1_cybersecurity_investigations__identifier__actions_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_snapshot_api_v1_cybersecurity_actions__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    event_detail_api_v1_cybersecurity_events__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decision_api_v1_cybersecurity_investigations__identifier__decisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Decision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_events_api_v1_cybersecurity_export_get: {
+        parameters: {
+            query?: {
+                mode?: "live" | "simulated" | "replay";
+                format?: "json" | "ndjson";
+                source_id?: string | null;
+                before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    asset_detail_api_v1_cybersecurity_assets__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_detail_api_v1_cybersecurity_reports__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    twin_summary_api_v1_cybersecurity_twins__identifier__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assess_api_v1_cybersecurity_assess_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    demonstration_api_v1_cybersecurity_demo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Demonstration"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_report_api_v1_cybersecurity_sources__identifier__reports_post: {
+        parameters: {
+            query: {
+                asset_id: string;
+                mode?: "live" | "simulated" | "replay";
+                run_id?: string;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Bomformat
+                     * @constant
+                     */
+                    bomFormat: "CycloneDX";
+                    /**
+                     * Specversion
+                     * @constant
+                     */
+                    specVersion: "1.6";
+                    /** Version */
+                    version: number;
+                    /** Serialnumber */
+                    serialNumber?: string | null;
+                    /** Metadata */
+                    metadata: {
+                        /** Tools */
+                        tools: {
+                            /** Components */
+                            components: {
+                                /**
+                                 * Type
+                                 * @constant
+                                 */
+                                type: "application";
+                                /** Name */
+                                name: string;
+                                /** Version */
+                                version: string;
+                            }[];
+                        };
+                        /** Timestamp */
+                        timestamp: string;
+                    };
+                    /** Components */
+                    components: {
+                        /**
+                         * Type
+                         * @enum {string}
+                         */
+                        type: "application" | "library" | "operating-system" | "firmware" | "device";
+                        /** Bom-Ref */
+                        "bom-ref": string;
+                        /** Name */
+                        name: string;
+                        /** Version */
+                        version?: string | null;
+                        /** Group */
+                        group?: string | null;
+                        /** Purl */
+                        purl?: string | null;
+                    }[];
+                    /** Vulnerabilities */
+                    vulnerabilities?: {
+                        /** Id */
+                        id: string;
+                        source?: {
+                            /** Name */
+                            name: string;
+                        } | null;
+                        /** Ratings */
+                        ratings?: {
+                            /**
+                             * Severity
+                             * @enum {string}
+                             */
+                            severity: "none" | "info" | "low" | "medium" | "high" | "critical" | "unknown";
+                            /** Score */
+                            score?: number | null;
+                            /** Method */
+                            method?: ("CVSSv2" | "CVSSv3" | "CVSSv31" | "CVSSv4" | "OWASP" | "other") | null;
+                        }[];
+                        /** Affects */
+                        affects: {
+                            /** Ref */
+                            ref: string;
+                        }[];
+                        /** Description */
+                        description?: string | null;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evidence_tool_api_v1_cybersecurity_tools_evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_v1_cybersecurity_summaries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

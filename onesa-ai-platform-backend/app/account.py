@@ -46,6 +46,7 @@ class AccountExport(Strict):
     trips: list[TripOut]
     industrial_investigations: list[InvestigationOut]
     digital_twins: dict[str, Any]
+    cybersecurity: dict[str, Any]
     scope: str
 
 
@@ -71,6 +72,7 @@ def export_account(
         text("SELECT to_regclass('industrial_investigations') IS NOT NULL")
     )
     twins_present = db.scalar(text("SELECT to_regclass('twin_assets') IS NOT NULL"))
+    cyber_present = db.scalar(text("SELECT to_regclass('cyber_sources') IS NOT NULL"))
     scopes = [
         ("conversations t WHERE t.user_id=:owner", "pg_column_size(t)"),
         (
@@ -108,6 +110,16 @@ def export_account(
             scopes.append(
                 (
                     table + " t JOIN twin_assets a ON a.id=t.asset_id WHERE a.user_id=:owner",
+                    "pg_column_size(t)",
+                )
+            )
+    if cyber_present:
+        from app.cyber_models import OWNED_MODELS
+
+        for cls in OWNED_MODELS:
+            scopes.append(
+                (
+                    cls.__tablename__ + " t WHERE t.user_id=:owner AND NOT t.sensitive",
                     "pg_column_size(t)",
                 )
             )
@@ -184,6 +196,7 @@ def export_account(
         if industrial_present
         else [],
         digital_twins=twin_export(db, user.id) if twins_present else {},
+        cybersecurity=cyber_export(db, user.id) if cyber_present else {},
         scope=(
             "Live profile, conversations/messages (including saved sources), "
             "extracted document text/metadata, tool runs, trips and owned Industrial "
@@ -195,6 +208,9 @@ def export_account(
             "source credentials are excluded. Original Twin binaries require their owned "
             "file download and are not embedded in this JSON. Knowledge "
             "originals are not retained. "
+            "Owned cybersecurity sources, mappings, events, findings and "
+            "decision histories are included even while disabled; ingestion"
+            " credentials and global operator records are excluded. "
             "Backups are outside this export."
         ),
     )
@@ -296,3 +312,9 @@ def twin_export(db: DB, owner: Any) -> dict[str, Any]:
         )
     ]
     return result
+
+
+def cyber_export(db: DB, owner: Any) -> dict[str, Any]:
+    from app.cybersecurity import account_export
+
+    return account_export(db, owner)

@@ -1,0 +1,180 @@
+.toolbar,
+.tabs,
+.actions,
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.toolbar {
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+.toolbar label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.tabs {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.75rem;
+  margin: 1.5rem 0;
+}
+.tabs button[aria-current="page"] {
+  background: var(--accent);
+  color: var(--onesa-on-accent);
+}
+.intro {
+  max-width: 78ch;
+  color: var(--muted);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.card,
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.15rem;
+  background: var(--panel);
+}
+.card strong {
+  font-size: 1.75rem;
+  display: block;
+  margin: 0.3rem 0;
+}
+.card p {
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+  gap: 1.25rem;
+}
+.panel {
+  min-width: 0;
+  margin: 1rem 0;
+}
+.panel h2,
+.panel h3 {
+  margin-top: 0;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.8rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.scroll {
+  overflow: auto;
+}
+.linkButton {
+  background: none !important;
+  border: 0 !important;
+  color: var(--accent) !important;
+  padding: 0 !important;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.badge {
+  font-size: 0.78rem;
+  display: inline-block;
+  border: 1px solid var(--line);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+.panel label {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.8rem 0;
+}
+.panel input,
+.panel select,
+.panel textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.panel textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+.panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 26rem;
+  overflow: auto;
+  font-size: 0.82rem;
+}
+.note {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.empty {
+  padding: 2rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+.eventList {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+.eventList li {
+  border-left: 3px solid var(--line);
+  padding: 0.6rem 0.8rem;
+}
+.panel :is(h2, h3):focus {
+  outline: 2px solid var(--accent);
+}
+@media (max-width: 850px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    padding: 0.85rem;
+  }
+  .toolbar {
+    align-items: flex-start;
+  }
+  .tabs {
+    gap: 0.4rem;
+  }
+  .tabs button {
+    font-size: 0.9rem;
+  }
+  .table th,
+  .table td {
+    padding: 0.6rem 0.35rem;
+  }
+}
+@media print {
+  .actions,
+  .tabs,
+  .toolbar {
+    display: none;
+  }
+  .panel pre {
+    max-height: none;
+  }
+}
