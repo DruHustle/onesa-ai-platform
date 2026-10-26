@@ -3,6 +3,8 @@
 import hashlib
 import io
 import json
+import shutil
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -20,7 +22,12 @@ class FrontendArtifactTests(unittest.TestCase):
         self.provider = {"project_id": "prj_fixture", "team_id": "team_fixture"}
         self.files = {
             ".vercel/project.json": json.dumps(
-                {"projectId": "prj_fixture", "orgId": "team_fixture"}
+                {
+                    "projectId": "prj_fixture",
+                    "orgId": "team_fixture",
+                    "projectName": "onesa-protocol-fixture",
+                    "settings": {"rootDirectory": f.APP_ROOT},
+                }
             ).encode(),
             "vercel.json": b'{"version":2}',
             ".vercel/output/functions/index.func/index.js": b"export default function(){}",
@@ -82,6 +89,18 @@ class FrontendArtifactTests(unittest.TestCase):
             (alias / "index.js").read_bytes(),
             self.files[".vercel/output/functions/index.func/index.js"],
         )
+        self.assertTrue((output / f.APP_ROOT).is_dir())
+        self.assertEqual(list((output / f.APP_ROOT).iterdir()), [])
+
+    def test_unapproved_application_root_is_rejected(self):
+        for root in ["../outside", "/outside", "other-product", None]:
+            with self.subTest(root=root):
+                project = json.loads(self.files[".vercel/project.json"])
+                project["settings"]["rootDirectory"] = root
+                self.files[".vercel/project.json"] = json.dumps(project).encode()
+                with self.assertRaisesRegex(f.r.Refused, "APPLICATION_ROOT_SCOPE"):
+                    self.unpack(self.artifact())
+                shutil.rmtree(self.root / "unpacked")
 
     def test_modified_output_or_deployment_config_fails_before_extraction(self):
         for name in self.files:
@@ -180,3 +199,42 @@ class IndependentPreviewTests(unittest.TestCase):
                 "/synthetic/api-preview",
             )
             create.assert_not_called()
+
+
+def prepare_full_cli_fixture(destination):
+    """Synthetic prebuilt data through the real unpacker; never release authority."""
+    destination = Path(destination)
+    destination.mkdir(mode=0o700, parents=True, exist_ok=False)
+    fixture = FrontendArtifactTests()
+    fixture.setUp()
+    try:
+        for environment in ["staging", "production"]:
+            fixture.files["vercel.json"] = b'{"framework":"nextjs","regions":["fra1"]}'
+            fixture.files[".vercel/output/config.json"] = b'{"version":3}'
+            fixture.files[".vercel/output/builds.json"] = json.dumps(
+                {
+                    "target": "preview" if environment == "staging" else "production",
+                    "builds": [],
+                }
+            ).encode()
+            fixture.files[".vercel/output/functions/index.func/.vc-config.json"] = (
+                b'{"runtime":"nodejs24.x","handler":"index.js","launcherType":"Nodejs"}'
+            )
+            fixture.files[".vercel/output/static/owned.js"] = (
+                b"// Synthetic loopback provider fixture only.\n" * 2048
+            )
+            output = fixture.unpack(fixture.artifact())
+            shutil.copytree(output, destination / environment, symlinks=True)
+            rejected = destination / "missing-root" / environment
+            shutil.copytree(output, rejected, symlinks=True)
+            shutil.rmtree(rejected / f.APP_ROOT)
+            shutil.rmtree(output)
+    finally:
+        fixture.doCleanups()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--prepare-cli-fixture":
+        prepare_full_cli_fixture(sys.argv[2])
+    else:
+        unittest.main()
