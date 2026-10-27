@@ -13,6 +13,19 @@ const {sprintf,vsprintf}=docsRequire('sprintf-js');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'packages/security/provenance.json'),'utf8'));
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 
+test('GHSA-6pq8-jhm2-2vcw: comma arrays tolerate non-callable own toString values',()=>{
+ const qs=docsRequire('qs');
+ for(const options of [{arrayFormat:'comma'},{arrayFormat:'comma',encodeValuesOnly:true}]){
+  for(const value of ['x',null,42,{}]){
+   let result;
+   assert.doesNotThrow(()=>{result=qs.stringify({a:[{toString:value}]},options);});
+   assert.equal(typeof result,'string');
+  }
+  assert.equal(qs.stringify({a:['first','second']},options),options.encodeValuesOnly?'a=first,second':'a=first%2Csecond');
+ }
+ assert.deepEqual(qs.parse('a%5B0%5D=first&a%5B1%5D=second'),{a:['first','second']});
+});
+
 function checkConsumer(parent,dependency,name){
  const consumer=createRequire(docsRequire.resolve(parent+'/package.json'));
  const directory=path.dirname(consumer.resolve(dependency+'/package.json'));
