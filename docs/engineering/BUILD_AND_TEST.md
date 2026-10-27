@@ -209,3 +209,8 @@ The offline protocol suite also verifies outgoing authentication headers and the
 pinned CLI's read-only user request with synthetic OAuth state. No provider credentials
 or external network access are used. `test_oracle_cli_auth.py` covers expiry,
 owner identity, concurrent custody changes and redacted early runner failures.
+
+Pinned Alpine image builds retry upstream package fetching at most three times.
+Each attempt keeps HTTPS, package signatures and the original package constraints;
+exhaustion fails the build. The dependency auditor uses a bounded 60-second socket
+timeout and retains the same vulnerability checks and failure status.
