@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -12,6 +13,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import oracle_ai_frontend as f
+
+r = f.r
 
 
 class FrontendArtifactTests(unittest.TestCase):
@@ -238,3 +241,150 @@ if __name__ == "__main__":
         prepare_full_cli_fixture(sys.argv[2])
     else:
         unittest.main()
+
+
+class ProviderRoutingTests(unittest.TestCase):
+    def setUp(self):
+        self.project = {
+            "id": "prj_fixture",
+            "rootDirectory": f.APP_ROOT,
+            "framework": "nextjs",
+            "nodeVersion": "24.x",
+            "serverlessFunctionRegion": "fra1",
+            "ssoProtection": {"deploymentType": "all"},
+            "protectionBypass": {},
+            "passwordProtection": None,
+            "trustedIps": None,
+        }
+        fields = {
+            k: self.project[k]
+            for k in [
+                "ssoProtection",
+                "protectionBypass",
+                "passwordProtection",
+                "trustedIps",
+            ]
+        }
+        self.plan = {
+            "project_id": self.project["id"],
+            "serverless_function_region": "fra1",
+            "vercel_protection_sha256": hashlib.sha256(
+                json.dumps(fields, sort_keys=True).encode()
+            ).hexdigest(),
+            "vercel_api_url_variable_ids": {
+                "staging": "fixture_stage",
+                "production": "fixture_production",
+            },
+            "api_origins": {
+                "staging": "https://platform-api-staging.onesa.eu",
+                "production": "https://platform-api.onesa.eu",
+            },
+        }
+        self.variables = {
+            self.plan["vercel_api_url_variable_ids"][env]: {
+                "id": self.plan["vercel_api_url_variable_ids"][env],
+                "key": "ONESA_API_URL",
+                "value": self.plan["api_origins"][env],
+                "target": ["preview" if env == "staging" else "production"],
+                "gitBranch": None,
+            }
+            for env in ["staging", "production"]
+        }
+        self.calls = []
+
+    def provider(self, path, *, data=None):
+        self.calls.append((path, data))
+        self.assertIsNone(data)
+        if path.startswith("/v9/projects/"):
+            return self.project
+        self.assertTrue(path.startswith("/v1/projects/prj_fixture/env/"))
+        return self.variables[path.rsplit("/", 1)[1]]
+
+    def call(self):
+        with (
+            patch.object(r, "read", return_value={"project_id": "prj_fixture"}),
+            patch.object(f, "provider", side_effect=self.provider),
+        ):
+            return f.protection(self.plan)
+
+    def test_only_two_explicit_nonsecret_routing_variables_are_read(self):
+        self.assertEqual(self.call(), self.project)
+        self.assertEqual(len(self.calls), 3)
+        self.assertTrue(
+            all("/env" not in path or "/env/" in path for path, _ in self.calls)
+        )
+
+    def test_wrong_origin_target_branch_or_project_fails_before_deploy(self):
+        row = self.variables["fixture_stage"]
+        for key, value in [
+            ("value", "https://foreign.invalid"),
+            ("key", "UNRELATED_SECRET"),
+            ("target", ["production"]),
+            ("gitBranch", "foreign"),
+            ("id", "foreign_id"),
+        ]:
+            old = row[key]
+            row[key] = value
+            with self.subTest(key=key), self.assertRaises(r.Refused):
+                self.call()
+            row[key] = old
+
+
+class ExplicitDeploymentRoutingTests(unittest.TestCase):
+    def test_ambiguous_cli_acknowledgement_never_allows_duplicate_create(self):
+        from uuid import uuid4
+
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            (folder / "operations").mkdir()
+            binding = {
+                "repository": "DruHustle/onesa-ai-platform",
+                "candidate_commit": "a" * 40,
+            }
+            plan = {
+                "project_id": "prj_fixture",
+                "serverless_function_region": "fra1",
+                "builds": {"production": {"archive_sha256": "b" * 64}},
+                "api_origins": {"production": "https://platform-api.onesa.eu"},
+                "cli_image": "sha256:" + "c" * 64,
+            }
+            operation = str(uuid4())
+            calls = []
+
+            def provider(*args, **kwargs):
+                calls.append(args)
+                raise subprocess.TimeoutExpired("synthetic-cli", 1)
+
+            with (
+                patch.object(r, "private", side_effect=lambda p, **kw: Path(p)),
+                patch.object(f, "unpack"),
+                patch.object(f, "protection", return_value={"id": "prj_fixture"}),
+                patch.object(f, "deployments_for", return_value=[]),
+                patch.object(
+                    r,
+                    "trusted_toolchain",
+                    return_value={
+                        "transport_guard_sha256": r.sha(
+                            Path(f.__file__).with_name(
+                                "oracle_vercel_transport_guard.cjs"
+                            )
+                        )
+                    },
+                ),
+                patch.object(f.subprocess, "run", side_effect=provider),
+                patch.object(f.time, "monotonic", side_effect=[0, 121]),
+            ):
+                with self.assertRaisesRegex(r.Refused, "UNCERTAIN"):
+                    f.create(binding, "production", operation, folder, plan)
+                with self.assertRaises(FileExistsError):
+                    f.create(binding, "production", operation, folder, plan)
+            self.assertEqual(len(calls), 1)
+            command = calls[0][0]
+            self.assertEqual(
+                command[command.index("--env") + 1],
+                "ONESA_API_URL=https://platform-api.onesa.eu",
+            )
+            self.assertTrue(
+                (folder / "operations" / operation / "intent.json").exists()
+            )
+            self.assertTrue((folder / "operations" / operation / "cli.stderr").exists())
