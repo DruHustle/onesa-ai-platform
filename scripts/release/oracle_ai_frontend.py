@@ -58,6 +58,90 @@ try {
 """
 
 
+def cli_authentication(plan):
+    """Actual vendor authentication, without mounting candidate code or creating a deployment."""
+    r.private(CLI_AUTH, directory=True)
+    paths = [r.private(CLI_AUTH / name) for name in ["auth.json", "config.json"]]
+    pins = {path: r.sha(path) for path in paths}
+    auth = r.read(paths[0])
+    r.require(
+        isinstance(auth.get("token"), str) and 1 <= len(auth["token"]) <= 16384,
+        "EXISTING_CLI_AUTHENTICATION_REQUIRED",
+    )
+    expiry = auth.get("expiresAt")
+    r.require(
+        expiry is None
+        or (type(expiry) is int and expiry - r.now().timestamp() >= 3600),
+        "CLI_AUTH_STATE_EXPIRED_OR_TOO_SHORT_FOR_QUALIFICATION",
+    )
+    image = r.trusted_toolchain(plan)["cli_image"]
+    r.require(re.fullmatch(r"sha256:[a-f0-9]{64}", image), "PINNED_CLI_TOOL_REQUIRED")
+    tool = json.loads(r.docker("image", "inspect", image))[0]
+    r.require(
+        tool["Id"] == image
+        and tool["Architecture"] == "arm64"
+        and tool["Config"]["Labels"].get("org.onesa.vercel-cli") == "65.2.0",
+        "PINNED_CLI_TOOL_REQUIRED",
+    )
+    try:
+        raw = r.command(
+            [
+                "/usr/bin/docker",
+                "run",
+                "--rm",
+                "--pull=never",
+                "--read-only",
+                "--tmpfs",
+                "/tmp:rw,mode=700,size=256m",
+                "--memory",
+                "512m",
+                "--cpus",
+                "1",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges:true",
+                "-v",
+                str(CLI_AUTH) + ":/private/creds:ro",
+                "--entrypoint",
+                "node",
+                image,
+                "-e",
+                CLI_BOOTSTRAP,
+                "--",
+                "/opt/onesa-vercel-tool/node_modules/vercel/dist/index.js",
+                "api",
+                "/v2/user",
+                "-X",
+                "GET",
+                "--raw",
+                "--global-config",
+                "/tmp/onesa-vercel-cli",
+            ],
+            timeout=60,
+        )
+        r.require(len(raw) <= 131072, "CLI_AUTH_RESPONSE_BOUND")
+        user = json.loads(raw)["user"]
+        r.require(
+            isinstance(user.get("username"), str)
+            and user["username"].lower() == "druhustle",
+            "EXISTING_PROVIDER_OWNER_REQUIRED",
+        )
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        raise r.Refused("PINNED_CLI_AUTHENTICATION_FAILED") from None
+    r.require(
+        all(r.sha(path) == pin for path, pin in pins.items()),
+        "CLI_CUSTODY_CHANGED_DURING_PREFLIGHT",
+    )
+    return {
+        "state": "PINNED_CLI_AUTHENTICATED_READ_ONLY",
+        "owner": "druhustle",
+        "cli_image": image,
+        "provider_create_requests": 0,
+        "credential_values_exported": False,
+    }
+
+
 def provider(path, *, data=None):
     cfg = r.read(PROVIDER)
     r.require(path.startswith("/") and "://" not in path, "PROVIDER_METADATA_PATH")
@@ -214,6 +298,7 @@ def validate(binding):
     )
     r.verify_probe_bytes(folder, binding, plan)
     protection(plan)
+    cli_authentication(plan)
     return folder, plan
 
 

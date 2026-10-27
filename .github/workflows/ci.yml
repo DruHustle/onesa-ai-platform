@@ -161,7 +161,7 @@ jobs:
         python3 - "$fixture" <<'PY'
         import json, os, pathlib, sys
         folder = pathlib.Path(sys.argv[1])
-        for name, value in [('auth.json', {'token': 'synthetic-startup-only'}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
+        for name, value in [('auth.json', {'token': 'synthetic-loopback-only', 'userId': 'user_fixture', 'expiresAt': 4102444800, 'cachedUser': {'id': 'user_fixture', 'username': 'untrusted-cache'}}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
             target = folder / name
             target.write_text(json.dumps(value))
             os.chmod(target, 0o600)
