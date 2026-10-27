@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+The offline release suite includes `test_oracle_inventory.py`: completed temporary
+monitoring clients and list/inspect races do not become preservation baselines.
+Long-lived temporary workloads, unchanged-inventory command failures, incomplete
+metadata and real independent runtime changes still fail closed. These fixtures
+make only mocked Docker reads and do not establish hosted qualification.
+
 Container health uses the Alpine base image's existing BusyBox `wget`, with proxies
 disabled and response bodies discarded. It retains the production readiness and
 staging liveness routes, intervals, retries and network deadlines. After building an
