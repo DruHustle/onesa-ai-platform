@@ -140,7 +140,7 @@ with psycopg.connect(uri,connect_timeout=10,sslmode='verify-full',sslrootcert='/
  with db.cursor() as q:
   q.execute('BEGIN READ ONLY');q.execute(\"SET LOCAL statement_timeout='5s'\")
   q.execute(\"SELECT current_database(),has_schema_privilege(current_user,'public','CREATE'),pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass\")
-  row=q.fetchone();q.execute('SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()');tls=q.fetchone()[0]
+  row=q.fetchone();tls=bool(db.pgconn.ssl_in_use)
   q.execute('SELECT version_num FROM alembic_version');schema=q.fetchone()[0]
   print(json.dumps({'database_matches':row[0]=='neondb','schema_create':row[1],'migration_table_owner':row[2],'tls':tls,'schema':schema,'SQL_writes':0}))
 """
