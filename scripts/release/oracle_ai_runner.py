@@ -856,7 +856,16 @@ def verify_application_bytes(folder, binding):
     return hashlib.sha256(canonical(expected)).hexdigest()
 
 
+PROBE_RESOURCE_FILES = (
+    "onesa-ai-platform-frontend/apps/chat/public/brand/icons/v1/sources.json",
+)
+
+
 def probe_source_files(files):
+    require(
+        all(name in files for name in PROBE_RESOURCE_FILES),
+        "MANDATORY_PROBE_RESOURCE_SOURCE_MISSING",
+    )
     return {
         name: value
         for name, value in files.items()
@@ -872,6 +881,7 @@ def probe_source_files(files):
             "onesa-ai-platform-backend/alembic.ini",
             "onesa-ai-platform-frontend/apps/chat/package.json",
             "onesa-ai-platform-frontend/apps/chat/package-lock.json",
+            *PROBE_RESOURCE_FILES,
         ]
     }
 
@@ -881,7 +891,22 @@ def verify_probe_bytes(folder, binding, plan):
     # independent of a later application candidate. Candidate scripts cannot
     # select a replacement verifier by changing their own source archive.
     expected = trusted_toolchain(plan)["probe_files"]
-    program = "import pathlib,hashlib,json;root=pathlib.Path('/opt/onesa-ai-platform');out={}\nfor top in ['scripts','onesa-ai-platform-backend/app','onesa-ai-platform-backend/migrations']:\n for p in (root/top).rglob('*'):\n  if p.is_file() and '__pycache__' not in p.parts and not p.name.endswith('.pyc'):out[str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()\nfor n in ['onesa-ai-platform-backend/alembic.ini','onesa-ai-platform-frontend/apps/chat/package.json','onesa-ai-platform-frontend/apps/chat/package-lock.json']:out[n]=hashlib.sha256((root/n).read_bytes()).hexdigest()\nprint(json.dumps(out))"
+    resources = [
+        "onesa-ai-platform-backend/alembic.ini",
+        "onesa-ai-platform-frontend/apps/chat/package.json",
+        "onesa-ai-platform-frontend/apps/chat/package-lock.json",
+        *PROBE_RESOURCE_FILES,
+    ]
+    program = (
+        "import pathlib,hashlib,json;root=pathlib.Path('/opt/onesa-ai-platform');out={}\n"
+        "for top in ['scripts','onesa-ai-platform-backend/app','onesa-ai-platform-backend/migrations']:\n"
+        " for p in (root/top).rglob('*'):\n"
+        "  if p.is_file() and '__pycache__' not in p.parts and not p.name.endswith('.pyc'):out[str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()\n"
+        "for n in "
+        + json.dumps(resources)
+        + ":out[n]=hashlib.sha256((root/n).read_bytes()).hexdigest()\n"
+        "print(json.dumps(out))"
+    )
     actual = json.loads(
         docker(
             "run",
