@@ -44,3 +44,9 @@ The pinned uploader distinguishes a complete provider missing-file rejection fro
 an uncertain create response. Only the former permits one identical file-upload
 continuation; lost, ambiguous or successful responses remain inspect-only.
 Credential-free tests exercise the real pinned client against a loopback fixture.
+
+
+The owner frontend runner binds and verifies the specifically named server API
+origin independently of Git branch metadata. Manual prebuilt deployment must not
+fall back to a loopback backend when branch-only variables are absent. The protected
+guide contains the exact source-bound routing configuration and current records.

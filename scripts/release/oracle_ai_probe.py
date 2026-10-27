@@ -15,6 +15,7 @@ import secrets
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -797,6 +798,53 @@ def execute(environment, request):
     return record
 
 
+def record_boundary_failure(environment, request, error):
+    """Persist bounded early diagnostics; this file can never qualify a release."""
+    try:
+        binding = request["binding"]
+        operation = request["operation_id"]
+        require(
+            environment in {"staging", "production"}
+            and str(UUID(operation)) == operation
+            and binding["repository"] == "DruHustle/onesa-ai-platform"
+            and binding["component"] in {"api", "frontend"}
+            and re.fullmatch("[a-f0-9]{40}", binding["candidate_commit"]),
+            "FAILURE_RECORD_SCOPE",
+        )
+        code = str(error) if isinstance(error, Refused) else None
+        if code is not None and not re.fullmatch("[A-Z][A-Z0-9_]{0,95}", code):
+            code = None
+        folder = OUTPUT.lstat()
+        require(
+            OUTPUT.is_dir()
+            and not OUTPUT.is_symlink()
+            and folder.st_uid == os.getuid()
+            and folder.st_mode & 0o077 == 0,
+            "PRIVATE_FAILURE_OUTPUT_REQUIRED",
+        )
+        write(
+            OUTPUT / "failure.json",
+            {
+                "status": "FAILED_NOT_QUALIFIED",
+                "diagnostic_only": True,
+                "environment": environment,
+                "repository": binding["repository"],
+                "component": binding["component"],
+                "candidate_commit": binding["candidate_commit"],
+                "operation_id": operation,
+                "failure_category": type(error).__name__,
+                "failure_code": code,
+                "http_status": error.code
+                if isinstance(error, urllib.error.HTTPError)
+                else None,
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+    except (OSError, KeyError, TypeError, ValueError):
+        # Keep the original failure and any already persisted diagnostic intact.
+        pass
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("environment", choices=["staging", "production"])
@@ -804,7 +852,13 @@ def main():
     args = p.parse_args()
     raw = sys.stdin.buffer.read(131073)
     require(len(raw) <= 131072, "PRIVATE_PROBE_REQUEST_BOUND")
-    print(json.dumps(execute(args.environment, json.loads(raw))))
+    request = json.loads(raw)
+    try:
+        result = execute(args.environment, request)
+    except Exception as error:
+        record_boundary_failure(args.environment, request, error)
+        raise
+    print(json.dumps(result))
 
 
 if __name__ == "__main__":
