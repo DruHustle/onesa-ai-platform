@@ -67,3 +67,9 @@ vendor CLI with a read-only authentication request. Expiring custody must contai
 coherent, current owner CLI snapshot; replacing only its token can leave incompatible
 expiry metadata. This check grants no release authority. Early runner diagnostics
 are retained without credentials or an additional deployment attempt allowance.
+
+Migration custody recognizes the existing runtime system CA reference while retaining
+the explicit pinned CA for supplied owner connections. It does not alter runtime
+credentials, certificate settings, database roles or migration authorization.
+The read-only probe measures TLS on its actual client connection; a provider's
+internal backend connection does not establish the external client's TLS state.
