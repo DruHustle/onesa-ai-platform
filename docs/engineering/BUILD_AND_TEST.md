@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+The owner qualification image includes the versioned icon manifest used by the
+mandatory hosted UI checks. Its exact source hash is part of the commissioned
+probe inventory. Missing or changed image resources fail the credential-free
+preflight; image startup, a passing API suite or a partial UI result cannot replace
+the full hosted qualification. Keep the existing metadata and icon assertions.
+
 Oracle staging container probes use database-free `/health`. The image default
 retains `/core-ready` for existing production dependency monitoring. The middleware
 regression in `tests/test_foundation.py` installs a failing connection hook on a

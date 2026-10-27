@@ -18,6 +18,7 @@ RUN node /tmp/npm/bin/npm-cli.js ci --ignore-scripts --prefix onesa-ai-platform-
 COPY infra/oracle/system_chromium.cjs /tmp/system_chromium.cjs
 RUN node /tmp/system_chromium.cjs && rm /tmp/system_chromium.cjs
 COPY scripts ./scripts
+COPY onesa-ai-platform-frontend/apps/chat/public/brand/icons/v1/sources.json ./onesa-ai-platform-frontend/apps/chat/public/brand/icons/v1/sources.json
 COPY onesa-ai-platform-backend/app ./onesa-ai-platform-backend/app
 COPY onesa-ai-platform-backend/migrations ./onesa-ai-platform-backend/migrations
 COPY onesa-ai-platform-backend/alembic.ini ./onesa-ai-platform-backend/alembic.ini
