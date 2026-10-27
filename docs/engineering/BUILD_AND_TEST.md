@@ -178,6 +178,12 @@ Keep all local model/database targets synthetic while generating documentation.
 
 ## Node TLS trust regression
 
+`node --test scripts/test_ui_navigation.cjs` reproduces a delayed response from a
+previous page during navigation. Only newly observed GET responses can qualify the
+current interface; current 401/503, interrupted bodies and missing responses still
+fail. Request observation is removed after success and failure. This does not relax
+the existing browser content, account, required-response or deadline checks.
+
 Use Node 24.22.1 or a later reviewed security patch in the 24 series. Run
 `node --test scripts/test_tls_trust.mjs` from the repository root. The test uses
 a known public CA certificate and newly generated synthetic localhost certificates
