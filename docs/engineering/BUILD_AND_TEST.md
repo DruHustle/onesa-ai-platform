@@ -1,5 +1,10 @@
 # Separate application builds and tests
 
+Owner-run static artifact checks treat Next.js catch-all chunk names such as
+`[...path]` as literal filenames, encode them for HTTP, and reject traversal
+segments, encoded paths, controls, query strings and fragments. Regressions verify
+that every accepted asset is read and hashed; changed or oversized bodies still fail.
+
 The owner qualification image includes the versioned icon manifest used by the
 mandatory hosted UI checks. Its exact source hash is part of the commissioned
 probe inventory. Missing or changed image resources fail the credential-free
