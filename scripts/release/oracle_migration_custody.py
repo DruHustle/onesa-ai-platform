@@ -62,7 +62,7 @@ def values(path):
     return result
 
 
-def target(uri):
+def target(uri, *, runtime_reference=False):
     require(
         isinstance(uri, str)
         and len(uri) < 4096
@@ -85,7 +85,11 @@ def target(uri):
         and {k for k, v in options}
         <= {"sslmode", "channel_binding", "connect_timeout", "sslrootcert"}
         and dict(options).get("sslrootcert", "/etc/ssl/cert.pem")
-        == "/etc/ssl/cert.pem",
+        in (
+            {"/etc/ssl/cert.pem", "system"}
+            if runtime_reference
+            else {"/etc/ssl/cert.pem"}
+        ),
         "DATABASE_URI_OPTIONS_REFUSED",
     )
     return (u.hostname, u.port or 5432, u.path), u.username
@@ -114,7 +118,10 @@ def hardened(uri):
 
 def validate_target(candidate, runtime):
     proposed, owner = target(candidate)
-    actual, user = target(runtime)
+    # The existing root-owned runtime may use libpq's system trust selection.
+    # It is an identity reference, never the supplied migration connection.
+    # Owner inputs and hardened() retain the explicit pinned CA restriction.
+    actual, user = target(runtime, runtime_reference=True)
     # Neon owner migrations use the direct endpoint for the same database; the
     # application's pooler and direct endpoint are not different environments.
     direct = (actual[0].replace("-pooler.", "."), actual[1], actual[2])

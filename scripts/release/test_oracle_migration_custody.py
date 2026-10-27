@@ -52,3 +52,27 @@ class CustodyTests(unittest.TestCase):
         self.assertIn("BEGIN READ ONLY", c.PROBE)
         self.assertNotIn("ALTER ", c.PROBE)
         self.assertNotIn("GRANT ", c.PROBE)
+
+    def test_existing_runtime_system_ca_does_not_change_owner_binding(self):
+        runtime = RUNTIME + "&sslrootcert=system"
+        self.assertEqual(
+            c.validate_target(OWNER, runtime), c.validate_target(OWNER, RUNTIME)
+        )
+        self.assertEqual(
+            parse_qs(urlsplit(c.hardened(OWNER)).query)["sslrootcert"],
+            ["/etc/ssl/cert.pem"],
+        )
+
+    def test_system_ca_remains_forbidden_for_supplied_owner_connection(self):
+        with self.assertRaises(c.Refused):
+            c.validate_target(OWNER + "&sslrootcert=system", RUNTIME)
+        with self.assertRaises(c.Refused):
+            c.hardened(OWNER + "&sslrootcert=system")
+
+    def test_runtime_reference_still_rejects_custom_or_duplicate_ca(self):
+        for query in [
+            "&sslrootcert=/tmp/forged.pem",
+            "&sslrootcert=system&sslrootcert=/etc/ssl/cert.pem",
+        ]:
+            with self.subTest(query=query), self.assertRaises(c.Refused):
+                c.validate_target(OWNER, RUNTIME + query)
