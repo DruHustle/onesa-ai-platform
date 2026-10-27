@@ -2,6 +2,22 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-27 — Bound retries for failed upstream build fetches
+
+Repeated native checks failed before testing during Alpine CDN TLS fetching or a
+PyPI audit handshake. Retry signed HTTPS package operations at most three times
+and allow the auditor a bounded 60-second socket timeout. Exhausted downloads and
+vulnerability findings still fail. No deployment or acceptance is implied.
+
+## 2026-10-27 — Check owner CLI authentication before qualification
+
+Verify the pinned vendor CLI's actual read-only owner authentication before consuming
+a qualification context. Refuse stale or concurrently replaced custody and retain
+redacted failures that occur before the hosted producer starts. Extend the offline
+real-client tests to assert authorization headers and user readback using synthetic
+OAuth state. Existing signatures, source binding and deployment attempt limits remain
+required; these changes do not establish a successful hosted release.
+
 ## 2026-10-13 — Protected Portal privacy-governance engineering reference
 
 Refresh committed Portal API/schema snapshots from the reviewed governance source and Robot snapshots from qualified main. Add seven internal workflows covering review, retention, deletion requests, processors, transfers, privacy publication and the planned Vercel commercial transition. Include the protected governance reference in architecture navigation while preserving every required topic and the public/internal boundary. Public builds exclude governance documents and mutation contracts; private policy content is never part of documentation source.

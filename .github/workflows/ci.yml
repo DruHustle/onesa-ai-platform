@@ -97,7 +97,7 @@ jobs:
     - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
-    - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
+    - run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.backend == 'true') }}
     timeout-minutes: 45
     permissions:
@@ -161,7 +161,7 @@ jobs:
         python3 - "$fixture" <<'PY'
         import json, os, pathlib, sys
         folder = pathlib.Path(sys.argv[1])
-        for name, value in [('auth.json', {'token': 'synthetic-startup-only'}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
+        for name, value in [('auth.json', {'token': 'synthetic-loopback-only', 'userId': 'user_fixture', 'expiresAt': 4102444800, 'cachedUser': {'id': 'user_fixture', 'username': 'untrusted-cache'}}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
             target = folder / name
             target.write_text(json.dumps(value))
             os.chmod(target, 0o600)
@@ -446,7 +446,7 @@ jobs:
 
           scripts/contract-tools/package-lock.json'
     - run: make install
-    - run: .venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps
+    - run: .venv/bin/python -m pip_audit --timeout 60 -r infra/operations/requirements.lock --disable-pip --no-deps
     - run: python3 scripts/acceptance/bootstrap.py
     - name: Fetch pinned TLS proxy with bounded registry-read recovery
       run: python3 scripts/ci/pull_image.py
