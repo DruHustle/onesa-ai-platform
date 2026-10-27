@@ -2,6 +2,13 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-27 — Bound retries for failed upstream build fetches
+
+Repeated native checks failed before testing during Alpine CDN TLS fetching or a
+PyPI audit handshake. Retry signed HTTPS package operations at most three times
+and allow the auditor a bounded 60-second socket timeout. Exhausted downloads and
+vulnerability findings still fail. No deployment or acceptance is implied.
+
 ## 2026-10-27 — Check owner CLI authentication before qualification
 
 Verify the pinned vendor CLI's actual read-only owner authentication before consuming
