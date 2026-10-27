@@ -1,6 +1,10 @@
 """Synthetic URI/custody validation. No network, real credentials or DDL."""
 
+import io
+import json
+import types
 import unittest
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 import oracle_migration_custody as c
@@ -76,3 +80,63 @@ class CustodyTests(unittest.TestCase):
         ]:
             with self.subTest(query=query), self.assertRaises(c.Refused):
                 c.validate_target(OWNER, RUNTIME + query)
+
+    def execute_probe(self, client_tls):
+        queries = []
+        connect_options = {}
+
+        class Cursor:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def execute(self, sql):
+                queries.append(sql)
+
+            def fetchone(self):
+                if queries[-1].startswith("SELECT current_database()"):
+                    return ("neondb", True, True)
+                if queries[-1] == "SELECT version_num FROM alembic_version":
+                    return ("20261010_capacity",)
+                raise AssertionError("Unexpected query: " + queries[-1])
+
+        class Connection:
+            pgconn = types.SimpleNamespace(ssl_in_use=client_tls)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def cursor(self):
+                return Cursor()
+
+        def connect(uri, **kwargs):
+            connect_options.update(kwargs)
+            return Connection()
+
+        output = io.StringIO()
+        with (
+            patch.dict(
+                "sys.modules", {"psycopg": types.SimpleNamespace(connect=connect)}
+            ),
+            patch("sys.stdin", io.StringIO(json.dumps({"uri": OWNER}))),
+            patch("sys.stdout", output),
+        ):
+            # Execute the fixed maintained probe, never caller-supplied code.
+            exec(compile(c.PROBE, "<owner-readonly-probe>", "exec"), {})  # noqa: S102
+        self.assertIn("BEGIN READ ONLY", queries)
+        self.assertFalse(any("pg_stat_ssl" in sql for sql in queries))
+        self.assertEqual(connect_options["sslmode"], "verify-full")
+        self.assertEqual(connect_options["channel_binding"], "require")
+        self.assertEqual(connect_options["sslrootcert"], "/etc/ssl/cert.pem")
+        return json.loads(output.getvalue())
+
+    def test_probe_measures_actual_client_tls_when_provider_terminates_it(self):
+        self.assertIs(self.execute_probe(True)["tls"], True)
+
+    def test_probe_never_reports_unencrypted_client_as_tls(self):
+        self.assertIs(self.execute_probe(False)["tls"], False)
