@@ -50,3 +50,9 @@ The owner frontend runner binds and verifies the specifically named server API
 origin independently of Git branch metadata. Manual prebuilt deployment must not
 fall back to a loopback backend when branch-only variables are absent. The protected
 guide contains the exact source-bound routing configuration and current records.
+
+Before consuming a qualification context, the AI runner now checks the actual pinned
+vendor CLI with a read-only authentication request. Expiring custody must contain a
+coherent, current owner CLI snapshot; replacing only its token can leave incompatible
+expiry metadata. This check grants no release authority. Early runner diagnostics
+are retained without credentials or an additional deployment attempt allowance.

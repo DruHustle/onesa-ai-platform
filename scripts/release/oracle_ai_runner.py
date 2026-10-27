@@ -932,6 +932,9 @@ def preflight(binding):
     migration_prerequisites(plan)
     cpus = probe_cpu_limit()
     require(shutil.disk_usage("/").free > 12 * 1024**3, "DISK_BUDGET")
+    import oracle_ai_frontend
+
+    authentication = oracle_ai_frontend.cli_authentication(plan)
     return {
         "state": "PREREQUISITES_READY_NOT_QUALIFIED",
         "source": binding["candidate_commit"],
@@ -940,6 +943,7 @@ def preflight(binding):
         "plan_sha256": sha(PLAN),
         "artifact_folder": str(folder),
         "hosted_probe_cpu_limit": cpus,
+        "provider_cli_authentication": authentication,
     }
 
 
@@ -1982,14 +1986,56 @@ def observe_production(binding, operation, folder, plan):
     }
 
 
-def main():
-    require(
-        os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS"), "EXTERNAL_OWNER_ONLY"
-    )
-    phase = sys.argv[1]
-    raw = sys.stdin.buffer.read(131073)
-    require(len(raw) <= 131072, "REQUEST_BOUND")
-    request = json.loads(raw)
+def record_runner_failure(phase, request, error):
+    """Bounded diagnostics only; never an approval or a retry allowance."""
+    try:
+        require(phase in {*CHECKS, "preflight"}, "PHASE_SCOPE")
+        binding = request["binding"]
+        require(
+            binding["repository"] == "DruHustle/onesa-ai-platform"
+            and binding["component"] == "api"
+            and re.fullmatch(r"[a-f0-9]{40}", binding["candidate_commit"]),
+            "FAILURE_SOURCE_SCOPE",
+        )
+        folder = private(
+            ROOT / "artifacts" / binding["candidate_commit"], directory=True
+        )
+        failures = folder / "failures"
+        failures.mkdir(mode=0o700, exist_ok=True)
+        private(failures, directory=True)
+        code = (
+            str(error)
+            if type(error).__name__ == "Refused"
+            and re.fullmatch(r"[A-Z0-9_]{1,120}", str(error))
+            else type(error).__name__
+        )
+        ids = {
+            key: value
+            for key, value in request.get("context", {}).items()
+            if key
+            in {"context_id", "operation_id", "authorization_id", "qualification_id"}
+            and isinstance(value, str)
+            and re.fullmatch(r"[a-f0-9-]{36}", value)
+        }
+        write(
+            failures / (phase + "-" + str(time.time_ns()) + ".json"),
+            {
+                "status": "FAILED_NOT_QUALIFIED",
+                "diagnostic_only": True,
+                "candidate_commit": binding["candidate_commit"],
+                "component": "api",
+                "phase": phase,
+                "record_ids": ids,
+                "failure_code": code,
+                "observed_at": now().isoformat(),
+                "provider_retry_allowed": False,
+            },
+        )
+    except (ValueError, TypeError, KeyError, OSError):
+        pass
+
+
+def run_request(phase, request):
     binding = request["binding"]
     context = request["context"]
     if phase == "preflight":
@@ -2086,6 +2132,22 @@ def main():
             }
         )
     )
+
+
+def main():
+    require(
+        os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS"), "EXTERNAL_OWNER_ONLY"
+    )
+    require(len(sys.argv) == 2, "ONE_RUNNER_PHASE_REQUIRED")
+    phase = sys.argv[1]
+    raw = sys.stdin.buffer.read(131073)
+    require(len(raw) <= 131072, "REQUEST_BOUND")
+    request = json.loads(raw)
+    try:
+        run_request(phase, request)
+    except Exception as error:  # noqa: BLE001 -- Redact and preserve failures before or during the hosted producer.
+        record_runner_failure(phase, request, error)
+        raise Refused("PINNED_RUNNER_FAILED_INSPECT_RETAINED_DIAGNOSTIC") from None
 
 
 if __name__ == "__main__":

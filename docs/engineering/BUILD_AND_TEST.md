@@ -204,3 +204,8 @@ not authorize provider operations. `test_oracle_ai_probe_boundary.py` verifies
 source-scoped early failure diagnostics, credential redaction and preservation of
 original failures. All existing qualification checks and one-use contexts remain
 mandatory; the protected deployment guide records current hosted outcomes.
+
+The offline protocol suite also verifies outgoing authentication headers and the
+pinned CLI's read-only user request with synthetic OAuth state. No provider credentials
+or external network access are used. `test_oracle_cli_auth.py` covers expiry,
+owner identity, concurrent custody changes and redacted early runner failures.

@@ -19,6 +19,7 @@ async function fixture(mode){
  const uploaded=new Set();let posts=0,created=0,uploads=0;const errors=[];
  const server=http.createServer(async(req,res)=>{
   try{
+   assert.equal(req.headers.authorization,'Bearer synthetic-loopback-only');
    const chunks=[];for await(const chunk of req)chunks.push(chunk);const bytes=Buffer.concat(chunks);
    if(req.method==='POST'&&req.url.startsWith('/v2/files')){
     assert.equal(crypto.createHash('sha1').update(bytes).digest('hex'),req.headers['x-now-digest']);uploaded.add(req.headers['x-now-digest']);uploads++;res.writeHead(200);res.end('{}');return;
@@ -54,6 +55,7 @@ async function fullCliFixture(mode){
  const deployment={id:'dpl_fixture',uid:'dpl_fixture',projectId:project.projectId,readyState:'READY',aliasAssigned:true,url:'fixture.invalid',createdAt:Date.now(),alias:[],target:environment==='production'?'production':null};
  function send(res,data,status=200){res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify(data));}
  const server=http.createServer(async(req,res)=>{try{
+  assert.equal(req.headers.authorization,'Bearer synthetic-loopback-only');
   const url=new URL(req.url,'http://fixture'),chunks=[];for await(const chunk of req)chunks.push(chunk);const bytes=Buffer.concat(chunks);
   if(req.method==='POST'&&url.pathname.startsWith('/v2/files')){const sha=crypto.createHash('sha1').update(bytes).digest('hex');assert.equal(sha,req.headers['x-now-digest']);uploaded.add(sha);uploads++;return send(res,{});}
   if(req.method==='POST'&&/\/v[0-9]+\/deployments$/.test(url.pathname)){
@@ -74,14 +76,15 @@ async function fullCliFixture(mode){
  try{
   const origin='http://127.0.0.1:'+server.address().port,preload=path.join(directory,'preload.cjs');fs.writeFileSync(preload,'require("/tests/oracle_vercel_transport_guard.cjs").install('+JSON.stringify(transport)+','+JSON.stringify(origin)+');',{mode:0o600});
   const bootstrap=fs.readFileSync(path.join(__dirname,'oracle_ai_frontend.py'),'utf8').match(/CLI_BOOTSTRAP = r"""([\s\S]*?)"""/)[1];
-  const args=['-e',bootstrap,'--','--require',preload,cli,'deploy','--prebuilt','--yes','--no-wait','--json','--global-config','/tmp/onesa-vercel-cli','--project',project.projectId,'--env','ONESA_API_URL='+ (environment==='production'?'https://platform-api.onesa.eu':'https://platform-api-staging.onesa.eu'),'--api',origin,'--meta','githubCommitSha='+'a'.repeat(40),'--meta','onesaOracleOperation='+operation,...(environment==='production'?['--prod']:[])];
+  const args=mode==='auth'?['-e',bootstrap,'--',cli,'api','/v2/user','-X','GET','--raw','--global-config','/tmp/onesa-vercel-cli','--api',origin]:['-e',bootstrap,'--','--require',preload,cli,'deploy','--prebuilt','--yes','--no-wait','--json','--global-config','/tmp/onesa-vercel-cli','--project',project.projectId,'--env','ONESA_API_URL='+ (environment==='production'?'https://platform-api.onesa.eu':'https://platform-api-staging.onesa.eu'),'--api',origin,'--meta','githubCommitSha='+'a'.repeat(40),'--meta','onesaOracleOperation='+operation,...(environment==='production'?['--prod']:[])];
   const result=await new Promise(resolve=>{
    const child=spawn(process.execPath,args,{cwd:workspace,env:{PATH:process.env.PATH,HOME:'/tmp'},stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',b=>stdout+=b);child.stderr.on('data',b=>stderr+=b);
    const timer=setTimeout(()=>child.kill('SIGTERM'),25000);child.once('error',e=>{clearTimeout(timer);resolve({code:null,stderr:e.message,stdout});});child.once('exit',code=>{clearTimeout(timer);resolve({code,stdout,stderr});});
   });
   assert.deepEqual(errors,[]);
   for(const [name,bytes]of Object.entries(before))assert.deepEqual(fs.readFileSync('/private/creds/'+name),bytes);
-  if(mode==='missing-root'){
+  if(mode==='auth'){assert.equal(result.code,0,result.stderr);assert.equal(JSON.parse(result.stdout).user.username,'synthetic-fixture');assert.equal(created,0);assert.equal(posts,0);assert.equal(uploads,0);assert.equal(fs.existsSync(path.join(transport,'create-request.json')),false);}
+  else if(mode==='missing-root'){
    assert.equal(result.code,1);assert.match(result.stderr,/provided path.*does not exist/s);assert.equal(created,0);assert.equal(posts,0);assert.equal(fs.existsSync(path.join(transport,'create-request.json')),false);
   }else{
    assert.equal(result.code,0,result.stderr);assert.equal(created,1);assert.equal(posts,mode==='cold'?2:1);assert.equal(uploads>0,mode==='cold');
@@ -95,9 +98,9 @@ if(process.argv[2]==='--cli-fixture')fullCliFixture(process.argv[3]).catch(e=>{c
 else if(process.argv[2]==='--fixture')fixture(process.argv[3]).catch(e=>{console.error(e);process.exit(1)});
 else{
  const test=require('node:test'),{execFile}=require('node:child_process');
- for(const environment of ['staging','production'])for(const mode of ['cold','warm','missing-root'])test(`full pinned deploy CLI ${environment} ${mode} project resolution and request budget`,{timeout:35000},async()=>{
+ for(const environment of ['staging','production'])for(const mode of ['cold','warm','missing-root','auth'])test(`full pinned deploy CLI ${environment} ${mode} project resolution and request budget`,{timeout:35000},async()=>{
   const result=await new Promise((resolve,reject)=>execFile(process.execPath,[__filename,'--cli-fixture',mode,environment],{timeout:30000,env:{PATH:process.env.PATH,HOME:'/tmp'}},(error,stdout,stderr)=>error?reject(Error(stderr||error.message)):resolve(JSON.parse(stdout))));
-  assert.equal(result.actual_creates,mode==='missing-root'?0:1);assert.equal(result.provider_credentials,false);assert.equal(result.master_custody_preserved,true);
+  assert.equal(result.actual_creates,['missing-root','auth'].includes(mode)?0:1);assert.equal(result.provider_credentials,false);assert.equal(result.master_custody_preserved,true);
  });
  for(const environment of ['staging','production'])test(`full pinned CLI ${environment} starts with read-only owner custody`,{timeout:30000},async()=>{
   const bootstrap=fs.readFileSync(path.join(__dirname,'oracle_ai_frontend.py'),'utf8').match(/CLI_BOOTSTRAP = r"""([\s\S]*?)"""/)[1];
