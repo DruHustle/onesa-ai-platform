@@ -1,5 +1,18 @@
 # Separate application builds and tests
 
+The documentation security suite exercises `qs` comma-array serialization with
+hostile non-callable `toString` properties and ordinary parse/stringify compatibility.
+Its lock uses upstream 6.16.1 for
+[GHSA-6pq8-jhm2-2vcw](https://github.com/ljharb/qs/security/advisories/GHSA-6pq8-jhm2-2vcw),
+retaining the low-threshold dependency audit. Dependabot PR204 / source
+`bf6ab183548ad180c0f4d5c5e6b543780430c889` supplies the reviewed lockfile patch;
+local checks and source promotion do not establish a live documentation release.
+
+Browser, documentation and TLS browser jobs use Playwright's supported Ubuntu24.04
+runner explicitly. The previous moving `ubuntu-latest` selected Ubuntu26.04 and
+timed out installing TLS browser dependencies. All three engines, TLS checks,
+the bounded installer and job deadlines remain mandatory.
+
 The offline release suite includes `test_oracle_inventory.py`: completed temporary
 monitoring clients and list/inspect races do not become preservation baselines.
 Long-lived temporary workloads, unchanged-inventory command failures, incomplete
