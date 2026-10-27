@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Source correction: bind interface qualification to newly observed GET requests.
+  A previous page's delayed authentication response cannot reject or qualify a new
+  visit. Current failed responses, incomplete bodies and absent data still fail.
+
+- Source candidate: use the base image's existing BusyBox HTTP client for container
+  health checks, avoiding a fresh Python import tree every 15 seconds. Readiness,
+  staging liveness, intervals, deadlines and retries remain unchanged. Final-image
+  tests cover failure, custom ports, proxy isolation and timeout; rollout is separate.
+
 - Source candidate: use database-free Oracle staging liveness while retaining real database,
   schema and model readiness in release qualification. The full middleware regression
   proves no database checkout even with a configured failing engine. Deployment and

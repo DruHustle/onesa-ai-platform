@@ -1,5 +1,19 @@
 # Separate application builds and tests
 
+The offline release suite includes `test_oracle_inventory.py`: completed temporary
+monitoring clients and list/inspect races do not become preservation baselines.
+Long-lived temporary workloads, unchanged-inventory command failures, incomplete
+metadata and real independent runtime changes still fail closed. These fixtures
+make only mocked Docker reads and do not establish hosted qualification.
+
+Container health uses the Alpine base image's existing BusyBox `wget`, with proxies
+disabled and response bodies discarded. It retains the production readiness and
+staging liveness routes, intervals, retries and network deadlines. After building an
+image, run `python3 scripts/healthcheck_smoke.py <image>`: an isolated network-free
+container tests the actual image command against a synthetic loopback server,
+including a custom port, HTTP 503/404, hostile proxy settings, refusal and timeout.
+These client checks are separate from application/database release qualification.
+
 Owner-run static artifact checks treat Next.js catch-all chunk names such as
 `[...path]` as literal filenames, encode them for HTTP, and reject traversal
 segments, encoded paths, controls, query strings and fragments. Regressions verify
@@ -169,6 +183,12 @@ A reference-only CI build does not qualify a protected edition with full runbook
 Keep all local model/database targets synthetic while generating documentation.
 
 ## Node TLS trust regression
+
+`node --test scripts/test_ui_navigation.cjs` reproduces a delayed response from a
+previous page during navigation. Only newly observed GET responses can qualify the
+current interface; current 401/503, interrupted bodies and missing responses still
+fail. Request observation is removed after success and failure. This does not relax
+the existing browser content, account, required-response or deadline checks.
 
 Use Node 24.22.1 or a later reviewed security patch in the 24 series. Run
 `node --test scripts/test_tls_trust.mjs` from the repository root. The test uses
