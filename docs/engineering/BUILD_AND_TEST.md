@@ -1,5 +1,13 @@
 # Separate application builds and tests
 
+Container health uses the Alpine base image's existing BusyBox `wget`, with proxies
+disabled and response bodies discarded. It retains the production readiness and
+staging liveness routes, intervals, retries and network deadlines. After building an
+image, run `python3 scripts/healthcheck_smoke.py <image>`: an isolated network-free
+container tests the actual image command against a synthetic loopback server,
+including a custom port, HTTP 503/404, hostile proxy settings, refusal and timeout.
+These client checks are separate from application/database release qualification.
+
 Owner-run static artifact checks treat Next.js catch-all chunk names such as
 `[...path]` as literal filenames, encode them for HTTP, and reject traversal
 segments, encoded paths, controls, query strings and fragments. Regressions verify

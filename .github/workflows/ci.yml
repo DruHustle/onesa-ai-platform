@@ -517,6 +517,9 @@ jobs:
         ref: ${{ github.sha }}
     - name: Build application runtime
       run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+    - name: Verify health client success, failure, proxy isolation and timeout
+      if: matrix.application == 'onesa-ai-platform-backend'
+      run: python3 scripts/healthcheck_smoke.py onesa-security-candidate:ci
     - name: Verify default production image startup and shutdown
       if: matrix.application == 'onesa-ai-platform-backend'
       run: python3 scripts/startup_smoke.py onesa-security-candidate:ci

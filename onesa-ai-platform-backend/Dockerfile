@@ -45,5 +45,5 @@ RUN rm -rf /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/py
 USER onesa
 EXPOSE 8000
 # Production dependency monitoring retains readiness; Oracle staging overrides this.
-HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/core-ready', timeout=5)"
+HEALTHCHECK --interval=15s --timeout=6s --start-period=20s --retries=5 CMD wget -q -Y off -T 5 -O /dev/null "http://127.0.0.1:${PORT:-8000}/core-ready"
 CMD ["sh", "/app/start.sh"]
