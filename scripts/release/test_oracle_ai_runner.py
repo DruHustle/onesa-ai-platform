@@ -116,6 +116,47 @@ class LedgerBoundaryTests(unittest.TestCase):
             self.call(identifier, phase="deploy")
 
 
+class ProbeResourceTests(unittest.TestCase):
+    def test_source_resources_are_required_and_unrelated_public_files_excluded(self):
+        resource = r.PROBE_RESOURCE_FILES[0]
+        with self.assertRaisesRegex(r.Refused, "RESOURCE_SOURCE_MISSING"):
+            r.probe_source_files({"scripts/probe.py": "a" * 64})
+        files = {
+            "scripts/probe.py": "a" * 64,
+            resource: "b" * 64,
+            "onesa-ai-platform-frontend/apps/chat/public/unrelated.json": "c" * 64,
+        }
+        self.assertEqual(
+            r.probe_source_files(files),
+            {"scripts/probe.py": "a" * 64, resource: "b" * 64},
+        )
+
+    def test_missing_or_modified_image_resource_fails_before_scan_acceptance(self):
+        resource = r.PROBE_RESOURCE_FILES[0]
+        expected = {"scripts/probe.py": "a" * 64, resource: "b" * 64}
+        for actual in [
+            {"scripts/probe.py": "a" * 64},
+            {**expected, resource: "c" * 64},
+        ]:
+            with (
+                self.subTest(actual=actual),
+                patch.object(
+                    r, "trusted_toolchain", return_value={"probe_files": expected}
+                ),
+                patch.object(
+                    r, "docker", return_value=json.dumps(actual).encode()
+                ) as docker,
+                patch.object(r, "image_security") as scan,
+                self.assertRaisesRegex(r.Refused, "PROBE_BYTES_DIFFER"),
+            ):
+                r.verify_probe_bytes(
+                    Path("/synthetic"), {}, {"probe_image": "sha256:" + "d" * 64}
+                )
+            self.assertIn(resource, docker.call_args.args[-1])
+            self.assertIn("--read-only", docker.call_args.args)
+            scan.assert_not_called()
+
+
 class ArchiveTests(unittest.TestCase):
     def test_source_tar_is_bound_to_git_tree_not_only_image_labels(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -2,6 +2,9 @@
 
 <!-- onesa-protected-source: ai-deployment -->
 
+Qualification probes include and verify their required source resources before
+hosted work. Failed or partial UI evidence remains unqualified.
+
 Detailed operational instructions are maintained in protected Engineering Docs.
 This public source is a reference page, not a deployment or recovery runbook.
 

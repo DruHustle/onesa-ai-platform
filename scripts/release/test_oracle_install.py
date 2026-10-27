@@ -80,6 +80,8 @@ class InstallTests(unittest.TestCase):
         files["onesa-ai-platform-backend/app/twin_files.py"] = (
             b"# synthetic source parser fixture only\n"
         )
+        for resource in runner.PROBE_RESOURCE_FILES:
+            files[resource] = (repo / resource).read_bytes()
         for name, data in files.items():
             path = source_root / name
             path.parent.mkdir(parents=True, exist_ok=True)
