@@ -196,3 +196,11 @@ limitation and link to guides. The CI gateway fixture opts in explicitly.
 Synthetic screenshot capture can use `ONESA_CAPTURE_URL` and a separate `ONESA_CAPTURE_FIXTURE_NAME` (lowercase letters, digits and hyphens). `ONESA_CAPTURE_NEW_FIXTURE=1` creates a fresh disposable account for that named fixture. Keep its ignored private state and use only an explicitly isolated mock stack; the default `demo` fixture remains compatible with the configured Docs gateway checks.
 
 For a public-only checkout, after the same locked prerequisites and browser installation, run `make DOCS_SCOPE=public docs-assets docs-public`. Asset rendering and staged validation read only public generated material. The default scope remains `all`; `make docs-assets docs-public docs-internal docs-validate` still requires both classified trees and the approved private source bundle for actual protected publication.
+
+
+The owner-run protocol fixture additionally asserts the real pinned Vercel CLI's
+outgoing `ONESA_API_URL` deployment value. Its loopback-only dummy credentials do
+not authorize provider operations. `test_oracle_ai_probe_boundary.py` verifies
+source-scoped early failure diagnostics, credential redaction and preservation of
+original failures. All existing qualification checks and one-use contexts remain
+mandatory; the protected deployment guide records current hosted outcomes.

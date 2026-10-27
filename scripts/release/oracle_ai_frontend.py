@@ -27,6 +27,10 @@ ROOT = Path("/var/lib/onesa/release-verification/ai-frontend")
 PROVIDER = Path("/etc/onesa/oracle-ai-vercel-observer.json")
 CLI_AUTH = Path("/etc/onesa/oracle-vercel-cli")
 APP_ROOT = "onesa-ai-platform-frontend/apps/chat"
+API_ORIGINS = {
+    "staging": "https://platform-api-staging.onesa.eu",
+    "production": "https://platform-api.onesa.eu",
+}
 
 # The pinned CLI atomically updates preferences and its cache during startup.
 # Keep owner custody read-only; all CLI writes belong to this container's tmpfs.
@@ -105,6 +109,25 @@ def protection(plan):
         == plan["vercel_protection_sha256"],
         "EXISTING_PROVIDER_PROTECTION_CHANGED",
     )
+    # Manual prebuilt deployments have no Git source. Commit metadata does not
+    # select branch-scoped variables, so verify the intended existing values and
+    # pass the single nonsecret route explicitly for this deployment.
+    for env, target in [("staging", "preview"), ("production", "production")]:
+        identifier = plan["vercel_api_url_variable_ids"][env]
+        r.require(
+            re.fullmatch("[A-Za-z0-9_-]{8,128}", identifier),
+            "NAMED_ROUTING_VARIABLE_ID",
+        )
+        variable = provider("/v1/projects/" + cfg["project_id"] + "/env/" + identifier)
+        r.require(
+            variable.get("id") == identifier
+            and variable.get("key") == "ONESA_API_URL"
+            and target in variable.get("target", [])
+            and variable.get("value") == API_ORIGINS[env]
+            and variable.get("gitBranch")
+            in ([None, "staging"] if env == "staging" else [None]),
+            "ACTUAL_FRONTEND_API_ROUTING_CHANGED",
+        )
     return project
 
 
@@ -131,6 +154,16 @@ def validate(binding):
         r.require(
             r.sha(r.private(config)) == binding["configuration_sha256"][env],
             "FRONTEND_CONFIGURATION_CHANGED",
+        )
+        value = r.read(config)
+        r.require(
+            value.get("candidate_commit") == binding["candidate_commit"]
+            and value.get("project_id") == plan["project_id"]
+            and value.get("target_environment") == env
+            and value.get("api_origin") == API_ORIGINS[env]
+            and value.get("api_routing_variable_id")
+            == plan["vercel_api_url_variable_ids"][env],
+            "SOURCE_BOUND_FRONTEND_ROUTING_CONFIGURATION_REQUIRED",
         )
         build = plan["builds"][env]
         receipt = r.read(folder / build["receipt"])
@@ -491,6 +524,8 @@ def create(binding, env, operation, folder, plan):
         "/tmp/onesa-vercel-cli",
         "--project",
         plan["project_id"],
+        "--env",
+        "ONESA_API_URL=" + API_ORIGINS[env],
         "--meta",
         "githubCommitRef=" + ("main" if env == "production" else "staging"),
         "--meta",
