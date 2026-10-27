@@ -800,3 +800,17 @@ Verified the qualified staging revision through actual owner Cloudflare Access M
 ## 2026-10-13 — Reject retired approvals and reconcile architecture evidence
 
 Retire the compatibility qualification command’s acceptance of locally editable gate JSON, even when its source hash matches. Actual release authority remains the existing trusted qualification/promotion workflows. Add forged and malformed approval regressions. Update canonical architecture/workflow references with actual isolated Portal/AI staging and protected engineering publication evidence; preserve Robot’s HTTP401 and production operational limitations.
+
+
+## 2026-10-27 — Explicit owner deployment routing (unreleased)
+
+Manual prebuilt Previews have no Git source, so commit metadata alone does not
+supply the staging branch's server-only API origin. The owner frontend runner now
+verifies only the two named existing routing variables, binds their identities and
+canonical origins to the source-specific configuration, and passes that one
+nonsecret origin explicitly to the deployment. Real pinned-CLI protocol tests
+assert the outgoing binding for staging and production. Project variables,
+authentication, optional-feature defaults and independent services are preserved.
+Early hosted-probe failures now retain bounded source/operation/error-code diagnostics
+without credentials or exception messages; a failure record never qualifies a release.
+Source checks do not establish hosted qualification or production acceptance.
