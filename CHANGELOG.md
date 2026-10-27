@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Source correction: bind interface qualification to newly observed GET requests.
+  A previous page's delayed authentication response cannot reject or qualify a new
+  visit. Current failed responses, incomplete bodies and absent data still fail.
+
 - Source candidate: use the base image's existing BusyBox HTTP client for container
   health checks, avoiding a fresh Python import tree every 15 seconds. Readiness,
   staging liveness, intervals, deadlines and retries remain unchanged. Final-image

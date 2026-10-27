@@ -19,31 +19,42 @@ async function navigateInterface(
   if (!Object.hasOwn(routes, route) || target.origin !== new URL(origin).origin)
     throw Error("Unsupported interface route");
   const profile = routes[route];
-  const waits = (authentication ? [] : profile.api).map((path) =>
-    page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return url.origin === target.origin && url.pathname === "/api/v1/" + path;
-    }, { timeout }).then(async (response) => {
-      if (response.status() !== 200 || await response.finished())
-        throw Error("Required interface data response failed");
-    }),
-  );
-  // Handle failures immediately even when document navigation fails. Awaiting
-  // this same promise below still fails closed on any required response failure.
-  const dataReady = Promise.all(waits);
-  dataReady.catch(() => {});
-  const response = await page.goto(target.href, { waitUntil: "domcontentloaded", timeout });
-  if (!response || response.status() !== 200) throw Error("Interface route failed");
-  const landed = new URL(response.url());
-  if (landed.origin !== target.origin || landed.pathname !== target.pathname)
-    throw Error("Interface route changed");
-  const content = authentication
-    ? page.getByLabel("Email", { exact: true })
-    : profile.label
-      ? page.getByLabel(profile.label, { exact: true })
-      : page.getByRole("heading", { name: profile.heading, exact: true, level: 1 });
-  await Promise.all([content.waitFor({ state: "visible", timeout }), dataReady]);
-  return response;
+  // A previous page can finish an API request after the next navigation starts.
+  // Only requests observed during this invocation may qualify its interface.
+  const currentRequests = new Set();
+  const rememberRequest = (request) => currentRequests.add(request);
+  page.on("request", rememberRequest);
+  try {
+    const waits = (authentication ? [] : profile.api).map((path) =>
+      page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return currentRequests.has(response.request()) &&
+          response.request().method() === "GET" &&
+          url.origin === target.origin && url.pathname === "/api/v1/" + path;
+      }, { timeout }).then(async (response) => {
+        if (response.status() !== 200 || await response.finished())
+          throw Error("Required interface data response failed");
+      }),
+    );
+    // Handle failures immediately even when document navigation fails. Awaiting
+    // this same promise below still fails closed on any required response failure.
+    const dataReady = Promise.all(waits);
+    dataReady.catch(() => {});
+    const response = await page.goto(target.href, { waitUntil: "domcontentloaded", timeout });
+    if (!response || response.status() !== 200) throw Error("Interface route failed");
+    const landed = new URL(response.url());
+    if (landed.origin !== target.origin || landed.pathname !== target.pathname)
+      throw Error("Interface route changed");
+    const content = authentication
+      ? page.getByLabel("Email", { exact: true })
+      : profile.label
+        ? page.getByLabel(profile.label, { exact: true })
+        : page.getByRole("heading", { name: profile.heading, exact: true, level: 1 });
+    await Promise.all([content.waitFor({ state: "visible", timeout }), dataReady]);
+    return response;
+  } finally {
+    page.off("request", rememberRequest);
+  }
 }
 
 module.exports = { navigateInterface };
