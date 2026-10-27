@@ -148,7 +148,7 @@ jobs:
     - name: Verify TLS policy in traced server routes
       run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
-    - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs
+    - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs scripts/test_ui_navigation.cjs
     - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
     - name: Audit the isolated owner CLI dependency lock
       run: |
