@@ -902,17 +902,30 @@ def _probe_plan(plan):
         r.PLAN = old
 
 
+def static_asset_path(name):
+    """Encode a literal build filename without permitting URL or path traversal."""
+    r.require(
+        isinstance(name, str)
+        and 0 < len(name) <= 4096
+        and name.startswith("/_next/static/")
+        and not any(character in name for character in ["\\", "%", "?", "#"])
+        and not any(ord(character) < 32 or ord(character) == 127 for character in name)
+        and all(part not in {"", ".", ".."} for part in name[1:].split("/")),
+        "BOUNDED_SERVED_ASSET_PATH",
+    )
+    # Next emits literal [param], [...param] and [[...param]] chunk filenames.
+    # Their dots are part of the filename, not a parent-directory segment.
+    return urllib.parse.quote(name, safe="/")
+
+
 def verify_static(folder, plan, dep):
     receipt = r.read(folder / plan["builds"]["production"]["receipt"])
     expected = receipt["served_static_files"]
     r.require(expected, "ACTUAL_SERVED_STATIC_ARTIFACT_REQUIRED")
     import hashlib
 
-    for path, digest in expected.items():
-        r.require(
-            path.startswith("/_next/static/") and ".." not in path,
-            "BOUNDED_SERVED_ASSET_PATH",
-        )
+    paths = [(static_asset_path(path), digest) for path, digest in expected.items()]
+    for path, digest in paths:
         with urllib.request.urlopen(
             "https://platform.onesa.eu" + path, timeout=30
         ) as response:

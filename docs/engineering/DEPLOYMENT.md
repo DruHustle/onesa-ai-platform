@@ -2,6 +2,13 @@
 
 <!-- onesa-protected-source: ai-deployment -->
 
+Static artifact verification accepts generated Next.js catch-all filenames while
+retaining canonical path, response-size and byte-digest checks. A verifier fix
+requires new source qualification and commissioning; failed contexts stay consumed.
+
+Qualification probes include and verify their required source resources before
+hosted work. Failed or partial UI evidence remains unqualified.
+
 Detailed operational instructions are maintained in protected Engineering Docs.
 This public source is a reference page, not a deployment or recovery runbook.
 
