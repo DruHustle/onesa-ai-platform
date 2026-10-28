@@ -24,6 +24,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import oracle_release_profiles as profiles
+
 PLAN = Path("/etc/onesa/oracle-ai-release.json")
 OPENSSL = "/usr/bin/openssl" if sys.platform == "linux" else "/opt/homebrew/bin/openssl"
 VERIFIER = Path(__file__).resolve().with_name("oracle_owner.py")
@@ -312,11 +315,19 @@ def candidate_environment(binding, env):
         env in ENV and re.fullmatch("[a-f0-9]{40}", binding["candidate_commit"]),
         "CANDIDATE_CONFIGURATION_SCOPE",
     )
-    return (
-        Path("/etc/onesa/backends/candidates")
-        / binding["candidate_commit"]
-        / ("ai-" + env + ".env")
+    return profiles.configuration_folder(
+        binding, Path("/etc/onesa/backends/candidates")
+    ) / ("ai-" + env + ".env")
+
+
+def plan_path(binding):
+    return profiles.plan_path(
+        binding, PLAN, Path("/etc/onesa/oracle-ai-frontend-release.json")
     )
+
+
+def artifact_folder(binding):
+    return profiles.artifact_folder(binding, ROOT)
 
 
 def trusted_toolchain(plan):
@@ -339,6 +350,9 @@ def trusted_toolchain(plan):
         "COMMISSIONED_TOOL_POLICY_CHANGED",
     )
     policy = read(store / "policy.json")
+    selected = profiles.policy_components(policy)
+    if "mode" in plan or selected == profiles.SCOPED:
+        profiles.validate_mode(plan["binding"], plan.get("mode"), policy)
     tool = policy["toolchain"]
     require(
         plan["probe_image"] == tool["probe_image"],
@@ -439,7 +453,7 @@ def image_security(scan, identity):
 def validate_plan(binding):
     require(
         binding.get("repository") == "DruHustle/onesa-ai-platform"
-        and binding.get("component") == "api"
+        and profiles.kind(binding) == "api"
         and binding.get("target_environment") == "production",
         "COMPONENT_SCOPE",
     )
@@ -447,12 +461,12 @@ def validate_plan(binding):
         re.fullmatch("[a-f0-9]{40}", binding.get("candidate_commit", "")),
         "EXACT_SOURCE_REQUIRED",
     )
-    plan = read(PLAN)
+    plan = read(plan_path(binding))
     require(
         plan["binding"] == binding and plan["schema_version"] == 1,
         "OWNER_INSTALLED_PLAN_BINDING",
     )
-    folder = private(ROOT / "artifacts" / binding["candidate_commit"], directory=True)
+    folder = private(artifact_folder(binding), directory=True)
     for name, expected in [
         ("source.tar", binding["source_sha256"]),
         ("image.tar.gz", binding["build_sha256"]),
@@ -478,6 +492,8 @@ def validate_plan(binding):
         )
         values = runtime_values(prepared)
         current = runtime_values(envpath)
+        enabled = profiles.enabled_features(values, plan["mode"])
+        require_probe_policy(binding, env, plan, enabled)
         allowed = {
             "ONESA_DIGITAL_TWINS_ENABLED",
             "ONESA_DIGITAL_TWINS_DEMO_ENABLED",
@@ -534,8 +550,10 @@ def validate_plan(binding):
                 and values.get("ONESA_DIGITAL_TWINS_PERSISTENT_MOUNT") == "true",
                 "TWINS_ACTIVATION_PROFILE",
             )
+        if "twins" in enabled:
             require(
-                values.get("ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY")
+                values.get("ONESA_DIGITAL_TWINS_PERSISTENT_MOUNT") == "true"
+                and values.get("ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY")
                 == "/var/lib/onesa/twins",
                 "PRIVATE_CONTAINER_STORAGE_PATH",
             )
@@ -974,7 +992,8 @@ def migration_prerequisites(plan):
             "SEPARATE_MIGRATION_OWNER_REQUIRED",
         )
     require(
-        plan["migration_revision"] in ["20261025_twins", "20261026_cybersecurity"],
+        plan["migration_revision"] in ["20261025_twins", "20261026_cybersecurity"]
+        and plan["expected_schema_revision"] == plan["migration_revision"],
         "ADDITIVE_MIGRATION_SCOPE",
     )
 
@@ -988,16 +1007,23 @@ def preflight(binding):
     import oracle_ai_frontend
 
     authentication = oracle_ai_frontend.cli_authentication(plan)
+    retained = None
+    if profiles.component(binding) not in profiles.LEGACY:
+        metadata = oracle_ai_frontend.observe_provider(
+            binding, "production", plan, "preflight"
+        )
+        retained = oracle_ai_frontend.verify_retained_frontend(binding, plan, metadata)
     return {
         "state": "PREREQUISITES_READY_NOT_QUALIFIED",
         "source": binding["candidate_commit"],
         "provider_requests": 0,
         "records_issued": 0,
-        "plan_sha256": sha(PLAN),
+        "plan_sha256": sha(plan_path(binding)),
         "artifact_folder": str(folder),
         "hosted_probe_cpu_limit": cpus,
         "hosted_probe_network": network,
         "provider_cli_authentication": authentication,
+        "retained_frontend_inspection": retained,
     }
 
 
@@ -1005,7 +1031,9 @@ def accepted_rollback_proof(plan):
     old = plan["rollback"]
     binding = old["binding"]
     require(
-        binding["component"] == "api"
+        binding["repository"] == plan["binding"]["repository"] == profiles.REPOSITORY
+        and binding["target_environment"] == "production"
+        and profiles.kind(binding) == "api"
         and binding["artifact_digest"] == old["image"]
         and binding["candidate_commit"] != plan["binding"]["candidate_commit"],
         "ROLLBACK_SOURCE_BINDING",
@@ -1014,11 +1042,11 @@ def accepted_rollback_proof(plan):
         binding,
         {"operation_id": old["operation_id"], "read_only": True},
         "production",
-        plan,
+        {**plan, "verifier_store": old.get("verifier_store", plan["verifier_store"])},
         dependency=True,
     )
     context = next(record["id"] for record in chain if record["kind"] == "context")
-    output = ROOT / "artifacts" / binding["candidate_commit"] / "observations" / context
+    output = artifact_folder(binding) / "observations" / context
     proof = read(output / "forward-check-receipt.json")
     require(
         proof["binding"] == binding
@@ -1041,6 +1069,13 @@ def accepted_rollback_proof(plan):
 
 
 def operational_observations(binding, plan):
+    if profiles.component(binding) not in profiles.LEGACY:
+        import oracle_ai_frontend
+
+        metadata = oracle_ai_frontend.observe_provider(
+            binding, "production", plan, "operations"
+        )
+        oracle_ai_frontend.verify_retained_frontend(binding, plan, metadata)
     metrics = read(Path("/var/lib/onesa/operations/metrics.json"))
     require(
         not metrics["simulation"]
@@ -1227,6 +1262,8 @@ def operational_observations(binding, plan):
         restore["binding"] == binding
         and restore["operation_id"] == plan["qualification_context_id"]
         and restore["status"] == "PASS"
+        and restore["profile"] == "twins"
+        and restore["schema_revision"] == plan["expected_schema_revision"]
         and restore["production_writes"] == 0
         and restore["database_manifest_matches"] is True
         and restore["file_hashes_match"] is True
@@ -1633,6 +1670,29 @@ def backend_identity(binding, env):
     return value
 
 
+def running_configuration(binding, env, actual):
+    require(env in ENV, "RUNTIME_ENVIRONMENT_SCOPE")
+    path = private(ENV[env])
+    require(
+        sha(path) == binding["configuration_sha256"][env],
+        "RUNNING_CONFIGURATION_FILE_BINDING",
+    )
+    configured = runtime_values(path)
+    rows = actual["Config"]["Env"]
+    require(
+        isinstance(rows, list)
+        and all(isinstance(row, str) and "=" in row for row in rows),
+        "RUNNING_CONFIGURATION_SHAPE",
+    )
+    live = dict(row.split("=", 1) for row in rows)
+    require(
+        len(live) == len(rows)
+        and all(live.get(key) == value for key, value in configured.items()),
+        "RUNNING_CONFIGURATION_DIFFERS_FROM_BOUND_FILE",
+    )
+    return configured
+
+
 def extract_reference(folder, destination, binding):
     _app, index = source_inventory(private(folder / "source.tar"), binding)
     destination.mkdir(mode=0o700)
@@ -1659,7 +1719,20 @@ def extract_reference(folder, destination, binding):
                 f.write(data)
 
 
-def required_probe_checks(binding, env, mode):
+def required_probe_checks(binding, env, mode, enabled_features=None):
+    require(mode in {"foundation", "twins", "cybersecurity"}, "UNKNOWN_PROBE_MODE")
+    profiles.bound_mode(binding, mode)
+    require(env in {"staging", "production"}, "UNKNOWN_PROBE_ENVIRONMENT")
+    features = (
+        (frozenset() if mode == "foundation" else frozenset({mode}))
+        if enabled_features is None
+        else frozenset(enabled_features)
+    )
+    require(
+        features <= {"twins", "cybersecurity"}
+        and (not features if mode == "foundation" else mode in features),
+        "ACTUAL_ENABLED_FEATURE_SCOPE_REQUIRED",
+    )
     mandatory = {
         "authentication",
         "owner_isolation",
@@ -1668,14 +1741,14 @@ def required_probe_checks(binding, env, mode):
         "database_persistence",
         "session_persistence",
     }
-    if mode == "twins":
+    if "twins" in features:
         mandatory |= {
             "twins_model_delivery",
             "twins_saved_state",
             "optional_sources_absent",
             "file_persistence",
         }
-    elif mode == "cybersecurity":
+    if "cybersecurity" in features:
         mandatory |= {
             "cybersecurity_scoped_readiness",
             "cybersecurity_ingestion",
@@ -1686,14 +1759,51 @@ def required_probe_checks(binding, env, mode):
             "cybersecurity_export",
             "optional_sources_absent",
         }
-        if binding["component"] == "frontend" or env == "staging":
+        if (
+            profiles.kind(binding) == "frontend"
+            or env == "staging"
+            or profiles.component(binding) not in profiles.LEGACY
+        ):
             mandatory.add("cybersecurity_ui")
-    else:
+    if mode == "foundation":
         require(mode == "foundation", "UNKNOWN_PROBE_MODE")
         mandatory |= {"twins_disabled", "cybersecurity_disabled", "ordinary_workflows"}
-    if env == "staging" and mode == "twins" and binding["component"] == "frontend":
+    if "twins" in features and (
+        (env == "staging" and profiles.kind(binding) == "frontend")
+        or profiles.component(binding) not in profiles.LEGACY
+    ):
         mandatory.add("twins_inspection")
     return mandatory
+
+
+def require_probe_policy(binding, env, plan, enabled):
+    mandatory = required_probe_checks(binding, env, plan["mode"], enabled)
+    required = plan.get("mandatory_probe_checks", {}).get(env)
+    require(
+        isinstance(required, list)
+        and all(isinstance(key, str) for key in required)
+        and len(set(required)) == len(required)
+        and mandatory <= set(required),
+        "INCOMPLETE_HOSTED_POLICY",
+    )
+    return set(required)
+
+
+def verify_observed_features(binding, observed, mode, enabled):
+    # Previously accepted legacy receipts predate the explicit feature-set field.
+    # They can cover only their original, single mode with the same live flags.
+    # They never qualify a new named profile or a combined-feature runtime.
+    if "enabled_features" not in observed:
+        original = set() if mode == "foundation" else {mode}
+        require(
+            profiles.component(binding) in profiles.LEGACY and set(enabled) == original,
+            "LEGACY_RECEIPT_CANNOT_COVER_NEW_FEATURE_SCOPE",
+        )
+    else:
+        require(
+            observed["enabled_features"] == sorted(enabled),
+            "OBSERVED_FEATURE_SCOPE_CHANGED",
+        )
 
 
 def probe_cpu_limit():
@@ -1719,9 +1829,19 @@ def probe_network():
     return "bridge"
 
 
-def probe(binding, env, operation, folder, plan):
+def probe(binding, env, operation, folder, plan, *, plan_file=None):
     cpus = probe_cpu_limit()
     network = probe_network()
+    plan_file = plan_path(binding) if plan_file is None else private(Path(plan_file))
+    installed_plan = read(plan_file)
+    require(
+        installed_plan["binding"] == binding
+        and all(
+            installed_plan[key] == plan[key]
+            for key in ["mode", "expected_schema_revision", "mandatory_probe_checks"]
+        ),
+        "PROBE_PLAN_FILE_BINDING",
+    )
     name = TARGET[env]
     current = inventory()
     actual = current[name]
@@ -1733,7 +1853,10 @@ def probe(binding, env, operation, folder, plan):
         == runtime_binding["candidate_commit"],
         "ACTUAL_RUNTIME_IDENTITY",
     )
-    if plan["mode"] == "twins":
+    values = running_configuration(runtime_binding, env, actual)
+    enabled = profiles.enabled_features(values, plan["mode"])
+    required = require_probe_policy(binding, env, plan, enabled)
+    if "twins" in enabled:
         mounts = actual.get("Mounts", [])
         require(
             any(
@@ -1747,15 +1870,22 @@ def probe(binding, env, operation, folder, plan):
         )
     output = folder / "observations" / operation
     output.mkdir(mode=0o700, parents=False, exist_ok=False)
-    if plan["mode"] == "twins":
+    if "twins" in enabled:
         extract_reference(folder, output / "reference", binding)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import oracle_ai_frontend
 
     metadata = oracle_ai_frontend.observe_provider(binding, env, plan, operation)
+    if (
+        env == "production"
+        and profiles.kind(binding) == "api"
+        and profiles.component(binding) not in profiles.LEGACY
+    ):
+        metadata["retained_frontend"] = oracle_ai_frontend.verify_retained_frontend(
+            binding, plan, metadata
+        )
     metadata["backend_identity"] = backend_identity(runtime_binding, env)
     write(output / "private-provider-observation.json", metadata)
-    values = runtime_values(ENV[env])
     narrowed = output / "private-runtime.env"
     with os.fdopen(
         os.open(narrowed, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600),
@@ -1771,6 +1901,8 @@ def probe(binding, env, operation, folder, plan):
                 ]
             )
         )
+        for key in ["ONESA_DIGITAL_TWINS_ENABLED", "ONESA_CYBERSECURITY_ENABLED"]:
+            f.write(key + "=" + values.get(key, "false") + "\n")
     # This immutable, credential-free-built probe image contains the reviewed
     # existing hosted API/UI harnesses and the owned Twins journey. It observes the
     # actual provider and application; no caller PASS or stored Actions artifact is read.
@@ -1793,7 +1925,7 @@ def probe(binding, env, operation, folder, plan):
         "--security-opt",
         "no-new-privileges:true",
         "-v",
-        str(PLAN) + ":/private/plan.json:ro",
+        str(plan_file) + ":/private/plan.json:ro",
         "-v",
         str(narrowed) + ":/private/runtime.env:ro",
         "-v",
@@ -1805,7 +1937,7 @@ def probe(binding, env, operation, folder, plan):
                 "-v",
                 str(output / "reference") + ":/private/reference:ro",
             ]
-            if plan["mode"] == "twins"
+            if "twins" in enabled
             else []
         ),
         "-v",
@@ -1820,7 +1952,7 @@ def probe(binding, env, operation, folder, plan):
         {
             "binding": binding,
             "operation_id": operation,
-            "plan_sha256": sha(PLAN),
+            "plan_sha256": sha(plan_file),
             "ci_run_id": plan["observed_ci_run_id"],
             "frontend_deployment_id": plan.get("current_frontend_deployment_id"),
             "provider_observation_sha256": sha(
@@ -1851,7 +1983,7 @@ def probe(binding, env, operation, folder, plan):
                 require(time.monotonic() < deadline, "HOSTED_PROBE_DEADLINE")
                 if (
                     env == "staging"
-                    and binding["component"] == "api"
+                    and profiles.kind(binding) == "api"
                     and not handled
                     and (output / "prepared-for-replacement.json").exists()
                 ):
@@ -1954,11 +2086,9 @@ def probe(binding, env, operation, folder, plan):
         and observed["environment"] == env,
         "HOSTED_PROBE_BINDING_MISMATCH",
     )
-    required = set(plan["mandatory_probe_checks"][env])
-    mandatory = required_probe_checks(binding, env, plan["mode"])
-    require(mandatory <= required, "INCOMPLETE_HOSTED_POLICY")
     require(
-        set(observed["checks"]) >= required
+        observed["enabled_features"] == sorted(enabled)
+        and set(observed["checks"]) >= required
         and all(observed["checks"][k] == "PASS" for k in required),
         "HOSTED_REQUIRED_CHECK_FAILED_SKIPPED_OR_MISSING",
     )
@@ -2031,9 +2161,13 @@ def observe_production(binding, operation, folder, plan):
         and observed["existing_records_preserved"] is True,
         "POST_DEPLOY_WORKFLOWS_NOT_VERIFIED",
     )
-    required = set(plan["mandatory_probe_checks"]["production"])
+    enabled = profiles.enabled_features(
+        running_configuration(binding, "production", actual), plan["mode"]
+    )
+    required = require_probe_policy(binding, "production", plan, enabled)
+    verify_observed_features(binding, observed, plan["mode"], enabled)
     require(
-        required and all(observed["checks"].get(k) == "PASS" for k in required),
+        all(observed["checks"].get(k) == "PASS" for k in required),
         "PRODUCTION_CHECK_FAILED_SKIPPED_OR_MISSING",
     )
     require(
@@ -2064,13 +2198,11 @@ def record_runner_failure(phase, request, error):
         binding = request["binding"]
         require(
             binding["repository"] == "DruHustle/onesa-ai-platform"
-            and binding["component"] == "api"
+            and profiles.kind(binding) == "api"
             and re.fullmatch(r"[a-f0-9]{40}", binding["candidate_commit"]),
             "FAILURE_SOURCE_SCOPE",
         )
-        folder = private(
-            ROOT / "artifacts" / binding["candidate_commit"], directory=True
-        )
+        folder = private(artifact_folder(binding), directory=True)
         failures = folder / "failures"
         failures.mkdir(mode=0o700, exist_ok=True)
         private(failures, directory=True)
@@ -2094,7 +2226,7 @@ def record_runner_failure(phase, request, error):
                 "status": "FAILED_NOT_QUALIFIED",
                 "diagnostic_only": True,
                 "candidate_commit": binding["candidate_commit"],
-                "component": "api",
+                "component": binding["component"],
                 "phase": phase,
                 "record_ids": ids,
                 "failure_code": code,
@@ -2137,12 +2269,12 @@ def run_request(phase, request):
         record["id"] for record in signed_chain if record["kind"] == "context"
     )
     plan["artifact_folder"] = str(folder)
+    import oracle_ai_frontend
+
     plan["preview_receipt_path"] = str(
-        Path("/var/lib/onesa/release-verification/ai-frontend/artifacts")
-        / binding["candidate_commit"]
-        / "operations"
-        / plan["qualification_context_id"]
-        / "provider-receipt.json"
+        oracle_ai_frontend.preview_receipt_path(
+            binding, plan["qualification_context_id"]
+        )
     )
     plan["observed_ci_run_id"] = next(
         row["run_id"] for row in ci if row.get("workflow") == "ci.yml"

@@ -28,6 +28,7 @@ ALLOWED = {
     "runners/oracle_frontend_build.py": "scripts/release/oracle_frontend_build.py",
     "runners/oracle_forward_check.py": "scripts/release/oracle_forward_check.py",
     "runners/oracle_ai_runner.py": "scripts/release/oracle_ai_runner.py",
+    "runners/oracle_release_profiles.py": "scripts/release/oracle_release_profiles.py",
     "runners/oracle_twin_restore.py": "scripts/release/oracle_twin_restore.py",
     "runners/oracle_ai_backup.py": "scripts/release/oracle_ai_backup.py",
     "runners/oracle_twin_backup_transport.mjs": "scripts/release/oracle_twin_backup_transport.mjs",
@@ -125,10 +126,17 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         and policy["schema_version"] == 1,
         "Installation policy schema",
     )
+    legacy = {"api", "frontend"}
+    scoped = legacy | {
+        "twins-api",
+        "twins-frontend",
+        "cybersecurity-api",
+        "cybersecurity-frontend",
+    }
     require(
         set(policy["components"])
-        == {"DruHustle/onesa-ai-platform:api", "DruHustle/onesa-ai-platform:frontend"},
-        "Only the reviewed AI API and frontend profiles are eligible",
+        in [{m["repository"] + ":" + c for c in names} for names in [legacy, scoped]],
+        "Only literal legacy or independent feature profiles are eligible",
     )
     # This source archive is data. Reconstruct its Git tree before using any
     # derived probe-code pins. All executable bootstrap modules were compared to
@@ -144,6 +152,7 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    components = module.profiles.policy_components(policy)
     _app, files = module.source_inventory(
         bundle / "tool-source.tar", {"source_tree": m["source_tree"]}
     )
@@ -181,10 +190,12 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         "Literal immutable tool image pins required",
     )
     target = INSTALL_PARENT / ("ai-" + m["source_tree"])
-    for component, script in [
-        ("api", "oracle_ai_runner.py"),
-        ("frontend", "oracle_ai_frontend.py"),
-    ]:
+    for component in sorted(components):
+        script = (
+            "oracle_ai_runner.py"
+            if module.profiles.kind({"component": component}) == "api"
+            else "oracle_ai_frontend.py"
+        )
         profile = policy["components"][m["repository"] + ":" + component]
         probe = {
             "repository": m["repository"],

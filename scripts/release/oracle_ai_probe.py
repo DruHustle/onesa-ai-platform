@@ -21,6 +21,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import UUID
 
+import oracle_release_profiles as profiles
+
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = Path("/private/output")
 
@@ -434,6 +436,68 @@ def ordinary_production(origin, users, project, hosted_suite):
     return checks
 
 
+def feature_probe_flags(binding, environment):
+    # New fixed feature profiles qualify rendered production journeys against
+    # the independently accepted retained frontend. The legacy API protocol path
+    # remains supported, without claiming renderer acceptance.
+    return (
+        ["--api-only"]
+        if environment == "production"
+        and profiles.kind(binding) == "api"
+        and profiles.component(binding) in profiles.LEGACY
+        else []
+    )
+
+
+def feature_probe(
+    feature, phase, environment, binding, operation, origin, users, bypass, env
+):
+    """Exercise the other enabled feature across the same controlled replacement.
+
+    Each journey keeps its own state files. This never starts a replacement,
+    issues a context, copies an approval, or creates a provider deployment.
+    """
+    require(feature in {"twins", "cybersecurity"}, "FEATURE_PROBE_SCOPE")
+    require(phase in {"prepare", "verify"}, "FEATURE_PROBE_PHASE")
+    name = "twin" if feature == "twins" else "cybersecurity"
+    context_path = OUTPUT / ("private-" + name + "-context.json")
+    if phase == "prepare":
+        write(
+            context_path,
+            {
+                "binding": binding,
+                "operation_id": operation,
+                "environment": environment,
+                "origin": origin,
+                "users": users,
+                "output_dir": str(OUTPUT),
+                "bypass": bypass,
+            },
+        )
+    scoped_env = {**env, "ONESA_ORACLE_" + name.upper() + "_CONTEXT": str(context_path)}
+    flags = feature_probe_flags(binding, environment)
+    run_node(
+        "scripts/release/oracle_" + name + "_ui.cjs",
+        scoped_env,
+        args=[*flags, *(["--verify"] if phase == "verify" else [])],
+    )
+    report = private_json(OUTPUT / (feature + "-" + phase + "-ui.json"))
+    require(
+        report["binding"] == binding
+        and report["operation_id"] == operation
+        and report["environment"] == environment
+        and type(report["workflow_run_id"]) is int
+        and report["workflow_run_id"] == 0
+        and report["source_commit"] == binding["candidate_commit"]
+        and report["status"] == "PASS"
+        and isinstance(report["checks"], dict)
+        and report["checks"]
+        and all(value == "PASS" for value in report["checks"].values()),
+        "OTHER_ENABLED_FEATURE_PROBE_FAILED_OR_MISMATCHED",
+    )
+    return report
+
+
 def execute(environment, request):
     require(
         environment in ["staging", "production"] and not os.getenv("GITHUB_ACTIONS"),
@@ -451,12 +515,29 @@ def execute(environment, request):
     )
     require(
         binding["repository"] == "DruHustle/onesa-ai-platform"
-        and binding["component"] in ["api", "frontend"],
+        and profiles.component(binding) in profiles.SCOPED,
         "PROBE_COMPONENT",
     )
+    profiles.bound_mode(binding, plan["mode"])
     settings = runtime("/private/runtime.env")
+    enabled = profiles.enabled_features(settings, plan["mode"])
     config = private_json("/private/vercel.json")
     origin, bypass, deployment = provider(config, environment, binding, plan, request)
+    if (
+        environment == "production"
+        and profiles.kind(binding) == "api"
+        and profiles.component(binding) not in profiles.LEGACY
+    ):
+        retained = config["retained_frontend"]
+        require(
+            retained["served_static_artifact_verified"] is True
+            and retained["authority_transferred"] is False
+            and type(retained["new_frontend_deployment_requests"]) is int
+            and retained["new_frontend_deployment_requests"] == 0
+            and retained["deployment_id"] == deployment["deployment_id"]
+            and retained["binding"]["candidate_commit"] == deployment["source"],
+            "ACCEPTED_RETAINED_FRONTEND_OBSERVATION_REQUIRED",
+        )
     initial_identity = served_backend_identity(
         origin, bypass, config["backend_identity"]
     )
@@ -475,6 +556,7 @@ def execute(environment, request):
         "workflow_run_id": 0,
         "execution_context": "owner-operated-oracle-" + environment,
         "mode": plan["mode"],
+        "enabled_features": sorted(enabled),
         "schema_revision": plan["expected_schema_revision"],
         "backend_identity": initial_identity,
         "ci_run_id": ci,
@@ -564,6 +646,20 @@ def execute(environment, request):
             record["ordinary_workflows"] = ordinary_production(
                 origin, users, config["project_id"], hosted_suite
             )
+        supplemental = sorted(enabled - {plan["mode"]})
+        supplemental_prepared = {}
+        for feature in supplemental:
+            supplemental_prepared[feature] = feature_probe(
+                feature,
+                "prepare",
+                environment,
+                binding,
+                operation,
+                origin,
+                users,
+                bypass,
+                env,
+            )
         if plan["mode"] == "foundation":
             clients = [hosted_suite.Session(origin), hosted_suite.Session(origin)]
             for client, user in zip(clients, users, strict=True):
@@ -640,16 +736,12 @@ def execute(environment, request):
                 },
             )
             env["ONESA_ORACLE_CYBERSECURITY_CONTEXT"] = str(context_path)
-            flags = (
-                ["--api-only"]
-                if environment == "production" and binding["component"] == "api"
-                else []
-            )
+            flags = feature_probe_flags(binding, environment)
             script = "scripts/release/oracle_cybersecurity_ui.cjs"
             run_node(script, env, args=flags)
             prepared = private_json(OUTPUT / "cybersecurity-prepare-ui.json")
             require(prepared["status"] == "PASS", "CYBERSECURITY_PREPARE_FAILED")
-            if environment == "staging" and binding["component"] == "api":
+            if environment == "staging" and profiles.kind(binding) == "api":
                 export_owned_restore(engine, users, binding, operation, "cybersecurity")
                 write(
                     OUTPUT / "prepared-for-replacement.json",
@@ -707,12 +799,11 @@ def execute(environment, request):
             twin_path = OUTPUT / "private-twin-context.json"
             write(twin_path, twin_context)
             env["ONESA_ORACLE_TWIN_CONTEXT"] = str(twin_path)
-            api_only = environment == "production" and binding["component"] == "api"
-            flags = ["--api-only"] if api_only else []
+            flags = feature_probe_flags(binding, environment)
             run_node("scripts/release/oracle_twin_ui.cjs", env, args=flags)
             prepare = private_json(OUTPUT / "twins-prepare-ui.json")
             require(prepare["status"] == "PASS", "TWINS_PREPARE_FAILED")
-            if environment == "staging" and binding["component"] == "api":
+            if environment == "staging" and profiles.kind(binding) == "api":
                 export_owned_restore(engine, users, binding, operation)
             write(
                 OUTPUT / "prepared-for-replacement.json",
@@ -723,7 +814,7 @@ def execute(environment, request):
                     "environment": environment,
                 },
             )
-            if environment == "staging" and binding["component"] == "api":
+            if environment == "staging" and profiles.kind(binding) == "api":
                 deadline = time.monotonic() + 150
                 while not (OUTPUT / "replacement-ok.json").exists():
                     require(
@@ -764,7 +855,28 @@ def execute(environment, request):
                 "MANDATORY_PROBE_CHECK_FAILED_OR_SKIPPED",
             )
             record["status"] = "PASS"
+        for feature in supplemental:
+            verified = feature_probe(
+                feature,
+                "verify",
+                environment,
+                binding,
+                operation,
+                origin,
+                users,
+                bypass,
+                env,
+            )
+            record["checks"].update(supplemental_prepared[feature]["checks"])
+            record["checks"].update(verified["checks"])
+            record.setdefault("cross_feature_observations", {})[feature] = {
+                "prepare_receipt": feature + "-prepare-ui.json",
+                "verify_receipt": feature + "-verify-ui.json",
+                "same_controlled_replacement": environment == "staging"
+                and profiles.kind(binding) == "api",
+            }
     except Exception as error:
+        record["status"] = "FAIL"
         record["failure_category"] = type(error).__name__
         raise
     finally:
@@ -807,7 +919,7 @@ def record_boundary_failure(environment, request, error):
             environment in {"staging", "production"}
             and str(UUID(operation)) == operation
             and binding["repository"] == "DruHustle/onesa-ai-platform"
-            and binding["component"] in {"api", "frontend"}
+            and profiles.component(binding) in profiles.SCOPED
             and re.fullmatch("[a-f0-9]{40}", binding["candidate_commit"]),
             "FAILURE_RECORD_SCOPE",
         )
