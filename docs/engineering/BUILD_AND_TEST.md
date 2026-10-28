@@ -97,6 +97,12 @@ use `npm --prefix onesa-ai-platform-frontend run docs:ci` and `make docs-assets
  docs-public docs-internal docs-validate` as one command without a line break.
 Regenerate ignored public/internal manuals in CI; do not commit them.
 
+The public static acceptance validator resolves both Playwright and Axe from the
+locked Docs installation. Importing `scripts/docs/acceptance.mjs` needs no Chat
+dependency installation. Screenshot capture and full documentation generation
+retain their separately documented application prerequisites; this dependency
+separation does not establish a passing browser suite or hosted publication.
+
 `apps/chat/tests/startup.spec.ts` uses synthetic browser network fixtures for initial
 rendering, the eight-second session-check deadline and cancellation, connection retry
 without a page reload, optional document loading and deferred Markdown rendering. It
