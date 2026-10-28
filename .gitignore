@@ -130,3 +130,9 @@ credentials*.json
 
 # Owner-supplied corporate facts awaiting publication approval.
 /onesa-ai-platform-backend/records/
+
+# Reviewed third-party runtime distributions; source and hashes ship together.
+!/packages/security/deepmerge/dist/
+/packages/security/deepmerge/dist/*
+!/packages/security/deepmerge/dist/cjs.js
+!/packages/security/deepmerge/dist/umd.js
