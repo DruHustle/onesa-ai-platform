@@ -275,3 +275,25 @@ Pinned Alpine image builds retry upstream package fetching at most three times.
 Each attempt keeps HTTPS, package signatures and the original package constraints;
 exhaustion fails the build. The dependency auditor uses a bounded 60-second socket
 timeout and retains the same vulnerability checks and failure status.
+
+The offline Oracle release tests cover the legacy API/frontend policy and a new,
+explicitly commissioned policy with fixed foundation, Twins and Cybersecurity
+scopes. Each scope still permits only one qualification context for an exact
+source. Mode changes, path aliases, expanded attempt limits, foreign repositories,
+changed CI, revoked dependencies and context reuse are rejected. Temporary test
+keys and a disposable signed ledger are not external release authority.
+
+Qualification derives required feature journeys from the actual runtime flags.
+If both optional features are enabled, both journeys must pass across the same
+controlled replacement; a missing or skipped check fails qualification. A failure
+after one journey passes retains a failed receipt and fixture cleanup evidence.
+The new feature API profiles verify the retained frontend's original accepted
+record and served build hashes, then require rendered production journeys without
+another frontend deployment. Restore checks use the exact hosted schema, including
+Twins on a database whose Cybersecurity migration is already present.
+Combined activation also verifies the current coordinated database-and-file backup
+before authorization and refreshes it after the actual production runtime changes.
+Cybersecurity with Twins disabled keeps its independent database backup path.
+These tests do not commission the new policy, activate features, migrate a hosted
+database or establish hosted acceptance. Consult the protected canonical procedure
+and evidence index for actual installation, qualification and deployment outcomes.

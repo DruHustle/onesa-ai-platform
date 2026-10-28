@@ -32,6 +32,39 @@ API_ORIGINS = {
     "production": "https://platform-api.onesa.eu",
 }
 
+
+def plan_path(binding):
+    return r.profiles.plan_path(binding, r.PLAN, PLAN)
+
+
+def artifact_folder(binding):
+    return r.profiles.artifact_folder(binding, ROOT)
+
+
+def preview_binding(api_binding):
+    component = r.profiles.companion(api_binding, "frontend")
+    binding = r.read(plan_path({"component": component}))["binding"]
+    r.require(
+        binding["component"] == component
+        and all(
+            binding[k] == api_binding[k]
+            for k in ["repository", "candidate_commit", "source_tree", "source_sha256"]
+        ),
+        "PREVIEW_DEPENDENCY_CHANGED_SOURCE_OR_PROFILE",
+    )
+    return binding
+
+
+def preview_receipt_path(api_binding, operation):
+    r.require(str(UUID(operation)) == operation, "PREVIEW_OPERATION_UUID")
+    return (
+        artifact_folder(preview_binding(api_binding))
+        / "operations"
+        / operation
+        / "provider-receipt.json"
+    )
+
+
 # The pinned CLI atomically updates preferences and its cache during startup.
 # Keep owner custody read-only; all CLI writes belong to this container's tmpfs.
 CLI_BOOTSTRAP = r"""
@@ -218,16 +251,16 @@ def protection(plan):
 def validate(binding):
     r.require(
         binding.get("repository") == "DruHustle/onesa-ai-platform"
-        and binding.get("component") == "frontend"
+        and r.profiles.kind(binding) == "frontend"
         and binding.get("target_environment") == "production",
         "FRONTEND_COMPONENT_SCOPE",
     )
-    plan = r.read(PLAN)
+    plan = r.read(plan_path(binding))
     r.require(
         plan["binding"] == binding and plan["schema_version"] == 1,
         "OWNER_FRONTEND_PLAN_BINDING",
     )
-    folder = r.private(ROOT / "artifacts" / binding["candidate_commit"], directory=True)
+    folder = r.private(artifact_folder(binding), directory=True)
     r.require(
         r.sha(r.private(folder / "source.tar")) == binding["source_sha256"],
         "FRONTEND_SOURCE_ARCHIVE",
@@ -276,6 +309,27 @@ def validate(binding):
         == "sha256:" + plan["builds"]["production"]["archive_sha256"],
         "AUTHORIZED_FRONTEND_ARTIFACT_BINDING",
     )
+    api_component = r.profiles.companion(binding, "api")
+    dependency = r.read(r.plan_path({"component": api_component}))
+    api_binding = dependency["binding"]
+    r.require(
+        api_binding["repository"] == binding["repository"]
+        and api_binding["component"] == api_component
+        and api_binding["target_environment"] == "production"
+        and dependency["mode"] == plan["mode"]
+        and dependency["expected_schema_revision"] == plan["expected_schema_revision"],
+        "FRONTEND_API_PLAN_MODE_OR_SCHEMA_CHANGED",
+    )
+    for env in ["staging", "production"]:
+        configured = r.private(r.candidate_environment(api_binding, env))
+        r.require(
+            r.sha(configured) == api_binding["configuration_sha256"][env],
+            "FRONTEND_API_CONFIGURATION_BINDING_CHANGED",
+        )
+        enabled = r.profiles.enabled_features(
+            r.runtime_values(configured), plan["mode"]
+        )
+        r.require_probe_policy(binding, env, plan, enabled)
     commissioned = r.trusted_toolchain(plan)
     r.require(
         plan["cli_image"] == commissioned["cli_image"]
@@ -466,12 +520,12 @@ def observe_provider(binding, env, plan, operation):
     else:
         identifier = (
             plan.get("current_frontend_deployment_id")
-            if binding["component"] == "frontend"
+            if r.profiles.kind(binding) == "frontend"
             else cfg["production_deployment_id"]
         )
         source = (
             binding["candidate_commit"]
-            if binding["component"] == "frontend"
+            if r.profiles.kind(binding) == "frontend"
             else plan["retained_frontend"]["source"]
         )
         origin = "https://platform.onesa.eu"
@@ -518,6 +572,64 @@ def observe_provider(binding, env, plan, operation):
             "target": dep.get("target"),
         },
         "provider_token_included": False,
+    }
+
+
+def verify_retained_frontend(binding, plan, metadata):
+    """Inspect the original accepted frontend; never issue or transfer authority."""
+    retained = plan["retained_frontend"]
+    old = retained["binding"]
+    r.require(
+        old["repository"] == binding["repository"]
+        and r.profiles.kind(old) == "frontend"
+        and old["target_environment"] == "production"
+        and old["candidate_commit"] == retained["source"]
+        and metadata["environment"] == "production"
+        and metadata["provider"]["source"] == old["candidate_commit"]
+        and metadata["provider"]["deployment_id"] == retained["deployment_id"],
+        "RETAINED_FRONTEND_SOURCE_OR_PROVIDER_MISMATCH",
+    )
+    operation = retained["operation_id"]
+    chain = r.verify_invocation(
+        old,
+        {"operation_id": operation, "read_only": True},
+        "production",
+        {"verifier_store": retained["verifier_store"]},
+        dependency=True,
+    )
+    accepted = next(row for row in chain if row["kind"] == "production-verification")
+    observed = accepted["details"]["observations"]
+    r.require(
+        observed["deployment_id"] == retained["deployment_id"]
+        and observed["runtime_source"] == old["candidate_commit"]
+        and "sha256:" + observed["artifact_sha256"] == old["artifact_digest"],
+        "RETAINED_FRONTEND_ACCEPTED_ARTIFACT_MISMATCH",
+    )
+    folder = artifact_folder(old)
+    receipt_path = r.private(folder / "frontend-production-build.json")
+    receipt = r.read(receipt_path)
+    r.require(
+        r.sha(receipt_path) == old["build_sha256"]
+        and receipt["environment"] == "production"
+        and all(
+            receipt["binding"][key] == old[key]
+            for key in ["candidate_commit", "source_tree", "source_sha256"]
+        )
+        and "sha256:" + receipt["artifact_sha256"] == old["artifact_digest"],
+        "RETAINED_FRONTEND_ORIGINAL_BUILD_MISMATCH",
+    )
+    verify_static(
+        folder,
+        {"builds": {"production": {"receipt": "frontend-production-build.json"}}},
+        metadata["provider"],
+    )
+    return {
+        "binding": old,
+        "deployment_id": retained["deployment_id"],
+        "production_verification_id": accepted["id"],
+        "served_static_artifact_verified": True,
+        "new_frontend_deployment_requests": 0,
+        "authority_transferred": False,
     }
 
 
@@ -706,8 +818,7 @@ def create(binding, env, operation, folder, plan):
 
 
 def prepare_preview(api_binding, context):
-    plan = r.read(PLAN)
-    binding = plan["binding"]
+    binding = preview_binding(api_binding)
     folder, plan = validate(binding)
     r.require(
         all(
@@ -750,10 +861,16 @@ def main():
     binding = request["binding"]
     context = request["context"]
     folder, plan = validate(binding)
-    api_plan = r.read(r.PLAN)
+    api_component = r.profiles.companion(binding, "api")
+    api_plan = r.read(r.plan_path({"component": api_component}))
     api_binding = api_plan["binding"]
     r.require(
-        api_plan["mode"] in ["twins", "cybersecurity"],
+        api_plan["mode"] in ["foundation", "twins", "cybersecurity"]
+        and api_binding["component"] == api_component
+        and (
+            binding["component"] in r.profiles.LEGACY
+            or api_plan["mode"] == plan["mode"]
+        ),
         "API_DEPENDENCY_FEATURE_NOT_QUALIFIED",
     )
     store = r.private(Path(api_plan["verifier_store"]), directory=True)
@@ -761,7 +878,7 @@ def main():
     try:
         latest = db.execute(
             "SELECT d.id FROM deployments d JOIN records r ON r.id=d.id WHERE d.state='accepted' AND r.scope=? ORDER BY r.sequence DESC LIMIT 1",
-            (api_binding["repository"] + ":api",),
+            (api_binding["repository"] + ":" + api_component,),
         ).fetchone()
     finally:
         db.close()
@@ -775,25 +892,18 @@ def main():
         dependency=True,
     )
     api_context = next(row["id"] for row in api_chain if row["kind"] == "context")
-    api_plan["artifact_folder"] = str(
-        r.ROOT / "artifacts" / api_binding["candidate_commit"]
-    )
+    api_plan["artifact_folder"] = str(r.artifact_folder(api_binding))
     api_plan["qualification_context_id"] = api_context
     actual = r.observe_production(
         api_binding, api_operation, Path(api_plan["artifact_folder"]), api_plan
     )
     plan["api_binding"] = api_binding
-    if api_plan["mode"] == "twins":
+    if "storage" in api_plan:
         plan["storage"] = api_plan["storage"]
     plan["mode"] = api_plan["mode"]
     plan["expected_schema_revision"] = api_plan["expected_schema_revision"]
     plan["preview_receipt_path"] = str(
-        ROOT
-        / "artifacts"
-        / binding["candidate_commit"]
-        / "operations"
-        / api_context
-        / "provider-receipt.json"
+        artifact_folder(binding) / "operations" / api_context / "provider-receipt.json"
     )
     if phase == "preflight":
         print(
@@ -814,8 +924,14 @@ def main():
     )
     select_preview(binding, api_binding, chain, phase, folder, plan)
     if phase == "staging":
-        with _probe_plan(plan):
-            details = r.probe(binding, "staging", context["context_id"], folder, plan)
+        details = r.probe(
+            binding,
+            "staging",
+            context["context_id"],
+            folder,
+            plan,
+            plan_file=plan_path(binding),
+        )
     elif phase == "operations":
         details = {
             "api_dependency": actual,
@@ -829,10 +945,14 @@ def main():
         details = receipt
         plan["current_frontend_deployment_id"] = receipt["deployment_id"]
         try:
-            with _probe_plan(plan):
-                details["hosted_verification"] = r.probe(
-                    binding, "production", context["operation_id"], folder, plan
-                )
+            details["hosted_verification"] = r.probe(
+                binding,
+                "production",
+                context["operation_id"],
+                folder,
+                plan,
+                plan_file=plan_path(binding),
+            )
         except Exception as error:  # noqa: BLE001 -- Preserve actual provider receipt on failed verification.
             details["verification_state"] = "FAILED_OR_INTERRUPTED"
             details["failure_category"] = type(error).__name__
@@ -848,6 +968,14 @@ def main():
         )
         output = folder / "observations" / context["operation_id"]
         hosted = r.read(output / "receipt.json")
+        enabled = r.profiles.enabled_features(
+            r.running_configuration(
+                api_binding, "production", r.inventory()[r.TARGET["production"]]
+            ),
+            plan["mode"],
+        )
+        required = r.require_probe_policy(binding, "production", plan, enabled)
+        r.verify_observed_features(binding, hosted, plan["mode"], enabled)
         r.require(
             hosted == r.read(output / "producer.stdout")
             and hosted["binding"] == binding
@@ -855,10 +983,7 @@ def main():
             and hosted["status"] == "PASS"
             and hosted["fixture_identities_disabled"] is True
             and hosted["existing_records_preserved"] is True
-            and all(
-                hosted["checks"].get(k) == "PASS"
-                for k in plan["mandatory_probe_checks"]["production"]
-            ),
+            and all(hosted["checks"].get(k) == "PASS" for k in required),
             "FRONTEND_PRODUCTION_WORKFLOWS_UNVERIFIED",
         )
         plan["current_frontend_deployment_id"] = receipt["deployment_id"]
@@ -885,21 +1010,6 @@ def main():
             }
         )
     )
-
-
-from contextlib import contextmanager
-
-
-@contextmanager
-def _probe_plan(plan):
-    # Pinned shared observer, same application only; this selects a fixed
-    # owner-installed plan rather than accepting a caller path.
-    old = r.PLAN
-    r.PLAN = PLAN
-    try:
-        yield
-    finally:
-        r.PLAN = old
 
 
 def static_asset_path(name):

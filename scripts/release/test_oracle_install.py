@@ -1,6 +1,7 @@
 """Disposable installer provenance tests; these fixtures confer no trust."""
 
 import base64
+import copy
 import hashlib
 import os
 import subprocess
@@ -199,6 +200,48 @@ class InstallTests(unittest.TestCase):
         self.seal()
         with self.assertRaises(verifier.Rejected):
             self.validate()
+
+    def scoped_policy(self):
+        for kind in ["api", "frontend"]:
+            original = self.policy["components"]["DruHustle/onesa-ai-platform:" + kind]
+            for mode in ["foundation", "twins", "cybersecurity"]:
+                component = kind if mode == "foundation" else mode + "-" + kind
+                profile = copy.deepcopy(original)
+                profile["release_mode"] = mode
+                self.policy["components"][
+                    "DruHustle/onesa-ai-platform:" + component
+                ] = profile
+
+    def test_six_literal_modes_install_the_same_pinned_runners_with_one_context_each(
+        self,
+    ):
+        self.scoped_policy()
+        self.seal()
+        result = self.validate()
+        self.assertEqual(result[1].name, "ai-" + self.manifest["source_tree"])
+        self.assertIn("runners/oracle_release_profiles.py", result[2])
+
+    def test_scoped_mode_changes_missing_profiles_and_expanded_attempts_are_refused(
+        self,
+    ):
+        self.scoped_policy()
+        baseline = copy.deepcopy(self.policy)
+        for change in ["wrong-mode", "missing", "extra", "two-attempts"]:
+            self.policy = copy.deepcopy(baseline)
+            key = "DruHustle/onesa-ai-platform:twins-api"
+            if change == "wrong-mode":
+                self.policy["components"][key]["release_mode"] = "cybersecurity"
+            elif change == "missing":
+                del self.policy["components"][key]
+            elif change == "extra":
+                self.policy["components"]["DruHustle/onesa-ai-platform:other-api"] = (
+                    copy.deepcopy(self.policy["components"][key])
+                )
+            else:
+                self.policy["components"][key]["qualification_attempt_limit"] = 2
+            self.seal()
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                self.validate()
 
     def test_alias_and_mode_refused(self):
         p = self.root / "oracle_owner.py"

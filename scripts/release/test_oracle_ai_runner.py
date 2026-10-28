@@ -514,6 +514,52 @@ class ProbeNetworkTests(unittest.TestCase):
 
 
 class ComponentCheckScopeTests(unittest.TestCase):
+    def test_both_enabled_features_are_mandatory_before_any_hosted_probe(self):
+        for component, mode in [
+            ("twins-api", "twins"),
+            ("cybersecurity-api", "cybersecurity"),
+            ("twins-frontend", "twins"),
+            ("cybersecurity-frontend", "cybersecurity"),
+        ]:
+            binding = {"component": component}
+            for environment in ["staging", "production"]:
+                with self.subTest(component=component, environment=environment):
+                    enabled = {"twins", "cybersecurity"}
+                    checks = r.required_probe_checks(
+                        binding, environment, mode, enabled
+                    )
+                    self.assertTrue(
+                        {
+                            "twins_model_delivery",
+                            "file_persistence",
+                            "cybersecurity_ingestion",
+                        }
+                        <= checks
+                    )
+                    plan = {
+                        "mode": mode,
+                        "mandatory_probe_checks": {environment: sorted(checks)},
+                    }
+                    self.assertEqual(
+                        r.require_probe_policy(binding, environment, plan, enabled),
+                        checks,
+                    )
+                    for missing in ["twins_model_delivery", "cybersecurity_ingestion"]:
+                        plan["mandatory_probe_checks"][environment] = sorted(
+                            checks - {missing}
+                        )
+                        with self.assertRaises(r.Refused):
+                            r.require_probe_policy(binding, environment, plan, enabled)
+                    plan["mandatory_probe_checks"][environment] = sorted(checks) + [
+                        "authentication"
+                    ]
+                    with self.assertRaises(r.Refused):
+                        r.require_probe_policy(binding, environment, plan, enabled)
+        with self.assertRaises(r.Refused):
+            r.required_probe_checks(
+                {"component": "twins-api"}, "staging", "twins", {"cybersecurity"}
+            )
+
     def test_cybersecurity_requires_its_own_checks_without_twins_or_skips(self):
         api = r.required_probe_checks(
             {"component": "api"}, "production", "cybersecurity"
