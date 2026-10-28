@@ -12,6 +12,38 @@ import oracle_twin_restore as t
 
 
 class FixtureFileTests(unittest.TestCase):
+    def test_restore_uses_exact_hosted_schema_without_downgrading_enabled_features(
+        self,
+    ):
+        binding = {"component": "twins-api", "candidate_commit": "a" * 40}
+        plan = {
+            "binding": binding,
+            "mode": "twins",
+            "expected_schema_revision": "20261026_cybersecurity",
+        }
+        self.assertEqual(
+            t.restore_revision(plan, binding, "twins"), "20261026_cybersecurity"
+        )
+        for changed, profile in [
+            ({**plan, "expected_schema_revision": "20261010_capacity"}, "twins"),
+            ({**plan, "expected_schema_revision": "head"}, "twins"),
+            ({**plan, "binding": {**binding, "candidate_commit": "b" * 40}}, "twins"),
+            ({**plan, "mode": "cybersecurity"}, "twins"),
+            (
+                {
+                    **plan,
+                    "mode": "cybersecurity",
+                    "expected_schema_revision": "20261025_twins",
+                },
+                "cybersecurity",
+            ),
+        ]:
+            with (
+                self.subTest(plan=changed, profile=profile),
+                self.assertRaises(t.r.Refused),
+            ):
+                t.restore_revision(changed, binding, profile)
+
     def test_cybersecurity_restore_excludes_foreign_owners_and_requires_real_workflow(
         self,
     ):
