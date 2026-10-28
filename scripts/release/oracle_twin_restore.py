@@ -218,6 +218,19 @@ def recover_encrypted_file(data, tool_image):
     return restored
 
 
+def restore_revision(plan, binding, profile):
+    revision = plan.get("expected_schema_revision")
+    r.require(
+        plan.get("binding") == binding
+        and profile in {"twins", "cybersecurity"}
+        and plan.get("mode") == profile
+        and revision in {"20261025_twins", "20261026_cybersecurity"}
+        and (profile != "cybersecurity" or revision == "20261026_cybersecurity"),
+        "EXACT_RESTORE_SCHEMA_PROFILE_REQUIRED",
+    )
+    return revision
+
+
 def restore(folder, binding, operation):
     r.require(str(UUID(operation)) == operation, "RESTORE_OPERATION_UUID")
     bundle_path = folder / "restore-fixtures.json"
@@ -225,12 +238,9 @@ def restore(folder, binding, operation):
     bundle = r.read(bundle_path)
     refs = validate(bundle, binding, operation)
     tables = fixture_tables(bundle)
-    revision = (
-        "20261026_cybersecurity"
-        if bundle.get("profile") == "cybersecurity"
-        else "20261025_twins"
-    )
-    tool = r.trusted_toolchain(r.read(r.PLAN))
+    plan = r.read(r.plan_path(binding))
+    revision = restore_revision(plan, binding, bundle.get("profile", "twins"))
+    tool = r.trusted_toolchain(plan)
     container = "onesa-twin-restore-" + UUID(operation).hex
     sql = r.docker(
         "run",
