@@ -635,6 +635,7 @@ def verify_retained_frontend(binding, plan, metadata):
 
 def create(binding, env, operation, folder, plan):
     r.require(str(UUID(operation)) == operation, "CANONICAL_PROVIDER_OPERATION")
+    r.prepare_artifact_directories(folder)
     op = folder / "operations" / operation
     op.mkdir(mode=0o700, exist_ok=False)
     r.require(
