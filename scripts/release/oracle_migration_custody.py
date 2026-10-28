@@ -62,7 +62,7 @@ def values(path):
     return result
 
 
-def target(uri):
+def target(uri, *, runtime_reference=False):
     require(
         isinstance(uri, str)
         and len(uri) < 4096
@@ -85,7 +85,11 @@ def target(uri):
         and {k for k, v in options}
         <= {"sslmode", "channel_binding", "connect_timeout", "sslrootcert"}
         and dict(options).get("sslrootcert", "/etc/ssl/cert.pem")
-        == "/etc/ssl/cert.pem",
+        in (
+            {"/etc/ssl/cert.pem", "system"}
+            if runtime_reference
+            else {"/etc/ssl/cert.pem"}
+        ),
         "DATABASE_URI_OPTIONS_REFUSED",
     )
     return (u.hostname, u.port or 5432, u.path), u.username
@@ -114,7 +118,10 @@ def hardened(uri):
 
 def validate_target(candidate, runtime):
     proposed, owner = target(candidate)
-    actual, user = target(runtime)
+    # The existing root-owned runtime may use libpq's system trust selection.
+    # It is an identity reference, never the supplied migration connection.
+    # Owner inputs and hardened() retain the explicit pinned CA restriction.
+    actual, user = target(runtime, runtime_reference=True)
     # Neon owner migrations use the direct endpoint for the same database; the
     # application's pooler and direct endpoint are not different environments.
     direct = (actual[0].replace("-pooler.", "."), actual[1], actual[2])
@@ -133,7 +140,7 @@ with psycopg.connect(uri,connect_timeout=10,sslmode='verify-full',sslrootcert='/
  with db.cursor() as q:
   q.execute('BEGIN READ ONLY');q.execute(\"SET LOCAL statement_timeout='5s'\")
   q.execute(\"SELECT current_database(),has_schema_privilege(current_user,'public','CREATE'),pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass\")
-  row=q.fetchone();q.execute('SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()');tls=q.fetchone()[0]
+  row=q.fetchone();tls=bool(db.pgconn.ssl_in_use)
   q.execute('SELECT version_num FROM alembic_version');schema=q.fetchone()[0]
   print(json.dumps({'database_matches':row[0]=='neondb','schema_create':row[1],'migration_table_owner':row[2],'tls':tls,'schema':schema,'SQL_writes':0}))
 """
