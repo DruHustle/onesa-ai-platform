@@ -121,6 +121,11 @@ agent_planning_failure_reasons = Counter(
     "Agent planning failure categories without request or generated content",
     ["reason"],
 )
+travel_planning_failure_reasons = Counter(
+    "onesa_travel_planning_failure_reasons_total",
+    "Travel planning failure categories without preferences or generated content",
+    ["reason"],
+)
 mail_jobs = Gauge(
     "onesa_identity_mail_jobs", "Identity mail states; acceptance is not delivery", ["state"]
 )
