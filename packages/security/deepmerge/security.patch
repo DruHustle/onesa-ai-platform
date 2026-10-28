@@ -1,0 +1,44 @@
+--- upstream/index.js
++++ patched/index.js
+@@ -46,0 +47,4 @@
++function propertyIsForbidden(key) {
++	return key === '__proto__'
++}
++
+@@ -57,0 +62,3 @@
++			if (propertyIsForbidden(key)) {
++				return
++			}
+@@ -62 +69 @@
+-		if (propertyIsUnsafe(target, key)) {
++		if (propertyIsForbidden(key) || propertyIsUnsafe(target, key)) {
+--- upstream/dist/cjs.js
++++ patched/dist/cjs.js
+@@ -71,0 +72,4 @@
++function propertyIsForbidden(key) {
++	return key === '__proto__'
++}
++
+@@ -82,0 +87,3 @@
++			if (propertyIsForbidden(key)) {
++				return
++			}
+@@ -87 +94 @@
+-		if (propertyIsUnsafe(target, key)) {
++		if (propertyIsForbidden(key) || propertyIsUnsafe(target, key)) {
+--- upstream/dist/umd.js
++++ patched/dist/umd.js
+@@ -76 +76,5 @@
+-	// Protects from prototype poisoning and unexpected merging up the prototype chain.
++	function propertyIsForbidden(key) {
++	return key === '__proto__'
++}
++
++// Protects from prototype poisoning and unexpected merging up the prototype chain.
+@@ -86,0 +91,3 @@
++			if (propertyIsForbidden(key)) {
++				return
++			}
+@@ -91 +98 @@
+-			if (propertyIsUnsafe(target, key)) {
++			if (propertyIsForbidden(key) || propertyIsUnsafe(target, key)) {
