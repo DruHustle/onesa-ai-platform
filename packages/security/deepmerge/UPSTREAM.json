@@ -1,0 +1,11 @@
+{
+  "upstream_version": "4.3.1",
+  "archive_url": "https://registry.npmjs.org/deepmerge/-/deepmerge-4.3.1.tgz",
+  "archive_sha256": "4003a0a348276a95543fa969f561f6b5968629acbbb59d66018dd23e7b8f1d5c",
+  "npm_integrity": "sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==",
+  "advisory": "GHSA-gcqx-w48m-w2h4",
+  "upstream_issue": "https://github.com/TehShrike/deepmerge/issues/273",
+  "reviewed_proposed_fix": "https://github.com/TehShrike/deepmerge/pull/274",
+  "patch_status": "LOCAL_PRIVATE_BACKPORT_NOT_AN_UPSTREAM_RELEASE",
+  "license": "MIT"
+}
