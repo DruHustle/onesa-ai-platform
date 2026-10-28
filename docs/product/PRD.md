@@ -296,13 +296,26 @@ compatible provider through configuration or a provider adapter, without rewriti
 its business workflows, tool integrations or stored domain records. A Chat UI model
 picker is a separate product choice and is not this acceptance criterion.
 
-This is a product requirement, not an implemented consumer-portability or MCP
-capability claim. The current internal `ModelClient` adapters support deployment
-configuration for mock, Ollama, vLLM and Cloudflare. That internal interchangeability
-does not prove the consumer-facing Onesa HTTP contract is a standard inference API.
-Drone's advisory adapter currently creates an owned Onesa conversation and uses the
-Onesa completion contract; Robot's optional read-only asset-context import is not
-an MCP connection.
+The source candidate adds `onesa-inference-v1`: opt-in stateless text inference,
+a portable Python client with Onesa and OpenAI-compatible transport adapters, and
+bounded caller-owned message/history records. Synthetic tests run the same consumer
+business code through both adapters; provider/model/revision and known token usage
+remain attached to each result. This is a text-only subset, not complete compatibility
+with another vendor's API. Streaming, vision, speech, remote tool-calling and automatic
+history/embedding migration are outside this profile. Unknown usage stays unknown.
+
+An optional local MCP stdio bridge pins protocol `2025-11-25` and exposes only
+explicitly permitted `text_stats`/`arithmetic` tools through existing authenticated
+Onesa services. It opens no HTTP listener, accepts no arbitrary tool or URL and invokes
+no model planner. Its lifecycle, discovery, explicit calls, refusal, revocation and
+bounded JSON transport have synthetic regressions. HTTP MCP/OAuth discovery, resource/
+prompt adapters and authenticated external-client qualification remain separate work.
+Robot's optional read-only asset-context import remains an ordinary HTTP integration.
+
+The internal `ModelClient` adapters still support mock, Ollama, vLLM and Cloudflare.
+Consumer inference defaults off; deployment, new processing/provider identities and
+live provider/MCP acceptance are not established by this implementation. The full
+acceptance below remains open until its broader and hosted gates are observed.
 
 Two independent boundaries are required:
 

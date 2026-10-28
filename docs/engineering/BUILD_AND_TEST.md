@@ -1,5 +1,19 @@
 # Separate application builds and tests
 
+Installer fixtures also place disposable custody under the private home directory
+when executed as root. The explicit writable-parent regression still requires the
+production verifier to reject shared writable ancestors; no custody guard changes.
+
+Consumer interoperability checks are in `tests/test_consumer.py` and
+`tests/test_mcp_stdio.py`. They cover unchanged consumer business code with Onesa
+and compatible provider transports, portable history/provenance, credential separation,
+strict completion/failure boundaries, response/input limits, cancellation and MCP
+discovery/explicit permissions. Route fixtures without PostgreSQL simulate admission
+and identity; the separate database test verifies actual sessions, CSRF, shared budgets
+and absence of stored conversations/messages. Run both with the existing backend
+`pytest -q` command and the isolated `_test` database. A skipped database case is
+not an authenticated integration PASS. No live provider or physical tool is used.
+
 Release-unit fixtures pin a disposable commissioning registry and keep its keys,
 policy and database inside their temporary directory. Root test execution uses a
 private home-directory parent and never reads the host's production trust registry.

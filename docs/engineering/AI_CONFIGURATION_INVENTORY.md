@@ -1,5 +1,47 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Consumer inference and MCP source candidate
+
+`ONESA_CONSUMER_INFERENCE_ENABLED=false` is the server-only default. Enabling it
+adds no provider or identity; it permits the existing authenticated session identity
+to call `POST /api/v1/inference/completions`. The exact supported request/response
+schemas are generated into `docs/api/openapi.json`. The text-only profile accepts
+up to 32 explicit system/user/assistant messages, 32,000 total characters, ending
+with a user message. It returns at most 8,000 characters, provider/model/revision,
+known token usage and a request identifier. No conversation, prompt or message is
+persisted by this endpoint. Existing shared admission, invitation, session/CSRF,
+expiry/revocation, timeout and cancellation controls still apply. Inference-provider
+processing/retention remains governed by the separately approved provider settings.
+
+`app.consumer.Connection` selects `onesa` or `openai-compatible` using private
+server configuration. Onesa uses an explicitly approved dedicated identity with
+its existing session, CSRF and exact public origin. It does not automate a human
+browser session or issue credentials. Compatible providers use their own server
+bearer credential and `/v1` base; Onesa cookies are never sent to that adapter.
+Only HTTPS bases without userinfo/query/fragment are accepted. Redirects, inherited
+proxies, provider retries and cross-provider fallback are disabled. Each complete
+call has a 25-second budget and a 64-KiB uncompressed JSON response ceiling.
+Caller task cancellation closes the owned HTTP operation. Complete history remains
+an explicit list of role/content records; callers retain it and the returned provenance.
+Chat selection does not modify Knowledge embedding identity, normalization or index.
+
+The optional local command `python -m app.mcp_stdio` runs from the backend using
+the existing locked environment. It receives only private `ONESA_MCP_API_URL`,
+`ONESA_MCP_ORIGIN`, `ONESA_MCP_SESSION`, `ONESA_MCP_CSRF` and
+`ONESA_MCP_ALLOWED_TOOLS` configuration. Permission defaults to an empty list;
+only the explicit comma-separated names `text_stats` and `arithmetic` are supported.
+Use a commissioned dedicated identity, never an owner's browser cookie. Credentials
+come from the approved process/secret store and must not be written into a public
+MCP configuration or command line. Every tool discovery/call is reauthenticated by
+the existing API. Explicit tool steps bypass model planning and retain local schema,
+permission and deadline checks. The bridge never exposes mission, hardware, arbitrary
+HTTP, file, shell, or administrative tools. Standard input/output carry only bounded
+JSON-RPC lines; no network listener or remote OAuth server is introduced.
+
+This is an opt-in software candidate, with synthetic fixtures only. Hosted activation,
+dedicated credentials, provider/privacy processing approval and external MCP-client
+acceptance require the existing qualified release process. No model is downloaded.
+
 ## Independent Cybersecurity settings — 2026-10-26 candidate
 
 The server-only flags `ONESA_CYBERSECURITY_ENABLED`,
