@@ -290,19 +290,25 @@ scope. Ordinary production remains distinct from the isolated synthetic demonstr
 
 ## Interoperable AI integration requirement — 2026-10-28
 
-Users must be able to choose another approved AI model without rebuilding the
-application or replacing its tool and data integrations. This is a product
-requirement, not an implemented multi-provider or MCP capability claim. The current
-`ModelClient` adapters support deployment configuration for mock, Ollama, vLLM and
-Cloudflare, but `/models` exposes one `default` model and Chat has no provider picker.
-Drone's current advisory integration uses the existing Onesa HTTP contract; Robot's
-optional read-only asset-context import is not an MCP connection.
+The consumer is the application, developer or organisation integrating the AI
+Platform. A consumer application must be able to replace Onesa AI with another
+compatible provider through configuration or a provider adapter, without rewriting
+its business workflows, tool integrations or stored domain records. A Chat UI model
+picker is a separate product choice and is not this acceptance criterion.
+
+This is a product requirement, not an implemented consumer-portability or MCP
+capability claim. The current internal `ModelClient` adapters support deployment
+configuration for mock, Ollama, vLLM and Cloudflare. That internal interchangeability
+does not prove the consumer-facing Onesa HTTP contract is a standard inference API.
+Drone's advisory adapter currently creates an owned Onesa conversation and uses the
+Onesa completion contract; Robot's optional read-only asset-context import is not
+an MCP connection.
 
 Two independent boundaries are required:
 
 | Boundary | Required contract |
 | --- | --- |
-| Model/provider selection | One application API and provider adapter interface for capability discovery, generation, bounded streaming, cancellation, usage and redacted failures. Users choose from models configured and authorized for their workspace. |
+| Consumer inference integration | A versioned provider-neutral client contract for capability discovery, messages, generation, bounded streaming, cancellation, usage and redacted failures. A configured Onesa or alternative-provider adapter implements that contract; the consumer's business logic stays the same. |
 | Tools and context | Versioned MCP client/server adapters expose approved tools, resources and prompts through standard discovery and authorization. Application services retain their existing ownership and permission checks. |
 
 MCP standardizes context/tool exchange; it does not define the application's model
@@ -312,21 +318,28 @@ Do not label an ordinary HTTP API as MCP-compatible without protocol conformance
 
 Acceptance must demonstrate all of the following before this requirement is closed:
 
-- At least two configured provider adapters pass the same contract tests. The model
-  picker shows only approved entries and accurate capabilities; an unavailable,
-  unauthorized or unsupported choice fails before provider transmission.
-- Switching models preserves owned conversation records and documents. Record the
-  actual selected provider/model/revision on each generation; do not relabel earlier
-  messages or silently truncate context when model limits differ.
+- The same consumer integration scenario passes through the Onesa adapter and at
+  least one alternative-provider adapter with identical application business code.
+  Only the approved configuration/adapter changes. Capability negotiation rejects
+  unavailable, unauthorized or unsupported requests before provider transmission.
+- Provider-specific sessions, identifiers and response formats stay inside adapters.
+  Document the supported inference API profile and any compatibility limits; an
+  endpoint's name alone does not establish OpenAI-compatible or MCP conformance.
+- Switching providers preserves the consumer application's owned conversation and
+  document records, with a documented portable message/export format. Record the
+  actual provider/model/revision for each generation; do not relabel prior messages
+  or silently truncate context when model limits differ.
 - Chat generation and Knowledge embeddings have separate identities. Changing a
   chat model must not silently change embedding dimensions, normalization or index
   version. Embedding changes need an explicit compatible reindex and rollback plan.
 - MCP calls carry the existing caller/tenant authority and approved scopes. Tool
   discovery, a model response or a connection never grants additional permission.
   Test cross-user denial, revocation, cancellation, malformed responses and injection.
-- Provider credentials and approved endpoint configuration stay server-side. A model
-  selector cannot submit arbitrary URLs, keys or cross-tenant connections. New hosted
-  providers require their actual privacy, rights, budget and release approval.
+- Provider credentials and approved endpoint configuration stay server-side. Consumer
+  access uses an explicitly scoped authenticated identity; browser-session automation
+  is not the portable service contract. Configuration cannot authorize arbitrary
+  destinations or cross-tenant connections. New hosted providers require their actual
+  privacy, rights, budget and release approval.
 - Fallback is explicit and separately approved. An outage must not silently send
   private content to another provider or present deterministic output as model output.
 - Products can retain their own compatible releases and tool schemas. Robot and

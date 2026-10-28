@@ -8,9 +8,9 @@ Docs visual acceptance and its native-owner regression now resolve the existing
 Docs-owned Axe dependency. Preview transport browser fixtures also close their
 owned servers on launch or cleanup failure, retaining the original failed result.
 
-The product requirements also distinguish provider/model switching from MCP tool
-and context interoperability. The current single-model catalog and product adapters
-remain accurately identified; shared-contract, user-selection and authorization
+The product requirements also distinguish consumer application/provider portability
+from MCP tool and context interoperability. The current internal and product adapters
+remain accurately identified; shared-contract, configuration-switch and authorization
 acceptance criteria are recorded without claiming the feature is implemented.
 
 Release-unit tests use their own temporary commissioning registry, including root
