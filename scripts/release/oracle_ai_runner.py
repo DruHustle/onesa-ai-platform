@@ -998,6 +998,18 @@ def migration_prerequisites(plan):
     )
 
 
+def prepare_artifact_directories(folder):
+    """Initialize only private journal parents; never reuse an operation directory."""
+    folder = private(Path(folder), directory=True)
+    for name in ["operations", "observations"]:
+        path = folder / name
+        try:
+            path.mkdir(mode=0o700, exist_ok=False)
+        except FileExistsError:
+            pass
+        private(path, directory=True)
+
+
 def preflight(binding):
     folder, plan = validate_plan(binding)
     migration_prerequisites(plan)
@@ -1006,6 +1018,10 @@ def preflight(binding):
     require(shutil.disk_usage("/").free > 12 * 1024**3, "DISK_BUDGET")
     import oracle_ai_frontend
 
+    frontend = oracle_ai_frontend.preview_binding(binding)
+    frontend_folder, _frontend_plan = oracle_ai_frontend.validate(frontend)
+    prepare_artifact_directories(folder)
+    prepare_artifact_directories(frontend_folder)
     authentication = oracle_ai_frontend.cli_authentication(plan)
     retained = None
     if profiles.component(binding) not in profiles.LEGACY:
@@ -1558,6 +1574,7 @@ def _activate(binding, env, operation, folder, plan):
     require(healthy(before[name]), "TARGET_UNHEALTHY_BEFORE_CHANGE")
     expected = plan["baseline"][env]
     require(summary(before[name]) == expected, "TARGET_CHANGED_SINCE_PREPARATION")
+    prepare_artifact_directories(folder)
     op = folder / "operations" / operation
     op.mkdir(mode=0o700, parents=False, exist_ok=False)
     oldbytes = private(IMAGES).read_bytes()
