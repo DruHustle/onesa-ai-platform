@@ -337,6 +337,27 @@ class GateTests(unittest.TestCase):
 
         import hosted_suite
 
+        for path in ["/api/v1/travel/trips", "/api/v1/agents/runs"]:
+            error = hosted_suite.HostedRequestFailure(
+                503,
+                path,
+                json.dumps(
+                    {
+                        "error": {
+                            "code": "planning_failed",
+                            "message": "private-provider-body",
+                        }
+                    }
+                ).encode(),
+            )
+            self.assertEqual(
+                hosted_suite.safe_suite_failure_code(error), "PLANNING_REJECTED"
+            )
+            self.assertEqual(
+                hosted_suite.safe_suite_failure_reason(error), "PLANNING_REJECTED"
+            )
+            self.assertNotIn("private-provider-body", str(error))
+
         for error, code, reason in [
             (
                 TimeoutError("private-value-never-log"),

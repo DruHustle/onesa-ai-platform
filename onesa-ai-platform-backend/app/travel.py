@@ -2,23 +2,26 @@
 
 import asyncio
 import json
+import logging
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
-from pydantic import Field
+from pydantic import Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import DB, Auth
 from app.errors import fail
-from app.inference import ModelClient, ModelMessage
+from app.inference import InferenceError, ModelClient, ModelMessage
 from app.models import Trip
+from app.observability import travel_planning_failure_reasons
 from app.pagination import page
 from app.responses import Activity, Day, Itinerary, TripList, TripOut
 from app.schemas import Strict
 
 router = APIRouter(prefix="/api/v1/travel", tags=["travel"])
+logger = logging.getLogger("onesa.travel")
 DISCLAIMER = (
     "Suggestions only. Current prices, availability, opening hours, "
     "travel times and bookings have not been verified."
@@ -66,6 +69,33 @@ class MockItineraryPlanner:
         )
 
 
+class ItineraryPlanningError(ValueError):
+    """Fixed diagnostic category; generated content is never retained."""
+
+
+def itinerary_failure_reason(error: Exception) -> str:
+    if isinstance(error, ItineraryPlanningError):
+        return (
+            str(error)
+            if str(error)
+            in {
+                "itinerary_size_limit",
+                "itinerary_empty",
+                "itinerary_invalid_json",
+                "itinerary_invalid_schema",
+                "itinerary_day_sequence",
+            }
+            else "planning_internal_error"
+        )
+    if isinstance(error, TimeoutError):
+        return "planning_timeout"
+    if isinstance(error, InferenceError):
+        if error.code == "inference_timeout":
+            return "planning_timeout"
+        return error.reason or "inference_unavailable"
+    return "planning_internal_error"
+
+
 class ModelItineraryPlanner:
     def __init__(self, client: ModelClient):
         self.client = client
@@ -74,9 +104,11 @@ class ModelItineraryPlanner:
         messages = [
             ModelMessage(
                 role="system",
-                content="Return only JSON matching this schema: "
+                content="Return one complete JSON object matching this schema, "
+                "without Markdown, code fences, commentary or a copy of the schema: "
                 + json.dumps(Itinerary.model_json_schema())
-                + ". Use the requested number of consecutive days starting at 1. "
+                + f". Return exactly {body.duration} consecutive days starting at 1. "
+                "Keep activity titles, notes and assumptions concise. "
                 "Suggest activities, "
                 "state assumptions, and never claim live research, prices, "
                 "availability or bookings. "
@@ -89,9 +121,23 @@ class ModelItineraryPlanner:
         async for part in self.client.stream(messages):
             size += len(part)
             if size > 64000:
-                raise ValueError("Itinerary exceeds limit")
+                raise ItineraryPlanningError("itinerary_size_limit")
             chunks.append(part)
-        return Itinerary.model_validate_json("".join(chunks))
+        text = "".join(chunks)
+        if not text.strip():
+            raise ItineraryPlanningError("itinerary_empty")
+        try:
+            itinerary = Itinerary.model_validate_json(text)
+        except ValidationError as error:
+            reason = (
+                "itinerary_invalid_json"
+                if any(item["type"] == "json_invalid" for item in error.errors())
+                else "itinerary_invalid_schema"
+            )
+            raise ItineraryPlanningError(reason) from None
+        if [day.day for day in itinerary.days] != list(range(1, body.duration + 1)):
+            raise ItineraryPlanningError("itinerary_day_sequence")
+        return itinerary
 
 
 class TravelProviders(Protocol):
@@ -139,13 +185,16 @@ async def planning(body: Preferences, request: Request) -> dict[str, Any]:
         async with asyncio.timeout(request.app.state.settings.generation_timeout):
             itinerary = await planner.plan(body)
         if [day.day for day in itinerary.days] != list(range(1, body.duration + 1)):
-            raise ValueError("Days do not match requested duration")
+            raise ItineraryPlanningError("itinerary_day_sequence")
         return {
             **itinerary.model_dump(),
             "providers": await UnconfiguredProviders().research(body.destination),
             "backend": request.app.state.settings.model_backend,
         }
-    except Exception:
+    except Exception as error:
+        reason = itinerary_failure_reason(error)
+        travel_planning_failure_reasons.labels(reason).inc()
+        logger.warning("travel_planning_failed reason=%s", reason)
         fail(503, "planning_failed", "Unable to produce a valid itinerary; retry")
 
 
