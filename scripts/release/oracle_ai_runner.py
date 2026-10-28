@@ -1068,6 +1068,77 @@ def accepted_rollback_proof(plan):
     return sha(output / "forward-check-receipt.json")
 
 
+def coordinated_backup_observation(binding, plan):
+    registration = read(Path("/etc/onesa/ai-twin-backup-registration.json"))
+    producer = Path(__file__).with_name("oracle_ai_backup.py")
+    require(
+        registration["storage_root"] == plan["storage"]["production"]
+        and registration["source_commit"] == trusted_toolchain(plan)["source_commit"]
+        and registration["release_candidate_commit"] == binding["candidate_commit"]
+        and registration["producer_sha256"] == sha(private(producer))
+        and registration["automatic_deletion"] is False
+        and registration["cap_bytes"] == 64 * 1024 * 1024,
+        "COORDINATED_BACKUP_REGISTRATION_CHANGED",
+    )
+    # Execute the pinned observer: it GETs the actual registered database/file
+    # ciphertext. An unsigned caller PASS/receipt is never accepted as a check.
+    coordinated = json.loads(
+        command(["/usr/bin/python3", "-I", str(producer), "--inspect"], timeout=240)
+    )
+    require(
+        coordinated["status"] == "PASS"
+        and coordinated["coordinated_snapshot"] is True
+        and coordinated["encrypted"] is True
+        and coordinated["off_instance_readback"] == "PASS"
+        and coordinated["source_commit"] == trusted_toolchain(plan)["source_commit"]
+        and coordinated["release_candidate_commit"] == binding["candidate_commit"]
+        and coordinated["application_runtime"]
+        == {
+            "source_commit": inventory()[TARGET["production"]]["Config"]["Labels"][
+                "org.onesa.source-commit"
+            ],
+            "image": inventory()[TARGET["production"]]["Image"],
+            "container_id": inventory()[TARGET["production"]]["Id"],
+            "runtime_sha256": sha(ENV["production"]),
+        }
+        and coordinated["producer_sha256"] == sha(producer),
+        "COORDINATED_BACKUP_READBACK_FAILED",
+    )
+    require(
+        dt.timedelta(0)
+        <= now() - dt.datetime.fromisoformat(coordinated["verified_at"])
+        < dt.timedelta(hours=36),
+        "COORDINATED_BACKUP_STALE",
+    )
+    return {
+        "producer_source": coordinated["source_commit"],
+        "release_candidate_commit": coordinated["release_candidate_commit"],
+        "application_runtime": coordinated["application_runtime"],
+        "verified_at": coordinated["verified_at"],
+        "registration_sha256": sha(Path("/etc/onesa/ai-twin-backup-registration.json")),
+        "off_instance_readback": "PASS",
+    }
+
+
+def post_deployment_backup(binding, plan):
+    profiles.bound_mode(binding, plan["mode"])
+    actual = inventory()[TARGET["production"]]
+    enabled = profiles.enabled_features(
+        running_configuration(binding, "production", actual), plan["mode"]
+    )
+    if "twins" not in enabled:
+        return None
+    command(
+        [
+            "/usr/bin/python3",
+            "-I",
+            str(Path(__file__).with_name("oracle_ai_backup.py")),
+        ],
+        timeout=240,
+    )
+    return operational_observations(binding, plan)
+
+
 def operational_observations(binding, plan):
     if profiles.component(binding) not in profiles.LEGACY:
         import oracle_ai_frontend
@@ -1200,56 +1271,25 @@ def operational_observations(binding, plan):
             and plan["rollback"]["retain_additive_schema_and_files"] is True,
             "CYBERSECURITY_ROLLBACK_IMAGE_MISSING",
         )
+        enabled = profiles.enabled_features(
+            runtime_values(candidate_environment(binding, "production")), plan["mode"]
+        )
+        coordinated = (
+            coordinated_backup_observation(binding, plan)
+            if "twins" in enabled
+            else None
+        )
         return {
             "checks": {k: "PASS" for k in CHECKS["operations"]},
             "mode": "cybersecurity",
+            "coordinated_backup": coordinated,
             "backup_readback": observed,
             "restore_receipt_sha256": sha(output / "restore-receipt.json"),
             "accepted_rollback_proof_sha256": rollback,
             "metrics_checked_at": metrics["checked_at"],
             "physical_hardware_authorized": False,
         }
-    registration = read(Path("/etc/onesa/ai-twin-backup-registration.json"))
-    producer = Path(__file__).with_name("oracle_ai_backup.py")
-    require(
-        registration["storage_root"] == plan["storage"]["production"]
-        and registration["source_commit"] == trusted_toolchain(plan)["source_commit"]
-        and registration["release_candidate_commit"] == binding["candidate_commit"]
-        and registration["producer_sha256"] == sha(private(producer))
-        and registration["automatic_deletion"] is False
-        and registration["cap_bytes"] == 64 * 1024 * 1024,
-        "COORDINATED_BACKUP_REGISTRATION_CHANGED",
-    )
-    # Execute the pinned observer: it GETs the actual registered database/file
-    # ciphertext. An unsigned caller PASS/receipt is never accepted as a check.
-    coordinated = json.loads(
-        command(["/usr/bin/python3", "-I", str(producer), "--inspect"], timeout=240)
-    )
-    require(
-        coordinated["status"] == "PASS"
-        and coordinated["coordinated_snapshot"] is True
-        and coordinated["encrypted"] is True
-        and coordinated["off_instance_readback"] == "PASS"
-        and coordinated["source_commit"] == trusted_toolchain(plan)["source_commit"]
-        and coordinated["release_candidate_commit"] == binding["candidate_commit"]
-        and coordinated["application_runtime"]
-        == {
-            "source_commit": inventory()[TARGET["production"]]["Config"]["Labels"][
-                "org.onesa.source-commit"
-            ],
-            "image": inventory()[TARGET["production"]]["Image"],
-            "container_id": inventory()[TARGET["production"]]["Id"],
-            "runtime_sha256": sha(ENV["production"]),
-        }
-        and coordinated["producer_sha256"] == sha(producer),
-        "COORDINATED_BACKUP_READBACK_FAILED",
-    )
-    require(
-        dt.timedelta(0)
-        <= now() - dt.datetime.fromisoformat(coordinated["verified_at"])
-        < dt.timedelta(hours=36),
-        "COORDINATED_BACKUP_STALE",
-    )
+    coordinated = coordinated_backup_observation(binding, plan)
     output = (
         Path(plan["artifact_folder"])
         / "observations"
@@ -1294,6 +1334,7 @@ def operational_observations(binding, plan):
         "backup_verified_at": backup["verified_at"],
         "restore_receipt_sha256": sha(output / "restore-receipt.json"),
         "registration_sha256": sha(Path("/etc/onesa/ai-twin-backup-registration.json")),
+        "coordinated_backup": coordinated,
         "accepted_rollback_proof_sha256": rollback_proof,
         "legal_publication_controls_unchanged": True,
         "physical_hardware_authorized": False,
@@ -2305,16 +2346,9 @@ def run_request(phase, request):
             details["hosted_verification"] = probe(
                 binding, "production", operation, folder, plan
             )
-            if plan["mode"] == "twins":
-                command(
-                    [
-                        "/usr/bin/python3",
-                        "-I",
-                        str(Path(__file__).with_name("oracle_ai_backup.py")),
-                    ],
-                    timeout=240,
-                )
-                details["post_deploy_backup"] = operational_observations(binding, plan)
+            backup = post_deployment_backup(binding, plan)
+            if backup is not None:
+                details["post_deploy_backup"] = backup
         except Exception as error:  # noqa: BLE001 -- Preserve a real provider receipt even when post-deploy checks fail.
             details["verification_state"] = "FAILED_OR_INTERRUPTED"
             details["failure_category"] = type(error).__name__
