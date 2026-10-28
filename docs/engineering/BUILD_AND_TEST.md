@@ -1,5 +1,17 @@
 # Separate application builds and tests
 
+Travel planning retains one provider request, the existing output-size/token and
+total generation-time budgets, strict JSON/schema/day validation, and the 503
+boundary for invalid plans. Its prompt explicitly requests compact complete JSON
+without Markdown. Fixed failure categories distinguish empty, oversized, invalid
+JSON/schema, day-sequence, timeout and provider failures without retaining model
+output, preferences or exception messages. Metrics and the bounded warning contain
+only those categories. Run `pytest -q tests/test_travel_planning_failures.py
+tests/test_agents_travel.py` from the backend with the disposable PostgreSQL test
+target configured; a rejected revision must preserve the saved trip. The hosted
+producer records the exact Travel create/revise/ownership step on failure. These
+synthetic tests and a stateless engineering diagnostic are not hosted acceptance.
+
 Owner preflight validates the matching frontend dependency and initializes private
 operation/observation parents for a new exact-source artifact. Existing operation
 directories and receipts remain reserved; initialization cannot retry a request.
@@ -96,6 +108,12 @@ Public/internal docs have separate generation/access controls in the parent Make
 use `npm --prefix onesa-ai-platform-frontend run docs:ci` and `make docs-assets
  docs-public docs-internal docs-validate` as one command without a line break.
 Regenerate ignored public/internal manuals in CI; do not commit them.
+
+The public static acceptance validator resolves both Playwright and Axe from the
+locked Docs installation. Importing `scripts/docs/acceptance.mjs` needs no Chat
+dependency installation. Screenshot capture and full documentation generation
+retain their separately documented application prerequisites; this dependency
+separation does not establish a passing browser suite or hosted publication.
 
 `apps/chat/tests/startup.spec.ts` uses synthetic browser network fixtures for initial
 rendering, the eight-second session-check deadline and cancellation, connection retry
