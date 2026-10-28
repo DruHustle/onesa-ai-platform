@@ -43,6 +43,7 @@ class HostedRequestFailure(Rejected):
             "MFA": "FIXTURE_MFA_REJECTED",
             "origin_rejected": "ORIGIN_REJECTED",
             "invitation_required": "INVITATION_REQUIRED",
+            "planning_failed": "PLANNING_REJECTED",
         }
         if isinstance(candidate, str) and candidate in known:
             self.code = known[candidate]
@@ -85,6 +86,8 @@ class HostedStreamFailure(Rejected):
 
 
 def safe_suite_failure_reason(error):
+    if isinstance(error, HostedRequestFailure) and error.code == "PLANNING_REJECTED":
+        return "PLANNING_REJECTED"
     transport = error.reason if isinstance(error, urllib.error.URLError) else error
     if isinstance(transport, TimeoutError):
         return "REQUEST_TIMEOUT"
@@ -691,6 +694,7 @@ def run_suite(origin, *, oracle_context=None):
                 "currency": "EUR",
                 "preferences": "Suggest just one concise walking activity. No live research or booking.",
             }
+            step = "trip-create"
             trip = clients[0].model_call(
                 "POST", "/api/v1/travel/trips", preference, expected=201
             )
@@ -702,6 +706,7 @@ def run_suite(origin, *, oracle_context=None):
                 and len(trip["itinerary"]["days"]) == 1,
                 "Real itinerary or explicit live-data boundary missing",
             )
+            step = "trip-read-and-ownership"
             clients[0].call("GET", "/api/v1/travel/trips/" + trip["id"])
             clients[1].call("GET", "/api/v1/travel/trips/" + trip["id"], expected=404)
             clients[1].call(
@@ -710,6 +715,7 @@ def run_suite(origin, *, oracle_context=None):
                 {**preference, "expected_revision": 1},
                 expected=404,
             )
+            step = "trip-revise"
             changed = clients[0].model_call(
                 "PUT",
                 "/api/v1/travel/trips/" + trip["id"],
@@ -720,6 +726,7 @@ def run_suite(origin, *, oracle_context=None):
                 },
             )
             require(changed["revision"] == 2, "Actual trip revision not persisted")
+            step = "trip-stale-revision-and-deletion-ownership"
             clients[0].model_call(
                 "PUT",
                 "/api/v1/travel/trips/" + trip["id"],
@@ -733,6 +740,7 @@ def run_suite(origin, *, oracle_context=None):
                 "DELETE", "/api/v1/travel/trips/" + trip["id"], expected=204
             )
             detail["real_travel_planning_revision_isolation_and_boundary"] = "PASS"
+            step = None
             workflow = "active_stop_and_direct_ownership_denial"
             with clients[0].stream(
                 {
