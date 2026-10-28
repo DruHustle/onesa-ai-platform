@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+Release-unit fixtures pin a disposable commissioning registry and keep its keys,
+policy and database inside their temporary directory. Root test execution uses a
+private home-directory parent and never reads the host's production trust registry.
+Fixtures that deliberately replace their policy explicitly update their synthetic
+commissioning record. Production source, trust checks and release authority are unchanged.
+
 Owner preflight validates the matching frontend dependency and initializes private
 operation/observation parents for a new exact-source artifact. Existing operation
 directories and receipts remain reserved; initialization cannot retry a request.
