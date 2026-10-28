@@ -288,6 +288,55 @@ script, failing-evidence example, human criteria, discovery and pilot boundaries
 A new hosted model run requires a finite current allowance and exact source/model
 scope. Ordinary production remains distinct from the isolated synthetic demonstration.
 
+## Interoperable AI integration requirement — 2026-10-28
+
+Users must be able to choose another approved AI model without rebuilding the
+application or replacing its tool and data integrations. This is a product
+requirement, not an implemented multi-provider or MCP capability claim. The current
+`ModelClient` adapters support deployment configuration for mock, Ollama, vLLM and
+Cloudflare, but `/models` exposes one `default` model and Chat has no provider picker.
+Drone's current advisory integration uses the existing Onesa HTTP contract; Robot's
+optional read-only asset-context import is not an MCP connection.
+
+Two independent boundaries are required:
+
+| Boundary | Required contract |
+| --- | --- |
+| Model/provider selection | One application API and provider adapter interface for capability discovery, generation, bounded streaming, cancellation, usage and redacted failures. Users choose from models configured and authorized for their workspace. |
+| Tools and context | Versioned MCP client/server adapters expose approved tools, resources and prompts through standard discovery and authorization. Application services retain their existing ownership and permission checks. |
+
+MCP standardizes context/tool exchange; it does not define the application's model
+routing. Follow the [official architecture](https://modelcontextprotocol.io/docs/learn/architecture)
+and explicitly pin the supported protocol/SDK version when implementation is qualified.
+Do not label an ordinary HTTP API as MCP-compatible without protocol conformance tests.
+
+Acceptance must demonstrate all of the following before this requirement is closed:
+
+- At least two configured provider adapters pass the same contract tests. The model
+  picker shows only approved entries and accurate capabilities; an unavailable,
+  unauthorized or unsupported choice fails before provider transmission.
+- Switching models preserves owned conversation records and documents. Record the
+  actual selected provider/model/revision on each generation; do not relabel earlier
+  messages or silently truncate context when model limits differ.
+- Chat generation and Knowledge embeddings have separate identities. Changing a
+  chat model must not silently change embedding dimensions, normalization or index
+  version. Embedding changes need an explicit compatible reindex and rollback plan.
+- MCP calls carry the existing caller/tenant authority and approved scopes. Tool
+  discovery, a model response or a connection never grants additional permission.
+  Test cross-user denial, revocation, cancellation, malformed responses and injection.
+- Provider credentials and approved endpoint configuration stay server-side. A model
+  selector cannot submit arbitrary URLs, keys or cross-tenant connections. New hosted
+  providers require their actual privacy, rights, budget and release approval.
+- Fallback is explicit and separately approved. An outage must not silently send
+  private content to another provider or present deterministic output as model output.
+- Products can retain their own compatible releases and tool schemas. Robot and
+  Drone safety supervisors remain independent of every model and MCP adapter;
+  generative output cannot authorize physical operation or a Drone launch.
+
+Local synthetic contract tests establish software behavior only. Live provider,
+authenticated MCP-client and hosted product acceptance require their own bounded,
+source-bound evidence; this requirement grants no model download or paid inference.
+
 ## Versioned synthetic import candidate
 
 The first evidence adapter accepts a bounded JSON `onesa-industrial-evidence-v1`

@@ -6,6 +6,11 @@ private home-directory parent and never reads the host's production trust regist
 Fixtures that deliberately replace their policy explicitly update their synthetic
 commissioning record. Production source, trust checks and release authority are unchanged.
 
+Docs visual acceptance and its native-owner regression resolve Axe from Docs' own
+locked dependency installation. Preview transport fixtures close their owned HTTP
+servers even if browser launch or browser cleanup fails; an unavailable renderer
+remains a failed check and must not leave the test process listening indefinitely.
+
 Owner preflight validates the matching frontend dependency and initializes private
 operation/observation parents for a new exact-source artifact. Existing operation
 directories and receipts remain reserved; initialization cannot retry a request.

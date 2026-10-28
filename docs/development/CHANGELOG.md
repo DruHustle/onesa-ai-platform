@@ -4,6 +4,15 @@ This preserved engineering record is not a post-launch release changelog. Curren
 
 ## 2026-10-28 — Isolate release-unit commissioning fixtures
 
+Docs visual acceptance and its native-owner regression now resolve the existing
+Docs-owned Axe dependency. Preview transport browser fixtures also close their
+owned servers on launch or cleanup failure, retaining the original failed result.
+
+The product requirements also distinguish provider/model switching from MCP tool
+and context interoperability. The current single-model catalog and product adapters
+remain accurately identified; shared-contract, user-selection and authorization
+acceptance criteria are recorded without claiming the feature is implemented.
+
 Release-unit tests use their own temporary commissioning registry, including root
 test execution, without reading the host's production trust registry. The profile
 ledger fixture explicitly updates its synthetic commissioning after its deliberate
