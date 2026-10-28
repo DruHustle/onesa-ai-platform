@@ -30,6 +30,7 @@
     "deepmerge": "file:vendor/onesa-deepmerge-4.3.1-onesa.2.tgz"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",

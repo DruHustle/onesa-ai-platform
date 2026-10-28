@@ -2,6 +2,15 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-28 — Declare Docs-owned accessibility validation dependencies
+
+The public static acceptance validator previously imported Axe from the Chat
+installation and could not be imported after a clean Docs-only install. Declare
+the existing reviewed Axe version in Docs and resolve it there alongside
+Playwright. Keep accessibility assertions, classified asset checks and independent
+release gates unchanged. Local import verification is separate from the complete
+browser acceptance suite and an authorized hosted publication.
+
 ## 2026-10-27 — Bound retries for failed upstream build fetches
 
 Repeated native checks failed before testing during Alpine CDN TLS fetching or a
