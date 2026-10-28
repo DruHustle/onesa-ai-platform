@@ -218,6 +218,15 @@ suite retains navigation, search, diagrams, PDF/source-link and private route ch
 A reference-only CI build does not qualify a protected edition with full runbooks.
 Keep all local model/database targets synthetic while generating documentation.
 
+## Conversation history and provider transport
+
+The conversation instruction identifies supplied messages as the current history
+and asks the model to copy recalled values verbatim. It is request context, never
+a stored user message. `tests/test_chat_integration.py` checks bounded history,
+ownership and persistence, including two-turn native Cloudflare request bodies
+for streaming and non-streaming responses. These protocol cases use synthetic
+provider responses; real model recall still requires hosted qualification.
+
 ## Node TLS trust regression
 
 `node --test scripts/test_ui_navigation.cjs` reproduces a delayed response from a
