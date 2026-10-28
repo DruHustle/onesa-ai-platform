@@ -1,5 +1,26 @@
 # Documentation dependency security and compatibility
 
+## 28 October 2026 deepmerge backport
+
+The mandatory all-severity Docs audit now reports
+[GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4).
+The official registry still supplies4.3.1 and no patched release. The reported
+null-placeholder exploit was reproduced against that exact integrity-checked
+package. A local, unpublished `@onesa/deepmerge`4.3.1-onesa.2 backport skips
+`__proto__` in both object-copy loops before reading or assigning its value.
+Source, CommonJS and UMD distributions carry the same focused change, derived
+from the [reviewed upstream proposal](https://github.com/TehShrike/deepmerge/pull/274).
+This is an Onesa patch, not an upstream-approved release. Original MIT attribution,
+archive identity, exact diffs and portable package integrity are preserved.
+
+Every SVGR and Swagger consumer must resolve the reviewed bytes. Regressions
+exercise poisoned source/target objects, null-prototype targets, primitive nested
+placeholders, arrays and getters, plus ordinary nested/symbol/custom merges in both
+shipped distributions. Full Docusaurus builds and Swagger compatibility remain
+required. The audit threshold and advisory checks are unchanged; a zero audit
+report alone cannot establish the safety of a private fork. This source change
+does not establish a hosted deployment or authorize publication.
+
 Updated 2026-10-09 · internal engineering · documentation 0.2.0.
 
 ## Finding and remediation
@@ -30,7 +51,7 @@ make docs-release-check
 make docs-browser
 ```
 
-Use Node 24 on PATH for direct npm commands, or the repository-local bin directory. The release gate runs all twelve adversarial/compatibility checks, validates installed source and tarball hashes, type-checks docs, verifies classified artifacts and runs an unsuppressed npm audit at all severities. CI enforces the same controls. Live browser verification exercises Swagger Try it out/Execute/response rendering in addition to search, PDFs, authorization, revocation, navigation and real assistant generation.
+Use Node 24 on PATH for direct npm commands, or the repository-local bin directory. The release gate runs the full adversarial/compatibility suite, validates installed source and tarball hashes, type-checks docs, verifies classified artifacts and runs an unsuppressed npm audit at all severities. CI enforces the same controls. Live browser verification exercises Swagger Try it out/Execute/response rendering in addition to search, PDFs, authorization, revocation, navigation and real assistant generation.
 
 For a backport change, review the source/diff, increment its local version, regenerate exact patches, run `make docs-security-pack`, update direct tarball specs, reinstall and commit reviewed sources, archives, provenance and lockfile together. Changing a tarball under the same version risks cached installations; integrity tests intentionally reject stale files. Replace a backport with an official compatible fixed release only after these regressions and both scope builds pass. Never remove an advisory from the audit, spoof an upstream release, or mark a local fork safe based solely on a zero audit result.
 

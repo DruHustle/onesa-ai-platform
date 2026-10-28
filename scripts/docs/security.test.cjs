@@ -39,6 +39,8 @@ function checkConsumer(parent,dependency,name){
 test('every affected transitive consumer uses the reviewed local fixes',()=>{
  checkConsumer('micromatch','braces','braces');
  checkConsumer('chokidar','braces','braces');
+ checkConsumer('@svgr/plugin-svgo','deepmerge','deepmerge');
+ checkConsumer('swagger-client','deepmerge','deepmerge');
  const remarkable=createRequire(docsRequire.resolve('remarkable/package.json'));
  const argparse=createRequire(remarkable.resolve('argparse/package.json'));
  const directory=path.dirname(argparse.resolve('sprintf-js/package.json'));
@@ -48,6 +50,58 @@ test('every affected transitive consumer uses the reviewed local fixes',()=>{
   for(const [file,digest] of Object.entries(record.source_files)) assert.equal(hash(fs.readFileSync(path.join(root,'packages/security',name,file))),digest);
   assert.equal(hash(fs.readFileSync(path.join(root,record.archive))),record.archive_sha256);
  }
+});
+
+for(const entry of ['deepmerge','deepmerge/dist/umd.js']){
+ const merge=docsRequire(entry);
+ test(`GHSA-gcqx-w48m-w2h4: ${entry} preserves prototypes for hostile source and target shapes`,()=>{
+  const payload=()=>JSON.parse('{"__proto__":{"onesaUnownedAdmin":true}}');
+  const nullTarget=Object.assign(Object.create(null),{debug:false});
+  const cases=[
+   [nullTarget,payload(),value=>value],
+   [payload(),{verbose:true},value=>value],
+   [{list:[]},{list:[payload()]},value=>value.list[0]],
+   ...[null,undefined,0,false,'placeholder'].map(session=>[{session},{session:payload()},value=>value.session]),
+  ];
+  for(const [target,source,select] of cases){
+   const result=merge(target,source);const observed=select(result);
+   assert.equal(Object.getPrototypeOf(observed),Object.prototype);
+   assert.equal(Object.hasOwn(observed,'__proto__'),false);
+   assert.equal(observed.onesaUnownedAdmin,undefined);
+   assert.equal(({}).onesaUnownedAdmin,undefined);
+  }
+  assert.equal(nullTarget.debug,false);
+  assert.equal(Object.getPrototypeOf(nullTarget),null);
+  assert.equal(merge(nullTarget,payload()).debug,false);
+ });
+ test(`${entry} rejects dangerous keys before reading their getters`,()=>{
+  let reads=0;const hostile={};
+  Object.defineProperty(hostile,'__proto__',{enumerable:true,get(){reads++;throw new Error('must never read this key');}});
+  assert.deepEqual(merge(hostile,{valid:true}),{valid:true});
+  assert.deepEqual(merge(Object.create(null),hostile),{});
+  assert.equal(reads,0);
+ });
+ test(`${entry} retains nested merges, symbols, arrays and custom merge compatibility`,()=>{
+  const symbol=Symbol('metadata');const target={nested:{a:1},list:[{id:1}],[symbol]:{a:1}};
+  const source={nested:{b:2},list:[{id:2}],[symbol]:{b:2}};const merged=merge(target,source);
+  assert.deepEqual(merged.nested,{a:1,b:2});assert.deepEqual(merged.list,[{id:1},{id:2}]);
+  assert.deepEqual(merged[symbol],{a:1,b:2});assert.notEqual(merged.list[0],target.list[0]);
+  assert.deepEqual(merge.all([{a:1},{b:2}]),{a:1,b:2});
+  assert.deepEqual(merge({list:[1]},{list:[2]},{arrayMerge:(_target,input)=>input}),{list:[2]});
+  assert.deepEqual(merge({label:{value:'a'}},{label:{value:'b'}},{customMerge:key=>key==='label'?(_a,b)=>({value:b.value.toUpperCase()}):undefined}),{label:{value:'B'}});
+  assert.deepEqual(target.nested,{a:1});
+ });
+}
+
+test('real Swagger resolution/request generation and SVGR transformation retain compatibility',async()=>{
+ const Swagger=docsRequire('swagger-client');
+ const spec={openapi:'3.0.3',info:{title:'Synthetic',version:'1.0'},servers:[{url:'https://synthetic.invalid'}],paths:{'/widgets/{id}':{get:{operationId:'getWidget',parameters:[{name:'id',in:'path',required:true,schema:{type:'string'}}],responses:{200:{description:'Owned fixture'}}}}}};
+ const resolved=await Swagger.resolve({spec});assert.deepEqual(resolved.errors,[]);
+ const request=Swagger.buildRequest({spec:resolved.spec,operationId:'getWidget',parameters:{id:'owned'}});
+ assert.equal(request.url,'https://synthetic.invalid/widgets/owned');assert.equal(request.method,'GET');
+ const transform=docsRequire('@svgr/plugin-svgo');
+ const svg=transform('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10H0z"/></svg>',{svgo:true},{componentName:'SyntheticIcon'});
+ assert.match(svg,/<svg/);assert.match(svg,/viewBox="0 0 10 10"/);
 });
 
 for(const method of ['parse','compile','expand','stringify']){
