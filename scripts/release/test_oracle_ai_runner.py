@@ -472,6 +472,47 @@ class ProbeCapacityTests(unittest.TestCase):
             r.probe_cpu_limit()
 
 
+class ProbeNetworkTests(unittest.TestCase):
+    def test_existing_bridge_preserves_outbound_access_and_separate_namespace(self):
+        value = [
+            {"Name": "bridge", "Driver": "bridge", "Scope": "local", "Internal": False}
+        ]
+        with patch.object(
+            r, "docker", return_value=json.dumps(value).encode()
+        ) as docker:
+            self.assertEqual(r.probe_network(), "bridge")
+            docker.assert_called_once_with("network", "inspect", "bridge", timeout=15)
+
+    def test_host_foreign_internal_and_missing_networks_never_fall_back(self):
+        base = {
+            "Name": "bridge",
+            "Driver": "bridge",
+            "Scope": "local",
+            "Internal": False,
+        }
+        for value in [
+            [],
+            [base, base],
+            {},
+            [{**base, "Name": "host"}],
+            [{**base, "Driver": "host"}],
+            [{**base, "Scope": "swarm"}],
+            [{**base, "Internal": True}],
+            [{**base, "Internal": None}],
+        ]:
+            with (
+                self.subTest(value=value),
+                patch.object(r, "docker", return_value=json.dumps(value).encode()),
+                self.assertRaises(r.Refused),
+            ):
+                r.probe_network()
+        with (
+            patch.object(r, "docker", side_effect=r.Refused("DAEMON_UNAVAILABLE")),
+            self.assertRaises(r.Refused),
+        ):
+            r.probe_network()
+
+
 class ComponentCheckScopeTests(unittest.TestCase):
     def test_cybersecurity_requires_its_own_checks_without_twins_or_skips(self):
         api = r.required_probe_checks(
