@@ -233,6 +233,68 @@ def test_each_turn_receives_supplied_context_without_persisting_system_instructi
     assert all(item["content"]["text"] != CONVERSATION_INSTRUCTION for item in history)
 
 
+@pytest.mark.parametrize("stream", [False, True])
+def test_persisted_history_reaches_native_cloudflare_request(api, stream):
+    """Protocol regression only: the synthetic response is not hosted model acceptance."""
+    import json
+    import secrets
+
+    import httpx
+
+    from app.config import Settings
+    from app.inference import CloudflareModelClient
+
+    signup(api)
+    identifier = new(api)
+    code = "ORCHARD-00" + secrets.token_hex(8)
+    first = "Remember this orchard reference: " + code
+    followup = "Which orchard reference did I provide?"
+    captured = []
+
+    def provider(request):
+        assert request.url.path.endswith("/ai/run/@cf/qwen/qwen3-30b-a3b-fp8")
+        captured.append(json.loads(request.content))
+        content = "Acknowledged." if len(captured) == 1 else code
+        return httpx.Response(
+            200,
+            text="data: "
+            + json.dumps({"choices": [{"delta": {"content": content}}]})
+            + "\n\ndata: [DONE]\n\n",
+        )
+
+    config = Settings(
+        model_backend="cloudflare",
+        model_name="@cf/qwen/qwen3-30b-a3b-fp8",
+        model_base_url="https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/ai/v1",
+        model_api_key=secrets.token_hex(24),
+    )
+    api.app.state.model_client = CloudflareModelClient(config, httpx.MockTransport(provider))
+    for content in [first, followup]:
+        response = api.post(
+            "/api/v1/chat/completions",
+            json={"conversation_id": identifier, "content": content, "stream": stream},
+        )
+        assert response.status_code == 200
+        if stream:
+            assert "event: message_end" in response.text
+        else:
+            assert response.json()["message_id"]
+    assert len(captured) == 2
+    assert captured[1]["messages"] == [
+        {"role": "system", "content": CONVERSATION_INSTRUCTION},
+        {"role": "user", "content": first},
+        {"role": "assistant", "content": "Acknowledged."},
+        {"role": "user", "content": followup},
+    ]
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert [message["content"]["text"] for message in history] == [
+        first,
+        "Acknowledged.",
+        followup,
+        code,
+    ]
+
+
 def test_busy_and_expired_lease_recovery(api: TestClient, pg: Engine) -> None:
     signup(api)
     identifier = new(api)
