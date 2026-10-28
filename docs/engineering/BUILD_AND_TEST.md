@@ -291,6 +291,9 @@ The new feature API profiles verify the retained frontend's original accepted
 record and served build hashes, then require rendered production journeys without
 another frontend deployment. Restore checks use the exact hosted schema, including
 Twins on a database whose Cybersecurity migration is already present.
+Combined activation also verifies the current coordinated database-and-file backup
+before authorization and refreshes it after the actual production runtime changes.
+Cybersecurity with Twins disabled keeps its independent database backup path.
 These tests do not commission the new policy, activate features, migrate a hosted
 database or establish hosted acceptance. Consult the protected canonical procedure
 and evidence index for actual installation, qualification and deployment outcomes.
