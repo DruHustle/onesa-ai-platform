@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+Owner preflight validates the matching frontend dependency and initializes private
+operation/observation parents for a new exact-source artifact. Existing operation
+directories and receipts remain reserved; initialization cannot retry a request.
+Cold-directory, concurrent-initialization and alias/permission refusal tests run
+with the release regression suite, without provider credentials.
+
 Oracle CI selection keeps an existing push authoritative, including failed,
 pending, skipped or cancelled evidence. Only an absent push permits the existing
 owner-dispatched full workflow; both owner identities, a complete run listing,

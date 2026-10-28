@@ -399,7 +399,6 @@ class ExplicitDeploymentRoutingTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            (folder / "operations").mkdir()
             binding = {
                 "repository": "DruHustle/onesa-ai-platform",
                 "candidate_commit": "a" * 40,
