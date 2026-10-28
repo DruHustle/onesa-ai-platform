@@ -2,6 +2,13 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-28 — Isolate release-unit commissioning fixtures
+
+Release-unit tests use their own temporary commissioning registry, including root
+test execution, without reading the host's production trust registry. The profile
+ledger fixture explicitly updates its synthetic commissioning after its deliberate
+policy replacement. Production verifier and release requirements are unchanged.
+
 ## 2026-10-28 — Declare Docs-owned accessibility validation dependencies
 
 The public static acceptance validator previously imported Axe from the Chat
