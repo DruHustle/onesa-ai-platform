@@ -17,6 +17,7 @@ class BodyLimit:
             return
         parts: list[bytes] = []
         bounded = {
+            "/api/v1/inference/completions": 384 * 1024,
             "/api/v1/industrial/imports/preview": 512 * 1024,
             # The validated bundle still has its own 512 KiB ceiling. Leave a
             # small bounded envelope for the investigation UUID/selection.

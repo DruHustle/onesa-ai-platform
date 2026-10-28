@@ -398,6 +398,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inference/completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete */
+        post: operations["complete_api_v1_inference_completions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/models": {
         parameters: {
             query?: never;
@@ -2071,6 +2088,56 @@ export interface components {
              * @default false
              */
             housing: boolean;
+        };
+        /** ConsumerCompletion */
+        ConsumerCompletion: {
+            /**
+             * Contract Version
+             * @constant
+             */
+            contract_version: "onesa-inference-v1";
+            /**
+             * Outcome
+             * @constant
+             */
+            outcome: "completed";
+            /** Text */
+            text: string;
+            model: components["schemas"]["ModelOut"];
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            usage: components["schemas"]["ConsumerUsage"];
+        };
+        /** ConsumerMessage */
+        ConsumerMessage: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "system" | "user" | "assistant";
+            /** Content */
+            content: string;
+        };
+        /** ConsumerRequest */
+        ConsumerRequest: {
+            /** Messages */
+            messages: components["schemas"]["ConsumerMessage"][];
+            /**
+             * Model Id
+             * @default default
+             * @constant
+             */
+            model_id: "default";
+        };
+        /** ConsumerUsage */
+        ConsumerUsage: {
+            /** Prompt Tokens */
+            prompt_tokens?: number | null;
+            /** Completion Tokens */
+            completion_tokens?: number | null;
         };
         /** ConversationCreate */
         ConversationCreate: {
@@ -4384,6 +4451,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_api_v1_inference_completions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsumerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsumerCompletion"];
+                };
             };
             /** @description Validation Error */
             422: {
