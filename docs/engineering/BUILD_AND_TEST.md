@@ -26,6 +26,16 @@ Long-lived temporary workloads, unchanged-inventory command failures, incomplete
 metadata and real independent runtime changes still fail closed. These fixtures
 make only mocked Docker reads and do not establish hosted qualification.
 
+Hosted browser probes use the daemon's existing outbound bridge network in their
+own network namespace. Host networking exposes Chromium to unrelated host interface
+changes and can cancel a request with `net::ERR_NETWORK_CHANGED`. Preflight and
+execution reject a missing, foreign, host or internal-only bridge; they never fall
+back to host networking. Application deadlines, TLS, workflow assertions, fixture
+cleanup and source-bound release authority remain mandatory. See Docker's
+[network isolation reference](https://docs.docker.com/engine/network/drivers/host/).
+An engineering diagnostic is separate from full hosted qualification and cannot
+issue a release record.
+
 Container health uses the Alpine base image's existing BusyBox `wget`, with proxies
 disabled and response bodies discarded. It retains the production readiness and
 staging liveness routes, intervals, retries and network deadlines. After building an

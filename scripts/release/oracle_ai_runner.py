@@ -983,6 +983,7 @@ def preflight(binding):
     folder, plan = validate_plan(binding)
     migration_prerequisites(plan)
     cpus = probe_cpu_limit()
+    network = probe_network()
     require(shutil.disk_usage("/").free > 12 * 1024**3, "DISK_BUDGET")
     import oracle_ai_frontend
 
@@ -995,6 +996,7 @@ def preflight(binding):
         "plan_sha256": sha(PLAN),
         "artifact_folder": str(folder),
         "hosted_probe_cpu_limit": cpus,
+        "hosted_probe_network": network,
         "provider_cli_authentication": authentication,
     }
 
@@ -1701,8 +1703,25 @@ def probe_cpu_limit():
     return str(min(2, int(value)))
 
 
+def probe_network():
+    """Use the existing bridge namespace, never the host's interface notifications."""
+    value = json.loads(docker("network", "inspect", "bridge", timeout=15))
+    require(
+        isinstance(value, list)
+        and len(value) == 1
+        and isinstance(value[0], dict)
+        and value[0].get("Name") == "bridge"
+        and value[0].get("Driver") == "bridge"
+        and value[0].get("Scope") == "local"
+        and value[0].get("Internal") is False,
+        "ISOLATED_OUTBOUND_PROBE_NETWORK_REQUIRED",
+    )
+    return "bridge"
+
+
 def probe(binding, env, operation, folder, plan):
     cpus = probe_cpu_limit()
+    network = probe_network()
     name = TARGET[env]
     current = inventory()
     actual = current[name]
@@ -1762,7 +1781,7 @@ def probe(binding, env, operation, folder, plan):
         "-i",
         "--read-only",
         "--network",
-        "host",
+        network,
         "--tmpfs",
         "/tmp:rw,mode=700,size=512m",
         "--memory",
