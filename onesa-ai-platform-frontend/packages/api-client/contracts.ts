@@ -16,6 +16,10 @@ export type ChatRequest = components["schemas"]["ChatRequest"];
 export type Chunk = components["schemas"]["Chunk"];
 export type CompletedToolStep = components["schemas"]["CompletedToolStep"];
 export type Component = components["schemas"]["Component"];
+export type ConsumerCompletion = components["schemas"]["ConsumerCompletion"];
+export type ConsumerMessage = components["schemas"]["ConsumerMessage"];
+export type ConsumerRequest = components["schemas"]["ConsumerRequest"];
+export type ConsumerUsage = components["schemas"]["ConsumerUsage"];
 export type ConversationCreate = components["schemas"]["ConversationCreate"];
 export type ConversationDetail = components["schemas"]["ConversationDetail"];
 export type ConversationList = components["schemas"]["ConversationList"];
@@ -178,6 +182,7 @@ export interface Operations {
   "PUT /industrial/investigations/{identifier}/draft": { body: paths["/api/v1/industrial/investigations/{identifier}/draft"]["put"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/industrial/investigations/{identifier}/draft"]["put"]["responses"][200]["content"]["application/json"] };
   "POST /industrial/investigations/{identifier}/generate": { body: paths["/api/v1/industrial/investigations/{identifier}/generate"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/industrial/investigations/{identifier}/generate"]["post"]["responses"][200]["content"]["application/json"] };
   "POST /industrial/investigations/{identifier}/review": { body: paths["/api/v1/industrial/investigations/{identifier}/review"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/industrial/investigations/{identifier}/review"]["post"]["responses"][200]["content"]["application/json"] };
+  "POST /inference/completions": { body: paths["/api/v1/inference/completions"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/inference/completions"]["post"]["responses"][200]["content"]["application/json"] };
   "GET /knowledge/documents": { body: undefined; response: paths["/api/v1/knowledge/documents"]["get"]["responses"][200]["content"]["application/json"] };
   "POST /knowledge/documents": { body: undefined; response: paths["/api/v1/knowledge/documents"]["post"]["responses"][201]["content"]["application/json"] };
   "DELETE /knowledge/documents/{identifier}": { body: undefined; response: void };

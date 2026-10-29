@@ -288,6 +288,81 @@ script, failing-evidence example, human criteria, discovery and pilot boundaries
 A new hosted model run requires a finite current allowance and exact source/model
 scope. Ordinary production remains distinct from the isolated synthetic demonstration.
 
+## Interoperable AI integration requirement — 2026-10-28
+
+The consumer is the application, developer or organisation integrating the AI
+Platform. A consumer application must be able to replace Onesa AI with another
+compatible provider through configuration or a provider adapter, without rewriting
+its business workflows, tool integrations or stored domain records. A Chat UI model
+picker is a separate product choice and is not this acceptance criterion.
+
+The source candidate adds `onesa-inference-v1`: opt-in stateless text inference,
+a portable Python client with Onesa and OpenAI-compatible transport adapters, and
+bounded caller-owned message/history records. Synthetic tests run the same consumer
+business code through both adapters; provider/model/revision and known token usage
+remain attached to each result. This is a text-only subset, not complete compatibility
+with another vendor's API. Streaming, vision, speech, remote tool-calling and automatic
+history/embedding migration are outside this profile. Unknown usage stays unknown.
+
+An optional local MCP stdio bridge pins protocol `2025-11-25` and exposes only
+explicitly permitted `text_stats`/`arithmetic` tools through existing authenticated
+Onesa services. It opens no HTTP listener, accepts no arbitrary tool or URL and invokes
+no model planner. Its lifecycle, discovery, explicit calls, refusal, revocation and
+bounded JSON transport have synthetic regressions. HTTP MCP/OAuth discovery, resource/
+prompt adapters and authenticated external-client qualification remain separate work.
+Robot's optional read-only asset-context import remains an ordinary HTTP integration.
+
+The internal `ModelClient` adapters still support mock, Ollama, vLLM and Cloudflare.
+Consumer inference defaults off; deployment, new processing/provider identities and
+live provider/MCP acceptance are not established by this implementation. The full
+acceptance below remains open until its broader and hosted gates are observed.
+
+Two independent boundaries are required:
+
+| Boundary | Required contract |
+| --- | --- |
+| Consumer inference integration | A versioned provider-neutral client contract for capability discovery, messages, generation, bounded streaming, cancellation, usage and redacted failures. A configured Onesa or alternative-provider adapter implements that contract; the consumer's business logic stays the same. |
+| Tools and context | Versioned MCP client/server adapters expose approved tools, resources and prompts through standard discovery and authorization. Application services retain their existing ownership and permission checks. |
+
+MCP standardizes context/tool exchange; it does not define the application's model
+routing. Follow the [official architecture](https://modelcontextprotocol.io/docs/learn/architecture)
+and explicitly pin the supported protocol/SDK version when implementation is qualified.
+Do not label an ordinary HTTP API as MCP-compatible without protocol conformance tests.
+
+Acceptance must demonstrate all of the following before this requirement is closed:
+
+- The same consumer integration scenario passes through the Onesa adapter and at
+  least one alternative-provider adapter with identical application business code.
+  Only the approved configuration/adapter changes. Capability negotiation rejects
+  unavailable, unauthorized or unsupported requests before provider transmission.
+- Provider-specific sessions, identifiers and response formats stay inside adapters.
+  Document the supported inference API profile and any compatibility limits; an
+  endpoint's name alone does not establish OpenAI-compatible or MCP conformance.
+- Switching providers preserves the consumer application's owned conversation and
+  document records, with a documented portable message/export format. Record the
+  actual provider/model/revision for each generation; do not relabel prior messages
+  or silently truncate context when model limits differ.
+- Chat generation and Knowledge embeddings have separate identities. Changing a
+  chat model must not silently change embedding dimensions, normalization or index
+  version. Embedding changes need an explicit compatible reindex and rollback plan.
+- MCP calls carry the existing caller/tenant authority and approved scopes. Tool
+  discovery, a model response or a connection never grants additional permission.
+  Test cross-user denial, revocation, cancellation, malformed responses and injection.
+- Provider credentials and approved endpoint configuration stay server-side. Consumer
+  access uses an explicitly scoped authenticated identity; browser-session automation
+  is not the portable service contract. Configuration cannot authorize arbitrary
+  destinations or cross-tenant connections. New hosted providers require their actual
+  privacy, rights, budget and release approval.
+- Fallback is explicit and separately approved. An outage must not silently send
+  private content to another provider or present deterministic output as model output.
+- Products can retain their own compatible releases and tool schemas. Robot and
+  Drone safety supervisors remain independent of every model and MCP adapter;
+  generative output cannot authorize physical operation or a Drone launch.
+
+Local synthetic contract tests establish software behavior only. Live provider,
+authenticated MCP-client and hosted product acceptance require their own bounded,
+source-bound evidence; this requirement grants no model download or paid inference.
+
 ## Versioned synthetic import candidate
 
 The first evidence adapter accepts a bounded JSON `onesa-industrial-evidence-v1`

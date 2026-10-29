@@ -24,6 +24,7 @@ from app import (
     auth,
     capacity,
     chat,
+    consumer_api,
     conversations,
     cybersecurity,
     documentation,
@@ -82,6 +83,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     api.include_router(uploads_router)
     api.include_router(account.router)
     api.include_router(conversations.router)
+    api.include_router(consumer_api.router)
     api.include_router(chat.router)
     api.include_router(knowledge.router)
     api.include_router(agents.router)

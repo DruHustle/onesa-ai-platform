@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import re
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
@@ -82,6 +83,8 @@ def itinerary_failure_reason(error: Exception) -> str:
                 "itinerary_size_limit",
                 "itinerary_empty",
                 "itinerary_invalid_json",
+                "itinerary_incomplete_json",
+                "itinerary_non_json_markup",
                 "itinerary_invalid_schema",
                 "itinerary_day_sequence",
             }
@@ -126,6 +129,12 @@ class ModelItineraryPlanner:
         text = "".join(chunks)
         if not text.strip():
             raise ItineraryPlanningError("itinerary_empty")
+        # A single whole-response JSON fence is transport formatting, not a
+        # different itinerary. Never extract an object from surrounding prose,
+        # reasoning, multiple blocks or trailing text, and never repair JSON.
+        framed = re.fullmatch(r"\s*```(?:json)?[ \t]*\r?\n(.*?)\r?\n```\s*", text, re.DOTALL)
+        if framed is not None:
+            text = framed[1]
         try:
             itinerary = Itinerary.model_validate_json(text)
         except ValidationError as error:
@@ -134,6 +143,11 @@ class ModelItineraryPlanner:
                 if any(item["type"] == "json_invalid" for item in error.errors())
                 else "itinerary_invalid_schema"
             )
+            if reason == "itinerary_invalid_json":
+                if text.lstrip().startswith("{") and not text.rstrip().endswith("}"):
+                    reason = "itinerary_incomplete_json"
+                elif text.lstrip().startswith(("```", "<think>")):
+                    reason = "itinerary_non_json_markup"
             raise ItineraryPlanningError(reason) from None
         if [day.day for day in itinerary.days] != list(range(1, body.duration + 1)):
             raise ItineraryPlanningError("itinerary_day_sequence")
