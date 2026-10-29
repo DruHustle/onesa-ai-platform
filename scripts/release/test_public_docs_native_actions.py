@@ -265,6 +265,7 @@ class NativeEventTests(unittest.TestCase):
             job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"],
             job["env"]["ONESA_DOCS_ENVIRONMENT"],
         )
+        self.assertEqual(job["env"]["ONESA_DOCS_ENVIRONMENT"], "staging")
         steps = job["steps"]
         staging = next(
             step
