@@ -2,6 +2,16 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {createGuard}=require('./oracle_vercel_transport_guard.cjs');
 const modulePath=path.join(__dirname,'oracle_vercel_transport_guard.cjs');
 function fixture(){const p=fs.mkdtempSync(path.join(os.tmpdir(),'onesa-transport-test-'));fs.chmodSync(p,0o700);fs.writeFileSync(path.join(p,'scope.json'),JSON.stringify({request_budget:1,operation_id:crypto.randomUUID(),repository:'DruHustle/onesa-ai-platform',component:'frontend',environment:'staging'}),{mode:0o600});return p;}
+for(const component of ['frontend','docs-public','docs-internal','api','foreign'])test(`transport scope preserves the explicit ${component} component boundary`,()=>{
+ const p=fixture();try{
+  const scope=JSON.parse(fs.readFileSync(path.join(p,'scope.json')));scope.component=component;
+  fs.writeFileSync(path.join(p,'scope.json'),JSON.stringify(scope),{mode:0o600});
+  if(['frontend','docs-public'].includes(component)){
+   createGuard(p)('https://api.vercel.com','POST','/v13/deployments');
+   assert.throws(()=>createGuard(p)('https://api.vercel.com','POST','/v13/deployments'));
+  }else{assert.throws(()=>createGuard(p));assert.equal(fs.existsSync(path.join(p,'create-request.json')),false);}
+ }finally{fs.rmSync(p,{recursive:true});}
+});
 function child(code){return new Promise((resolve,reject)=>{const p=spawn(process.execPath,['-e',code],{stdio:'ignore'});p.on('error',reject);p.on('exit',code=>resolve(code));});}
 test('the create budget survives process interruption and rejects a foreign target',()=>{
  const p=fixture();try{let check=createGuard(p);assert.throws(()=>check('https://foreign.invalid','POST','/v13/deployments'));check('https://api.vercel.com','POST','/v13/deployments?teamId=fixture');check('https://api.vercel.com','POST','/v2/files');check('https://api.vercel.com','GET','/v13/deployments');check=createGuard(p);assert.throws(()=>check('https://api.vercel.com','POST','/v13/deployments'));assert.equal(JSON.parse(fs.readFileSync(path.join(p,'create-request.json'))).automatic_retry,false);}finally{fs.rmSync(p,{recursive:true});}
