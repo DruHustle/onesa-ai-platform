@@ -268,7 +268,7 @@ jobs:
         \ True})\nroutes.extend([{'handle': 'filesystem'}, {'src': '/((?:[^/]+/)*[^/.]+)', 'dest': '/$1.html'}, {'src':\
         \ '/.*', 'dest': '/404.html', 'status': 404}])\npath = Path(os.environ['RUNNER_TEMP']) / 'onesa-docs/.vercel/output/config.json'\n\
         path.write_text(json.dumps({'version': 3, 'routes': routes}) + '\\n')\nPYTHON\ncd \"$RUNNER_TEMP/onesa-docs\"\
-        \ntest \"$DEPLOY_TARGET\" = preview\nnode \"$ONESA_DOCS_PREPARED_CLI\" deploy --prebuilt --yes --meta onesaSourceRevision=\"\
+        \ntest \"$DEPLOY_TARGET\" = preview\nnode \"$ONESA_DOCS_PREPARED_CLI\" deploy --prebuilt --yes --target=preview --meta onesaSourceRevision=\"\
         $GITHUB_SHA\" --token=\"$VERCEL_TOKEN\" > \"$RUNNER_TEMP/onesa-docs-url.txt\"\ncat \"$RUNNER_TEMP/onesa-docs-url.txt\"\
         \ >> \"$GITHUB_STEP_SUMMARY\"\n"
     - name: Verify actual deployment identity, readiness and source revision
