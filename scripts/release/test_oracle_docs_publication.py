@@ -3,7 +3,7 @@
 import threading
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -116,6 +116,39 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(
             self.store.db.execute(
                 "SELECT count(*) FROM records WHERE kind='documentation-preview-receipt'"
+            ).fetchone()[0],
+            0,
+        )
+
+    def test_full_preflight_target_has_time_for_the_matrix_but_no_release_authority(
+        self,
+    ):
+        preview = self.store.put(
+            publication.RECEIPT, self.binding, {"synthetic": True}
+        )["record"]
+        docs = SimpleNamespace(
+            preview_for_binding=lambda *_: preview,
+            target_for_observation=lambda *_args, **_kwargs: {"synthetic_target": True},
+        )
+        with patch.object(publication, "docs", docs):
+            target = publication.native_preflight(self.store, self.binding)["record"]
+        self.assertEqual(
+            datetime.fromisoformat(target["expires_at"])
+            - datetime.fromisoformat(target["issued_at"]),
+            timedelta(seconds=900),
+        )
+        self.assertFalse(target["details"]["qualification_reserved"])
+        self.assertFalse(target["details"]["production_deployment_authorized"])
+        self.assertEqual(target["details"]["hosted_acceptance"], "NOT_PERFORMED")
+        self.assertEqual(
+            self.store.db.execute("SELECT count(*) FROM contexts").fetchone()[0], 0
+        )
+        self.assertEqual(
+            self.store.db.execute("SELECT count(*) FROM deployments").fetchone()[0], 0
+        )
+        self.assertEqual(
+            self.store.db.execute(
+                "SELECT count(*) FROM records WHERE kind IN ('qualification','authorization','native-observation')"
             ).fetchone()[0],
             0,
         )

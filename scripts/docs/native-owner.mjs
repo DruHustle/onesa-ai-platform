@@ -32,7 +32,13 @@ export async function guardOwnedHttp(context,page,origin,onViolation) {
   let allowed=false;
   try{allowed=request.method==='GET'&&new URL(request.url).origin===origin;}catch{}
   if(!allowed)onViolation();
-  try{await session.send(allowed?'Fetch.continueRequest':'Fetch.failRequest',allowed?{requestId}:{requestId,errorReason:'BlockedByClient'});}catch{if(!page.isClosed())onViolation();}
+  try{await session.send(allowed?'Fetch.continueRequest':'Fetch.failRequest',allowed?{requestId}:{requestId,errorReason:'BlockedByClient'});}catch(error){
+   // Navigation can cancel an already-allowed same-origin GET before CDP resumes
+   // it. This exact Chromium response cannot dispatch a forbidden request. Every
+   // required response/byte/UI assertion remains mandatory; other errors fail.
+   const cancelledRead=allowed&&/^(?:cdpSession\.send: )?Protocol error \(Fetch\.continueRequest\): Invalid InterceptionId\.$/.test(error.message);
+   if(!cancelledRead&&!page.isClosed())onViolation();
+  }
  };
  session.on('Fetch.requestPaused',paused);
  // These settings belong only to this disposable target, never the owner context.
@@ -100,4 +106,12 @@ export async function validateNativePublicDocumentation(context,{origin,revision
 }
 export async function validateNativePublicPreview(context,options){
  return validateNativePublicDocumentation(context,{...options,expectedEnvironment:'staging'});
+}
+
+export async function validateNativePublicPreflight(context,options){
+ // Exercise the same bytes and complete UI matrix before reserving qualification.
+ // This result has no signature, qualification record or deployment authority.
+ if(options.expectedEnvironment!=='staging')throw Error('NATIVE_STAGING_PREFLIGHT_REQUIRED');
+ await validateNativePublicDocumentation(context,options);
+ return {state:'NATIVE_OWNER_SESSION_READY_NOT_QUALIFICATION',providerWrites:0,sessionValuesRead:false};
 }
