@@ -37,6 +37,12 @@ Docs visual acceptance and its native-owner regression resolve Axe from Docs' ow
 locked dependency installation. Preview transport fixtures close their owned HTTP
 servers even if browser launch or browser cleanup fails; an unavailable renderer
 remains a failed check and must not leave the test process listening indefinitely.
+Native public asset verification uses at most four concurrent GETs. Every manifest
+entry still requires its exact status, size, digest and MIME before the full UI
+matrix, within the existing observation deadline. Failure stops further reads and
+settles in-flight reads before target cleanup. Run `node --test
+scripts/docs/native-owner.test.mjs scripts/docs/native-full-preflight.test.mjs`
+with the locked public build for the bounded-reader and complete TLS fixtures.
 
 Travel planning retains one provider request, the existing output-size/token and
 total generation-time budgets, strict JSON/schema/day validation, and the 503

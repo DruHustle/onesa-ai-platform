@@ -30,16 +30,7 @@ try{
   for(const x of v.assets)if(typeof x.route!=='string'||!x.route.startsWith('/')||x.route.startsWith('//')||/[?#\\]/.test(x.route)||!/^[a-f0-9]{64}$/.test(x.sha256)||!Number.isSafeInteger(x.bytes)||x.bytes<0||x.bytes>16*1024*1024||!Array.isArray(x.mimes)||!x.mimes.length)throw Error('EXACT_ASSET_BYTES_AND_MIME_REQUIRED');
   const validate=v.mode==='preflight'?module.validateNativePublicPreflight:module.validateNativePublicDocumentation;
   const result=await validate(context,{origin,revision:v.revision,expectedEnvironment:v.environment,verifyPublicAssets:async get=>{
-   let verified=0;
-   for(const x of v.assets){
-    const response=await get(origin+x.route);
-    if(response.status()!==200)throw Error('TRUSTED_ASSET_HTTP');
-    const body=await response.body();
-    if(body.length!==x.bytes||createHash('sha256').update(body).digest('hex')!==x.sha256)throw Error('TRUSTED_ASSET_DIGEST');
-    if(!x.mimes.includes(response.headers()['content-type']?.split(';')[0].trim()))throw Error('TRUSTED_ASSET_MIME');
-    verified++;
-   }
-   return {verified,expected:v.assets.length};
+   return module.verifyNativePublicAssets(get,origin,v.assets);
   }});
   console.log(JSON.stringify(v.mode==='preflight'?result:{...result,browser:browserIdentity}));
 }catch(error){
