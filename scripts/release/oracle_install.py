@@ -34,6 +34,15 @@ ALLOWED = {
     "runners/oracle_twin_backup_transport.mjs": "scripts/release/oracle_twin_backup_transport.mjs",
     "runners/oracle_twin_backup_crypto.mjs": "scripts/release/oracle_twin_backup_crypto.mjs",
 }
+DOCS_ALLOWED = {
+    **ALLOWED,
+    "oracle_docs_owner.py": "scripts/release/oracle_docs_owner.py",
+    "oracle_docs_native.py": "scripts/release/oracle_docs_native.py",
+    "oracle_docs_contract.py": "scripts/release/oracle_docs_contract.py",
+    "runners/oracle_docs_runner.py": "scripts/release/oracle_docs_runner.py",
+    "runners/oracle_docs_build.py": "scripts/release/oracle_docs_build.py",
+    "runners/oracle_docs_checks.py": "scripts/release/oracle_docs_checks.py",
+}
 MAX_BYTES = 2 * 1024 * 1024
 
 
@@ -82,8 +91,10 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         m["schema_version"] == 1 and m["repository"] == "DruHustle/onesa-ai-platform",
         "Installation repository refused",
     )
+    is_docs = set(m["files"]) == set(DOCS_ALLOWED)
+    allowed = DOCS_ALLOWED if is_docs else ALLOWED
     require(
-        set(m["files"]) == set(ALLOWED),
+        set(m["files"]) == set(allowed),
         "Only reviewed verifier and component runner may be installed",
     )
     github.owner()
@@ -99,7 +110,7 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     require(not source.get("truncated"), "Source tree incomplete")
     blobs = {r["path"]: r for r in source["tree"] if r["type"] == "blob"}
     payloads = {}
-    for local, upstream in ALLOWED.items():
+    for local, upstream in allowed.items():
         relative(local)
         checksum = m["files"][local]
         require(
@@ -135,7 +146,10 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     }
     require(
         set(policy["components"])
-        in [{m["repository"] + ":" + c for c in names} for names in [legacy, scoped]],
+        in [
+            {m["repository"] + ":" + c for c in names}
+            for names in ([{"docs-public"}] if is_docs else [legacy, scoped])
+        ],
         "Only literal legacy or independent feature profiles are eligible",
     )
     # This source archive is data. Reconstruct its Git tree before using any
@@ -152,11 +166,19 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    components = module.profiles.policy_components(policy)
+    components = (
+        {"docs-public"} if is_docs else module.profiles.policy_components(policy)
+    )
     _app, files = module.source_inventory(
         bundle / "tool-source.tar", {"source_tree": m["source_tree"]}
     )
     tool = policy["toolchain"]
+    if is_docs:
+        target = INSTALL_PARENT / ("ai-docs-" + m["source_tree"])
+        validate_docs_policy(bundle, m, policy, files, target)
+        payloads["tool-source.tar"] = tool_bytes
+        payloads["policy.json"] = policy_bytes
+        return m, target, payloads, ci
     require(
         set(tool)
         == {
@@ -222,6 +244,88 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     payloads["tool-source.tar"] = tool_bytes
     payloads["policy.json"] = policy_bytes
     return m, target, payloads, ci
+
+
+def validate_docs_policy(bundle, manifest, policy, files, target):
+    """Docs extends this installer; it creates no separate trust or release store."""
+    tool = policy["toolchain"]
+    require(
+        set(tool)
+        == {
+            "source_commit",
+            "source_tree",
+            "source_sha256",
+            "cli_image",
+            "cli_image_security_path",
+            "transport_guard_sha256",
+            "docs_project_id",
+            "vercel_team_id",
+            "native_source_pins",
+            "native_runtime_pins",
+            "native_producer_sha256",
+        }
+        and tool["source_commit"] == manifest["candidate_commit"]
+        and tool["source_tree"] == manifest["source_tree"]
+        and tool["source_sha256"] == manifest["tool_source_sha256"]
+        and re.fullmatch("sha256:[a-f0-9]{64}", tool["cli_image"])
+        and re.fullmatch("prj_[A-Za-z0-9]+", tool["docs_project_id"])
+        and re.fullmatch("team_[A-Za-z0-9]+", tool["vercel_team_id"])
+        and tool["transport_guard_sha256"]
+        == manifest["files"]["runners/oracle_vercel_transport_guard.cjs"]
+        and tool["cli_image_security_path"]
+        == "/var/lib/onesa/release-verification/ai-docs/artifacts/"
+        + manifest["source_tree"]
+        + "/toolchain/cli-security.json",
+        "Exact source-bound existing Docs toolchain required",
+    )
+    spec = importlib.util.spec_from_file_location(
+        "reviewed_docs_native_contract", bundle / "oracle_docs_contract.py"
+    )
+    contract = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    require(
+        tool["native_source_pins"]
+        == {name: files[name] for name in contract.SOURCE_CLOSURE}
+        and contract.producer_digest(
+            tool["native_source_pins"], tool["native_runtime_pins"]
+        )
+        == tool["native_producer_sha256"],
+        "Native observer source/runtime closure differs from reviewed source",
+    )
+    profile = policy["components"][manifest["repository"] + ":docs-public"]
+    require(
+        set(profile)
+        == {
+            "qualification_attempt_limit",
+            "runners",
+            "required_checks",
+            "publication_mechanism",
+        }
+        and profile["qualification_attempt_limit"] == 1
+        and profile["publication_mechanism"] == "existing-isolated-owner-vercel-cli",
+        "Literal independent Docs profile required",
+    )
+    verifier.binding_valid(
+        {
+            "repository": manifest["repository"],
+            "component": "docs-public",
+            "candidate_commit": manifest["candidate_commit"],
+            "source_tree": manifest["source_tree"],
+            "source_sha256": manifest["tool_source_sha256"],
+            "build_sha256": "0" * 64,
+            "artifact_digest": "sha256:" + "0" * 64,
+            "configuration_sha256": {"staging": "0" * 64, "production": "0" * 64},
+            "target_environment": "production",
+        },
+        policy,
+    )
+    for phase in verifier.PHASES:
+        runner = profile["runners"][phase]
+        require(
+            runner["path"] == str(target / "runners/oracle_docs_runner.py")
+            and runner["sha256"] == manifest["files"]["runners/oracle_docs_runner.py"],
+            "Docs runner differs from reviewed installation",
+        )
 
 
 def install(bundle, manifest_pin, github, *, dry_run=False, uid=0):
