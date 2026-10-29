@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
-import {nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,validateNativePublicPreflight,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
+import {verifyNativePublicAssets,nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,validateNativePublicPreflight,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
 import {waitForInteractiveDocumentation,observeDocumentationFailure} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
@@ -270,4 +271,48 @@ test('stalled failure diagnostics finish boundedly and do not turn failure into 
  await observeDocumentationFailure(error,{evaluate:()=>new Promise(()=>{})});
  assert.ok(performance.now()-start<3000);assert.equal(error.message,'Original stalled interaction');
  assert.deepEqual(error.documentationObservation,{phase:'unspecified',state:null});
+});
+
+function assetFixture(count=12){
+ const body=Buffer.from('synthetic public asset');
+ const digest=createHash('sha256').update(body).digest('hex');
+ return {body,assets:Array.from({length:count},(_,i)=>({route:'/asset-'+i,bytes:body.length,sha256:digest,mimes:['text/plain']}))};
+}
+test('native public bytes use at most four actual concurrent reads and verify every response',async()=>{
+ const {body,assets}=assetFixture();let active=0,maximum=0;const seen=new Set();
+ const result=await verifyNativePublicAssets(async url=>{
+  active++;maximum=Math.max(maximum,active);await new Promise(r=>setTimeout(r,15));seen.add(url);active--;
+  return {status:()=>200,body:async()=>body,headers:()=>({'content-type':'text/plain; charset=utf-8'})};
+ },PREVIEW,assets);
+ assert.deepEqual(result,{verified:12,expected:12});assert.equal(maximum,4);assert.equal(active,0);assert.equal(seen.size,12);
+});
+test('bounded asset reads fail closed on HTTP, bytes, MIME and rejected transport',async()=>{
+ const {body,assets}=assetFixture();
+ for(const kind of ['http','bytes','mime','transport']){
+  let calls=0;
+  await assert.rejects(verifyNativePublicAssets(async()=>{
+   calls++;if(kind==='transport')throw Error('SYNTHETIC_TRANSPORT_FAILURE');
+   return {status:()=>kind==='http'?404:200,body:async()=>kind==='bytes'?Buffer.from('changed'):body,headers:()=>({'content-type':kind==='mime'?'text/html':'text/plain'})};
+  },PREVIEW,assets));
+  assert.ok(calls<=4,'No new reads may start after the first observed failure');
+ }
+});
+test('duplicate, foreign and oversized asset descriptors are refused before a request',async()=>{
+ const {assets}=assetFixture(1);
+ for(const candidate of [[assets[0],assets[0]],[{...assets[0],route:'//foreign.invalid/file'}],[{...assets[0],bytes:16*1024*1024+1}]]){
+  let reads=0;await assert.rejects(verifyNativePublicAssets(async()=>{reads++;},PREVIEW,candidate));assert.equal(reads,0);
+ }
+});
+test('asset failure settles every in-flight read before the caller can clean up',async()=>{
+ const {body,assets}=assetFixture();let calls=0,active=0;
+ const failure=new Error('ORIGINAL_SYNTHETIC_FAILURE');
+ await assert.rejects(verifyNativePublicAssets(async()=>{
+  const index=calls++;active++;
+  try{
+   if(index===0)throw failure;
+   await new Promise(resolve=>setTimeout(resolve,25));
+   return {status:()=>200,body:async()=>body,headers:()=>({'content-type':'text/plain'})};
+  }finally{active--;}
+ },PREVIEW,assets),error=>error===failure);
+ assert.equal(calls,4);assert.equal(active,0);
 });
