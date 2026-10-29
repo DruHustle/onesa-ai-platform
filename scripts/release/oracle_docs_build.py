@@ -346,7 +346,7 @@ def read_build(
         listing["total_count"] == len(items) == len(names)
         and {item["name"] for item in items} == names
         and {item["id"] for item in items} == archives.keys(),
-        "EXACT_TWO_PUBLIC_DOCS_ARTIFACTS_REQUIRED",
+        "EXACT_PUBLIC_DOCS_ARTIFACT_SET_REQUIRED",
     )
     result = []
     acceptance = None

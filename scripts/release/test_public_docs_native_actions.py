@@ -267,6 +267,22 @@ class NativeEventTests(unittest.TestCase):
         )
         self.assertEqual(job["env"]["ONESA_DOCS_ENVIRONMENT"], "staging")
         steps = job["steps"]
+        publish = next(
+            step
+            for step in steps
+            if step.get("name")
+            == "Publish verified public build as Preview only without dependency installation"
+        )
+        self.assertIn("deploy --prebuilt --yes --target=preview", publish["run"])
+        self.assertNotIn("--prod", publish["run"])
+        self.assertEqual(publish["if"], "inputs.target != 'build'")
+        local = next(
+            step
+            for step in steps
+            if step.get("name") == "Upload local public build checks only"
+        )
+        self.assertEqual(local["if"], "inputs.target == 'build'")
+        self.assertNotIn("env", local)
         staging = next(
             step
             for step in steps
