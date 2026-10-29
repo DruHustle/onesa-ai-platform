@@ -20,7 +20,25 @@ submitted values/passwords. Common statuses: 401 auth, 403 Origin/CSRF/permissio
 415 format, 422 validation/model selection, 429 auth throttle, 503 dependency/generation failure.
 
 [openapi.json](openapi.json) is the implemented machine-readable contract. Regenerate with
-`make openapi`; inspect `/docs` on the internal/local API for schema details.
+`make openapi`; inspect the exported snapshot for exact schema details.
+
+## Optional consumer text inference v1
+
+`POST /api/v1/inference/completions` accepts `ConsumerRequest` and returns
+`ConsumerCompletion` when the server-only consumer flag is enabled. It defaults off.
+Existing authenticated sessions, invitation eligibility, Origin/CSRF and shared
+model admission/budgets apply; no public bearer credential or account is created.
+Commission a dedicated consumer identity through the existing approved process.
+
+The profile `onesa-inference-v1` accepts explicit portable role/content history,
+returns a complete bounded text result with model/revision and known usage, and
+does not store conversations or messages. Inputs over 32 messages or 32,000 total
+characters, unsupported roles/models/options and output over 8,000 characters are
+refused. Partial, revoked, disconnected or failed generation never returns success.
+The Python `app.consumer` client maps this profile and a documented text-only
+OpenAI Chat Completions subset to the same message/result records. It does not claim
+full vendor API, streaming, multimodal, embedding or remote tool-call compatibility.
+See [consumer configuration and the separate MCP bridge](../engineering/AI_CONFIGURATION_INVENTORY.md#consumer-inference-and-mcp-source-candidate).
 
 ## Optional Digital Twins v1
 

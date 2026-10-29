@@ -74,6 +74,7 @@ class Settings(BaseSettings):
     digital_twins_demo_enabled: bool = False
     digital_twins_storage_directory: str = ""
     digital_twins_persistent_mount: bool = False
+    consumer_inference_enabled: bool = False
 
     @field_validator("model_quantization", "model_revision", mode="before")
     @classmethod
