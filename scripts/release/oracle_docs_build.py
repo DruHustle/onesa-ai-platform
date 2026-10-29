@@ -4,6 +4,7 @@ This produces build evidence only. It cannot publish, issue authorization, or
 substitute an Actions artifact for owner provenance or native hosted acceptance.
 """
 
+import base64
 import hashlib
 import io
 import json
@@ -15,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 
+import oracle_docs_checks
 import oracle_owner as owner
 
 REPOSITORY = "DruHustle/onesa-ai-platform"
@@ -52,6 +54,139 @@ FORBIDDEN = {
     "generated/diagrams/onesa-design-system.svg",
     "generated/diagrams/tailscale-administration.pdf",
 }
+CHECK_ARTIFACT = "onesa-public-docs-local-build-checks"
+CHECK_STEPS = {
+    "Record local public build checks without hosted authority",
+    "Upload local public build checks only",
+}
+CONTRACT_FILES = {
+    "registry": "onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json",
+    "icons": "onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json",
+}
+
+
+def source_contract(github, sha):
+    """Read the qualified commit's public contracts, independent of install paths."""
+    result = {}
+    for key, path in CONTRACT_FILES.items():
+        row = github.api("repos/" + REPOSITORY + "/contents/" + path + "?ref=" + sha)
+        owner.require(
+            row.get("type") == "file"
+            and row.get("path") == path
+            and row.get("encoding") == "base64"
+            and type(row.get("size")) is int
+            and 0 < row["size"] <= 128 * 1024
+            and isinstance(row.get("content"), str)
+            and len(row["content"]) <= 256 * 1024,
+            "EXACT_PUBLIC_DOCS_SOURCE_CONTRACT_REQUIRED",
+        )
+        try:
+            raw = base64.b64decode(row["content"].replace("\n", ""), validate=True)
+            owner.require(
+                len(raw) == row["size"]
+                and hashlib.sha1(
+                    b"blob " + str(len(raw)).encode() + b"\0" + raw
+                ).hexdigest()
+                == row.get("sha"),
+                "PUBLIC_DOCS_CONTRACT_GIT_BLOB_CHANGED",
+            )
+            value = json.loads(raw)
+            owner.require(isinstance(value, dict), "PUBLIC_DOCS_CONTRACT_SHAPE")
+            result[key] = value
+        except owner.Rejected:
+            raise
+        except (ValueError, UnicodeError) as error:
+            raise owner.Rejected("INVALID_PUBLIC_DOCS_SOURCE_CONTRACT") from error
+    return result
+
+
+def local_checks(raw, artifact, sha, run_id, contract):
+    """Real CI custody of local checks is still not owner authorization."""
+    owner.require(
+        isinstance(raw, bytes)
+        and 0 < len(raw) <= 1024 * 1024
+        and artifact["digest"] == "sha256:" + hashlib.sha256(raw).hexdigest(),
+        "DOCS_LOCAL_CHECK_ARCHIVE_DIGEST_REQUIRED",
+    )
+    try:
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            items = archive.infolist()
+            owner.require(
+                len(items) == 1
+                and items[0].filename
+                == items[0].orig_filename
+                == "docs-local-build-checks.json"
+                and items[0].file_size <= 1024 * 1024
+                and not items[0].flag_bits & 1
+                and items[0].compress_type in {zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED}
+                and stat.S_IFMT(items[0].external_attr >> 16) in {0, stat.S_IFREG},
+                "EXACT_LOCAL_DOCS_CHECK_MEMBER_REQUIRED",
+            )
+
+            def unique(pairs):
+                value = {}
+                for key, item in pairs:
+                    owner.require(key not in value, "DUPLICATE_DOCS_CHECK_JSON_KEY")
+                    value[key] = item
+                return value
+
+            value = json.loads(archive.read(items[0]), object_pairs_hook=unique)
+        owner.require(
+            set(value)
+            == {
+                "schema_version",
+                "evidence_kind",
+                "repository",
+                "candidate_commit",
+                "actions_build_run_id",
+                "checks",
+                "checks_sha256",
+                "hosted_qualification",
+                "production_deployment_authorized",
+                "application_deployment_authorized",
+                "backend_deployment_authorized",
+            }
+            and type(value["schema_version"]) is int
+            and value["schema_version"] == 1
+            and value["evidence_kind"] == "onesa-public-docs-local-build-checks"
+            and value["repository"] == REPOSITORY
+            and value["candidate_commit"] == sha
+            and type(value["actions_build_run_id"]) is int
+            and value["actions_build_run_id"] == run_id
+            and value["checks_sha256"] == owner.digest(value["checks"])
+            and set(value["checks"]) == {"staging", "production"}
+            and all(
+                value[key] is False
+                for key in [
+                    "hosted_qualification",
+                    "production_deployment_authorized",
+                    "application_deployment_authorized",
+                    "backend_deployment_authorized",
+                ]
+            ),
+            "LOCAL_DOCS_CHECK_SOURCE_RUN_SCOPE_OR_AUTHORITY_REFUSED",
+        )
+        for environment, check in value["checks"].items():
+            owner.require(
+                check["result"] == "PASS"
+                and check["environment_context"] == environment
+                and check["provenance"]
+                == {"revision": sha, "classification": "public"},
+                "SUCCESSFUL_EXACT_LOCAL_DOCS_CONTEXT_REQUIRED",
+            )
+            oracle_docs_checks.validate(
+                check, contract["registry"], contract["icons"], require=owner.require
+            )
+    except owner.Rejected:
+        raise
+    except (KeyError, ValueError, TypeError, UnicodeError, zipfile.BadZipFile) as error:
+        raise owner.Rejected("INVALID_LOCAL_DOCS_CHECKS") from error
+    return {
+        "artifact_id": artifact["id"],
+        "archive_sha256": hashlib.sha256(raw).hexdigest(),
+        "checks_sha256": value["checks_sha256"],
+        "checks": value["checks"],
+    }
 
 
 class Audience(HTMLParser):
@@ -166,9 +301,13 @@ def archive_identity(raw, artifact, sha):
     }
 
 
-def read_build(github, source, run_id, archives, *, now=None):
+def read_build(
+    github, source, run_id, archives, *, now=None, require_local_checks=False
+):
     """A pinned external consumer supplies downloaded bytes, never a supplied PASS."""
     owner.require(not os.getenv("GITHUB_ACTIONS"), "EXTERNAL_DOCS_READER_REQUIRED")
+    owner.require(type(require_local_checks) is bool, "EXPLICIT_DOCS_CHECK_MODE")
+    required_steps = BUILD_STEPS | (CHECK_STEPS if require_local_checks else set())
     owner.require(
         set(source) == {"repository", "candidate_commit", "source_tree"}
         and source["repository"] == REPOSITORY
@@ -223,7 +362,7 @@ def read_build(github, source, run_id, archives, *, now=None):
         and job["conclusion"] == "success"
         and all(
             sum(step["name"] == name for step in job["steps"]) == 1
-            for name in BUILD_STEPS | PROVIDER_STEPS
+            for name in required_steps | PROVIDER_STEPS
         )
         and all(
             step["status"] == "completed"
@@ -233,7 +372,7 @@ def read_build(github, source, run_id, archives, *, now=None):
         and all(
             steps.get(name, {}).get("status") == "completed"
             and steps[name].get("conclusion") == "success"
-            for name in BUILD_STEPS
+            for name in required_steps
         )
         and all(
             steps.get(name, {}).get("status") == "completed"
@@ -244,13 +383,16 @@ def read_build(github, source, run_id, archives, *, now=None):
     )
     listing = github.api(prefix + "/artifacts?per_page=100")
     items = listing["artifacts"]
+    names = set(ARTIFACTS) | ({CHECK_ARTIFACT} if require_local_checks else set())
     owner.require(
-        listing["total_count"] == len(items) == 2
-        and {item["name"] for item in items} == ARTIFACTS.keys()
+        listing["total_count"] == len(items) == len(names)
+        and {item["name"] for item in items} == names
         and {item["id"] for item in items} == archives.keys(),
-        "EXACT_TWO_PUBLIC_DOCS_ARTIFACTS_REQUIRED",
+        "EXACT_PUBLIC_DOCS_ARTIFACT_SET_REQUIRED",
     )
     result = []
+    acceptance = None
+    contract = source_contract(github, sha) if require_local_checks else None
     for item in sorted(items, key=lambda item: item["name"]):
         owner.require(
             type(item["id"]) is int
@@ -260,7 +402,10 @@ def read_build(github, source, run_id, archives, *, now=None):
             and item["workflow_run"]["head_sha"] == sha,
             "DOCS_ARTIFACT_ORIGIN_EXPIRED_OR_CHANGED",
         )
-        result.append(archive_identity(archives[item["id"]], item, sha))
+        if item["name"] == CHECK_ARTIFACT:
+            acceptance = local_checks(archives[item["id"]], item, sha, run_id, contract)
+        else:
+            result.append(archive_identity(archives[item["id"]], item, sha))
     owner.require(
         github.qualify(source) == ci
         and github.api(prefix) == run
@@ -274,6 +419,12 @@ def read_build(github, source, run_id, archives, *, now=None):
         "actions_job_id": job["id"],
         "native_ci": ci,
         "artifacts": result,
+        **({"local_acceptance": acceptance} if require_local_checks else {}),
+        **(
+            {"public_source_contract_sha256": owner.digest(contract)}
+            if require_local_checks
+            else {}
+        ),
         "STAGING_VERIFIED": "BLOCKED",
         "required_external_checks": [
             "owner_controlled_preview_publication_and_provider_identity",

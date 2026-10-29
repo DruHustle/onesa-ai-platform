@@ -1,19 +1,26 @@
 """Disposable Actions metadata/ZIP controls; no provider or owner authority."""
 
+import base64
 import copy
 import hashlib
 import io
 import json
 import os
+import shutil
 import stat
+import subprocess
+import sys
+import tempfile
 import unittest
 import warnings
 import zipfile
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from unittest.mock import patch
 
 import oracle_docs_build as docs
 import oracle_owner as owner
+from test_docs_scope import acceptance
 
 NOW = datetime(2026, 10, 29, 2, tzinfo=timezone.utc)
 SOURCE = {
@@ -61,6 +68,7 @@ class GitHub:
         self.changed_source = False
         self.changed_artifacts = False
         self.artifact_reads = 0
+        self.changed_contract = False
         self.run = {
             "id": 100,
             "repository": {"full_name": docs.REPOSITORY},
@@ -134,6 +142,29 @@ class GitHub:
             if self.changed_artifacts and self.artifact_reads > 1:
                 items[0]["expired"] = True
             return {"total_count": len(items), "artifacts": items}
+        for file in docs.CONTRACT_FILES.values():
+            if (
+                path
+                == "repos/"
+                + docs.REPOSITORY
+                + "/contents/"
+                + file
+                + "?ref="
+                + SOURCE["candidate_commit"]
+            ):
+                raw = (Path(__file__).resolve().parents[2] / file).read_bytes()
+                return {
+                    "type": "file",
+                    "path": file,
+                    "encoding": "base64",
+                    "size": len(raw),
+                    "content": base64.b64encode(
+                        raw + (b"tampered" if self.changed_contract else b"")
+                    ).decode(),
+                    "sha": hashlib.sha1(
+                        b"blob " + str(len(raw)).encode() + b"\0" + raw
+                    ).hexdigest(),
+                }
         raise AssertionError("Unexpected fixture API path")
 
 
@@ -146,6 +177,112 @@ class DocsBuildTests(unittest.TestCase):
         return docs.read_build(
             self.github, SOURCE, run_id, self.github.archives, now=NOW
         )
+
+    def add_checks(self, mutate=None):
+        checks = {
+            environment: acceptance(environment)
+            for environment in ["staging", "production"]
+        }
+        for check in checks.values():
+            check["provenance"]["revision"] = SOURCE["candidate_commit"]
+        value = {
+            "schema_version": 1,
+            "evidence_kind": "onesa-public-docs-local-build-checks",
+            "repository": docs.REPOSITORY,
+            "candidate_commit": SOURCE["candidate_commit"],
+            "actions_build_run_id": 100,
+            "checks": checks,
+            "checks_sha256": owner.digest(checks),
+            "hosted_qualification": False,
+            "production_deployment_authorized": False,
+            "application_deployment_authorized": False,
+            "backend_deployment_authorized": False,
+        }
+        if mutate:
+            original_hash = value["checks_sha256"]
+            mutate(value)
+            if value["checks_sha256"] == original_hash:
+                value["checks_sha256"] = owner.digest(value["checks"])
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            archive.writestr("docs-local-build-checks.json", json.dumps(value))
+        self.github.items.append(
+            {
+                "id": 302,
+                "name": docs.CHECK_ARTIFACT,
+                "expired": False,
+                "workflow_run": {"id": 100, "head_sha": SOURCE["candidate_commit"]},
+            }
+        )
+        self.github.set_archive(302, output.getvalue())
+        self.github.job["steps"].extend(
+            {"name": name, "status": "completed", "conclusion": "success"}
+            for name in sorted(docs.CHECK_STEPS)
+        )
+
+    def read_with_checks(self):
+        return docs.read_build(
+            self.github,
+            SOURCE,
+            100,
+            self.github.archives,
+            now=NOW,
+            require_local_checks=True,
+        )
+
+    def test_typed_local_build_checks_remain_distinct_from_owner_hosted_evidence(self):
+        self.add_checks()
+        result = self.read_with_checks()
+        self.assertEqual(result["local_acceptance"]["artifact_id"], 302)
+        self.assertEqual(result["actions_build_run_id"], 100)
+        self.assertEqual(result["STAGING_VERIFIED"], "BLOCKED")
+        self.assertFalse(result["production_deployment_authorized"])
+        with self.assertRaises(owner.Rejected):
+            self.read()  # Legacy two-artifact mode cannot silently consume new evidence.
+
+    def test_missing_modified_or_skipped_local_build_checks_fail_closed(self):
+        with self.assertRaises(owner.Rejected):
+            self.read_with_checks()
+        mutations = [
+            lambda v: v.update(candidate_commit="f" * 40),
+            lambda v: v.update(actions_build_run_id=0),
+            lambda v: v.update(actions_build_run_id=True),
+            lambda v: v.update(hosted_qualification=True),
+            lambda v: v.update(production_deployment_authorized=True),
+            lambda v: v.update(checks_sha256="0" * 64),
+            lambda v: v["checks"]["staging"].update(result="FAIL"),
+            lambda v: v["checks"]["staging"].update(environment_context="production"),
+            lambda v: v["checks"]["staging"].update(accessibility=["PASS"] * 124),
+        ]
+        for mutate in mutations:
+            self.github = GitHub()
+            self.add_checks(mutate)
+            with self.subTest(mutate=mutate), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
+        for conclusion in ["skipped", "failure"]:
+            self.github = GitHub()
+            self.add_checks()
+            step = next(
+                s for s in self.github.job["steps"] if s["name"] in docs.CHECK_STEPS
+            )
+            step["conclusion"] = conclusion
+            with self.subTest(conclusion=conclusion), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
+
+    def test_local_check_artifact_modification_expiry_and_concurrent_changes_refuse(
+        self,
+    ):
+        for failure in ["bytes", "expiry", "concurrent"]:
+            self.github = GitHub()
+            self.add_checks()
+            if failure == "bytes":
+                self.github.archives[302] += b"tampered"
+            elif failure == "expiry":
+                self.github.items[-1]["expired"] = True
+            else:
+                self.github.changed_artifacts = True
+            with self.subTest(failure=failure), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
 
     def test_genuine_build_stays_blocked_for_hosted_qualification_and_authority(self):
         result = self.read()
@@ -283,6 +420,59 @@ class DocsBuildTests(unittest.TestCase):
             setattr(self.github, flag, True)
             with self.subTest(flag=flag), self.assertRaises(owner.Rejected):
                 self.read()
+
+    def test_source_contract_is_git_bound_and_not_loaded_from_an_install_checkout(self):
+        self.add_checks()
+        result = self.read_with_checks()
+        self.assertRegex(result["public_source_contract_sha256"], "^[a-f0-9]{64}$")
+        self.github.changed_contract = True
+        with self.assertRaisesRegex(
+            owner.Rejected, "PUBLIC_DOCS_CONTRACT_GIT_BLOB_CHANGED"
+        ):
+            self.read_with_checks()
+
+    def test_real_three_module_install_loads_without_a_checkout_or_legacy_gate(self):
+        self.add_checks()
+        artifact = self.github.items[-1]
+        contract = docs.source_contract(self.github, SOURCE["candidate_commit"])
+        payload = {
+            "raw": base64.b64encode(self.github.archives[302]).decode(),
+            "artifact": artifact,
+            "sha": SOURCE["candidate_commit"],
+            "contract": contract,
+        }
+        with tempfile.TemporaryDirectory(
+            prefix="isolated-docs-owner-module-"
+        ) as folder:
+            for name in [
+                "oracle_docs_build.py",
+                "oracle_docs_checks.py",
+                "oracle_owner.py",
+            ]:
+                shutil.copyfile(Path(__file__).with_name(name), Path(folder) / name)
+            program = """import base64,json,sys
+sys.path.insert(0,sys.argv[1])
+import oracle_docs_build as docs
+assert 'free_gate' not in sys.modules and 'evidence' not in sys.modules
+value=json.load(sys.stdin)
+observed=docs.local_checks(base64.b64decode(value['raw']),value['artifact'],value['sha'],100,value['contract'])
+assert observed['artifact_id']==302
+print('ACTUAL_ISOLATED_DOCS_CHECK_READER_PASS_NO_CHECKOUT_OR_AUTHORITY')
+"""
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", program, folder],
+                input=json.dumps(payload),
+                text=True,
+                cwd=folder,
+                capture_output=True,
+                timeout=20,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.stdout.strip(),
+            "ACTUAL_ISOLATED_DOCS_CHECK_READER_PASS_NO_CHECKOUT_OR_AUTHORITY",
+        )
 
     def test_context_failure_keeps_its_precise_nonsecret_reason(self):
         self.github.set_archive(

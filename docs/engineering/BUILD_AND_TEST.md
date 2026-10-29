@@ -1,5 +1,12 @@
 # Separate application builds and tests
 
+`python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
+and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
+verify genuine build/local-check custody separately from owner hosted acceptance.
+They reject run ID zero as an Actions run, source/context drift, failed or skipped
+checks, changed bytes, expiry and attempts to grant authority from local results.
+No provider or production credentials are used by these tests.
+
 The owner frontend fixture injects a conflicting production default and verifies
 explicit Preview selection before staging dispatch. A wrong provider target retains
 the one-create intent and refuses acceptance. Actual pinned CLI protocol fixtures
