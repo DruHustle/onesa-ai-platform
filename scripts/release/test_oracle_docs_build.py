@@ -1,15 +1,21 @@
 """Disposable Actions metadata/ZIP controls; no provider or owner authority."""
 
+import base64
 import copy
 import hashlib
 import io
 import json
 import os
+import shutil
 import stat
+import subprocess
+import sys
+import tempfile
 import unittest
 import warnings
 import zipfile
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from unittest.mock import patch
 
 import oracle_docs_build as docs
@@ -62,6 +68,7 @@ class GitHub:
         self.changed_source = False
         self.changed_artifacts = False
         self.artifact_reads = 0
+        self.changed_contract = False
         self.run = {
             "id": 100,
             "repository": {"full_name": docs.REPOSITORY},
@@ -135,6 +142,29 @@ class GitHub:
             if self.changed_artifacts and self.artifact_reads > 1:
                 items[0]["expired"] = True
             return {"total_count": len(items), "artifacts": items}
+        for file in docs.CONTRACT_FILES.values():
+            if (
+                path
+                == "repos/"
+                + docs.REPOSITORY
+                + "/contents/"
+                + file
+                + "?ref="
+                + SOURCE["candidate_commit"]
+            ):
+                raw = (Path(__file__).resolve().parents[2] / file).read_bytes()
+                return {
+                    "type": "file",
+                    "path": file,
+                    "encoding": "base64",
+                    "size": len(raw),
+                    "content": base64.b64encode(
+                        raw + (b"tampered" if self.changed_contract else b"")
+                    ).decode(),
+                    "sha": hashlib.sha1(
+                        b"blob " + str(len(raw)).encode() + b"\0" + raw
+                    ).hexdigest(),
+                }
         raise AssertionError("Unexpected fixture API path")
 
 
@@ -390,6 +420,59 @@ class DocsBuildTests(unittest.TestCase):
             setattr(self.github, flag, True)
             with self.subTest(flag=flag), self.assertRaises(owner.Rejected):
                 self.read()
+
+    def test_source_contract_is_git_bound_and_not_loaded_from_an_install_checkout(self):
+        self.add_checks()
+        result = self.read_with_checks()
+        self.assertRegex(result["public_source_contract_sha256"], "^[a-f0-9]{64}$")
+        self.github.changed_contract = True
+        with self.assertRaisesRegex(
+            owner.Rejected, "PUBLIC_DOCS_CONTRACT_GIT_BLOB_CHANGED"
+        ):
+            self.read_with_checks()
+
+    def test_real_three_module_install_loads_without_a_checkout_or_legacy_gate(self):
+        self.add_checks()
+        artifact = self.github.items[-1]
+        contract = docs.source_contract(self.github, SOURCE["candidate_commit"])
+        payload = {
+            "raw": base64.b64encode(self.github.archives[302]).decode(),
+            "artifact": artifact,
+            "sha": SOURCE["candidate_commit"],
+            "contract": contract,
+        }
+        with tempfile.TemporaryDirectory(
+            prefix="isolated-docs-owner-module-"
+        ) as folder:
+            for name in [
+                "oracle_docs_build.py",
+                "oracle_docs_checks.py",
+                "oracle_owner.py",
+            ]:
+                shutil.copyfile(Path(__file__).with_name(name), Path(folder) / name)
+            program = """import base64,json,sys
+sys.path.insert(0,sys.argv[1])
+import oracle_docs_build as docs
+assert 'free_gate' not in sys.modules and 'evidence' not in sys.modules
+value=json.load(sys.stdin)
+observed=docs.local_checks(base64.b64decode(value['raw']),value['artifact'],value['sha'],100,value['contract'])
+assert observed['artifact_id']==302
+print('ACTUAL_ISOLATED_DOCS_CHECK_READER_PASS_NO_CHECKOUT_OR_AUTHORITY')
+"""
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", program, folder],
+                input=json.dumps(payload),
+                text=True,
+                cwd=folder,
+                capture_output=True,
+                timeout=20,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.stdout.strip(),
+            "ACTUAL_ISOLATED_DOCS_CHECK_READER_PASS_NO_CHECKOUT_OR_AUTHORITY",
+        )
 
     def test_context_failure_keeps_its_precise_nonsecret_reason(self):
         self.github.set_archive(
