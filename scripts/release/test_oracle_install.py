@@ -77,7 +77,10 @@ class InstallTests(unittest.TestCase):
         source_root = self.root / "synthetic-source"
         source_root.mkdir(mode=0o700)
         repo = Path(__file__).resolve().parents[2]
-        for local, source in installer.ALLOWED.items():
+        is_docs = getattr(self, "DOCS", False)
+        for local, source in (
+            installer.DOCS_ALLOWED if is_docs else installer.ALLOWED
+        ).items():
             data = (repo / source).read_bytes()
             files[source] = data
             self.put(local, data)
@@ -87,6 +90,11 @@ class InstallTests(unittest.TestCase):
         )
         for resource in runner.PROBE_RESOURCE_FILES:
             files[resource] = (repo / resource).read_bytes()
+        if is_docs:
+            import oracle_docs_contract as contract
+
+            for resource in contract.SOURCE_CLOSURE:
+                files[resource] = (repo / resource).read_bytes()
         for name, data in files.items():
             path = source_root / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -152,6 +160,61 @@ class InstallTests(unittest.TestCase):
                     phase: sorted(verifier.REQUIRED_CHECKS[phase])
                     for phase in verifier.PHASES
                 },
+            }
+        if is_docs:
+            import oracle_docs_contract as contract
+
+            runtime = {
+                "node": "4" * 64,
+                "openssl": "5" * 64,
+                "browser_packages": "6" * 64,
+            }
+            native_files = {
+                name: hashlib.sha256(files[name]).hexdigest()
+                for name in contract.SOURCE_CLOSURE
+            }
+            self.policy["toolchain"] = {
+                "source_commit": "a" * 40,
+                "source_tree": tree,
+                "source_sha256": self.manifest["tool_source_sha256"],
+                "cli_image": "sha256:" + "2" * 64,
+                "cli_image_security_path": "/var/lib/onesa/release-verification/ai-docs/artifacts/"
+                + tree
+                + "/toolchain/cli-security.json",
+                "transport_guard_sha256": self.manifest["files"][
+                    "runners/oracle_vercel_transport_guard.cjs"
+                ],
+                "docs_project_id": "prj_fixture",
+                "vercel_team_id": "team_fixture",
+                "native_source_pins": native_files,
+                "native_runtime_pins": runtime,
+                "native_producer_sha256": contract.producer_digest(
+                    native_files, runtime
+                ),
+            }
+            self.policy["components"] = {
+                "DruHustle/onesa-ai-platform:docs-public": {
+                    "qualification_attempt_limit": 1,
+                    "publication_mechanism": "existing-isolated-owner-vercel-cli",
+                    "runners": {
+                        phase: {
+                            "path": str(
+                                installer.INSTALL_PARENT
+                                / ("ai-docs-" + tree)
+                                / "runners/oracle_docs_runner.py"
+                            ),
+                            "sha256": self.manifest["files"][
+                                "runners/oracle_docs_runner.py"
+                            ],
+                            "timeout_seconds": 1800,
+                        }
+                        for phase in verifier.PHASES
+                    },
+                    "required_checks": {
+                        phase: sorted(verifier.REQUIRED_CHECKS[phase])
+                        for phase in verifier.PHASES
+                    },
+                }
             }
         self.seal()
 
