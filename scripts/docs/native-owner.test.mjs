@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
 import {createRequire} from 'node:module';
-import {nativeGet,exactPreviewOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
+import {nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
 import {waitForInteractiveDocumentation,observeDocumentationFailure} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
@@ -37,6 +37,14 @@ test('failed hydration observation preserves the original failure and rejects ar
 test('only exact public Preview origin is accepted',()=>{
  assert.equal(exactPreviewOrigin(PREVIEW+'/'),PREVIEW);
  for(const value of ['http://onesa-docs-synthetic-druhustles-projects.vercel.app/','https://other.vercel.app/','https://platform.onesa.eu/','https://onesa-engineering-docs.pages.dev/',PREVIEW+'/?token=value',PREVIEW+'/path','https://user@onesa-docs-synthetic-druhustles-projects.vercel.app/'])assert.throws(()=>exactPreviewOrigin(value));
+});
+
+test('production native observation accepts only the exact public canonical Docs origin',()=>{
+ assert.equal(exactNativeDocsOrigin('https://docs.onesa.eu/','production'),'https://docs.onesa.eu');
+ assert.equal(exactNativeDocsOrigin(PREVIEW+'/','staging'),PREVIEW);
+ for(const value of [PREVIEW+'/','https://docs.engineering.onesa.eu/','https://docs.onesa.eu/?token=synthetic','https://docs.onesa.eu/path','https://user@docs.onesa.eu/','http://docs.onesa.eu/'])assert.throws(()=>exactNativeDocsOrigin(value,'production'));
+ assert.throws(()=>exactNativeDocsOrigin('https://docs.onesa.eu/','staging'));
+ assert.throws(()=>exactNativeDocsOrigin('https://docs.onesa.eu/','development'));
 });
 
 test('native reader refuses external URLs before any browser evaluation',async()=>{
@@ -74,6 +82,22 @@ test('native verification owns one page, blocks writes and closes only its page 
 test('native validation requires a verifier function before creating a page',async()=>{
  let created=0;const context={newPage:async()=>created++};
  await assert.rejects(validateNativePublicPreview(context,{origin:PREVIEW,revision:'a'.repeat(40)}));assert.equal(created,0);
+});
+
+test('a stalled native observation closes its owned target and preserves the owner tab',async()=>{
+ let closed=false;const original={};
+ const page={setExtraHTTPHeaders:async()=>{},goto:async()=>new Promise(()=>{}),isClosed:()=>closed,close:async()=>{closed=true;}};
+ const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+ const context={pages:()=>[original],newPage:async()=>page,newCDPSession:async()=>session};
+ await assert.rejects(validateNativePublicPreview(context,{origin:PREVIEW,revision:'a'.repeat(40),verifyPublicAssets:async()=>({verified:1,expected:1}),deadlineMs:30}),/OWNED_NATIVE_OBSERVATION_DEADLINE/);
+ assert.equal(closed,true);assert.deepEqual(context.pages(),[original]);
+});
+
+test('an expired native audit cannot create further auxiliary targets',async()=>{
+ const abort=new AbortController();abort.abort();let created=0;
+ const facade=ownedAuditPage({}, {newPage:async()=>{created++;}},new Map(),()=>{},undefined,PREVIEW,abort.signal);
+ await assert.rejects(facade.context().newPage(),/OWNED_NATIVE_OBSERVATION_DEADLINE/);
+ assert.equal(created,0);
 });
 
 

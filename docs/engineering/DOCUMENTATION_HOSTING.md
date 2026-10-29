@@ -47,6 +47,21 @@ expiry and unchanged custody after reading. Legacy two-archive inspection remain
 available separately; it cannot satisfy the new check mode. These local checks
 never claim an owner-run receipt, a hosted PASS or deployment authority.
 
+The public Docs owner adapter extends the existing external Oracle verifier. Its
+installation is checked against reviewed Main and fresh CI; installation, issuer
+commissioning and native-observer commissioning remain separate actions. A new
+observer key is untrusted until the owner commissions its exact source and runtime
+closure. Neither caller JSON nor an Actions artifact is owner authorization.
+
+Preview and production requests retain durable operation identities and a guarded
+create budget. Interrupted outcomes require read-only inspection; repeating an
+operation cannot submit another deployment. Production remains unverified until
+the actual canonical source, complete artifact bytes and required native browser
+workflows pass. Detailed commands, trust configuration and observed deployment
+status belong in the protected canonical procedure. This implementation reference
+does not claim a commissioned installation or a completed publication. Protected
+Engineering Docs retains its separate existing publication and access gates.
+
 
 ## Current public Docs release — 2026-10-20
 
