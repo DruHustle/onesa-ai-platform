@@ -355,3 +355,16 @@ Cybersecurity with Twins disabled keeps its independent database backup path.
 These tests do not commission the new policy, activate features, migrate a hosted
 database or establish hosted acceptance. Consult the protected canonical procedure
 and evidence index for actual installation, qualification and deployment outcomes.
+
+Upload regression tests exercise request-scoped expiry cleanup against disposable
+PostgreSQL: another account's expired chunks and active rows survive, an owner's
+expired fragments are removed, and the global limit still counts active leases.
+The owner probe retains metadata-only preservation baselines and changed-table
+diagnostics; every pre-existing row remains subject to the same strict comparison.
+
+Travel accepts bare JSON or one whole-response JSON fence, followed by the same
+strict itinerary schema and consecutive-day validation. It never extracts JSON
+from prose, repairs an incomplete response, retries inference or substitutes a mock.
+Protocol tests cover malformed framing, multiple objects, private reasoning markup,
+schema drift and preservation of the saved trip after a failed revision. This
+bounded framing support does not establish the cause of any historical hosted failure.

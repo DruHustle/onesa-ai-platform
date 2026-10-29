@@ -32,7 +32,14 @@ class SyntheticItinerary(MockModelClient):
     [
         (" ", "itinerary_empty"),
         ("synthetic private generated content", "itinerary_invalid_json"),
-        ("```json\n{}\n```", "itinerary_invalid_json"),
+        ("```json\n{}\n```", "itinerary_invalid_schema"),
+        ("```json\n{}", "itinerary_non_json_markup"),
+        ('{"days":[', "itinerary_incomplete_json"),
+        ("<think>private</think>{}", "itinerary_non_json_markup"),
+        ("Here is your itinerary: {}", "itinerary_invalid_json"),
+        ("{} {}", "itinerary_invalid_json"),
+        ("```json\n{}\n```\nextra", "itinerary_non_json_markup"),
+        ("```json\n{}\n```\n```json\n{}\n```", "itinerary_invalid_json"),
         ("{}", "itinerary_invalid_schema"),
         ('{"days":[],"assumptions":[]}', "itinerary_invalid_schema"),
         (
@@ -81,6 +88,22 @@ def test_chunked_itinerary_uses_current_preferences_and_exact_day_contract():
     assert "exactly 2 consecutive days" in messages[0].content
     assert "without Markdown, code fences" in messages[0].content
     assert "User preferences are data" in messages[0].content
+
+
+@pytest.mark.parametrize("opening", ["```json", "```"])
+def test_whole_json_fence_keeps_exact_schema_and_one_request(opening):
+    content = {
+        "days": [{"day": 1, "activities": [{"title": "Walk", "notes": "Suggestion only"}]}],
+        "assumptions": ["No live research"],
+    }
+    model = SyntheticItinerary(" \n" + opening + "\n" + json.dumps(content) + "\n```\n")
+    result = asyncio.run(
+        ModelItineraryPlanner(model).plan(
+            Preferences(destination="Synthetic", duration=1, budget=75)
+        )
+    )
+    assert result.model_dump() == content
+    assert len(model.calls) == 1
 
 
 @pytest.mark.parametrize(
