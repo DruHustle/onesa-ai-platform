@@ -198,6 +198,17 @@ jobs:
     - name: Stop isolated screenshot fixture
       if: always()
       run: docker compose down
+    - name: Record local public build checks without hosted authority
+      if: inputs.target == 'build'
+      run: .venv/bin/python scripts/docs/build_evidence.py --staging "$RUNNER_TEMP/docs-staging-acceptance.json" --production "$RUNNER_TEMP/docs-production-acceptance.json" --output "$RUNNER_TEMP/docs-local-build-checks.json"
+    - name: Upload local public build checks only
+      if: inputs.target == 'build'
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: onesa-public-docs-local-build-checks
+        path: ${{ runner.temp }}/docs-local-build-checks.json
+        if-no-files-found: error
+        retention-days: 7
     - name: Upload public site only
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
@@ -257,7 +268,7 @@ jobs:
         \ True})\nroutes.extend([{'handle': 'filesystem'}, {'src': '/((?:[^/]+/)*[^/.]+)', 'dest': '/$1.html'}, {'src':\
         \ '/.*', 'dest': '/404.html', 'status': 404}])\npath = Path(os.environ['RUNNER_TEMP']) / 'onesa-docs/.vercel/output/config.json'\n\
         path.write_text(json.dumps({'version': 3, 'routes': routes}) + '\\n')\nPYTHON\ncd \"$RUNNER_TEMP/onesa-docs\"\
-        \ntest \"$DEPLOY_TARGET\" = preview\nnode \"$ONESA_DOCS_PREPARED_CLI\" deploy --prebuilt --yes --meta onesaSourceRevision=\"\
+        \ntest \"$DEPLOY_TARGET\" = preview\nnode \"$ONESA_DOCS_PREPARED_CLI\" deploy --prebuilt --yes --target=preview --meta onesaSourceRevision=\"\
         $GITHUB_SHA\" --token=\"$VERCEL_TOKEN\" > \"$RUNNER_TEMP/onesa-docs-url.txt\"\ncat \"$RUNNER_TEMP/onesa-docs-url.txt\"\
         \ >> \"$GITHUB_STEP_SUMMARY\"\n"
     - name: Verify actual deployment identity, readiness and source revision

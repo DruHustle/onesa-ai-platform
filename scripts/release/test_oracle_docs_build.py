@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 import oracle_docs_build as docs
 import oracle_owner as owner
+from test_docs_scope import acceptance
 
 NOW = datetime(2026, 10, 29, 2, tzinfo=timezone.utc)
 SOURCE = {
@@ -146,6 +147,112 @@ class DocsBuildTests(unittest.TestCase):
         return docs.read_build(
             self.github, SOURCE, run_id, self.github.archives, now=NOW
         )
+
+    def add_checks(self, mutate=None):
+        checks = {
+            environment: acceptance(environment)
+            for environment in ["staging", "production"]
+        }
+        for check in checks.values():
+            check["provenance"]["revision"] = SOURCE["candidate_commit"]
+        value = {
+            "schema_version": 1,
+            "evidence_kind": "onesa-public-docs-local-build-checks",
+            "repository": docs.REPOSITORY,
+            "candidate_commit": SOURCE["candidate_commit"],
+            "actions_build_run_id": 100,
+            "checks": checks,
+            "checks_sha256": owner.digest(checks),
+            "hosted_qualification": False,
+            "production_deployment_authorized": False,
+            "application_deployment_authorized": False,
+            "backend_deployment_authorized": False,
+        }
+        if mutate:
+            original_hash = value["checks_sha256"]
+            mutate(value)
+            if value["checks_sha256"] == original_hash:
+                value["checks_sha256"] = owner.digest(value["checks"])
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            archive.writestr("docs-local-build-checks.json", json.dumps(value))
+        self.github.items.append(
+            {
+                "id": 302,
+                "name": docs.CHECK_ARTIFACT,
+                "expired": False,
+                "workflow_run": {"id": 100, "head_sha": SOURCE["candidate_commit"]},
+            }
+        )
+        self.github.set_archive(302, output.getvalue())
+        self.github.job["steps"].extend(
+            {"name": name, "status": "completed", "conclusion": "success"}
+            for name in sorted(docs.CHECK_STEPS)
+        )
+
+    def read_with_checks(self):
+        return docs.read_build(
+            self.github,
+            SOURCE,
+            100,
+            self.github.archives,
+            now=NOW,
+            require_local_checks=True,
+        )
+
+    def test_typed_local_build_checks_remain_distinct_from_owner_hosted_evidence(self):
+        self.add_checks()
+        result = self.read_with_checks()
+        self.assertEqual(result["local_acceptance"]["artifact_id"], 302)
+        self.assertEqual(result["actions_build_run_id"], 100)
+        self.assertEqual(result["STAGING_VERIFIED"], "BLOCKED")
+        self.assertFalse(result["production_deployment_authorized"])
+        with self.assertRaises(owner.Rejected):
+            self.read()  # Legacy two-artifact mode cannot silently consume new evidence.
+
+    def test_missing_modified_or_skipped_local_build_checks_fail_closed(self):
+        with self.assertRaises(owner.Rejected):
+            self.read_with_checks()
+        mutations = [
+            lambda v: v.update(candidate_commit="f" * 40),
+            lambda v: v.update(actions_build_run_id=0),
+            lambda v: v.update(actions_build_run_id=True),
+            lambda v: v.update(hosted_qualification=True),
+            lambda v: v.update(production_deployment_authorized=True),
+            lambda v: v.update(checks_sha256="0" * 64),
+            lambda v: v["checks"]["staging"].update(result="FAIL"),
+            lambda v: v["checks"]["staging"].update(environment_context="production"),
+            lambda v: v["checks"]["staging"].update(accessibility=["PASS"] * 124),
+        ]
+        for mutate in mutations:
+            self.github = GitHub()
+            self.add_checks(mutate)
+            with self.subTest(mutate=mutate), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
+        for conclusion in ["skipped", "failure"]:
+            self.github = GitHub()
+            self.add_checks()
+            step = next(
+                s for s in self.github.job["steps"] if s["name"] in docs.CHECK_STEPS
+            )
+            step["conclusion"] = conclusion
+            with self.subTest(conclusion=conclusion), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
+
+    def test_local_check_artifact_modification_expiry_and_concurrent_changes_refuse(
+        self,
+    ):
+        for failure in ["bytes", "expiry", "concurrent"]:
+            self.github = GitHub()
+            self.add_checks()
+            if failure == "bytes":
+                self.github.archives[302] += b"tampered"
+            elif failure == "expiry":
+                self.github.items[-1]["expired"] = True
+            else:
+                self.github.changed_artifacts = True
+            with self.subTest(failure=failure), self.assertRaises(owner.Rejected):
+                self.read_with_checks()
 
     def test_genuine_build_stays_blocked_for_hosted_qualification_and_authority(self):
         result = self.read()
