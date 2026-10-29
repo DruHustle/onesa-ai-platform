@@ -1,5 +1,11 @@
 # Onesa UG documentation hosting
 
+Public Docs native preflight checks every bound asset and the complete interaction,
+layout and accessibility matrix before qualification is reserved. Readiness still
+grants no qualification or deployment authority; signed observations remain separate.
+Cancelled same-origin reads retain mandatory response and UI checks; foreign or
+write requests and unexpected interception failures still block native acceptance.
+
 ## Public source and protected operational documents
 
 Repository visibility remains public under the owner's current instruction. Public

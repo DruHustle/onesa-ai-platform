@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
 import {createRequire} from 'node:module';
-import {nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
+import {nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,validateNativePublicPreflight,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
 import {waitForInteractiveDocumentation,observeDocumentationFailure} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
@@ -82,6 +82,48 @@ test('native verification owns one page, blocks writes and closes only its page 
 test('native validation requires a verifier function before creating a page',async()=>{
  let created=0;const context={newPage:async()=>created++};
  await assert.rejects(validateNativePublicPreview(context,{origin:PREVIEW,revision:'a'.repeat(40)}));assert.equal(created,0);
+});
+
+test('only a cancelled already-allowed GET avoids a false write-enforcement failure',async()=>{
+ for(const [method,url,message,expected] of [
+  ['GET',PREVIEW+'/asset.js','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',0],
+  ['GET',PREVIEW+'/asset.js','Protocol error (Fetch.continueRequest): Invalid InterceptionId.',0],
+  ['GET',PREVIEW+'/asset.js','Synthetic transport failure',1],
+  ['GET','https://foreign.invalid/','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',2],
+  ['POST',PREVIEW+'/api','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',2],
+ ]){
+  let listener,violations=0;
+  const page={setExtraHTTPHeaders:async()=>{},isClosed:()=>false};
+  const session={on:(_name,fn)=>{listener=fn;},off:()=>{},detach:async()=>{},send:async command=>{if(command==='Fetch.continueRequest'||command==='Fetch.failRequest')throw Error(message);}};
+  const guard=await guardOwnedHttp({newCDPSession:async()=>session},page,PREVIEW,()=>violations++);
+  await listener({requestId:'synthetic',request:{method,url}});
+  assert.equal(violations,expected);await guard.dispose();
+ }
+});
+
+test('full preflight rejects production, missing byte verification and an unavailable owner session',async()=>{
+ let created=0,closed=0;
+ const original={},page={setExtraHTTPHeaders:async()=>{},goto:async()=>({status:()=>403}),url:()=>PREVIEW,isClosed:()=>false,close:async()=>closed++};
+ const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+ const context={pages:()=>[original],newPage:async()=>{created++;return page;},newCDPSession:async()=>session};
+ const options={origin:PREVIEW,revision:'a'.repeat(40),expectedEnvironment:'staging',verifyPublicAssets:async()=>({verified:1,expected:1})};
+ await assert.rejects(validateNativePublicPreflight(context,{...options,expectedEnvironment:'production'}),/NATIVE_STAGING_PREFLIGHT_REQUIRED/);
+ await assert.rejects(validateNativePublicPreflight(context,{...options,verifyPublicAssets:undefined}),/SOURCE_AND_TRUSTED_PUBLIC_ASSETS_REQUIRED/);
+ assert.equal(created,0);
+ await assert.rejects(validateNativePublicPreflight(context,options),/GENUINE_OWNER_PREVIEW_SESSION_REQUIRED/);
+ assert.equal(created,1);assert.equal(closed,1);assert.deepEqual(context.pages(),[original]);
+});
+
+test('a readable root is insufficient when preflight bytes or downstream UI checks fail',async()=>{
+ for(const bytes of [{verified:0,expected:1},{verified:1,expected:1}]){
+  let closed=0,verified=0;
+  const original={},page={setExtraHTTPHeaders:async()=>{},goto:async()=>({status:()=>200}),url:()=>PREVIEW,evaluate:async()=>false,isClosed:()=>false,close:async()=>closed++};
+  const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+  const context={pages:()=>[original],newPage:async()=>page,newCDPSession:async()=>session};
+  // The deliberately incomplete page cannot pass UI acceptance after valid bytes.
+  await assert.rejects(validateNativePublicPreflight(context,{origin:PREVIEW,revision:'a'.repeat(40),expectedEnvironment:'staging',verifyPublicAssets:async()=>{verified++;return bytes;}}));
+  assert.equal(verified,1);assert.equal(closed,1);assert.deepEqual(context.pages(),[original]);
+ }
 });
 
 test('a stalled native observation closes its owned target and preserves the owner tab',async()=>{
