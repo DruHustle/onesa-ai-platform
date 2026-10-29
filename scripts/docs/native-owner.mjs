@@ -45,9 +45,11 @@ export async function emulateOwnedViewport(session,size) {
  // Target-only emulation: Playwright setViewportSize would resize the shared native window.
  await session.send('Emulation.setDeviceMetricsOverride',{width:size.width,height:size.height,screenWidth:size.width,screenHeight:size.height,deviceScaleFactor:1,mobile:false,dontSetVisibleSize:true});
 }
-export function ownedAuditPage(page,context,auxiliary,onWrite,session,origin) {
+export function ownedAuditPage(page,context,auxiliary,onWrite,session,origin,signal) {
  const facade={newPage:async()=>{
+  if(signal?.aborted)throw Error('OWNED_NATIVE_OBSERVATION_DEADLINE');
   const owned=await context.newPage();
+  if(signal?.aborted){await owned.close();throw Error('OWNED_NATIVE_OBSERVATION_DEADLINE');}
   try{const guard=await guardOwnedHttp(context,owned,origin,onWrite);auxiliary.set(owned,guard);return owned;}catch{await owned.close();throw Error('OWNED_AUDIT_TARGET_GUARD_UNAVAILABLE');}
  }};
  // A local facade for Axe's blank result page; never replace shared context methods.
@@ -64,12 +66,22 @@ export async function cleanupOwnedTargets(page,guard,auxiliary) {
  }));
  if(results.some(result=>result.status==='rejected'))throw Error('OWNED_TARGET_CLEANUP_FAILED');
 }
-export async function validateNativePublicPreview(context,{origin,revision,verifyPublicAssets}) {
- origin=exactPreviewOrigin(origin+'/');
+export function exactNativeDocsOrigin(value,environment){
+ if(environment==='staging')return exactPreviewOrigin(value);
+ const url=new URL(value);
+ if(environment!=='production'||url.href!=='https://docs.onesa.eu/')throw Error('EXACT_CANONICAL_PUBLIC_DOCS_ORIGIN');
+ return url.origin;
+}
+export async function validateNativePublicDocumentation(context,{origin,revision,verifyPublicAssets,expectedEnvironment,deadlineMs=720000}) {
+ origin=exactNativeDocsOrigin(origin+'/',expectedEnvironment);
  if(!/^[a-f0-9]{40}$/.test(revision)||typeof verifyPublicAssets!=='function')throw Error('SOURCE_AND_TRUSTED_PUBLIC_ASSETS_REQUIRED');
+ if(!Number.isSafeInteger(deadlineMs)||deadlineMs<1||deadlineMs>720000)throw Error('BOUNDED_NATIVE_OBSERVATION_DEADLINE_REQUIRED');
  const before=[...context.pages()],page=await context.newPage(),auxiliary=new Map();let blockedWrites=0,guard;
+ const controller=new AbortController();let timer;
+ const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('OWNED_NATIVE_OBSERVATION_DEADLINE'));},deadlineMs);});
  // Request interception belongs only to owned targets and applies to every redirect.
  try {
+  return await Promise.race([deadline,(async()=>{
   guard=await guardOwnedHttp(context,page,origin,()=>blockedWrites++);
   const response=await page.goto(origin+'/',{waitUntil:'domcontentloaded',timeout:30000});
   if(response?.status()!==200||new URL(page.url()).origin!==origin)throw Error('GENUINE_OWNER_PREVIEW_SESSION_REQUIRED');
@@ -78,10 +90,14 @@ export async function validateNativePublicPreview(context,{origin,revision,verif
   // Caller independently verifies every trusted public artifact byte before UI acceptance.
   const assets=await verifyPublicAssets(get);
   if(!Number.isSafeInteger(assets?.verified)||assets.verified<=0||assets.verified!==assets.expected)throw Error('TRUSTED_ALL_PUBLIC_BYTES_REQUIRED');
-  const auditPage=ownedAuditPage(page,context,auxiliary,()=>blockedWrites++,guard.session,origin);
+  const auditPage=ownedAuditPage(page,context,auxiliary,()=>blockedWrites++,guard.session,origin,controller.signal);
   await auditPage.setViewportSize({width:1440,height:900});
-  const acceptance=await validatePublicDocumentation({page:auditPage,requestGet:get,origin,expectedRevision:revision,expectedEnvironment:'staging'});
+  const acceptance=await validatePublicDocumentation({page:auditPage,requestGet:get,origin,expectedRevision:revision,expectedEnvironment});
   if(blockedWrites!==0||!before.every(tab=>context.pages().includes(tab)))throw Error('OWNER_CONTEXT_PRESERVATION');
   return {acceptance,verified_public_asset_responses:assets.verified,provider_writes:0,blocked_non_get_requests:0,original_tabs_preserved:true,session_values_read:false,validation_channel:'native-owner'};
- }finally{await cleanupOwnedTargets(page,guard,auxiliary);}
+  })()]);
+ }finally{clearTimeout(timer);controller.abort();await cleanupOwnedTargets(page,guard,auxiliary);}
+}
+export async function validateNativePublicPreview(context,options){
+ return validateNativePublicDocumentation(context,{...options,expectedEnvironment:'staging'});
 }
