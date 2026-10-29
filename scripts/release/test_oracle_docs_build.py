@@ -284,6 +284,19 @@ class DocsBuildTests(unittest.TestCase):
             with self.subTest(flag=flag), self.assertRaises(owner.Rejected):
                 self.read()
 
+    def test_context_failure_keeps_its_precise_nonsecret_reason(self):
+        self.github.set_archive(
+            300,
+            archive(
+                "onesa-public-docs-staging",
+                label="DEVELOPMENT · Public developer documentation",
+            ),
+        )
+        with self.assertRaisesRegex(
+            owner.Rejected, "DOCS_BUILD_CONTEXT_MISMATCH_NEVER_RELABEL_ARCHIVES"
+        ):
+            self.read()
+
     def test_missing_provenance_and_incomplete_public_tree_are_refused(self):
         for missing in ["protected_document_sources", "code_sha256", "sources"]:
             self.github = GitHub()
