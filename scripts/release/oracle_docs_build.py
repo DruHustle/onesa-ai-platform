@@ -152,6 +152,8 @@ def archive_identity(raw, artifact, sha):
                 page.depth == 0 and page.labels == [ARTIFACTS[artifact["name"]]],
                 "DOCS_BUILD_CONTEXT_MISMATCH_NEVER_RELABEL_ARCHIVES",
             )
+    except owner.Rejected:
+        raise
     except (KeyError, ValueError, UnicodeError, zipfile.BadZipFile) as error:
         raise owner.Rejected("DOCS_ARCHIVE_INCOMPLETE_OR_INVALID") from error
     return {
