@@ -508,6 +508,7 @@ class Store:
 
     def put(self, kind, binding, details, *, parent=None, ttl=3600):
         require(60 <= ttl <= 86400, "Bounded record lifetime required")
+        issued = self.clock()
         record = {
             "schema_version": 1,
             "id": str(uuid4()),
@@ -515,10 +516,16 @@ class Store:
             "binding": binding,
             "workflow_run_id": 0,
             "execution_context": "owner-operated-oracle-staging"
-            if kind in ["context", "qualification"]
+            if kind
+            in [
+                "context",
+                "qualification",
+                "documentation-preview-intent",
+                "documentation-preview-receipt",
+            ]
             else "owner-operated-oracle-release",
-            "issued_at": self.clock().isoformat(),
-            "expires_at": (self.clock() + timedelta(seconds=ttl)).isoformat(),
+            "issued_at": issued.isoformat(),
+            "expires_at": (issued + timedelta(seconds=ttl)).isoformat(),
             "parent": parent,
             "owner_provenance": {
                 "mechanism": "commissioned-pinned-OpenSSH-and-authenticated-owner",
@@ -592,7 +599,8 @@ class Store:
             "Record expired/not yet valid",
         )
         require(
-            r["workflow_run_id"] == 0
+            type(r["workflow_run_id"]) is int
+            and r["workflow_run_id"] == 0
             and r["owner_provenance"]["installation_id"]
             == self.trust["installation_id"]
             and r["owner_provenance"]["verifier_sha256"]
@@ -634,9 +642,21 @@ class Store:
             and file_digest(path) == runner["sha256"],
             "Unreviewed runner refused",
         )
+        request = {"binding": binding, "context": context}
+        if binding["repository"] == "DruHustle/onesa-ai-platform" and binding[
+            "component"
+        ] in {"docs-public", "docs-internal"}:
+            # Only an explicitly commissioned Docs runner needs to revalidate its
+            # genuine build artifacts. This travels in private stdin, never the
+            # browser, arguments, environment, Actions or returned observations.
+            require(
+                isinstance(self.github.token, str) and self.github.token,
+                "Existing owner GitHub custody required",
+            )
+            request["owner_token"] = self.github.token
         r = subprocess.run(
             ["/usr/bin/python3", "-I", str(path), phase],
-            input=canonical({"binding": binding, "context": context}),
+            input=canonical(request),
             capture_output=True,
             timeout=runner["timeout_seconds"],
             env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
@@ -654,7 +674,7 @@ class Store:
             "Observed source/artifact/environment mismatch",
         )
         require(
-            value.get("workflow_run_id") == 0,
+            type(value.get("workflow_run_id")) is int and value["workflow_run_id"] == 0,
             "Owner observation must retain run ID zero",
         )
         if phase in ["deploy", "production"]:
@@ -842,6 +862,12 @@ class Store:
             self.db.execute(
                 "UPDATE deployments SET state='deployed-unverified' WHERE id=?", (id_,)
             )
+        if binding["repository"] == "DruHustle/onesa-ai-platform" and binding[
+            "component"
+        ] in {"docs-public", "docs-internal"}:
+            # Native canonical-browser evidence can only be collected after the
+            # provider publication. Preserve its genuine receipt while pending.
+            return self.inspect(id_, observe=False)
         return self.inspect(id_, observe=True)
 
     def inspect(self, operation, *, observe=False):
@@ -876,6 +902,32 @@ class Store:
                 "Canonical deployment differs from provider receipt",
             )
         with self.transaction():
+            if (
+                r["binding"]["repository"] == "DruHustle/onesa-ai-platform"
+                and r["binding"]["component"] in {"docs-public", "docs-internal"}
+                and not receipts
+            ):
+                existing = self.db.execute(
+                    "SELECT id FROM records WHERE kind='deployment-receipt' AND parent=?",
+                    (operation,),
+                ).fetchall()
+                require(len(existing) <= 1, "Duplicate reconciled provider receipts")
+                if existing:
+                    previous = self.get(existing[0][0], historical=True)["record"][
+                        "details"
+                    ]
+                    require(
+                        previous["observations"]["deployment_id"]
+                        == observed["observations"]["deployment_id"],
+                        "Concurrent provider receipt identity changed",
+                    )
+                else:
+                    self.put(
+                        "deployment-receipt",
+                        r["binding"],
+                        {**observed, "reconciled_read_only": True},
+                        parent=operation,
+                    )
             result = self.put(
                 "production-verification", r["binding"], observed, parent=operation
             )
