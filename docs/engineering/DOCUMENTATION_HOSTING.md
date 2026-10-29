@@ -27,6 +27,17 @@ Each protected publication needs its own approved-identity browser acceptance;
 source cleanup or a temporary mailbox test cannot stand in for that observation.
 The current accepted protected edition is recorded below.
 
+Credential-free `docs-hosting.yml` builds produce separate staging-context and
+production-context public archives. The external owner toolchain can read these
+through `scripts/release/oracle_docs_build.py`, which revalidates exact Main CI,
+the real positive Actions run ID, mandatory successful build steps, skipped provider
+steps, both artifact digests, public provenance and their rendered context labels.
+Development-labelled archives cannot be renamed into staging evidence. This reader
+produces build evidence only: owner-controlled Preview publication, native hosted
+acceptance, scoped authorization and canonical production observation remain required.
+It creates no authorization record or deployment request and does not install or
+commission a Docs issuer. Existing conditional native-metadata paths retain their gates.
+
 
 ## Current public Docs release — 2026-10-20
 
