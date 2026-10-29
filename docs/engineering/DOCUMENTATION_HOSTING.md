@@ -38,6 +38,15 @@ acceptance, scoped authorization and canonical production observation remain req
 It creates no authorization record or deployment request and does not install or
 commission a Docs issuer. Existing conditional native-metadata paths retain their gates.
 
+New build-only runs also upload `onesa-public-docs-local-build-checks`, containing
+the actual typed staging and production local acceptance results. The external
+reader's explicit `require_local_checks=True` mode requires all three genuine
+artifacts and both additional successful recording/upload steps. It verifies the
+check archive digest, positive Actions run ID, source, context, full view matrix,
+expiry and unchanged custody after reading. Legacy two-archive inspection remains
+available separately; it cannot satisfy the new check mode. These local checks
+never claim an owner-run receipt, a hosted PASS or deployment authority.
+
 
 ## Current public Docs release — 2026-10-20
 
