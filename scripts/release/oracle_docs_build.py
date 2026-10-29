@@ -4,6 +4,7 @@ This produces build evidence only. It cannot publish, issue authorization, or
 substitute an Actions artifact for owner provenance or native hosted acceptance.
 """
 
+import base64
 import hashlib
 import io
 import json
@@ -15,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 
-import free_gate
+import oracle_docs_checks
 import oracle_owner as owner
 
 REPOSITORY = "DruHustle/onesa-ai-platform"
@@ -58,9 +59,48 @@ CHECK_STEPS = {
     "Record local public build checks without hosted authority",
     "Upload local public build checks only",
 }
+CONTRACT_FILES = {
+    "registry": "onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json",
+    "icons": "onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json",
+}
 
 
-def local_checks(raw, artifact, sha, run_id):
+def source_contract(github, sha):
+    """Read the qualified commit's public contracts, independent of install paths."""
+    result = {}
+    for key, path in CONTRACT_FILES.items():
+        row = github.api("repos/" + REPOSITORY + "/contents/" + path + "?ref=" + sha)
+        owner.require(
+            row.get("type") == "file"
+            and row.get("path") == path
+            and row.get("encoding") == "base64"
+            and type(row.get("size")) is int
+            and 0 < row["size"] <= 128 * 1024
+            and isinstance(row.get("content"), str)
+            and len(row["content"]) <= 256 * 1024,
+            "EXACT_PUBLIC_DOCS_SOURCE_CONTRACT_REQUIRED",
+        )
+        try:
+            raw = base64.b64decode(row["content"].replace("\n", ""), validate=True)
+            owner.require(
+                len(raw) == row["size"]
+                and hashlib.sha1(
+                    b"blob " + str(len(raw)).encode() + b"\0" + raw
+                ).hexdigest()
+                == row.get("sha"),
+                "PUBLIC_DOCS_CONTRACT_GIT_BLOB_CHANGED",
+            )
+            value = json.loads(raw)
+            owner.require(isinstance(value, dict), "PUBLIC_DOCS_CONTRACT_SHAPE")
+            result[key] = value
+        except owner.Rejected:
+            raise
+        except (ValueError, UnicodeError) as error:
+            raise owner.Rejected("INVALID_PUBLIC_DOCS_SOURCE_CONTRACT") from error
+    return result
+
+
+def local_checks(raw, artifact, sha, run_id, contract):
     """Real CI custody of local checks is still not owner authorization."""
     owner.require(
         isinstance(raw, bytes)
@@ -134,7 +174,9 @@ def local_checks(raw, artifact, sha, run_id):
                 == {"revision": sha, "classification": "public"},
                 "SUCCESSFUL_EXACT_LOCAL_DOCS_CONTEXT_REQUIRED",
             )
-            free_gate.docs_acceptance_schema(check)
+            oracle_docs_checks.validate(
+                check, contract["registry"], contract["icons"], require=owner.require
+            )
     except owner.Rejected:
         raise
     except (KeyError, ValueError, TypeError, UnicodeError, zipfile.BadZipFile) as error:
@@ -350,6 +392,7 @@ def read_build(
     )
     result = []
     acceptance = None
+    contract = source_contract(github, sha) if require_local_checks else None
     for item in sorted(items, key=lambda item: item["name"]):
         owner.require(
             type(item["id"]) is int
@@ -360,7 +403,7 @@ def read_build(
             "DOCS_ARTIFACT_ORIGIN_EXPIRED_OR_CHANGED",
         )
         if item["name"] == CHECK_ARTIFACT:
-            acceptance = local_checks(archives[item["id"]], item, sha, run_id)
+            acceptance = local_checks(archives[item["id"]], item, sha, run_id, contract)
         else:
             result.append(archive_identity(archives[item["id"]], item, sha))
     owner.require(
@@ -377,6 +420,11 @@ def read_build(
         "native_ci": ci,
         "artifacts": result,
         **({"local_acceptance": acceptance} if require_local_checks else {}),
+        **(
+            {"public_source_contract_sha256": owner.digest(contract)}
+            if require_local_checks
+            else {}
+        ),
         "STAGING_VERIFIED": "BLOCKED",
         "required_external_checks": [
             "owner_controlled_preview_publication_and_provider_identity",
