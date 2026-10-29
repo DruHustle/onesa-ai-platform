@@ -35,6 +35,7 @@ class ProfileLedgerTests(unittest.TestCase):
         trust = json.loads((f.root / "trust.json").read_bytes())
         trust["policy_sha256"] = owner.file_digest(f.root / "policy.json")
         (f.root / "trust.json").write_bytes(owner.canonical(trust))
+        f.commission_fixture()
         f.store = f.open()
         f.addCleanup(f.store.db.close)
 

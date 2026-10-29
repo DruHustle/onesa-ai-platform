@@ -1153,6 +1153,52 @@
         }
       }
     },
+    "/api/v1/inference/completions": {
+      "post": {
+        "tags": [
+          "consumer inference"
+        ],
+        "summary": "Complete",
+        "operationId": "complete_api_v1_inference_completions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsumerCompletion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/api/v1/models": {
       "get": {
         "tags": [
@@ -8041,6 +8087,130 @@
           "name"
         ],
         "title": "Component"
+      },
+      "ConsumerCompletion": {
+        "properties": {
+          "contract_version": {
+            "type": "string",
+            "const": "onesa-inference-v1",
+            "title": "Contract Version"
+          },
+          "outcome": {
+            "type": "string",
+            "const": "completed",
+            "title": "Outcome"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelOut"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ConsumerUsage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract_version",
+          "outcome",
+          "text",
+          "model",
+          "request_id",
+          "usage"
+        ],
+        "title": "ConsumerCompletion"
+      },
+      "ConsumerMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 32000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ConsumerMessage"
+      },
+      "ConsumerRequest": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ConsumerMessage"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Messages"
+          },
+          "model_id": {
+            "type": "string",
+            "const": "default",
+            "title": "Model Id",
+            "default": "default"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "ConsumerRequest"
+      },
+      "ConsumerUsage": {
+        "properties": {
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ConsumerUsage"
       },
       "ConversationCreate": {
         "properties": {
