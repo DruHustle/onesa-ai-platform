@@ -1,11 +1,37 @@
 // Read-only public Docs acceptance in a supplied native owner context; no session export.
 import {validatePublicDocumentation} from './acceptance.mjs';
+import {createHash} from 'node:crypto';
 
 export function exactPreviewOrigin(value) {
  const url=new URL(value);
  if(url.protocol!=='https:'||url.port||url.username||url.password||url.search||url.hash||url.pathname!=='/'||!/^onesa-docs-[a-z0-9]+-druhustles-projects\.vercel\.app$/.test(url.hostname))throw Error('EXACT_PUBLIC_PREVIEW_ORIGIN');
  return url.origin;
 }
+export async function verifyNativePublicAssets(get,origin,assets) {
+ if(typeof get!=='function'||!Array.isArray(assets)||!assets.length||assets.length>20000||new Set(assets.map(x=>x.route)).size!==assets.length)throw Error('BOUNDED_TRUSTED_ASSET_MANIFEST_REQUIRED');
+ for(const x of assets)if(typeof x.route!=='string'||!x.route.startsWith('/')||x.route.startsWith('//')||/[?#\\]/.test(x.route)||!/^[a-f0-9]{64}$/.test(x.sha256)||!Number.isSafeInteger(x.bytes)||x.bytes<0||x.bytes>16*1024*1024||!Array.isArray(x.mimes)||!x.mimes.length)throw Error('EXACT_ASSET_BYTES_AND_MIME_REQUIRED');
+ let next=0,verified=0,failed=false,firstFailure;
+ async function worker(){
+  while(!failed){
+   const index=next++;if(index>=assets.length)return;
+   const x=assets[index];
+   try{
+    const response=await get(origin+x.route);
+    if(response.status()!==200)throw Error('TRUSTED_ASSET_HTTP');
+    const body=await response.body();
+    if(body.length!==x.bytes||createHash('sha256').update(body).digest('hex')!==x.sha256)throw Error('TRUSTED_ASSET_DIGEST');
+    if(!x.mimes.includes(response.headers()['content-type']?.split(';')[0].trim()))throw Error('TRUSTED_ASSET_MIME');
+    verified++;
+   }catch(error){failed=true;firstFailure??=error;throw error;}
+  }
+ }
+ // Four reads bound memory and connections without extending the native deadline.
+ await Promise.allSettled(Array.from({length:Math.min(4,assets.length)},worker));
+ if(failed)throw firstFailure;
+ if(verified!==assets.length)throw Error('TRUSTED_ALL_PUBLIC_BYTES_REQUIRED');
+ return {verified,expected:assets.length};
+}
+
 export async function nativeGet(page,origin,value) {
  const url=new URL(value);
  if(url.origin!==origin||url.username||url.password||url.hash||new URL(page.url()).origin!==origin)throw Error('NATIVE_SAME_ORIGIN_GET');
