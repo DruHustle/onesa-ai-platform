@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Source candidate: retain typed local public Docs checks as a separate genuine
+  build artifact for the external owner reader; legacy archive inspection cannot
+  substitute for the new required-check mode or native hosted acceptance.
+  The retained optional Docs Preview command also explicitly selects Preview.
+
 - Source correction: explicitly select Preview for owner-run frontend staging,
   independent of CLI defaults; retain exact target readback and one-create custody.
 - Source candidate: verify credential-free Docs build/run/archive/context evidence
