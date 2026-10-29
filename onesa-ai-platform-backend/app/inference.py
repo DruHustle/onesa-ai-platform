@@ -56,6 +56,7 @@ class GenerationStats:
     output_tokens: int | None = None
     total_seconds: float | None = None
     first_token_seconds: float | None = None
+    finish_reason: str | None = None
 
 
 active_stats: ContextVar[GenerationStats | None] = ContextVar("generation_stats", default=None)
@@ -197,7 +198,7 @@ class OpenAIModelClient:
                             else None,
                         )
                     choices = data.get("choices", [])
-                    if not isinstance(choices, list):
+                    if not isinstance(choices, list) or len(choices) > 1:
                         raise InferenceError("generation_failed", reason="invalid_stream_shape")
                     for choice in choices:
                         if not isinstance(choice, dict) or not isinstance(
@@ -205,6 +206,19 @@ class OpenAIModelClient:
                         ):
                             raise InferenceError("generation_failed", reason="invalid_stream_shape")
                         content = choice.get("delta", {}).get("content")
+                        reason = choice.get("finish_reason")
+                        if reason is not None:
+                            if not isinstance(reason, str) or reason not in {
+                                "stop",
+                                "length",
+                                "content_filter",
+                                "tool_calls",
+                                "function_call",
+                            }:
+                                raise InferenceError("invalid_inference_response")
+                            stats = active_stats.get()
+                            if stats is not None:
+                                stats.finish_reason = reason
                         if content is not None:
                             if not isinstance(content, str):
                                 raise InferenceError(

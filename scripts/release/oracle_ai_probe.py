@@ -269,6 +269,21 @@ def persistent_fingerprints(engine, exclude):
     return result
 
 
+def preservation_summary(fingerprint):
+    # Retain only counts and hashes, never account identifiers, credentials or
+    # content. This is diagnostic evidence; the full strict equality gate stays.
+    accounts = {k: v for k, v in fingerprint.items() if k != "__persistent_tables__"}
+    return {
+        "accounts": {
+            "count": len(accounts),
+            "sha256": hashlib.sha256(
+                json.dumps(accounts, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest(),
+        },
+        "tables": fingerprint.get("__persistent_tables__", {}),
+    }
+
+
 def create_fixtures(engine, ci_id):
     from app.models import AccessGrant, User, now
     from argon2 import PasswordHasher
@@ -546,6 +561,7 @@ def execute(environment, request):
     require(type(ci) is int and ci > 0, "GENUINE_CI_REFERENCE_REQUIRED")
     engine = fixture_engine(settings, environment, plan["expected_schema_revision"])
     before = fingerprints(engine)
+    write(OUTPUT / "preservation-before.json", preservation_summary(before))
     users = []
     clean = False
     preserved = False
@@ -884,7 +900,23 @@ def execute(environment, request):
             if users:
                 disable_fixtures(engine, users, before, ci)
                 clean = True
-            preserved = fingerprints(engine, exclude={u["id"] for u in users}) == before
+            after = fingerprints(engine, exclude={u["id"] for u in users})
+            write(OUTPUT / "preservation-after.json", preservation_summary(after))
+            preserved = after == before
+            old_summary, new_summary = (
+                preservation_summary(before),
+                preservation_summary(after),
+            )
+            record["preservation_changes"] = {
+                "accounts_changed": old_summary["accounts"] != new_summary["accounts"],
+                "tables_changed": sorted(
+                    name
+                    for name in old_summary["tables"].keys()
+                    | new_summary["tables"].keys()
+                    if old_summary["tables"].get(name)
+                    != new_summary["tables"].get(name)
+                ),
+            }
             require(preserved, "EXISTING_ACCOUNT_OR_GRANT_CHANGED")
         finally:
             engine.dispose()
