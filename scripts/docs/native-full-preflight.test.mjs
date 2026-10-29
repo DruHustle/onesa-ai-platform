@@ -10,7 +10,7 @@ import net from 'node:net';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
-import {validateNativePublicPreflight} from './native-owner.mjs';
+import {validateNativePublicPreflight,verifyNativePublicAssets} from './native-owner.mjs';
 const app=path.resolve('onesa-ai-platform-frontend/apps/docs');
 const build=path.join(app,'build-public');
 const require=createRequire(path.join(app,'package.json'));
@@ -84,13 +84,10 @@ async function fixture(t,{unhydrated=false,changedAsset=false}={}){
  let verified=0;
  async function observe(){
   try{return await validateNativePublicPreflight(context,{origin,revision,expectedEnvironment:'staging',verifyPublicAssets:async get=>{
-   for(const [route,item] of files){
-    const response=await get(origin+route);
-    assert.equal(response.status(),200);
-    assert.equal(digest(await response.body()),digest(item.body),'Actual fixture asset changed');
-    verified++;
-   }
-   return {verified,expected:files.size};
+   const assets=[...files].map(([route,item])=>({route,sha256:digest(item.body),bytes:item.body.length,mimes:[item.mime]}));
+   const result=await verifyNativePublicAssets(get,origin,assets);
+   verified=result.verified;
+   return result;
   }});}catch(error){error.fixtureObservation={originalTabPreserved:context.pages().includes(original),violations,protocolFailures};throw error;}
  }
  return {observe,context,original,files,verified:()=>verified};
@@ -105,7 +102,7 @@ test('complete public bytes and the full native UI matrix are required before re
 
 test('a changed asset cannot produce readiness despite a readable root and provenance',async t=>{
  const f=await fixture(t,{changedAsset:true});
- await assert.rejects(f.observe(),/Actual fixture asset changed/);
+ await assert.rejects(f.observe(),/TRUSTED_ASSET_DIGEST/);
  assert.deepEqual(f.context.pages(),[f.original]);
 });
 
