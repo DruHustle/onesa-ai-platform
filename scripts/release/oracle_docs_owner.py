@@ -110,7 +110,7 @@ def publish_preview(store, binding):
 
 
 def native_preflight(store, binding):
-    """Issue fresh signed target data before reserving qualification, not a PASS."""
+    """Issue bounded target data for full preflight; never qualification or a PASS."""
     component_scope(store, binding)
     store.github.qualify(binding)
     preview = docs.preview_for_binding(store, binding)
@@ -130,7 +130,9 @@ def native_preflight(store, binding):
                 "production_deployment_authorized": False,
             },
             parent=preview["id"],
-            ttl=300,
+            # The complete read-only native matrix has a twelve-minute deadline.
+            # This target grants no qualification, signature or deployment right.
+            ttl=900,
         )
 
 
