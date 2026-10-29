@@ -34,127 +34,22 @@ PUBLIC_DOCS_METADATA_KIND = "onesa-docs-public-native-preview-metadata"
 
 
 def docs_acceptance_schema(acceptance):
-    """Require per-view evidence, rather than counts of unstructured PASS placeholders."""
-    accessibility = acceptance.get("accessibility", [])
-    e.require(
-        isinstance(accessibility, list) and len(accessibility) >= 124,
-        "Complete Docs accessibility views required",
-    )
-    coordinates = set()
-    routes = set()
-    for view in accessibility:
-        e.require(
-            isinstance(view, dict)
-            and isinstance(view.get("route"), str)
-            and view["route"].startswith("/")
-            and "?" not in view["route"]
-            and "#" not in view["route"]
-            and view.get("mode") in {"light", "dark"}
-            and view.get("width") in {320, 1440}
-            and isinstance(view.get("violations"), list),
-            "Structured Docs accessibility view required",
-        )
-        coordinate = (view["route"], view["mode"], view["width"])
-        e.require(coordinate not in coordinates, "Duplicate Docs accessibility view")
-        coordinates.add(coordinate)
-        routes.add(view["route"])
-        for violation in view["violations"]:
-            e.require(
-                isinstance(violation, dict)
-                and isinstance(violation.get("id"), str)
-                and violation.get("impact") in {None, "minor", "moderate"}
-                and isinstance(violation.get("nodes"), list),
-                "Blocking or malformed Docs accessibility violation",
-            )
-    e.require(
-        coordinates
-        == {
-            (route, mode, width)
-            for route in routes
-            for mode in ["light", "dark"]
-            for width in [320, 1440]
-        },
-        "Both system modes and widths required for every public Docs route",
-    )
-    widths = acceptance.get("widths", [])
-    expected = {
-        (route, "dark", width)
-        for route in ["/", "/architecture", "/downloads", "/api-explorer"]
-        for width in [320, 390, 768, 1024, 1440]
-    }
-    actual = []
-    e.require(isinstance(widths, list), "Docs width evidence required")
-    for view in widths:
-        e.require(
-            isinstance(view, dict) and view.get("overflow") is False,
-            "Malformed or overflowing Docs width view",
-        )
-        actual.append((view.get("route"), view.get("mode"), view.get("width")))
-    e.require(
-        len(actual) == len(set(actual)) and set(actual) == expected,
-        "Exact Docs width matrix required",
-    )
-    navigation = acceptance.get("navigation", [])
+    """Preserve the existing source-owned contract for conditional and hosted paths."""
+    import oracle_docs_checks
+
     registry = json.loads(
         (
             e.ROOT
             / "onesa-ai-platform-frontend/packages/onesa-design/onesa-applications.json"
-        ).read_text()
+        ).read_bytes()
     )
-    expected_links = [
-        {"label": app["label"], "href": app["href"].rstrip("/")}
-        for app in registry["applications"]
-    ]
-    e.require(
-        isinstance(navigation, list)
-        and len(navigation) == 2
-        and all(
-            isinstance(view, dict) and view.get("links") == expected_links
-            for view in navigation
-        )
-        and {view.get("view") for view in navigation} == {"desktop", "mobile"},
-        "Exact four-product Docs navigation in both views required",
-    )
-    icons = acceptance.get("icons", [])
     manifest = json.loads(
         (
             e.ROOT
             / "onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json"
-        ).read_text()
+        ).read_bytes()
     )
-    expected_icons = {}
-    for file in manifest["products"][0]["files"]:
-        if file["name"] in {"onesa-docs.svg", "onesa-docs.ico", "onesa-docs-180.png"}:
-            route = (
-                "/favicon.ico"
-                if file["name"].endswith(".ico")
-                else "/brand/icons/v1/" + file["name"]
-            )
-            expected_icons[route] = file
-    e.require(
-        isinstance(icons, list) and len(icons) == 3,
-        "Docs identity icon evidence required",
-    )
-    paths = []
-    for icon in icons:
-        e.require(
-            isinstance(icon, dict) and icon.get("path") in expected_icons,
-            "Structured Docs identity icon required",
-        )
-        expected_icon = expected_icons[icon["path"]]
-        mimes = (
-            {"image/x-icon", "image/vnd.microsoft.icon"}
-            if icon["path"] == "/favicon.ico"
-            else {expected_icon["mime"]}
-        )
-        e.require(
-            icon.get("status") == 200
-            and icon.get("sha256") == expected_icon["sha256"]
-            and icon.get("mime") in mimes,
-            "Actual Docs icon bytes/status/MIME required",
-        )
-        paths.append(icon["path"])
-    e.require(len(set(paths)) == 3, "Duplicate Docs identity icon")
+    oracle_docs_checks.validate(acceptance, registry, manifest, require=e.require)
 
 
 def public_docs_proof(proof, sha):

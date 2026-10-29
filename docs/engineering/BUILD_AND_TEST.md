@@ -1,5 +1,18 @@
 # Separate application builds and tests
 
+`python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
+and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
+verify genuine build/local-check custody separately from owner hosted acceptance.
+They reject run ID zero as an Actions run, source/context drift, failed or skipped
+checks, changed bytes, expiry and attempts to grant authority from local results.
+No provider or production credentials are used by these tests.
+
+The owner frontend fixture injects a conflicting production default and verifies
+explicit Preview selection before staging dispatch. A wrong provider target retains
+the one-create intent and refuses acceptance. Actual pinned CLI protocol fixtures
+also exercise the explicit staging argument with synthetic loopback-only services.
+These controls use no provider credentials and do not establish hosted acceptance.
+
 Installer fixtures also place disposable custody under the private home directory
 when executed as root. The explicit writable-parent regression still requires the
 production verifier to reject shared writable ancestors; no custody guard changes.
@@ -368,3 +381,14 @@ from prose, repairs an incomplete response, retries inference or substitutes a m
 Protocol tests cover malformed framing, multiple objects, private reasoning markup,
 schema drift and preservation of the saved trip after a failed revision. This
 bounded framing support does not establish the cause of any historical hosted failure.
+
+## Credential-free Docs build handoff
+
+`.venv/bin/python -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
+checks real-run identity requirements and disposable ZIP failure controls for the
+external Docs build reader. It refuses run ID zero as an Actions ID, missing/skipped
+mandatory checks, provider execution, changed source/custody, expired records,
+modified/private archives, unsafe ZIP members and mismatched rendered contexts.
+The fixtures never issue qualification, authorization or provider requests. Build-only
+workflow artifacts carry staging and production contexts separately; actual owner-run
+provenance and hosted acceptance remain independent requirements.

@@ -27,6 +27,26 @@ Each protected publication needs its own approved-identity browser acceptance;
 source cleanup or a temporary mailbox test cannot stand in for that observation.
 The current accepted protected edition is recorded below.
 
+Credential-free `docs-hosting.yml` builds produce separate staging-context and
+production-context public archives. The external owner toolchain can read these
+through `scripts/release/oracle_docs_build.py`, which revalidates exact Main CI,
+the real positive Actions run ID, mandatory successful build steps, skipped provider
+steps, both artifact digests, public provenance and their rendered context labels.
+Development-labelled archives cannot be renamed into staging evidence. This reader
+produces build evidence only: owner-controlled Preview publication, native hosted
+acceptance, scoped authorization and canonical production observation remain required.
+It creates no authorization record or deployment request and does not install or
+commission a Docs issuer. Existing conditional native-metadata paths retain their gates.
+
+New build-only runs also upload `onesa-public-docs-local-build-checks`, containing
+the actual typed staging and production local acceptance results. The external
+reader's explicit `require_local_checks=True` mode requires all three genuine
+artifacts and both additional successful recording/upload steps. It verifies the
+check archive digest, positive Actions run ID, source, context, full view matrix,
+expiry and unchanged custody after reading. Legacy two-archive inspection remains
+available separately; it cannot satisfy the new check mode. These local checks
+never claim an owner-run receipt, a hosted PASS or deployment authority.
+
 
 ## Current public Docs release — 2026-10-20
 
