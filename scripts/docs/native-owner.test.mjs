@@ -89,7 +89,7 @@ test('audit facade constrains auxiliary pages without altering the native shared
 });
 
 test('actual Axe aggregation uses owned constrained blank pages and preserves original tabs',async t=>{
- const {default:AxeBuilder}=createRequire(new URL('../../onesa-ai-platform-frontend/apps/chat/package.json',import.meta.url))('@axe-core/playwright');
+ const {default:AxeBuilder}=require('@axe-core/playwright');
  const browser=await chromium.launch();t.after(()=>browser.close());const context=await browser.newContext();
  const original=await context.newPage(),page=await context.newPage(),auxiliary=new Map();let blocked=0;
  await page.setContent('<!doctype html><html lang="en"><title>Public fixture</title><main><h1>Public fixture</h1></main></html>');

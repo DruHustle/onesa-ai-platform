@@ -2,6 +2,22 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-28 — Isolate release-unit commissioning fixtures
+
+Docs visual acceptance and its native-owner regression now resolve the existing
+Docs-owned Axe dependency. Preview transport browser fixtures also close their
+owned servers on launch or cleanup failure, retaining the original failed result.
+
+The product requirements also distinguish consumer application/provider portability
+from MCP tool and context interoperability. The current internal and product adapters
+remain accurately identified; shared-contract, configuration-switch and authorization
+acceptance criteria are recorded without claiming the feature is implemented.
+
+Release-unit tests use their own temporary commissioning registry, including root
+test execution, without reading the host's production trust registry. The profile
+ledger fixture explicitly updates its synthetic commissioning after its deliberate
+policy replacement. Production verifier and release requirements are unchanged.
+
 ## 2026-10-28 — Declare Docs-owned accessibility validation dependencies
 
 The public static acceptance validator previously imported Axe from the Chat
