@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Source candidate: retain typed local public Docs checks as a separate genuine
+  build artifact for the external owner reader; legacy archive inspection cannot
+  substitute for the new required-check mode or native hosted acceptance.
+  The retained optional Docs Preview command also explicitly selects Preview.
+
+- Source correction: explicitly select Preview for owner-run frontend staging,
+  independent of CLI defaults; retain exact target readback and one-create custody.
+- Source candidate: verify credential-free Docs build/run/archive/context evidence
+  while retaining blocked hosted acceptance and owner authorization. Build-only
+  staging archives carry the staging label; old development archives are not relabelled.
+
 - Source correction: bind interface qualification to newly observed GET requests.
   A previous page's delayed authentication response cannot reject or qualify a new
   visit. Current failed responses, incomplete bodies and absent data still fail.
