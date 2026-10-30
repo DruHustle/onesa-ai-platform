@@ -38,11 +38,29 @@ DOCS_ALLOWED = {
     **ALLOWED,
     "oracle_docs_owner.py": "scripts/release/oracle_docs_owner.py",
     "oracle_docs_native.py": "scripts/release/oracle_docs_native.py",
+    "oracle_docs_driver.py": "scripts/release/oracle_docs_driver.py",
     "oracle_docs_contract.py": "scripts/release/oracle_docs_contract.py",
     "runners/oracle_docs_runner.py": "scripts/release/oracle_docs_runner.py",
     "runners/oracle_docs_build.py": "scripts/release/oracle_docs_build.py",
     "runners/oracle_docs_checks.py": "scripts/release/oracle_docs_checks.py",
 }
+PRIVATE_DOCS_ALLOWED = {
+    **DOCS_ALLOWED,
+    **{
+        ("runners/" + name): ("scripts/release/" + name)
+        for name in [
+            "oracle_docs_internal_runner.py",
+            "oracle_docs_internal_build.py",
+            "oracle_docs_internal_checks.py",
+            "oracle_docs_internal_access.py",
+            "oracle_docs_internal_provider.py",
+            "oracle_docs_internal_publish.py",
+            "oracle_docs_internal_conditional.py",
+            "oracle_cloudflare_transport_guard.cjs",
+        ]
+    },
+}
+
 MAX_BYTES = 2 * 1024 * 1024
 
 
@@ -91,8 +109,15 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         m["schema_version"] == 1 and m["repository"] == "DruHustle/onesa-ai-platform",
         "Installation repository refused",
     )
-    is_docs = set(m["files"]) == set(DOCS_ALLOWED)
-    allowed = DOCS_ALLOWED if is_docs else ALLOWED
+    is_private_docs = set(m["files"]) == set(PRIVATE_DOCS_ALLOWED)
+    is_docs = is_private_docs or set(m["files"]) == set(DOCS_ALLOWED)
+    allowed = (
+        PRIVATE_DOCS_ALLOWED
+        if is_private_docs
+        else DOCS_ALLOWED
+        if is_docs
+        else ALLOWED
+    )
     require(
         set(m["files"]) == set(allowed),
         "Only reviewed verifier and component runner may be installed",
@@ -148,7 +173,13 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         set(policy["components"])
         in [
             {m["repository"] + ":" + c for c in names}
-            for names in ([{"docs-public"}] if is_docs else [legacy, scoped])
+            for names in (
+                [{"docs-internal"}]
+                if is_private_docs
+                else [{"docs-public"}]
+                if is_docs
+                else [legacy, scoped]
+            )
         ],
         "Only literal legacy or independent feature profiles are eligible",
     )
@@ -167,15 +198,24 @@ def validate(bundle, manifest_pin, github, *, uid=0):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     components = (
-        {"docs-public"} if is_docs else module.profiles.policy_components(policy)
+        {"docs-internal"}
+        if is_private_docs
+        else {"docs-public"}
+        if is_docs
+        else module.profiles.policy_components(policy)
     )
     _app, files = module.source_inventory(
         bundle / "tool-source.tar", {"source_tree": m["source_tree"]}
     )
     tool = policy["toolchain"]
     if is_docs:
-        target = INSTALL_PARENT / ("ai-docs-" + m["source_tree"])
-        validate_docs_policy(bundle, m, policy, files, target)
+        target = INSTALL_PARENT / (
+            ("ai-docs-internal-" if is_private_docs else "ai-docs-") + m["source_tree"]
+        )
+        if is_private_docs:
+            validate_private_docs_policy(bundle, m, policy, files, target)
+        else:
+            validate_docs_policy(bundle, m, policy, files, target)
         payloads["tool-source.tar"] = tool_bytes
         payloads["policy.json"] = policy_bytes
         return m, target, payloads, ci
@@ -325,6 +365,125 @@ def validate_docs_policy(bundle, manifest, policy, files, target):
             runner["path"] == str(target / "runners/oracle_docs_runner.py")
             and runner["sha256"] == manifest["files"]["runners/oracle_docs_runner.py"],
             "Docs runner differs from reviewed installation",
+        )
+
+
+def validate_private_docs_policy(bundle, manifest, policy, files, target):
+    tool = policy["toolchain"]
+    require(
+        set(tool)
+        == {
+            "source_commit",
+            "source_tree",
+            "source_sha256",
+            "cli_image",
+            "cli_image_security_path",
+            "cli_distribution_sha256",
+            "transport_guard_sha256",
+            "docs_project_id",
+            "cloudflare_account_id",
+            "protected_source_bundle_sha256",
+            "conditional_source_pins",
+            "native_source_pins",
+            "native_runtime_pins",
+            "native_producer_sha256",
+        },
+        "Closed independent protected Docs toolchain required",
+    )
+    require(
+        tool["source_commit"] == manifest["candidate_commit"]
+        and tool["source_tree"] == manifest["source_tree"]
+        and tool["source_sha256"] == manifest["tool_source_sha256"]
+        and re.fullmatch("sha256:[a-f0-9]{64}", tool["cli_image"])
+        and re.fullmatch("[a-f0-9-]{36}", tool["docs_project_id"])
+        and re.fullmatch("[a-f0-9]{32}", tool["cloudflare_account_id"])
+        and verifier.HEX.fullmatch(tool["protected_source_bundle_sha256"]),
+        "Exact protected source, existing account/project and approved document pins required",
+    )
+    require(
+        tool["transport_guard_sha256"]
+        == manifest["files"]["runners/oracle_cloudflare_transport_guard.cjs"]
+        and tool["cli_image_security_path"]
+        == "/var/lib/onesa/release-verification/ai-docs-internal/artifacts/"
+        + manifest["source_tree"]
+        + "/toolchain/cli-security.json",
+        "Exact private transport and image-check custody required",
+    )
+    # Pin the two-change vendor distribution to its independently reviewed source.
+    import tarfile
+
+    with tarfile.open(bundle / "tool-source.tar", "r:") as archive:
+        info = archive.getmember("infra/oracle/cloudflare-tools/upstream.json")
+        require(
+            info.isfile() and info.size <= 32768,
+            "Reviewed private client provenance required",
+        )
+        provenance = json.loads(archive.extractfile(info).read())
+    require(
+        tool["cli_distribution_sha256"] == provenance["one_submit_cli_sha256"]
+        and provenance["version"] == "4.153.0",
+        "Reviewed private single-submit client required",
+    )
+    spec = importlib.util.spec_from_file_location(
+        "reviewed_private_docs_native_contract", bundle / "oracle_docs_contract.py"
+    )
+    contract = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(contract)
+    require(
+        tool["native_source_pins"]
+        == {name: files[name] for name in contract.source_closure("docs-internal")}
+        and contract.producer_digest(
+            tool["native_source_pins"],
+            tool["native_runtime_pins"],
+            component="docs-internal",
+        )
+        == tool["native_producer_sha256"],
+        "Private native source/runtime closure differs from reviewed source",
+    )
+    conditional = {
+        "scripts/release/free_gate.py",
+        "scripts/release/evidence.py",
+        "scripts/release/qualify.py",
+    }
+    require(
+        tool["conditional_source_pins"] == {name: files[name] for name in conditional},
+        "Existing conditional verifier must remain independently source-pinned",
+    )
+    profile = policy["components"][manifest["repository"] + ":docs-internal"]
+    require(
+        set(profile)
+        == {
+            "qualification_attempt_limit",
+            "runners",
+            "required_checks",
+            "publication_mechanism",
+        }
+        and profile["qualification_attempt_limit"] == 1
+        and profile["publication_mechanism"]
+        == "existing-isolated-owner-cloudflare-pages-cli",
+        "Literal independent protected Docs profile required",
+    )
+    verifier.binding_valid(
+        {
+            "repository": manifest["repository"],
+            "component": "docs-internal",
+            "candidate_commit": manifest["candidate_commit"],
+            "source_tree": manifest["source_tree"],
+            "source_sha256": manifest["tool_source_sha256"],
+            "build_sha256": "0" * 64,
+            "artifact_digest": "sha256:" + "0" * 64,
+            "configuration_sha256": {"staging": "0" * 64, "production": "0" * 64},
+            "target_environment": "production",
+        },
+        policy,
+    )
+    for phase in verifier.PHASES:
+        runner = profile["runners"][phase]
+        require(
+            runner["path"] == str(target / "runners/oracle_docs_internal_runner.py")
+            and runner["sha256"]
+            == manifest["files"]["runners/oracle_docs_internal_runner.py"],
+            "Protected runner differs from reviewed installation",
         )
 
 
