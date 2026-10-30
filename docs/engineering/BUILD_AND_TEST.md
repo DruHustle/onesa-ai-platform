@@ -404,3 +404,10 @@ modified/private archives, unsafe ZIP members and mismatched rendered contexts.
 The fixtures never issue qualification, authorization or provider requests. Build-only
 workflow artifacts carry staging and production contexts separately; actual owner-run
 provenance and hosted acceptance remain independent requirements.
+
+The release suite exercises the actual installed Docs module layout in a separate
+`python -I` process with no inherited import path or provider credentials. It
+reproduces the former missing-sibling import failure and verifies that both the
+root verifier and sibling runner parsers load before any operation starts. This
+startup regression is local evidence; fresh commissioning and hosted qualification
+remain required for a changed runner.
