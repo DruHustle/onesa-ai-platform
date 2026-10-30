@@ -398,3 +398,18 @@ modified/private archives, unsafe ZIP members and mismatched rendered contexts.
 The fixtures never issue qualification, authorization or provider requests. Build-only
 workflow artifacts carry staging and production contexts separately; actual owner-run
 provenance and hosted acceptance remain independent requirements.
+
+The protected Docs adapter uses its own reviewed installation, source and runtime
+closure, private artifact custody and one-use owner ledger. Its new conditional
+metadata export/import/inspection commands retain the existing genuine Actions
+handoff; that handoff grants no publication authority. Run
+`python -m unittest discover -s scripts/release -p 'test_oracle_docs_internal_*.py'`
+for source, Access, build, provider, conditional and durable journal refusals.
+`node --test scripts/docs/internal-native.test.mjs scripts/release/oracle_cloudflare_transport_guard.test.cjs`
+checks private byte/header readback, anonymous denial and atomic single dispatch.
+The actual pinned Linux client protocol is mandatory in CI and uses synthetic
+responses with its network disabled. The private full-renderer regression requires
+an approved, isolated staging-context build outside Actions and runs
+`ONESA_INTERNAL_DOCS_TEST_BUILD=/absolute/private/fixture ONESA_INTERNAL_DOCS_TEST_ENVIRONMENT=staging node --test scripts/docs/internal-acceptance.test.mjs`.
+These tests do not commission a verifier, qualify a hosted deployment or publish
+documentation. Actual outcomes remain in the protected canonical evidence index.
