@@ -6,13 +6,14 @@ const { createHash } = require("node:crypto");
 const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
 const { withTemporaryDraft } = require("./usability-draft.cjs");
 const { navigateInterface } = require("./ui_navigation.cjs");
+const { loadContext, writeReceipt } = require("./oracle_context.cjs");
 const requireChat = createRequire(
   path.resolve("onesa-ai-platform-frontend/apps/chat/package.json"),
 );
 const { chromium, expect } = requireChat("@playwright/test");
 const { default: AxeBuilder } = requireChat("@axe-core/playwright");
 const oracle = process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT
-  ? require("./oracle_context.cjs").loadContext(process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT)
+  ? loadContext(process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT)
   : null;
 const sourceIdentity = () => oracle ? {
   candidate_commit: oracle.candidate_commit,
@@ -590,9 +591,9 @@ async function main() {
       synthetic_only: true,
       manual_safari_and_screen_reader: "NOT TESTED",
     };
-    fs.writeFileSync(
+    writeReceipt(
       path.join(outputDirectory(), "hosted-ui.json"),
-      JSON.stringify(report, null, 2),
+      report,
     );
     console.log(
       JSON.stringify({
@@ -610,9 +611,9 @@ async function main() {
       "Hosted UI authentication statuses: " +
         JSON.stringify(authenticationStatuses),
     );
-    fs.writeFileSync(
+    writeReceipt(
       path.join(outputDirectory(), "hosted-ui.json"),
-      JSON.stringify({
+      {
         status: "FAIL",
         ...sourceIdentity(),
         failure_phase: phase,
@@ -622,7 +623,7 @@ async function main() {
         views,
         authentication_statuses: authenticationStatuses,
         workflow_checks: workflowChecks,
-      }),
+      },
     );
     throw new Error("Hosted UI verification failed");
   } finally {
