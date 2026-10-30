@@ -233,7 +233,7 @@ class OwnedProbeTests(unittest.TestCase):
                     "0.5",
                 )
 
-    def cleanup(self, wrong=False, stop_error=False):
+    def cleanup(self, wrong=False, stop_error=False, exited=False):
         process = Mock()
         process.poll.return_value = None
         exists = True
@@ -248,6 +248,9 @@ class OwnedProbeTests(unittest.TestCase):
                 row = copy.deepcopy(self.client)
                 if wrong:
                     row["Image"] = "sha256:forged"
+                if exited:
+                    row["State"]["Running"] = False
+                    exists = False
                 return json.dumps([row]).encode()
             self.assertEqual(args, ("stop", "--time", "60", self.cid))
             if stop_error:
@@ -269,6 +272,11 @@ class OwnedProbeTests(unittest.TestCase):
                 "client_exit_confirmed"
             ]
         )
+
+    def test_exited_exact_client_waits_for_auto_removal_without_another_stop(self):
+        safe, calls, _process = self.cleanup(exited=True)
+        self.assertTrue(safe)
+        self.assertFalse(any(x[0] == "stop" for x in calls))
 
     def test_wrong_identity_is_never_stopped_and_private_inputs_are_retained(self):
         safe, calls, _process = self.cleanup(wrong=True)
