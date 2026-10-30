@@ -72,6 +72,9 @@ export default {
       response=denied();
     }
     const headers=new Headers(response.headers);
+    // Pages associates .mmd with karaoke data. These authenticated generated
+    // Mermaid sources are UTF-8 text; keep their bytes and every Access check.
+    if (response.status===200 && /^\/generated\/diagrams\/[A-Za-z0-9_-]+\.mmd$/.test(new URL(request.url).pathname)) headers.set('content-type','text/plain; charset=utf-8');
     headers.set('cache-control','private, no-store');
     headers.set('x-robots-tag','noindex, nofollow, noarchive');
     headers.set('x-content-type-options','nosniff');

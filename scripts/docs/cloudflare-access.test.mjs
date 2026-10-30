@@ -7,7 +7,7 @@ const env={CF_ACCESS_TEAM_DOMAIN:'onesa-test.cloudflareaccess.com',CF_ACCESS_AUD
 const encoded=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
 before(async()=>{pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);jwk={...await crypto.subtle.exportKey('jwk',pair.publicKey),kid:'synthetic-kid',alg:'RS256'};});
 async function token(changes={}){const now=Math.floor(Date.now()/1000);const text=encoded({alg:'RS256',kid:jwk.kid})+'.'+encoded({iss:'https://'+env.CF_ACCESS_TEAM_DOMAIN,aud:[audience],email:'engineer@example.invalid',sub:'synthetic-engineer',iat:now-10,exp:now+300,...changes});return text+'.'+Buffer.from(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(text))).toString('base64url');}
-async function call(path,credential,changes={},options={}){let assets=0;const original=globalThis.fetch;globalThis.fetch=async url=>{assert.equal(url,'https://'+env.CF_ACCESS_TEAM_DOMAIN+'/cdn-cgi/access/certs');return Response.json({keys:[jwk]});};try{const response=await gateway.fetch(new Request('https://'+(options.host||'onesa-test.pages.dev')+path,{headers:options.cookie?{cookie:'CF_Authorization='+credential}:credential?{'cf-access-jwt-assertion':credential}:{},method:options.method||'GET'}),{...env,...changes,ASSETS:{fetch:()=>{assets++;if(options.assetError)throw new Error(options.assetError);return new Response('synthetic engineering artifact');}}});return {response,assets};}finally{globalThis.fetch=original;}}
+async function call(path,credential,changes={},options={}){let assets=0;const original=globalThis.fetch;globalThis.fetch=async url=>{assert.equal(url,'https://'+env.CF_ACCESS_TEAM_DOMAIN+'/cdn-cgi/access/certs');return Response.json({keys:[jwk]});};try{const response=await gateway.fetch(new Request('https://'+(options.host||'onesa-test.pages.dev')+path,{headers:options.cookie?{cookie:'CF_Authorization='+credential}:credential?{'cf-access-jwt-assertion':credential}:{},method:options.method||'GET'}),{...env,...changes,ASSETS:{fetch:()=>{assets++;if(options.assetError)throw new Error(options.assetError);return new Response(options.assetBody||'synthetic engineering artifact',{status:options.assetStatus||200,headers:options.assetHeaders||{}});}}});return {response,assets};}finally{globalThis.fetch=original;}}
 test('anonymous direct documents, search indexes, diagrams and manuals never reach assets',async()=>{for(const path of ['/docs','/generated/retrieval.json','/assets/js/main.js','/manuals/private.pdf','/sitemap.xml']){const {response,assets}=await call(path);assert.equal(response.status,401);assert.equal(assets,0);assert.equal(response.headers.get('cache-control'),'private, no-store');}});
 test('signed approved engineering identity can read private assets',async()=>{const {response,assets}=await call('/manuals/engineering.pdf',await token());assert.equal(response.status,200);assert.equal(assets,1);assert.equal(response.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');});
 test('normal users, wrong audience, wrong issuer, expired and future tokens are denied',async()=>{for(const change of [{email:'ordinary@example.invalid'},{aud:['b'.repeat(64)]},{iss:'https://other.cloudflareaccess.com'},{exp:1},{iat:Math.floor(Date.now()/1000)+3600},{sub:''}]){const {response,assets}=await call('/database',await token(change));assert.equal(response.status,401);assert.equal(assets,0);}});
@@ -52,4 +52,33 @@ test('custom domain is exact and still requires valid membership and audience',a
   const denied=await call('/manuals/private.pdf',await token(change),{}, {host:'docs.engineering.onesa.eu'});assert.equal(denied.response.status,401);assert.equal(denied.assets,0);
  }
  const unconfigured=await call('/docs',jwt,{CF_ACCESS_ALLOWED_HOSTS:'["onesa-test.pages.dev"]'},{host:'docs.engineering.onesa.eu'});assert.equal(unconfigured.response.status,401);assert.equal(unconfigured.assets,0);
+});
+
+
+test('authenticated generated Mermaid source is exact private UTF-8 text for GET and HEAD',async()=>{
+ const body='flowchart LR\n  Input --> Output\n';
+ for(const method of ['GET','HEAD']){
+  const {response,assets}=await call('/generated/diagrams/agents.mmd',await token(),{}, {method,assetBody:body,assetHeaders:{'content-type':'application/vnd.chipnuts.karaoke-mmd'}});
+  assert.equal(assets,1);assert.equal(response.status,200);
+  assert.equal(response.headers.get('content-type'),'text/plain; charset=utf-8');
+  assert.equal(await response.text(),body);
+  assert.equal(response.headers.get('cache-control'),'private, no-store');
+  assert.equal(response.headers.get('x-content-type-options'),'nosniff');
+  assert.equal(response.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
+ }
+ const denied=await call('/generated/diagrams/agents.mmd');
+ assert.equal(denied.response.status,401);assert.equal(denied.assets,0);
+});
+
+test('Mermaid MIME correction preserves missing files, unrelated routes and other types',async()=>{
+ const jwt=await token();
+ for(const [route,status,mime] of [
+  ['/generated/diagrams/missing.mmd',404,'text/html'],
+  ['/unrelated/agents.mmd',200,'application/octet-stream'],
+  ['/generated/diagrams/agents.pdf',200,'application/pdf'],
+  ['/generated/diagrams/agents.mmd.html',200,'text/html']
+ ]){
+  const {response,assets}=await call(route,jwt,{}, {assetStatus:status,assetHeaders:{'content-type':mime}});
+  assert.equal(assets,1);assert.equal(response.status,status);assert.equal(response.headers.get('content-type'),mime);
+ }
 });
