@@ -1,5 +1,12 @@
 # Separate application builds and tests
 
+`node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
+worker with synthetic signed identities. Generated Mermaid sources must retain
+their exact bytes and private headers while overriding Pages' karaoke MIME type
+with UTF-8 plain text. Denied identities cannot reach assets; error responses and
+unrelated asset types retain their provider MIME type. Hosted byte and MIME
+verification remains mandatory for each new private Docs artifact.
+
 Hosted UI receipts are created privately and exclusively before the unchanged
 owner probe reads them. The credential-free receipt regression runs the actual
 Python reader against Node-created files, including a permissive-writer negative
