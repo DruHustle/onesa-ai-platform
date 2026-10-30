@@ -1,0 +1,8 @@
+{
+  "name": "onesa-owner-cloudflare-tool",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "wrangler": "4.153.0"
+  }
+}
