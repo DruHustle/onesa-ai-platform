@@ -232,8 +232,198 @@ def docker(*args, **kwargs):
     return command(["/usr/bin/docker", *args], **kwargs)
 
 
-def inventory():
+class OwnedProbeSnapshot:
+    """Identify only this runner's active client; never an authorization record.
+
+    Docker writes the CID into a private control directory that is not mounted
+    into the producer. No caller JSON or environment option can select a client.
+    """
+
+    def __init__(self, control, operation, image, environment, mounts, network, cpus):
+        require(str(UUID(operation)) == operation, "OWNED_PROBE_OPERATION")
+        self.control = private(Path(control), directory=True)
+        self.cidfile = self.control / "container.cid"
+        self.name = "onesa-ai-probe-" + operation
+        self.operation = operation
+        self.image = image
+        self.environment = environment
+        self.mounts = sorted((str(p), target, rw) for p, target, rw in mounts)
+        self.network = network
+        self.nano_cpus = int(float(cpus) * 1_000_000_000)
+        self._identity = None
+        require(
+            all(
+                Path(p) != self.control and Path(p) not in self.control.parents
+                for p, _target, _rw in self.mounts
+            ),
+            "OWNED_PROBE_CONTROL_MUST_NOT_BE_MOUNTED",
+        )
+
+    def cid(self):
+        path = private(self.cidfile)
+        before = path.stat()
+        require(before.st_nlink == 1, "OWNED_PROBE_CID_FILE")
+        value = path.read_text().strip()
+        require(re.fullmatch("[a-f0-9]{64}", value), "OWNED_PROBE_CID_FILE")
+        after = path.stat()
+        identity = (before.st_dev, before.st_ino, before.st_mtime_ns, value)
+        require(
+            (before.st_dev, before.st_ino, before.st_mtime_ns)
+            == (after.st_dev, after.st_ino, after.st_mtime_ns)
+            and (self._identity is None or self._identity == identity),
+            "OWNED_PROBE_CID_CHANGED",
+        )
+        self._identity = identity
+        return value
+
+    def validate(self, observed):
+        row = observed.get(self.name)
+        require(row and row["Id"] == self.cid(), "OWNED_PROBE_NOT_RUNNING")
+        config, host = row["Config"], row["HostConfig"]
+        require(
+            row["Name"] == "/" + self.name
+            and row["Image"] == self.image
+            and row["State"]["Running"] is True
+            and host["AutoRemove"] is True
+            and host["Init"] is True
+            and host["ReadonlyRootfs"] is True
+            and host["Privileged"] is False
+            and host.get("CapAdd") in [None, []]
+            and host["CapDrop"] == ["ALL"]
+            and host["SecurityOpt"] == ["no-new-privileges:true"]
+            and host["NetworkMode"] == self.network
+            and host["Memory"] == 2 * 1024**3
+            and host["NanoCpus"] == self.nano_cpus
+            and not host.get("PortBindings")
+            and not host.get("PublishAllPorts")
+            and config["Entrypoint"] == ["python3"]
+            and config["Cmd"]
+            == [
+                "/opt/onesa-ai-platform/scripts/release/oracle_ai_probe.py",
+                self.environment,
+                "--stdin-request",
+            ]
+            and config["Labels"].get("org.onesa.probe-operation") == self.operation,
+            "OWNED_PROBE_RUNTIME_IDENTITY",
+        )
+        actual = []
+        for mount in row["Mounts"]:
+            if mount["Type"] == "bind":
+                actual.append((mount["Source"], mount["Destination"], mount["RW"]))
+            else:
+                require(
+                    mount["Type"] == "tmpfs"
+                    and mount["Destination"] == "/tmp"
+                    and mount["RW"] is True,
+                    "OWNED_PROBE_EXTRA_MOUNT",
+                )
+        require(sorted(actual) == self.mounts, "OWNED_PROBE_MOUNT_IDENTITY")
+        require(
+            host["Tmpfs"] == {"/tmp": "rw,mode=700,size=512m"},
+            "OWNED_PROBE_TMPFS_IDENTITY",
+        )
+        return self.name
+
+
+def finish_probe_client(process, owned_probe, output):
+    """Stop only the proven client; retain private inputs if its exit is uncertain."""
+    safe = False
+    failure = None
+    try:
+        cid = owned_probe.cid()
+
+        def present():
+            found = (
+                docker(
+                    "ps",
+                    "-a",
+                    "--no-trunc",
+                    "--filter",
+                    "id=" + cid,
+                    "--format",
+                    "{{.ID}}",
+                    timeout=5,
+                )
+                .decode()
+                .splitlines()
+            )
+            require(found in [[], [cid]], "OWNED_PROBE_EXIT_IDENTITY")
+            return bool(found)
+
+        if present():
+            rows = json.loads(docker("inspect", cid, timeout=5))
+            require(len(rows) == 1, "OWNED_PROBE_EXIT_IDENTITY")
+            owned_probe.validate({rows[0]["Name"].removeprefix("/"): rows[0]})
+            # One normal stop request, never a retry or a broad container kill.
+            docker("stop", "--time", "60", cid, timeout=75)
+        safe = not present()
+        require(safe, "OWNED_PROBE_EXIT_UNCONFIRMED")
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        TypeError,
+        subprocess.SubprocessError,
+    ) as error:
+        failure = type(error).__name__
+    finally:
+        if process.poll() is None:
+            # This is our Popen handle, not an inferred PID or another workload.
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+        write(
+            output / "client-cleanup.json",
+            {
+                "operation_id": owned_probe.operation,
+                "client_exit_confirmed": safe,
+                "private_inputs_retained": True,
+                "failure_category": failure,
+                "release_authority": False,
+            },
+        )
+    return safe
+
+
+def cleanup_probe_inputs(output, binding, operation, environment, exited):
+    """Exited containers alone do not prove that fixture cleanup completed."""
+    clean = False
+    try:
+        receipt = read(output / "receipt.json") if exited else {}
+        clean = (
+            receipt.get("binding") == binding
+            and receipt.get("operation_id") == operation
+            and receipt.get("environment") == environment
+            and receipt.get("fixture_identities_disabled") is True
+            and receipt.get("existing_records_preserved") is True
+        )
+    except (OSError, ValueError, KeyError, TypeError):
+        pass  # Keep the private inputs for exact owner inspection/recovery.
+    if clean:
+        for name in ["private-runtime.env", "private-provider-observation.json"]:
+            private(output / name).unlink()
+    write(
+        output / "private-input-cleanup.json",
+        {
+            "operation_id": operation,
+            "private_inputs_retained": not clean,
+            "client_exit_confirmed": exited,
+            "fixture_cleanup_confirmed": clean,
+            "release_authority": False,
+        },
+    )
+    return clean
+
+
+def inventory(*, owned_probe=None):
     """Capture every workload only after temporary Docker clients finish."""
+    require(
+        owned_probe is None or type(owned_probe) is OwnedProbeSnapshot,
+        "OWNED_PROBE_CONTROL_REQUIRED",
+    )
     deadline = time.monotonic() + 20
     while True:
         require(time.monotonic() < deadline, "RUNTIME_INVENTORY_NOT_QUIESCENT")
@@ -259,9 +449,12 @@ def inventory():
                 ),
                 "RUNTIME_LIFECYCLE_METADATA_REQUIRED",
             )
+            if owned_probe is not None:
+                owned_name = owned_probe.validate(observed)
+                observed = {k: v for k, v in observed.items() if k != owned_name}
             # Do not omit helpers or classify an unknown workload as safe. Wait
             # for automatic removal; a long-lived --rm workload blocks release.
-            if not any(v["HostConfig"]["AutoRemove"] for v in values):
+            if not any(v["HostConfig"]["AutoRemove"] for v in observed.values()):
                 return observed
         require(time.monotonic() < deadline, "RUNTIME_INVENTORY_NOT_QUIESCENT")
         time.sleep(0.25)
@@ -1964,10 +2157,37 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
     # This immutable, credential-free-built probe image contains the reviewed
     # existing hosted API/UI harnesses and the owned Twins journey. It observes the
     # actual provider and application; no caller PASS or stored Actions artifact is read.
+    controls = folder / "probe-clients"
+    controls.mkdir(mode=0o700, exist_ok=True)
+    private(controls, directory=True)
+    control = controls / operation
+    control.mkdir(mode=0o700, exist_ok=False)
+    mounts = [
+        (plan_file, "/private/plan.json", False),
+        (narrowed, "/private/runtime.env", False),
+        (output / "private-provider-observation.json", "/private/vercel.json", False),
+        (Path(plan["preview_receipt_path"]), "/private/frontend-preview.json", False),
+        *(
+            [(output / "reference", "/private/reference", False)]
+            if "twins" in enabled
+            else []
+        ),
+        (output, "/private/output", True),
+    ]
+    owned_probe = OwnedProbeSnapshot(
+        control, operation, plan["probe_image"], env, mounts, network, cpus
+    )
     args = [
         "/usr/bin/docker",
         "run",
         "--rm",
+        "--init",
+        "--name",
+        owned_probe.name,
+        "--cidfile",
+        str(owned_probe.cidfile),
+        "--label",
+        "org.onesa.probe-operation=" + operation,
         "-i",
         "--read-only",
         "--network",
@@ -1982,24 +2202,11 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         "ALL",
         "--security-opt",
         "no-new-privileges:true",
-        "-v",
-        str(plan_file) + ":/private/plan.json:ro",
-        "-v",
-        str(narrowed) + ":/private/runtime.env:ro",
-        "-v",
-        str(output / "private-provider-observation.json") + ":/private/vercel.json:ro",
-        "-v",
-        str(plan["preview_receipt_path"]) + ":/private/frontend-preview.json:ro",
-        *(
-            [
-                "-v",
-                str(output / "reference") + ":/private/reference:ro",
-            ]
-            if "twins" in enabled
-            else []
-        ),
-        "-v",
-        str(output) + ":/private/output:rw",
+        *[
+            arg
+            for path, target, rw in mounts
+            for arg in ["-v", str(path) + ":" + target + (":rw" if rw else ":ro")]
+        ],
         "--entrypoint",
         "python3",
         plan["probe_image"],
@@ -2031,12 +2238,13 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
             stdout=out,
             stderr=err,
             env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
+            umask=0o077,
         )
-        process.stdin.write(data)
-        process.stdin.close()
         deadline = time.monotonic() + 1800
         handled = False
         try:
+            process.stdin.write(data)
+            process.stdin.close()
             while process.poll() is None:
                 require(time.monotonic() < deadline, "HOSTED_PROBE_DEADLINE")
                 if (
@@ -2065,7 +2273,7 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
                         import oracle_forward_check
 
                         oracle_forward_check.check(output, binding, operation)
-                    before = inventory()
+                    before = inventory(owned_probe=owned_probe)
                     old = before[name]
                     write(
                         output / "replacement-intent.json",
@@ -2096,7 +2304,7 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
                         "staging",
                         timeout=180,
                     )
-                    after = inventory()
+                    after = inventory(owned_probe=owned_probe)
                     new = after[name]
                     require(
                         new["Id"] != old["Id"]
@@ -2131,11 +2339,25 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
                 "HOSTED_PRODUCER_FAILED_INSPECT_PRIVATE_RECEIPT",
             )
         finally:
-            if process.poll() is None:
-                process.terminate()
-                process.wait(timeout=20)
-            narrowed.unlink(missing_ok=True)
-            (output / "private-provider-observation.json").unlink(missing_ok=True)
+            failed = sys.exc_info()[0] is not None
+            try:
+                safe = finish_probe_client(process, owned_probe, output)
+            except (
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+                subprocess.SubprocessError,
+            ):
+                # The runner's original diagnostic must survive cleanup failure.
+                safe = False
+            try:
+                cleanup_probe_inputs(output, binding, operation, env, safe)
+            except (OSError, ValueError, KeyError, TypeError):
+                if not failed:
+                    raise Refused("PRIVATE_PROBE_CLEANUP_FAILED_INSPECT_ONLY") from None
+            if not failed:
+                require(safe, "OWNED_PROBE_EXIT_UNCONFIRMED_INSPECT_ONLY")
     observed = json.loads(stdout.read_bytes())
     require(
         observed["binding"] == binding
