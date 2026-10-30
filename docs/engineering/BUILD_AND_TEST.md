@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+Hosted UI receipts are created privately and exclusively before the unchanged
+owner probe reads them. The credential-free receipt regression runs the actual
+Python reader against Node-created files, including a permissive-writer negative
+control, existing-file preservation and simultaneous independent writers. These
+local checks do not qualify a hosted release.
+
 `python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
 and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
 verify genuine build/local-check custody separately from owner hosted acceptance.
