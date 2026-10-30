@@ -276,14 +276,18 @@ class OwnedProbeSnapshot:
         self._identity = identity
         return value
 
-    def validate(self, observed):
+    def validate(self, observed, *, allow_exited=False):
         row = observed.get(self.name)
         require(row and row["Id"] == self.cid(), "OWNED_PROBE_NOT_RUNNING")
         config, host = row["Config"], row["HostConfig"]
         require(
             row["Name"] == "/" + self.name
             and row["Image"] == self.image
-            and row["State"]["Running"] is True
+            and (
+                row["State"]["Running"] is True
+                or allow_exited is True
+                and row["State"]["Running"] is False
+            )
             and host["AutoRemove"] is True
             and host["Init"] is True
             and host["ReadonlyRootfs"] is True
@@ -353,9 +357,18 @@ def finish_probe_client(process, owned_probe, output):
         if present():
             rows = json.loads(docker("inspect", cid, timeout=5))
             require(len(rows) == 1, "OWNED_PROBE_EXIT_IDENTITY")
-            owned_probe.validate({rows[0]["Name"].removeprefix("/"): rows[0]})
-            # One normal stop request, never a retry or a broad container kill.
-            docker("stop", "--time", "60", cid, timeout=75)
+            owned_probe.validate(
+                {rows[0]["Name"].removeprefix("/"): rows[0]}, allow_exited=True
+            )
+            if rows[0]["State"]["Running"] is True:
+                # One normal stop request, never a retry or a broad container kill.
+                docker("stop", "--time", "60", cid, timeout=75)
+        # AutoRemove can finish after the client exits. Only poll for disappearance;
+        # an already exited client is never stopped again or admitted to inventory.
+        deadline = time.monotonic() + 10
+        while present():
+            require(time.monotonic() < deadline, "OWNED_PROBE_EXIT_UNCONFIRMED")
+            time.sleep(0.1)
         safe = not present()
         require(safe, "OWNED_PROBE_EXIT_UNCONFIRMED")
     except (
