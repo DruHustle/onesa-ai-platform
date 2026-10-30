@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+Hosted UI receipts are created privately and exclusively before the unchanged
+owner probe reads them. The credential-free receipt regression runs the actual
+Python reader against Node-created files, including a permissive-writer negative
+control, existing-file preservation and simultaneous independent writers. These
+local checks do not qualify a hosted release.
+
 `python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
 and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
 verify genuine build/local-check custody separately from owner hosted acceptance.
@@ -413,3 +419,10 @@ an approved, isolated staging-context build outside Actions and runs
 `ONESA_INTERNAL_DOCS_TEST_BUILD=/absolute/private/fixture ONESA_INTERNAL_DOCS_TEST_ENVIRONMENT=staging node --test scripts/docs/internal-acceptance.test.mjs`.
 These tests do not commission a verifier, qualify a hosted deployment or publish
 documentation. Actual outcomes remain in the protected canonical evidence index.
+
+The release suite exercises the actual installed Docs module layout in a separate
+`python -I` process with no inherited import path or provider credentials. It
+reproduces the former missing-sibling import failure and verifies that both the
+root verifier and sibling runner parsers load before any operation starts. This
+startup regression is local evidence; fresh commissioning and hosted qualification
+remain required for a changed runner.
