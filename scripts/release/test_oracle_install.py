@@ -77,9 +77,14 @@ class InstallTests(unittest.TestCase):
         source_root = self.root / "synthetic-source"
         source_root.mkdir(mode=0o700)
         repo = Path(__file__).resolve().parents[2]
-        is_docs = getattr(self, "DOCS", False)
+        is_private_docs = getattr(self, "PRIVATE_DOCS", False)
+        is_docs = is_private_docs or getattr(self, "DOCS", False)
         for local, source in (
-            installer.DOCS_ALLOWED if is_docs else installer.ALLOWED
+            installer.PRIVATE_DOCS_ALLOWED
+            if is_private_docs
+            else installer.DOCS_ALLOWED
+            if is_docs
+            else installer.ALLOWED
         ).items():
             data = (repo / source).read_bytes()
             files[source] = data
@@ -93,8 +98,18 @@ class InstallTests(unittest.TestCase):
         if is_docs:
             import oracle_docs_contract as contract
 
-            for resource in contract.SOURCE_CLOSURE:
+            for resource in contract.source_closure(
+                "docs-internal" if is_private_docs else "docs-public"
+            ):
                 files[resource] = (repo / resource).read_bytes()
+        if is_private_docs:
+            for name in [
+                "scripts/release/free_gate.py",
+                "scripts/release/evidence.py",
+                "scripts/release/qualify.py",
+                "infra/oracle/cloudflare-tools/upstream.json",
+            ]:
+                files[name] = (repo / name).read_bytes()
         for name, data in files.items():
             path = source_root / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -216,6 +231,59 @@ class InstallTests(unittest.TestCase):
                     },
                 }
             }
+        if is_private_docs:
+            import oracle_docs_contract as contract
+
+            closure = {
+                name: hashlib.sha256(files[name]).hexdigest()
+                for name in contract.source_closure("docs-internal")
+            }
+            tool = self.policy["toolchain"]
+            tool.pop("vercel_team_id")
+            tool.update(
+                cli_image_security_path="/var/lib/onesa/release-verification/ai-docs-internal/artifacts/"
+                + tree
+                + "/toolchain/cli-security.json",
+                cli_distribution_sha256="95783b16eadfa64161f0fd7c453f3c424a21c855c9afc445ea4a5703c6b512fe",
+                docs_project_id="11111111-1111-4111-8111-111111111111",
+                cloudflare_account_id="1" * 32,
+                protected_source_bundle_sha256="7" * 64,
+                conditional_source_pins={
+                    name: hashlib.sha256(files[name]).hexdigest()
+                    for name in [
+                        "scripts/release/free_gate.py",
+                        "scripts/release/evidence.py",
+                        "scripts/release/qualify.py",
+                    ]
+                },
+                native_source_pins=closure,
+                native_producer_sha256=contract.producer_digest(
+                    closure, runtime, component="docs-internal"
+                ),
+                transport_guard_sha256=self.manifest["files"][
+                    "runners/oracle_cloudflare_transport_guard.cjs"
+                ],
+            )
+            profile = self.policy["components"].pop(
+                "DruHustle/onesa-ai-platform:docs-public"
+            )
+            profile["publication_mechanism"] = (
+                "existing-isolated-owner-cloudflare-pages-cli"
+            )
+            for phase in verifier.PHASES:
+                profile["runners"][phase].update(
+                    path=str(
+                        installer.INSTALL_PARENT
+                        / ("ai-docs-internal-" + tree)
+                        / "runners/oracle_docs_internal_runner.py"
+                    ),
+                    sha256=self.manifest["files"][
+                        "runners/oracle_docs_internal_runner.py"
+                    ],
+                )
+            self.policy["components"]["DruHustle/onesa-ai-platform:docs-internal"] = (
+                profile
+            )
         self.seal()
 
     def put(self, name, data):

@@ -70,11 +70,12 @@ def installed(path):
     owner.require(
         checkout.name == "onesa-ai-platform"
         and cfg["binding"]["repository"] == builds.REPOSITORY
-        and cfg["binding"]["component"] == "docs-public",
-        "ISOLATED_PUBLIC_DOCS_INSTALLATION_ONLY",
+        and cfg["binding"]["component"] in {"docs-public", "docs-internal"},
+        "ISOLATED_INDEPENDENT_DOCS_INSTALLATION_ONLY",
     )
     owner.require(
-        cfg["source_pins"].keys() == contract.SOURCE_CLOSURE,
+        cfg["source_pins"].keys()
+        == contract.source_closure(cfg["binding"]["component"]),
         "CLOSED_SOURCE_SET_REQUIRED",
     )
     for relative, pin in cfg["source_pins"].items():
@@ -123,7 +124,11 @@ def installed(path):
         expected_modules == modules,
         "BROWSER_RUNTIME_MUST_BELONG_TO_THE_INSTALLED_CHECKOUT",
     )
-    producer = contract.producer_digest(cfg["source_pins"], cfg["runtime_pins"])
+    producer = contract.producer_digest(
+        cfg["source_pins"],
+        cfg["runtime_pins"],
+        component=cfg["binding"]["component"],
+    )
     owner.require(
         set(cfg["producer"]) == {"sha256", "public_key", "private_key"}
         and producer == cfg["producer"]["sha256"],
@@ -276,6 +281,12 @@ def assets(raw, descriptor, source):
     return result
 
 
+def private_assets(raw, descriptor):
+    import oracle_docs_internal_build as private_build
+
+    return private_build.served_assets(raw, descriptor)
+
+
 def observe(cfg, record, archive, *, probe=False):
     target = record["details"]["target"]
     environment = record["details"]["environment"]
@@ -299,7 +310,12 @@ def observe(cfg, record, archive, *, probe=False):
         "ROOT_BOUND_ARTIFACT_SIZE_CHANGED",
     )
     raw = archive_path.read_bytes()
-    expected = assets(raw, publication["artifact"], cfg["binding"]["candidate_commit"])
+    internal = cfg["binding"]["component"] == "docs-internal"
+    expected = (
+        private_assets(raw, publication["artifact"])
+        if internal
+        else assets(raw, publication["artifact"], cfg["binding"]["candidate_commit"])
+    )
     owner.require(
         provider["asset_count"] == len(expected)
         and provider["artifact_manifest_sha256"]
@@ -315,6 +331,20 @@ def observe(cfg, record, archive, *, probe=False):
         "environment": environment,
         "mode": "preflight" if probe else "observe",
         "assets": expected,
+        **(
+            {
+                "component": "docs-internal",
+                "origins": publication["access"]["anonymous_origins"],
+                "team_origin": publication["access"]["team_origin"],
+                **(
+                    {"rollback": publication["rollback"]}
+                    if environment == "staging"
+                    else {}
+                ),
+            }
+            if internal
+            else {}
+        ),
     }
     encoded = owner.canonical(request)
     file = journal / "input.json"
@@ -356,7 +386,12 @@ def observe(cfg, record, archive, *, probe=False):
         and response["blocked_non_get_requests"] == 0
         and response["original_tabs_preserved"] is True
         and response["session_values_read"] is False
-        and response["verified_public_asset_responses"] == len(expected),
+        and response[
+            "verified_protected_asset_responses"
+            if internal
+            else "verified_public_asset_responses"
+        ]
+        == len(expected),
         "ACTUAL_NATIVE_OBSERVER_OR_PRESERVATION_FAILED",
     )
     browser = response["browser"]
@@ -381,7 +416,27 @@ def observe(cfg, record, archive, *, probe=False):
             / "onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json"
         ).read_bytes()
     )
-    checks.validate(response["acceptance"], registry, icons, require=owner.require)
+    if internal:
+        import oracle_docs_internal_build as private_build
+        import oracle_docs_internal_checks as private_checks
+
+        files = private_build.archive_files(raw)
+        private_checks.validate(
+            response["acceptance"],
+            navigation=private_build.read_json(
+                files["generated/engineering-navigation.json"]
+            ),
+            catalog=private_build.read_json(files["generated/diagrams.json"]),
+            registry=registry,
+            icon_manifest=icons,
+            assets=[item["route"] for item in expected],
+            origins=publication["access"]["anonymous_origins"],
+            team_origin=publication["access"]["team_origin"],
+            rollback=publication.get("rollback"),
+            require=owner.require,
+        )
+    else:
+        checks.validate(response["acceptance"], registry, icons, require=owner.require)
     owner.require(
         response["acceptance"]["result"] == "PASS"
         and response["acceptance"]["environment_context"] == environment,
@@ -395,7 +450,11 @@ def observe(cfg, record, archive, *, probe=False):
         "acceptance": response["acceptance"],
         "source_revision": cfg["binding"]["candidate_commit"],
         "observation_mode": "existing-owner-browser-no-profile-export",
-        "kind": "owner-native-public-docs-observation",
+        "kind": (
+            "owner-native-protected-docs-observation"
+            if internal
+            else "owner-native-public-docs-observation"
+        ),
         "browser": browser,
     }
 
