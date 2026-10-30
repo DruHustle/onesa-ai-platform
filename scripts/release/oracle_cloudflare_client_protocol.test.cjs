@@ -2,6 +2,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process'),{randomUUID}=require('node:crypto');
 const source=path.resolve(__dirname,'../..'),image=process.env.ONESA_CF_PROTOCOL_IMAGE;
+const uid=process.getuid(),gid=process.getgid();
 assert.match(image||'',/^(sha256:[a-f0-9]{64}|onesa-owner-cloudflare-cli:ci)$/,'An explicitly built disposable protocol image is mandatory');
 const publisher=fs.readFileSync(path.join(__dirname,'oracle_docs_internal_publish.py'),'utf8'),matches=[...publisher.matchAll(/^BOOTSTRAP = r"""([\s\S]*?)"""/gm)];
 assert.equal(matches.length,1);const bootstrap=matches[0][1];
@@ -16,11 +17,15 @@ for(const scenario of ['warm-success','cold-success','worker-success','unknown-e
  fs.writeFileSync(path.join(root,'guard.json'),JSON.stringify(cfg),{mode:0o600});
  fs.writeFileSync(path.join(credentials,'publisher.json'),JSON.stringify({schema_version:1,purpose:'existing-cloudflare-pages-publisher',account_id:cfg.account_id,token:'synthetic-not-a-working-provider-credential',expires_at:new Date(Date.now()+3600000).toISOString(),release_authority:false}),{mode:0o600});
  const cli='/opt/onesa-cloudflare-tool/node_modules/wrangler/wrangler-dist/cli.js';
- const command=['run','--rm','--pull=never','--network','none','--read-only','--tmpfs','/tmp:rw,mode=700,size=256m','--tmpfs','/workspace/.wrangler:rw,noexec,mode=700,size=256m','--memory','512m','--cpus','1','--pids-limit','256','--cap-drop','ALL','--security-opt','no-new-privileges:true','-v',staticDir+':/workspace:ro','-v',path.join(credentials,'publisher.json')+':/private/credentials/publisher.json:ro','-v',root+':/private/operation:rw','-v',path.join(root,'mock.cjs')+':/private/mock.cjs:ro','-v',path.join(__dirname,'oracle_cloudflare_transport_guard.cjs')+':/private/guard.cjs:ro','-e','NODE_PATH=/opt/onesa-cloudflare-tool/node_modules','-e','ONESA_CF_FIXTURE_UNDICI=/opt/onesa-cloudflare-tool/node_modules/undici','-e','ONESA_CF_FIXTURE_SCENARIO='+scenario,'-e','ONESA_CF_FIXTURE_RESULT=/private/operation/dispatch-observation.json','--entrypoint','node','-w','/workspace',image,'--require','/private/mock.cjs','-e',bootstrap,'--',cli,'pages','deploy','/workspace','--project-name','onesa-engineering-docs','--branch','onesa-oracle-fixture','--commit-hash',cfg.source_commit,'--commit-message','synthetic-one-create','--commit-dirty=false'];
+ // Hosted Linux binds retain the runner UID. With all capabilities dropped,
+ // container root cannot read another UID's private fixture. Match its owner,
+ // retaining private modes and the production bootstrap/transport restrictions.
+ const command=['run','--rm','--pull=never','--network','none','--read-only','--user',uid+':'+gid,'--tmpfs','/tmp:rw,mode=700,uid='+uid+',gid='+gid+',size=256m','--tmpfs','/workspace/.wrangler:rw,noexec,mode=700,uid='+uid+',gid='+gid+',size=256m','--memory','512m','--cpus','1','--pids-limit','256','--cap-drop','ALL','--security-opt','no-new-privileges:true','-v',staticDir+':/workspace:ro','-v',path.join(credentials,'publisher.json')+':/private/credentials/publisher.json:ro','-v',root+':/private/operation:rw','-v',path.join(root,'mock.cjs')+':/private/mock.cjs:ro','-v',path.join(__dirname,'oracle_cloudflare_transport_guard.cjs')+':/private/guard.cjs:ro','-e','NODE_PATH=/opt/onesa-cloudflare-tool/node_modules','-e','ONESA_CF_FIXTURE_UNDICI=/opt/onesa-cloudflare-tool/node_modules/undici','-e','ONESA_CF_FIXTURE_SCENARIO='+scenario,'-e','ONESA_CF_FIXTURE_RESULT=/private/operation/dispatch-observation.json','--entrypoint','node','-w','/workspace',image,'--require','/private/mock.cjs','-e',bootstrap,'--',cli,'pages','deploy','/workspace','--project-name','onesa-engineering-docs','--branch','onesa-oracle-fixture','--commit-hash',cfg.source_commit,'--commit-message','synthetic-one-create','--commit-dirty=false'];
  if(['cold-success','worker-success'].includes(scenario))command.push('--skip-caching');
  const result=spawnSync(process.env.ONESA_TEST_DOCKER||'docker',command,{encoding:'utf8',timeout:100000,maxBuffer:2*1024*1024});
  fs.writeFileSync(path.join(root,'stdout'),result.stdout||'',{mode:0o600});fs.writeFileSync(path.join(root,'stderr'),result.stderr||'',{mode:0o600});
  assert.equal(result.error,undefined,'Bounded actual client failed: '+root);
+ assert.ok(fs.existsSync(path.join(root,'dispatch-observation.json')),'Fixture client did not start; exit '+result.status+'; private diagnostic files: '+root);
  const observed=JSON.parse(fs.readFileSync(path.join(root,'dispatch-observation.json'),'utf8'));
  assert.equal(observed.provider_requests,0);assert.equal(observed.calls.filter(x=>x.method==='POST'&&x.path.endsWith('/deployments')).length,1,'Exactly one actual client dispatch required: '+root);
  const intent=JSON.parse(fs.readFileSync(path.join(root,'create-dispatch.intent.json'),'utf8'));
