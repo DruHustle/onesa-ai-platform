@@ -12,6 +12,7 @@ import json
 import os
 from datetime import datetime, timedelta
 
+import oracle_docs_driver as drivers
 import oracle_owner as owner
 
 DOMAIN = "onesa-docs-native-attestation/v1"
@@ -232,10 +233,9 @@ def active(store, registration_id, binding):
 
 
 def begin_qualification(store, context_id, registration_id):
-    import oracle_docs_runner as docs
-
     context = store.get(context_id, "context")["record"]
     binding = context["binding"]
+    docs = drivers.for_binding(binding)
     active(store, registration_id, binding)
     ci = store.github.qualify(binding)
     preview = docs.preview_for_binding(store, binding)
@@ -301,8 +301,6 @@ def decode(raw):
 
 
 def import_observation(store, raw):
-    import oracle_docs_runner as docs
-
     envelope = decode(raw)
     payload = envelope["payload"]
     owner.require(
@@ -353,6 +351,7 @@ def import_observation(store, raw):
         and timedelta() <= store.clock() - observed < timedelta(minutes=5),
         "NATIVE_OBSERVATION_EXPIRED_OR_FUTURE",
     )
+    docs = drivers.for_binding(binding)
     docs.validate_native(store, challenge, payload)
     with store.transaction():
         store.get(challenge["id"], CHALLENGE, binding)
@@ -435,6 +434,7 @@ def complete_qualification(store, context_id):
 def observation_for_challenge(store, challenge):
     """Read one currently valid signed observation; do not repeat native tests."""
     binding = challenge["binding"]
+    docs = drivers.for_binding(binding)
     rows = store.db.execute(
         "SELECT id FROM records WHERE kind=? AND parent=?",
         (OBSERVATION, challenge["id"]),
@@ -448,8 +448,6 @@ def observation_for_challenge(store, challenge):
         "SIGNED_NATIVE_OBSERVATION_SCOPE_CHANGED",
     )
     active(store, payload["registration_id"], binding)
-    import oracle_docs_runner as docs
-
     docs.validate_native(store, challenge, payload)
     return observed
 
@@ -475,10 +473,9 @@ def staging_observation(store, context_id):
 
 
 def production_challenge(store, operation_id, registration_id):
-    import oracle_docs_runner as docs
-
     operation = store.get(operation_id, "deployment-intent")["record"]
     binding = operation["binding"]
+    docs = drivers.for_binding(binding)
     active(store, registration_id, binding)
     scope(store, binding)
     store.get(operation["parent"], "authorization", binding)
