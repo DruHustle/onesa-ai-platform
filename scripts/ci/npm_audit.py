@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICIES = {
+    "infra/oracle/cloudflare-tools": "low",
     "onesa-ai-platform-frontend/apps/docs": "low",
     "onesa-ai-platform-frontend/apps/chat": "high",
 }

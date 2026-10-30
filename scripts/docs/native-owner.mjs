@@ -46,7 +46,7 @@ export async function nativeGet(page,origin,value) {
    if(reader)while(true){const chunk=await reader.read();if(chunk.done)break;size+=chunk.value.byteLength;if(size>16*1024*1024){await reader.cancel();throw Error('BODY_BOUND');}chunks.push(chunk.value);}
    const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
    let binary='';for(let start=0;start<bytes.length;start+=32768)binary+=String.fromCharCode(...bytes.subarray(start,start+32768));
-   return {status:response.status,headers:{'content-type':response.headers.get('content-type')||''},body:btoa(binary)};
+   return {status:response.status,headers:Object.fromEntries(['content-type','cache-control','x-robots-tag','x-content-type-options'].map(name=>[name,response.headers.get(name)||''])),body:btoa(binary)};
   }finally{clearTimeout(timer);}
  },{url:url.href,origin});
  const body=Buffer.from(result.body,'base64');

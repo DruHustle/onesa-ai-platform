@@ -12,8 +12,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "runners"))
-import oracle_docs_runner as docs
 import oracle_owner as owner
+from oracle_docs_driver import for_binding, for_component
 
 INTENT = "documentation-preview-intent"
 RECEIPT = "documentation-preview-receipt"
@@ -33,6 +33,7 @@ def receipt_for(store, intent, *, reconcile=False):
     original = store.get(intent, INTENT)["record"]
     binding = original["binding"]
     component_scope(store, binding)
+    docs = for_binding(binding)
     # Inspection resolves the already recorded operation; it never invokes create.
     observation = docs.inspect_preview(store, original)
     owner.require(
@@ -73,6 +74,7 @@ def receipt_for(store, intent, *, reconcile=False):
 
 def publish_preview(store, binding):
     scope = component_scope(store, binding)
+    docs = for_binding(binding)
     ci = store.github.qualify(binding)
     prepared = docs.prepare(store, binding)
     with store.transaction():
@@ -112,6 +114,7 @@ def publish_preview(store, binding):
 def native_preflight(store, binding):
     """Issue bounded target data for full preflight; never qualification or a PASS."""
     component_scope(store, binding)
+    docs = for_binding(binding)
     store.github.qualify(binding)
     preview = docs.preview_for_binding(store, binding)
     target = docs.target_for_observation(
@@ -152,18 +155,26 @@ def main():
             "complete-qualification",
             "production-challenge",
             "native-preflight",
+            "export-conditional",
+            "accept-conditional",
+            "inspect-conditional",
         ],
     )
     parser.add_argument("--store", type=Path, required=True)
     parser.add_argument("--component", choices=["docs-public", "docs-internal"])
     parser.add_argument("--record")
     parser.add_argument("--registration")
+    parser.add_argument("--run-id", type=int)
     args = parser.parse_args()
     owner.require(
         os.geteuid() == 0
         and os.getenv("SUDO_USER") == "ubuntu"
         and not os.getenv("GITHUB_ACTIONS"),
         "EXTERNAL_OWNER_SSH_SUDO_REQUIRED",
+    )
+    owner.require(
+        args.run_id is None or args.action == "accept-conditional",
+        "CONDITIONAL_RUN_ID_ONLY_FOR_EXPLICIT_HANDOFF",
     )
     raw = sys.stdin.buffer.read(1024 * 1024 + 32769)
     owner.require(
@@ -180,7 +191,32 @@ def main():
         "import-native": {"native_envelope"},
     }.get(args.action, set())
     owner.require(set(request) == fields, "NO_CALLER_PASS_OR_AUTHORIZATION_ACCEPTED")
-    if args.action == "inspect-publications":
+    docs = for_component(store, args.component)
+    if args.action in {
+        "export-conditional",
+        "accept-conditional",
+        "inspect-conditional",
+    }:
+        owner.require(
+            set(store.policy["components"])
+            == {"DruHustle/onesa-ai-platform:docs-internal"},
+            "PRIVATE_CONDITIONAL_OWNER_SCOPE_ONLY",
+        )
+        import oracle_docs_internal_conditional as conditional
+
+        owner.require(
+            args.record
+            and not any([args.registration, args.component])
+            and (args.run_id is not None) is (args.action == "accept-conditional"),
+            "EXACT_PRIVATE_CONTEXT_AND_CONDITIONAL_ACTION_REQUIRED",
+        )
+        if args.action == "export-conditional":
+            result = conditional.export(store, args.record)
+        elif args.action == "accept-conditional":
+            result = conditional.accept(store, args.record, args.run_id)
+        else:
+            result = conditional.inspect(store, args.record)
+    elif args.action == "inspect-publications":
         owner.require(
             not any([args.record, args.registration, args.component]),
             "READ_ONLY_RETAINED_PUBLICATION_INSPECTION_ONLY",

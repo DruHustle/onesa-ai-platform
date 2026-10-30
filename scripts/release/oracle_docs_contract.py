@@ -23,12 +23,28 @@ SOURCE_CLOSURE = frozenset(
     }
 )
 RUNTIME_PINS = frozenset({"node", "openssl", "browser_packages"})
+PRIVATE_SOURCE_CLOSURE = SOURCE_CLOSURE | frozenset(
+    {
+        "scripts/docs/internal-native.mjs",
+        "scripts/docs/internal-acceptance.mjs",
+        "scripts/release/oracle_docs_internal_build.py",
+        "scripts/release/oracle_docs_internal_checks.py",
+    }
+)
 
 
-def producer_digest(files, runtime):
+def source_closure(component="docs-public"):
+    owner.require(
+        component in {"docs-public", "docs-internal"},
+        "EXACT_NATIVE_DOCS_COMPONENT_REQUIRED",
+    )
+    return SOURCE_CLOSURE if component == "docs-public" else PRIVATE_SOURCE_CLOSURE
+
+
+def producer_digest(files, runtime, *, component="docs-public"):
     owner.require(
         isinstance(files, dict)
-        and files.keys() == SOURCE_CLOSURE
+        and files.keys() == source_closure(component)
         and isinstance(runtime, dict)
         and runtime.keys() == RUNTIME_PINS,
         "CLOSED_NATIVE_PRODUCER_AND_RUNTIME_REQUIRED",
