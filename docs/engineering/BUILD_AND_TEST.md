@@ -1,5 +1,12 @@
 # Separate application builds and tests
 
+`node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
+worker with synthetic signed identities. Generated Mermaid sources must retain
+their exact bytes and private headers while overriding Pages' karaoke MIME type
+with UTF-8 plain text. Denied identities cannot reach assets; error responses and
+unrelated asset types retain their provider MIME type. Hosted byte and MIME
+verification remains mandatory for each new private Docs artifact.
+
 Hosted UI receipts are created privately and exclusively before the unchanged
 owner probe reads them. The credential-free receipt regression runs the actual
 Python reader against Node-created files, including a permissive-writer negative
@@ -93,6 +100,16 @@ monitoring clients and list/inspect races do not become preservation baselines.
 Long-lived temporary workloads, unchanged-inventory command failures, incomplete
 metadata and real independent runtime changes still fail closed. These fixtures
 make only mocked Docker reads and do not establish hosted qualification.
+
+`test_oracle_owned_probe.py` reproduces the self-client replacement deadlock and
+checks the narrow owner-controlled exception. The Docker-written CID lives outside
+all producer mounts; its immutable identity, exact image, operation label, command,
+mounts and resource/security profile must agree. Missing, changed or forged clients
+and any other automatic-removal workload fail closed. Cancellation tests retain
+private inputs on uncertain exit, preserve the original failure and prohibit a
+second stop/deployment request. SIGTERM enters existing fixture cleanup. Run this
+with the full offline release suite; Linux root custody and genuine hosted
+replacement/rollback evidence remain mandatory before release.
 
 Hosted browser probes use the daemon's existing outbound bridge network in their
 own network namespace. Host networking exposes Chromium to unrelated host interface
