@@ -21,7 +21,13 @@ import zipfile
 from contextlib import contextmanager
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Core starts this installed runner with Python -I. Its sibling parsers live in
+# runners/, while the owner verifier/native contract live one directory above.
+# Neither directory is inherited from the calling owner's interpreter.
+sys.path[:0] = [
+    str(Path(__file__).resolve().parent.parent),
+    str(Path(__file__).resolve().parent),
+]
 import oracle_docs_build as builds
 import oracle_docs_checks as checks
 import oracle_docs_native as native

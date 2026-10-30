@@ -1,5 +1,11 @@
 # Separate application builds and tests
 
+Hosted UI receipts are created privately and exclusively before the unchanged
+owner probe reads them. The credential-free receipt regression runs the actual
+Python reader against Node-created files, including a permissive-writer negative
+control, existing-file preservation and simultaneous independent writers. These
+local checks do not qualify a hosted release.
+
 `python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
 and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
 verify genuine build/local-check custody separately from owner hosted acceptance.
@@ -398,3 +404,10 @@ modified/private archives, unsafe ZIP members and mismatched rendered contexts.
 The fixtures never issue qualification, authorization or provider requests. Build-only
 workflow artifacts carry staging and production contexts separately; actual owner-run
 provenance and hosted acceptance remain independent requirements.
+
+The release suite exercises the actual installed Docs module layout in a separate
+`python -I` process with no inherited import path or provider credentials. It
+reproduces the former missing-sibling import failure and verifies that both the
+root verifier and sibling runner parsers load before any operation starts. This
+startup regression is local evidence; fresh commissioning and hosted qualification
+remain required for a changed runner.
