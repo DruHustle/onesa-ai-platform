@@ -1,5 +1,10 @@
 # Onesa AI Platform
 
+The owner-run qualification candidate identifies its active probe from a private
+Docker CID and verifies its image, command, mounts and isolation before observing
+a controlled staging replacement. Other temporary clients still block the check.
+This source correction requires fresh hosted qualification and release records.
+
 Server gateway imports and traced-bundle checks keep the Node trust policy in
 serverless artifacts as well as conventional Node startup.
 
