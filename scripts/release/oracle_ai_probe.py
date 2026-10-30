@@ -12,6 +12,7 @@ import json
 import os
 import re
 import secrets
+import signal
 import subprocess
 import sys
 import time
@@ -997,11 +998,21 @@ def main():
     raw = sys.stdin.buffer.read(131073)
     require(len(raw) <= 131072, "PRIVATE_PROBE_REQUEST_BOUND")
     request = json.loads(raw)
+    previous = signal.getsignal(signal.SIGTERM)
+
+    def interrupted(_signum, _frame):
+        # Let the existing owned-fixture cleanup run once without interruption.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        raise Refused("OWNED_PROBE_INTERRUPTED_NOT_QUALIFIED")
+
+    signal.signal(signal.SIGTERM, interrupted)
     try:
         result = execute(args.environment, request)
     except Exception as error:
         record_boundary_failure(args.environment, request, error)
         raise
+    finally:
+        signal.signal(signal.SIGTERM, previous)
     print(json.dumps(result))
 
 

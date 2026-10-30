@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Source correction: prevent owner staging qualification from waiting for its own
+  active probe to exit before acknowledging the required replacement. Only the
+  exact privately identified and fully inspected probe is excluded from those two
+  snapshots. Other workloads retain the existing preservation checks. Interrupted
+  clients receive one verified normal stop, run owned-fixture cleanup and retain
+  private inputs when exit cannot be confirmed. Hosted acceptance remains separate.
+
 - Source candidate: retain typed local public Docs checks as a separate genuine
   build artifact for the external owner reader; legacy archive inspection cannot
   substitute for the new required-check mode or native hosted acceptance.
