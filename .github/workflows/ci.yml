@@ -160,7 +160,7 @@ jobs:
       run: |
         docker build -f infra/oracle/cloudflare.Dockerfile -t onesa-owner-cloudflare-cli:ci .
         ONESA_CF_PROTOCOL_IMAGE=onesa-owner-cloudflare-cli:ci node --test scripts/release/oracle_cloudflare_client_protocol.test.cjs
-        node --test scripts/release/oracle_cloudflare_transport_guard.test.cjs scripts/docs/internal-native.test.mjs
+        node --test scripts/release/oracle_cloudflare_transport_guard.test.cjs
     - name: Verify the pinned owner CLI prebuilt upload protocol offline
       run: |
         docker build -f infra/oracle/vercel.Dockerfile -t onesa-owner-cli-protocol:ci .
@@ -343,6 +343,8 @@ jobs:
       if: github.event.repository.private == false
       run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - name: "Release requirement: private Docs native asset refusals"
+      run: node --test scripts/docs/internal-native.test.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
     - name: Install documentation browsers and system dependencies
       timeout-minutes: 10
