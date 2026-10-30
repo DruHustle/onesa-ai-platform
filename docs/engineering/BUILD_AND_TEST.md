@@ -94,6 +94,16 @@ Long-lived temporary workloads, unchanged-inventory command failures, incomplete
 metadata and real independent runtime changes still fail closed. These fixtures
 make only mocked Docker reads and do not establish hosted qualification.
 
+`test_oracle_owned_probe.py` reproduces the self-client replacement deadlock and
+checks the narrow owner-controlled exception. The Docker-written CID lives outside
+all producer mounts; its immutable identity, exact image, operation label, command,
+mounts and resource/security profile must agree. Missing, changed or forged clients
+and any other automatic-removal workload fail closed. Cancellation tests retain
+private inputs on uncertain exit, preserve the original failure and prohibit a
+second stop/deployment request. SIGTERM enters existing fixture cleanup. Run this
+with the full offline release suite; Linux root custody and genuine hosted
+replacement/rollback evidence remain mandatory before release.
+
 Hosted browser probes use the daemon's existing outbound bridge network in their
 own network namespace. Host networking exposes Chromium to unrelated host interface
 changes and can cancel a request with `net::ERR_NETWORK_CHANGED`. Preflight and
