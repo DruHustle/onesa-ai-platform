@@ -154,6 +154,13 @@ jobs:
       run: |
         npm audit --package-lock-only --audit-level=low --prefix infra/oracle/vercel-tools
         npm audit --package-lock-only --audit-level=low --prefix infra/oracle/npm-runtime
+    - name: "Release requirement: private Docs publisher dependency lock"
+      run: python3 scripts/ci/npm_audit.py --prefix infra/oracle/cloudflare-tools
+    - name: "Release requirement: private Docs Linux single-dispatch protocol"
+      run: |
+        docker build -f infra/oracle/cloudflare.Dockerfile -t onesa-owner-cloudflare-cli:ci .
+        ONESA_CF_PROTOCOL_IMAGE=onesa-owner-cloudflare-cli:ci node --test scripts/release/oracle_cloudflare_client_protocol.test.cjs
+        node --test scripts/release/oracle_cloudflare_transport_guard.test.cjs scripts/docs/internal-native.test.mjs
     - name: Verify the pinned owner CLI prebuilt upload protocol offline
       run: |
         docker build -f infra/oracle/vercel.Dockerfile -t onesa-owner-cli-protocol:ci .
