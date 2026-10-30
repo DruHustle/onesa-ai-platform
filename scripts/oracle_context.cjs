@@ -1,5 +1,20 @@
 /* Local Oracle probe metadata cannot authorize a production release. */
 const fs = require("node:fs");
+const path = require("node:path");
+function writeReceipt(file, value) {
+  const raw = JSON.stringify(value, null, 2);
+  const directory = path.dirname(file), parent = fs.lstatSync(directory);
+  if (!parent.isDirectory() || parent.isSymbolicLink() ||
+      parent.uid !== process.getuid() || (parent.mode & 0o022))
+    throw new Error("Owned receipt directory required");
+  const fd = fs.openSync(file,
+    fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW,
+    0o600);
+  try { fs.writeFileSync(fd, raw); fs.fsyncSync(fd); }
+  finally { fs.closeSync(fd); }
+  const dir = fs.openSync(directory, fs.constants.O_RDONLY);
+  try { fs.fsyncSync(dir); } finally { fs.closeSync(dir); }
+}
 function privateJson(file) {
   const st = fs.lstatSync(file);
   if (!st.isFile() || (st.mode & 0o077) || st.uid !== process.getuid() || st.size > 16384)
@@ -25,4 +40,4 @@ function loadContext(file) {
     throw new Error("Oracle fixture/output context mismatch");
   return c;
 }
-module.exports = { loadContext };
+module.exports = { loadContext, writeReceipt };
