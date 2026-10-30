@@ -51,8 +51,8 @@ class PublicationTests(unittest.TestCase):
         self.enterContext(
             patch.object(
                 publication,
-                "docs",
-                SimpleNamespace(
+                "for_binding",
+                return_value=SimpleNamespace(
                     prepare=lambda *_args: {"synthetic_build_only": True},
                     create_preview=create,
                     inspect_preview=inspect,
@@ -130,7 +130,7 @@ class PublicationTests(unittest.TestCase):
             preview_for_binding=lambda *_: preview,
             target_for_observation=lambda *_args, **_kwargs: {"synthetic_target": True},
         )
-        with patch.object(publication, "docs", docs):
+        with patch.object(publication, "for_binding", return_value=docs):
             target = publication.native_preflight(self.store, self.binding)["record"]
         self.assertEqual(
             datetime.fromisoformat(target["expires_at"])

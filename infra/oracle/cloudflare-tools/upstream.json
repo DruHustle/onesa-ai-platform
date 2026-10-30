@@ -1,0 +1,13 @@
+{
+  "version": "4.153.0",
+  "distribution": "https://registry.npmjs.org/wrangler/-/wrangler-4.153.0.tgz",
+  "license": "MIT OR Apache-2.0",
+  "upstream_cli_sha256": "18dbf242b542e171c993d68cc41a4e58bc4f533392fc91b71e29ffeee7bf6c0c",
+  "one_submit_cli_sha256": "95783b16eadfa64161f0fd7c453f3c424a21c855c9afc445ea4a5703c6b512fe",
+  "patches": [
+    "refuse redirects on final Pages deployment POST",
+    "disable only the final non-idempotent creation retry"
+  ],
+  "asset_retry_and_status_polling": "preserved",
+  "trust": "image is untrusted until independently scanned and explicitly owner-commissioned"
+}

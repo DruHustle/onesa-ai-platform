@@ -18,6 +18,7 @@ class DocsInstallTests(unittest.TestCase):
         _manifest, target, payloads, _ci = self.validate()
         self.assertEqual(target.name, "ai-docs-" + self.manifest["source_tree"])
         self.assertIn("oracle_docs_owner.py", payloads)
+        self.assertIn("oracle_docs_driver.py", payloads)
         self.assertIn("runners/oracle_docs_runner.py", payloads)
         self.assertFalse(target.exists())
 
@@ -73,6 +74,11 @@ class DocsInstallTests(unittest.TestCase):
             self.seal()
             with self.assertRaises(owner.Rejected):
                 self.validate()
+
+    def test_driver_is_an_installed_reviewed_module_not_a_caller_extension(self):
+        self.put("oracle_docs_driver.py", b"unreviewed component selection")
+        with self.assertRaises(owner.Rejected):
+            self.validate()
 
     def test_changed_installer_or_failed_current_ci_fails_before_installation(self):
         self.github.failed = True
