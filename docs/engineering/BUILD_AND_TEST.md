@@ -30,6 +30,61 @@ Installer fixtures also place disposable custody under the private home director
 when executed as root. The explicit writable-parent regression still requires the
 production verifier to reject shared writable ancestors; no custody guard changes.
 
+Run `python3 -m unittest discover -s scripts/ci -p test_browser_dependencies.py`
+for the disposable GitHub-runner browser preparation boundary. The helper selects
+`https://archive.ubuntu.com/ubuntu/` for noble, noble-updates and noble-backports,
+and `https://security.ubuntu.com/ubuntu/` for a separate noble-security stanza.
+Selection requires the exact `mirror+file:/etc/apt/apt-mirrors.txt` URI, canonical
+Ubuntu Signed-By identity and reviewed public-key bytes, and bounded Deb822 fields. Unknown,
+duplicate, mixed, malformed or authentication-relaxing input fails before writes;
+legacy active mirror indirection also fails. Comments, continuations and line
+endings follow the [Ubuntu Noble source format](https://manpages.ubuntu.com/manpages/noble/en/man5/sources.list.5.html),
+with ambiguous inline comments refused. Only the affected URI and Signed-By path
+values change; all other source bytes are preserved.
+The unused mirror list is neither read nor modified, and disabled validated stanzas
+remain disabled. Existing source/config custody, signed package verification,
+timeouts, retries and fatal repository-update errors remain required.
+
+The observed hosted image made the canonical keyring root-owned but mode `0777`.
+The helper never changes its bytes or mode, and APT is not rebound to that writable
+file. A single no-follow, nonblocking descriptor captures at most 3608 bytes after
+validating regular-file metadata, one link, root ownership/group, mode `0644` or
+the observed `0777`, and exact size 3607. The captured buffer must match SHA-256
+`80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31`.
+Only those bytes can be copied to
+`/etc/apt/onesa-ci-keyrings/ubuntu-noble-2023.11.28.1.gpg`. Its held directory
+ancestry must be root-owned, non-writable by group/others and traversable by APT;
+the new directory is `0755` and file `0644`. A completed, fsynced exclusive temporary
+file is published without replacing any existing final name. Existing copies must
+already match the same bytes and custody; conflicts refuse. All sources, existing
+configuration and copy plans validate before any write. Repeated execution validates
+both original and protected key even after the affected stanzas have been rebound.
+The result reports Signed-By path changes separately from unchanged signer bytes,
+suites and components. No runtime download or automatic key rotation is supported.
+
+The reviewed pin and embedded public verification-key fixture come from Ubuntu's
+[Noble ubuntu-keyring 2023.11.28.1 metadata](https://packages.ubuntu.com/noble/all/ubuntu-keyring/download)
+and its [official package](https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1_all.deb).
+The 11124-byte package matches the HTTPS-published SHA-256
+`36de43b15853ccae0028e9a767613770c704833f82586f28eb262f0311adb8a8`;
+in-memory extraction of its canonical public-key member yields regular file,
+UID/GID `0:0`, mode `0644`, size 3607 and the key digest above. This is provenance
+from official HTTPS metadata and the checksum-bound package, not an independently
+verified signed InRelease chain. Unknown key versions or bytes require a reviewed
+pin update. The test fixture contains only this public verification key.
+
+The preparation fixtures verify canonical archive/security routing, removal of
+all active archive-list references, preserved unknown list bytes, idempotence,
+single bounded key capture, unchanged originals, unsafe ancestry/metadata/digest
+refusal, concurrent destination conflicts, interrupted-copy cleanup and validation
+of every source before any write. When the native
+`/usr/bin/apt-get` is already installed, one fixture uses `--print-uris` against
+isolated temporary configuration/state/cache/log directories to cross-check the
+actual APT parser without acquiring packages or changing host APT configuration.
+The full `scripts/ci/test_*.py` suite remains a mandatory pipeline-security step.
+This local evidence does not replace the exact-source hosted browser and TLS gates
+or the unchanged first-attempt release policy.
+
 Consumer response parsing rejects excessive JSON nesting as an incompatible
 provider response, even when the body fits the byte limit. The regression verifies
 one request, no automatic retry and no provider details in the public error; this
