@@ -2,6 +2,31 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-31 — Select canonical signed Ubuntu sources for browser CI
+
+The first main check of `da83084feaa936ce73348fc0280498a5bdef8a19`
+([run 41180154809](https://github.com/DruHustle/onesa-ai-platform/actions/runs/41180154809))
+failed in TLS browser preparation: the existing helper rejected an unexpected
+runner mirror-list URI before Playwright or TLS acceptance ran. The offending
+URI was not logged, so this change adds no inferred mirror hostname. That failed
+first attempt remains preserved and does not qualify a release.
+
+The prepared correction explicitly selects the canonical HTTPS Ubuntu archive
+or security endpoint from a fully validated Ubuntu 24.04/noble Deb822 stanza.
+It requires the exact existing archive-list reference and the canonical Ubuntu
+keyring with valid custody. Types, suites, components, architectures and activation
+are bounded; duplicate, mixed, malformed, inline-comment, unknown and authentication-
+relaxing fields fail before any write. Only URI bytes change. Unused mirror-list
+bytes remain untouched, while signatures, suites, timeouts, retries and all release
+gates remain in place.
+
+Preparation-level fixtures cover both acquisition endpoints, preserved comments
+and line endings, keyring custody, idempotence and refusal without partial writes.
+An installed native APT parser cross-check prints the expected acquisition URIs
+using isolated temporary configuration/state/cache/log paths, without network
+acquisition or host APT writes. A new source candidate must pass the full native
+first-attempt checks; this prepared fix does not turn the failed main run into a pass.
+
 ## 2026-10-31 — Bound provider failures and repair dependency security gates
 
 The bounded consumer response reader now converts JSON decoder recursion failure

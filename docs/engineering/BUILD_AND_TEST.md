@@ -30,6 +30,30 @@ Installer fixtures also place disposable custody under the private home director
 when executed as root. The explicit writable-parent regression still requires the
 production verifier to reject shared writable ancestors; no custody guard changes.
 
+Run `python3 -m unittest discover -s scripts/ci -p test_browser_dependencies.py`
+for the disposable GitHub-runner browser preparation boundary. The helper selects
+`https://archive.ubuntu.com/ubuntu/` for noble, noble-updates and noble-backports,
+and `https://security.ubuntu.com/ubuntu/` for a separate noble-security stanza.
+Selection requires the exact `mirror+file:/etc/apt/apt-mirrors.txt` URI, canonical
+Ubuntu Signed-By identity and keyring custody, and bounded Deb822 fields. Unknown,
+duplicate, mixed, malformed or authentication-relaxing input fails before writes;
+legacy active mirror indirection also fails. Comments, continuations and line
+endings follow the [Ubuntu Noble source format](https://manpages.ubuntu.com/manpages/noble/en/man5/sources.list.5.html),
+with ambiguous inline comments refused. Every non-URI source byte is preserved.
+The unused mirror list is neither read nor modified, and disabled validated stanzas
+remain disabled. Existing source/config custody, signed package verification,
+timeouts, retries and fatal repository-update errors remain required.
+
+The preparation fixtures verify canonical archive/security routing, removal of
+all active archive-list references, preserved unknown list bytes, idempotence,
+keyring refusal and validation of every source before any write. When the native
+`/usr/bin/apt-get` is already installed, one fixture uses `--print-uris` against
+isolated temporary configuration/state/cache/log directories to cross-check the
+actual APT parser without acquiring packages or changing host APT configuration.
+The full `scripts/ci/test_*.py` suite remains a mandatory pipeline-security step.
+This local evidence does not replace the exact-source hosted browser and TLS gates
+or the unchanged first-attempt release policy.
+
 Consumer response parsing rejects excessive JSON nesting as an incompatible
 provider response, even when the body fits the byte limit. The regression verifies
 one request, no automatic retry and no provider details in the public error; this
