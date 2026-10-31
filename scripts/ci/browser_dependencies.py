@@ -15,22 +15,17 @@ NETWORK = (
     'Acquire::Retries "1";\n'
     'APT::Update::Error-Mode "any";\n'
 )
+ARCHIVE_LIST = "mirror+file:/etc/apt/apt-mirrors.txt"
+UBUNTU_KEYRING = "/usr/share/keyrings/ubuntu-archive-keyring.gpg"
 
 
-def rewrite_sources(text, deb822=False, mirror_files=None):
+def rewrite_sources(text, deb822=False):
     """Change only the observed Azure mirror URI; retain trust and suite fields."""
     changes = 0
 
     def replace(match):
         nonlocal changes
         value = match.group(0)
-        if value.startswith("mirror+file:"):
-            if (
-                value == "mirror+file:/etc/apt/apt-mirrors.txt"
-                and mirror_files is not None
-            ):
-                mirror_files.add("apt-mirrors.txt")
-            return value
         uri = urlsplit(value)
         if uri.hostname != "azure.archive.ubuntu.com":
             return value
@@ -63,57 +58,124 @@ def rewrite_sources(text, deb822=False, mirror_files=None):
             active = bool(re.match(r"^\s*deb(?:-src)?\s", line))
         if active:
             content, marker, comment = line.partition("#")
-            line = (
-                re.sub(r"(?:https?://|mirror\+file:)[^\s]+", replace, content)
-                + marker
-                + comment
-            )
+            if "mirror+" in content:
+                raise ValueError(
+                    "Archive indirection requires a validated Ubuntu stanza"
+                )
+            line = re.sub(r"https?://[^\s]+", replace, content) + marker + comment
         result.append(line)
     return "".join(result), changes
 
 
-def rewrite_mirror_list(text):
-    """Remove only Azure from the runner's referenced archive failover list."""
-    if len(text.splitlines()) > 32:
-        raise ValueError("Unexpected mirror-list bounds")
-    output = []
-    removed = 0
-    canonical = False
-    for line in text.splitlines(keepends=True):
-        if not line.strip() or line.lstrip().startswith("#"):
-            output.append(line)
+def deb822_fields(lines):
+    """Read a bounded stanza without treating inline comments as legacy syntax."""
+    fields = {}
+    uri_lines = []
+    current = None
+    ambiguous = False
+    for index, line in enumerate(lines):
+        if not line.strip() or line.startswith("#"):
             continue
-        match = re.fullmatch(
-            r"(https?://[^\s]+)(?:[ \t]+priority:[1-9][0-9]*)?[ \t]*(?:\r?\n)?", line
+        header = re.fullmatch(
+            r"([A-Za-z][A-Za-z0-9-]*):[ \t]*(.*)", line.rstrip("\r\n")
         )
-        if not match:
-            raise ValueError("Unexpected runner mirror-list entry")
-        uri = urlsplit(match.group(1))
-        if (
-            uri.scheme not in {"http", "https"}
-            or uri.username
-            or uri.password
-            or uri.port
-            or uri.query
-            or uri.fragment
-            or uri.path not in {"/ubuntu", "/ubuntu/"}
-            or uri.hostname
-            not in {
-                "azure.archive.ubuntu.com",
-                "archive.ubuntu.com",
-                "security.ubuntu.com",
-            }
-        ):
-            raise ValueError("Unexpected runner mirror-list URI")
-        if uri.hostname == "azure.archive.ubuntu.com":
-            removed += 1
-            continue
-        if uri.hostname == "archive.ubuntu.com" and uri.scheme == "https":
-            canonical = True
-        output.append(line)
-    if not canonical:
-        raise ValueError("Existing signed archive transport must remain available")
-    return "".join(output), removed
+        if header:
+            current = header[1].lower()
+            if current in fields:
+                ambiguous = True
+            fields.setdefault(current, []).append(header[2])
+        elif line.startswith((" ", "\t")) and current is not None:
+            fields[current].append(line.strip(" \t\r\n"))
+        else:
+            ambiguous = True
+            current = None
+        if current == "uris":
+            uri_lines.append(index)
+    return fields, uri_lines, ambiguous
+
+
+def bounded_values(fields, name, allowed):
+    values = " ".join(fields.get(name, [])).split()
+    if not values or len(values) != len(set(values)) or not set(values) <= allowed:
+        raise ValueError("Unexpected Ubuntu archive field")
+    return set(values)
+
+
+def rewrite_ubuntu_stanza(lines, root):
+    """Select official HTTPS archives only from an unambiguous signed noble stanza."""
+    original = "".join(lines)
+    if not any("mirror+" in line for line in lines if not line.startswith("#")):
+        updated, count = rewrite_sources(original, True)
+        return updated, count, 0
+    fields, uri_lines, ambiguous = deb822_fields(lines)
+    required = {"types", "uris", "suites", "components", "signed-by"}
+    if (
+        ambiguous
+        or not required <= fields.keys()
+        or not fields.keys() <= required | {"architectures", "enabled"}
+        or any(
+            "#" in value
+            or not value.isascii()
+            or any(ord(char) < 32 and char != "\t" for char in value)
+            for values in fields.values()
+            for value in values
+        )
+    ):
+        raise ValueError("Ambiguous Ubuntu archive stanza")
+    bounded_values(fields, "types", {"deb", "deb-src"})
+    bounded_values(
+        fields, "components", {"main", "restricted", "universe", "multiverse"}
+    )
+    suites = bounded_values(
+        fields,
+        "suites",
+        {"noble", "noble-updates", "noble-backports", "noble-security"},
+    )
+    if "noble-security" in suites and len(suites) != 1:
+        raise ValueError("Archive and security suites require separate stanzas")
+    if "architectures" in fields:
+        architectures = bounded_values(fields, "architectures", {"amd64", "i386"})
+        if "amd64" not in architectures:
+            raise ValueError("Ubuntu archive stanza must retain amd64")
+    enabled_values = " ".join(fields.get("enabled", ["yes"])).split()
+    if len(enabled_values) != 1 or enabled_values[0] not in {"yes", "no"}:
+        raise ValueError("Ambiguous Ubuntu archive activation")
+    if " ".join(fields["uris"]).split() != [ARCHIVE_LIST]:
+        raise ValueError("Only the exact runner archive indirection is supported")
+    if " ".join(fields["signed-by"]).split() != [UBUNTU_KEYRING]:
+        raise ValueError("Canonical Ubuntu archive keyring required")
+    if regular(root / UBUNTU_KEYRING.lstrip("/")).st_size == 0:
+        raise ValueError("Empty Ubuntu archive keyring")
+    if enabled_values == ["no"]:
+        return original, 0, 0
+    endpoint = (
+        "https://security.ubuntu.com/ubuntu/"
+        if suites == {"noble-security"}
+        else "https://archive.ubuntu.com/ubuntu/"
+    )
+    output = list(lines)
+    for index in uri_lines:
+        output[index] = output[index].replace(ARCHIVE_LIST, endpoint)
+    remaining, _, _ = deb822_fields(output)
+    if " ".join(remaining["uris"]).split() != [endpoint]:
+        raise ValueError("Active archive indirection was not removed")
+    return "".join(output), 1, 1
+
+
+def rewrite_deb822(text, root):
+    output = []
+    stanza = []
+    changes = 0
+    indirections = 0
+    for line in [*text.splitlines(keepends=True), ""]:
+        stanza.append(line)
+        if not line.strip():
+            updated, count, selected = rewrite_ubuntu_stanza(stanza, root)
+            output.append(updated)
+            changes += count
+            indirections += selected
+            stanza = []
+    return "".join(output), changes, indirections
 
 
 def regular(path):
@@ -156,21 +218,17 @@ def prepare(root):
     if not 1 <= len(files) <= 32:
         raise ValueError("Bounded existing APT source inventory required")
     replacements = []
-    mirror_files = set()
-    mirror_updates = 0
+    indirections = 0
     for path in files:
         before = regular(path)
-        text = path.read_text()
-        updated, count = rewrite_sources(text, path.suffix == ".sources", mirror_files)
+        text = path.read_bytes().decode("utf-8")
+        if path.suffix == ".sources":
+            updated, count, selected = rewrite_deb822(text, root)
+            indirections += selected
+        else:
+            updated, count = rewrite_sources(text)
         if count:
             replacements.append((path, updated, stat.S_IMODE(before.st_mode), count))
-    for name in sorted(mirror_files):
-        path = apt / name
-        before = regular(path)
-        updated, count = rewrite_mirror_list(path.read_text())
-        if count:
-            replacements.append((path, updated, stat.S_IMODE(before.st_mode), count))
-            mirror_updates += 1
     config = apt / "apt.conf.d/99-onesa-ci-network"
     if config.exists():
         regular(config)
@@ -182,8 +240,9 @@ def prepare(root):
         atomic(path, updated, mode)
     atomic(config, NETWORK, 0o644)
     return {
-        "source_files_updated": len(replacements) - mirror_updates,
-        "mirror_list_files_updated": mirror_updates,
+        "source_files_updated": len(replacements),
+        "mirror_list_files_updated": 0,
+        "archive_indirections_replaced": indirections,
         "mirror_URIs_updated": sum(row[3] for row in replacements),
         "request_timeout_seconds": 20,
         "APT_file_retries": 1,
