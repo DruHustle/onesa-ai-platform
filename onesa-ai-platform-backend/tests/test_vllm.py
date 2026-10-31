@@ -1,10 +1,17 @@
 import asyncio
+import json
 
 import httpx
 import pytest
 
 from app.config import Settings
-from app.inference import InferenceError, ModelMessage, VLLMModelClient
+from app.inference import (
+    GenerationStats,
+    InferenceError,
+    ModelMessage,
+    VLLMModelClient,
+    observe_generation,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -122,3 +129,69 @@ def test_error_metadata_rejects_untrusted_provider_values(code):
 @pytest.mark.parametrize("reason", [None, {"private": "details"}, ["private"], True])
 def test_error_reason_rejects_nonstring_values(reason):
     assert InferenceError(reason=reason).reason is None
+
+
+@pytest.mark.parametrize(
+    "first_reason,later_choice",
+    [
+        pytest.param("length", {"delta": {}, "finish_reason": "stop"}, id="contradictory-finish"),
+        pytest.param(
+            "stop",
+            {"delta": {"content": "UNEXPECTED_AFTER_FINISH"}},
+            id="content-after-finish",
+        ),
+    ],
+)
+def test_provider_cannot_reopen_or_replace_a_terminal_finish(first_reason, later_choice):
+    content = '[{"tool":"text_stats","arguments":{"text":"synthetic"}}]'
+    frames = [
+        {"choices": [{"delta": {"content": content}, "finish_reason": first_reason}]},
+        {"choices": [later_choice]},
+    ]
+    response = "".join("data: " + json.dumps(frame) + "\n\n" for frame in frames)
+    response += "data: [DONE]\n\n"
+    requests = []
+
+    def provider(request):
+        requests.append(request)
+        return httpx.Response(200, text=response)
+
+    client = VLLMModelClient(Settings(model_backend="vllm"), httpx.MockTransport(provider))
+    stats = GenerationStats()
+    observed = []
+
+    async def collect():
+        with observe_generation(stats):
+            messages = [ModelMessage(role="user", content="Synthetic input")]
+            async for chunk in client.stream(messages):
+                observed.append(chunk)
+
+    with pytest.raises(InferenceError):
+        asyncio.run(collect())
+    assert stats.finish_reason == first_reason
+    assert observed == [content]
+    assert len(requests) == 1
+
+
+def test_usage_only_frame_after_terminal_finish_remains_valid():
+    frames = [
+        {"choices": [{"delta": {"content": "Synthetic answer"}, "finish_reason": "stop"}]},
+        {"choices": [], "usage": {"prompt_tokens": 11, "completion_tokens": 7}},
+    ]
+    response = "".join("data: " + json.dumps(frame) + "\n\n" for frame in frames)
+    response += "data: [DONE]\n\n"
+    client = VLLMModelClient(
+        Settings(model_backend="vllm"),
+        httpx.MockTransport(lambda request: httpx.Response(200, text=response)),
+    )
+    stats = GenerationStats()
+
+    async def collect():
+        with observe_generation(stats):
+            return "".join(
+                [chunk async for chunk in client.stream([ModelMessage(role="user", content="Hi")])]
+            )
+
+    assert asyncio.run(collect()) == "Synthetic answer"
+    assert stats.finish_reason == "stop"
+    assert stats.input_tokens == 11 and stats.output_tokens == 7
