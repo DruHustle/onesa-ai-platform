@@ -315,6 +315,18 @@ users. Use the existing integration guide before running `make integration`. Bro
 checks use an isolated mock stack, not the active application or a real inference service.
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
 
+Structured planning regressions use the actual provider stream parser with synthetic
+responses. Valid JSON with an incomplete finish reason must fail, later choices cannot
+replace a terminal result, and a rejected oversized stream must close before the planner
+returns. A trailing usage-only frame remains supported. These tests check protocol and
+resource handling; they do not qualify a real model's answer quality.
+
+The PostgreSQL planning-authority tests revoke the session during inference and require
+both new/revised Travel plans and agent runs to refuse persistence or tool execution.
+The refusal must retain its structured authentication error. Transaction-timezone tests
+start connections in non-UTC zones, require stable UTC timestamps inside each transaction,
+and confirm the transaction-local setting does not leak to the next pool user.
+
 The Industrial database suite includes a fresh status read while another transaction
 holds the record's writer lock. The read must return the committed snapshot promptly;
 stale-recovery mutations still acquire and recheck their own lock. This synthetic
