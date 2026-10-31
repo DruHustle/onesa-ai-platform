@@ -23,6 +23,17 @@ runtime. Imports retain the source revision, attribution, licence and conversion
 metadata in private owned records. Existing Digital Twins activation, durable storage,
 source-bound CI and owner-controlled hosted release gates remain required.
 
+The frontend Docker runtime explicitly copies `apps/chat/public` alongside the
+standalone server and generated static files. Next.js standalone tracing does not
+copy this public directory automatically. The existing container job runs
+`python3 scripts/check_reference_delivery.py http://127.0.0.1:3120` against its
+running image through the isolated staging proxy. This credential-free HTTP check
+requires the exact source manifest and all twelve model, thumbnail, licence and
+provenance files, with matching byte lengths, SHA-256 digests and media types.
+Missing files, redirects and changed bytes fail the container job. A local
+standalone-server rehearsal is supplemental; it does not replace image or hosted
+qualification.
+
 `node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
 worker with synthetic signed identities. Generated Mermaid sources must retain
 their exact bytes and private headers while overriding Pages' karaoke MIME type
