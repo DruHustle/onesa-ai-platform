@@ -27,6 +27,15 @@ using isolated temporary configuration/state/cache/log paths, without network
 acquisition or host APT writes. A new source candidate must pass the full native
 first-attempt checks; this prepared fix does not turn the failed main run into a pass.
 
+The first dev push of the correction at `8cc4458f04fad7470a48132d8e68de4afbd756ce`
+([run 41181491988](https://github.com/DruHustle/onesa-ai-platform/actions/runs/41181491988))
+then refused the canonical keyring's custody before writing sources or installing
+browsers. A diagnostic-only follow-up reports the fixed keyring role, file type,
+UID/GID, mode, size, existing bound and failing-condition codes from the already
+held stat snapshot. It reports no key contents, raw source URI, environment or
+path. All custody conditions and refusals remain identical; unexpected metadata
+requires review before any functional repair. This failed candidate is not qualified.
+
 ## 2026-10-31 — Bound provider failures and repair dependency security gates
 
 The bounded consumer response reader now converts JSON decoder recursion failure

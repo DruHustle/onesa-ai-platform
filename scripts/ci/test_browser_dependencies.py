@@ -1,6 +1,8 @@
 """Synthetic APT fixtures; never modify a workstation or production host."""
 
+import json
 import os
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -321,6 +323,116 @@ class BrowserDependenciesTests(unittest.TestCase):
                 else:
                     keyring.unlink()
                 self.refuse_without_writes(root)
+
+    def test_keyring_refusal_reports_only_fixed_role_metadata_and_preserves_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            apt, source, keyring, mirror = self.canonical_fixture(root)
+            secret = b"private-keyring-content-must-not-enter-diagnostics"
+            keyring.write_bytes(secret)
+            keyring.chmod(0o666)
+            observed = keyring.stat()
+            source_before = source.read_bytes()
+            mirror_before = mirror.read_bytes()
+            with self.assertRaises(ValueError) as error:
+                browser.prepare(root)
+            message = str(error.exception)
+            prefix = "Unexpected APT keyring custody: "
+            self.assertTrue(message.startswith(prefix))
+            self.assertEqual(
+                json.loads(message.removeprefix(prefix)),
+                {
+                    "role": "ubuntu_archive_keyring",
+                    "type": "regular",
+                    "uid": observed.st_uid,
+                    "gid": observed.st_gid,
+                    "mode": "0666",
+                    "size": observed.st_size,
+                    "size_bound": 256 * 1024,
+                    "failed_conditions": ["group_or_other_writable"],
+                },
+            )
+            self.assertLess(len(message), 512)
+            for forbidden in (
+                secret.decode(),
+                str(keyring),
+                str(root),
+                browser.ARCHIVE_LIST,
+                browser.UBUNTU_KEYRING,
+                "unknown.invalid",
+                "GITHUB_ACTIONS",
+            ):
+                self.assertNotIn(forbidden, message)
+            self.assertEqual(source.read_bytes(), source_before)
+            self.assertEqual(mirror.read_bytes(), mirror_before)
+            self.assertEqual(keyring.read_bytes(), secret)
+            self.assertEqual(stat.S_IMODE(keyring.stat().st_mode), 0o666)
+            self.assertFalse((apt / "apt.conf.d/99-onesa-ci-network").exists())
+
+    def test_each_custody_refusal_reports_the_single_held_stat_snapshot(self):
+        cases = {
+            "not_regular": (0, stat.S_IFDIR | 0o644),
+            "owner_uid": (4, os.geteuid() + 1),
+            "group_or_other_writable": (0, stat.S_IFREG | 0o666),
+            "size_bound": (6, 256 * 1024 + 1),
+        }
+        for condition, (field, value) in cases.items():
+            with (
+                self.subTest(condition=condition),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory).resolve()
+                _apt, _source, keyring, _mirror = self.canonical_fixture(root)
+                values = list(keyring.stat())
+                values[field] = value
+                held = os.stat_result(values)
+                original_stat = Path.stat
+                reads = []
+
+                def snapshot(
+                    path,
+                    *args,
+                    _keyring=keyring,
+                    _reads=reads,
+                    _held=held,
+                    _original_stat=original_stat,
+                    **kwargs,
+                ):
+                    if path == _keyring and kwargs.get("follow_symlinks", True):
+                        _reads.append(path)
+                        if len(_reads) != 1:
+                            raise AssertionError(
+                                "Refusal must not rediscover keyring metadata"
+                            )
+                        return _held
+                    return _original_stat(path, *args, **kwargs)
+
+                with (
+                    patch.object(Path, "stat", snapshot),
+                    self.assertRaises(ValueError) as error,
+                ):
+                    browser.regular(keyring, ubuntu_keyring=True)
+                diagnostic = json.loads(str(error.exception).split(": ", 1)[1])
+                self.assertEqual(reads, [keyring])
+                self.assertEqual(diagnostic["failed_conditions"], [condition])
+                self.assertEqual(diagnostic["uid"], held.st_uid)
+                self.assertEqual(diagnostic["gid"], held.st_gid)
+                self.assertEqual(diagnostic["size"], held.st_size)
+                self.assertEqual(
+                    diagnostic["mode"], f"{stat.S_IMODE(held.st_mode):04o}"
+                )
+                self.assertEqual(
+                    diagnostic["type"],
+                    "directory" if condition == "not_regular" else "regular",
+                )
+
+    def test_unrelated_source_refusal_keeps_generic_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            _apt, source = self.fixture(root)
+            source.chmod(0o666)
+            with self.assertRaisesRegex(ValueError, "^Unexpected APT source custody$"):
+                browser.prepare(root)
 
     def test_prepare_preserves_disabled_stanza_and_unused_mirror_alias(self):
         with tempfile.TemporaryDirectory() as directory:
