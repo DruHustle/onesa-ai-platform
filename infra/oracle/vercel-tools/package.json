@@ -3,13 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "dependencies": {
-    "vercel": "65.2.0"
+    "vercel": "65.2.0",
+    "minimatch": "file:vendor/onesa-minimatch-callable-1.0.0.tgz"
   },
   "overrides": {
     "@fastify/busboy": "3.2.4",
     "ajv": "8.20.0",
     "js-yaml": "4.3.2",
-    "minimatch@10.1.1": "10.2.6",
+    "@ts-morph/common@0.11.1": {"minimatch": "$minimatch"},
+    "@vercel/nft": {"glob": {".": "14.0.2", "minimatch": "11.0.1"}},
+    "@vercel/python-analysis": {"minimatch": "11.0.1"},
     "path-to-regexp@8.3.0": "8.4.2",
     "path-to-regexp@6.1.0": "6.3.0",
     "smol-toml": "1.9.1",

@@ -6,6 +6,8 @@ const path=require('node:path');
 const os=require('node:os');
 const crypto=require('node:crypto');
 const {createRequire}=require('node:module');
+const http=require('node:http');
+const {callableConsumer,compatiblePatterns,boundedPattern}=require('../glob_security.cjs');
 const root=path.resolve(__dirname,'../..');
 const docsRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));
 const braces=docsRequire('braces');
@@ -49,7 +51,50 @@ test('every affected transitive consumer uses the reviewed local fixes',()=>{
  for(const [name,record] of Object.entries(manifest)){
   for(const [file,digest] of Object.entries(record.source_files)) assert.equal(hash(fs.readFileSync(path.join(root,'packages/security',name,file))),digest);
   assert.equal(hash(fs.readFileSync(path.join(root,record.archive))),record.archive_sha256);
+  for(const archive of record.additional_archives||[]) assert.equal(hash(fs.readFileSync(path.join(root,archive))),record.archive_sha256);
  }
+});
+
+test('GHSA-g3hv-75wg-m249: installed Docs matchers bound amplification and preserve reviewed syntax',async()=>{
+ const legacy=callableConsumer(docsRequire,'serve-handler');
+ const swagger=createRequire(docsRequire.resolve('@swagger-api/apidom-reference'));
+ assert.equal(swagger('minimatch/package.json').version,'11.0.1');
+ for(const entry of [legacy,swagger.resolve('minimatch')]){
+  compatiblePatterns(entry);
+  await boundedPattern(entry);
+ }
+});
+
+test('actual serve-handler preserves glob headers, redirects, rewrites and missing-file refusal',async t=>{
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'onesa-serve-compat-'));
+ fs.mkdirSync(path.join(folder,'public'));
+ fs.writeFileSync(path.join(folder,'public','guide.txt'),'synthetic public guide');
+ const handler=docsRequire('serve-handler');
+ const server=http.createServer((request,response)=>handler(request,response,{
+  public:path.join(folder,'public'),cleanUrls:false,directoryListing:false,
+  headers:[{source:'**/*.txt',headers:[{key:'X-Onesa-Fixture',value:'matched'}]}],
+  redirects:[{source:'/legacy',destination:'/guide.txt',type:302}],
+  rewrites:[{source:'/help',destination:'/guide.txt'}],
+ }));
+ t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));fs.rmSync(folder,{recursive:true,force:true});});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const base=`http://127.0.0.1:${server.address().port}`;
+ for(const route of ['/guide.txt','/help']){
+  const response=await fetch(base+route);
+  assert.equal(response.status,200);assert.equal(await response.text(),'synthetic public guide');
+ }
+ assert.equal((await fetch(base+'/guide.txt')).headers.get('x-onesa-fixture'),'matched');
+ const redirected=await fetch(base+'/legacy',{redirect:'manual'});
+ assert.equal(redirected.status,302);assert.equal(redirected.headers.get('location'),'/guide.txt');
+ assert.equal((await fetch(base+'/missing.txt')).status,404);
+});
+
+test('actual Swagger file resolver preserves explicit allowlists and defaults to refusal',()=>{
+ const FileResolver=docsRequire('@swagger-api/apidom-reference/resolve/resolvers/file').default;
+ const resolver=new FileResolver({fileAllowList:['/owned/docs/**/*.yaml']});
+ assert.equal(resolver.canRead({uri:'/owned/docs/api/schema.yaml'}),true);
+ for(const uri of ['/owned/private/key.yaml','/owned/docs/schema.json','https://unowned.invalid/schema.yaml']) assert.equal(resolver.canRead({uri}),false);
+ assert.equal(new FileResolver().canRead({uri:'/owned/docs/schema.yaml'}),false);
 });
 
 for(const entry of ['deepmerge','deepmerge/dist/umd.js']){
