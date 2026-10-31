@@ -20,9 +20,9 @@ from app.agent_runtime import (
     default_registry,
     planning_failure_reason,
 )
-from app.auth import DB, Auth, authenticated
+from app.auth import DB, Auth, authenticated, eligible, lock_account
 from app.errors import fail
-from app.models import AgentRun, now
+from app.models import AgentRun, AuthSession, User, now
 from app.observability import (
     agent_outcomes,
     agent_planning_failure_reasons,
@@ -144,7 +144,7 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
     # lease checks. Valid runs retain the same shared admission and expiry limits.
     lease = await run_in_threadpool(capacity.begin, request)
     try:
-        result = await execute_admitted(body, request, db, auth[0].id, allowed, current)
+        result = await execute_admitted(body, request, db, auth, allowed, current)
         if not await run_in_threadpool(capacity.active, request, lease):
             fail(503, "generation_lease_lost", "Unable to verify active request authority")
         return result
@@ -156,7 +156,7 @@ async def execute_admitted(
     body: RunRequest,
     request: Request,
     db: Session,
-    user_id: UUID,
+    auth: tuple[User, AuthSession],
     allowed: set[str],
     tool_registry: ToolRegistry,
 ) -> dict[str, Any]:
@@ -175,7 +175,9 @@ async def execute_admitted(
     if any(call.tool not in allowed for call in calls):
         agent_planning_failures.inc()
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
-    row = AgentRun(id=body.id, user_id=user_id, goal=body.goal)
+    user = lock_account(db, auth)
+    eligible(request, db, user)
+    row = AgentRun(id=body.id, user_id=user.id, goal=body.goal)
     db.add(row)
     try:
         db.commit()

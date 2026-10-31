@@ -170,6 +170,7 @@ class OpenAIModelClient:
                     raise InferenceError("model_not_available")
                 response.raise_for_status()
                 ended = False
+                finished = False
                 async for line in response.aiter_lines():
                     if not line.startswith("data:"):
                         continue
@@ -201,6 +202,11 @@ class OpenAIModelClient:
                     if not isinstance(choices, list) or len(choices) > 1:
                         raise InferenceError("generation_failed", reason="invalid_stream_shape")
                     for choice in choices:
+                        # A terminal choice is final. Later choices cannot
+                        # replace an incomplete reason with success or append
+                        # more text; a usage-only frame remains supported.
+                        if finished:
+                            raise InferenceError("generation_failed", reason="invalid_stream_shape")
                         if not isinstance(choice, dict) or not isinstance(
                             choice.get("delta", {}), dict
                         ):
@@ -219,6 +225,7 @@ class OpenAIModelClient:
                             stats = active_stats.get()
                             if stats is not None:
                                 stats.finish_reason = reason
+                            finished = True
                         if content is not None:
                             if not isinstance(content, str):
                                 raise InferenceError(
