@@ -144,7 +144,7 @@ def rewrite_ubuntu_stanza(lines, root):
         raise ValueError("Only the exact runner archive indirection is supported")
     if " ".join(fields["signed-by"]).split() != [UBUNTU_KEYRING]:
         raise ValueError("Canonical Ubuntu archive keyring required")
-    if regular(root / UBUNTU_KEYRING.lstrip("/")).st_size == 0:
+    if regular(root / UBUNTU_KEYRING.lstrip("/"), ubuntu_keyring=True).st_size == 0:
         raise ValueError("Empty Ubuntu archive keyring")
     if enabled_values == ["no"]:
         return original, 0, 0
@@ -178,16 +178,48 @@ def rewrite_deb822(text, root):
     return "".join(output), changes, indirections
 
 
-def regular(path):
+def regular(path, *, ubuntu_keyring=False):
     if path.is_symlink() or any(p.is_symlink() for p in path.parents):
         raise ValueError("APT source aliases are not accepted")
     value = path.stat()
-    if (
-        not stat.S_ISREG(value.st_mode)
-        or value.st_uid != os.geteuid()
-        or value.st_mode & 0o022
-        or value.st_size > 256 * 1024
-    ):
+    failures = [
+        code
+        for code, refused in (
+            ("not_regular", not stat.S_ISREG(value.st_mode)),
+            ("owner_uid", value.st_uid != os.geteuid()),
+            ("group_or_other_writable", bool(value.st_mode & 0o022)),
+            ("size_bound", value.st_size > 256 * 1024),
+        )
+        if refused
+    ]
+    if failures:
+        if ubuntu_keyring:
+            kind = {
+                stat.S_IFREG: "regular",
+                stat.S_IFDIR: "directory",
+                stat.S_IFLNK: "symlink",
+                stat.S_IFIFO: "fifo",
+                stat.S_IFSOCK: "socket",
+                stat.S_IFCHR: "character",
+                stat.S_IFBLK: "block",
+            }.get(stat.S_IFMT(value.st_mode), "unknown")
+            raise ValueError(
+                "Unexpected APT keyring custody: "
+                + json.dumps(
+                    {
+                        "role": "ubuntu_archive_keyring",
+                        "type": kind,
+                        "uid": value.st_uid,
+                        "gid": value.st_gid,
+                        "mode": f"{stat.S_IMODE(value.st_mode):04o}",
+                        "size": value.st_size,
+                        "size_bound": 256 * 1024,
+                        "failed_conditions": failures,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            )
         raise ValueError("Unexpected APT source custody")
     return value
 
