@@ -9,7 +9,13 @@ from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from app.inference import InferenceError, ModelClient, ModelMessage
+from app.inference import (
+    GenerationStats,
+    InferenceError,
+    ModelClient,
+    ModelMessage,
+    observe_generation,
+)
 
 
 class ToolCall(BaseModel):
@@ -107,6 +113,7 @@ def planning_failure_reason(error: Exception) -> str:
                 "plan_invalid_json",
                 "plan_invalid_shape",
                 "plan_invalid_schema",
+                "plan_incomplete_response",
             }
             else "planning_internal_error"
         )
@@ -138,10 +145,21 @@ class ModelToolPlanner:
             ModelMessage(role="user", content=goal),
         ]
         text = ""
-        async for chunk in self.client.stream(messages):
-            text += chunk
-            if len(text) > 16000:
-                raise PlanningError("plan_size_limit")
+        stats = GenerationStats()
+        iterator = self.client.stream(messages)
+        try:
+            with observe_generation(stats):
+                async for chunk in iterator:
+                    text += chunk
+                    if len(text) > 16000:
+                        raise PlanningError("plan_size_limit")
+        finally:
+            close = getattr(iterator, "aclose", None)
+            if close is not None:
+                await close()
+        # Valid JSON is not proof that the provider completed the requested plan.
+        if stats.finish_reason not in {None, "stop"}:
+            raise PlanningError("plan_incomplete_response")
         if not text.strip():
             raise PlanningError("plan_empty")
         try:
