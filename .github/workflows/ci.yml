@@ -136,6 +136,8 @@ jobs:
     - name: Verify application TLS trust and isolated certificate rejection
       run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
+    - name: Verify installed lint matcher safety and file selection
+      run: node --test scripts/test_lint_globs.cjs
     - name: Validate the application-owned viewer contract and fixtures
       run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs scripts/release/oracle_twin_backup_crypto.test.mjs scripts/release/oracle_vercel_transport_guard.test.cjs
     - run: 'cd onesa-ai-platform-frontend/apps/chat
@@ -154,6 +156,11 @@ jobs:
       run: |
         npm audit --package-lock-only --audit-level=low --prefix infra/oracle/vercel-tools
         npm audit --package-lock-only --audit-level=low --prefix infra/oracle/npm-runtime
+    - name: Verify installed owner dependency security and compatibility
+      run: |
+        npm ci --ignore-scripts --prefix infra/oracle/vercel-tools
+        npm ci --ignore-scripts --prefix infra/oracle/npm-runtime
+        node --test scripts/release/oracle_dependency_security.test.cjs
     - name: "Release requirement: private Docs publisher dependency lock"
       run: python3 scripts/ci/npm_audit.py --prefix infra/oracle/cloudflare-tools
     - name: "Release requirement: private Docs Linux single-dispatch protocol"

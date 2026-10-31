@@ -133,6 +133,34 @@ class PrivateBuildTests(unittest.TestCase):
         with self.assertRaises(owner.Rejected):
             build.served_assets(raw, self.inspect(raw))
 
+    def test_native_http_paths_preserve_space_unicode_and_reserved_name_bytes(self):
+        filenames = {
+            "manuals/Private guide.pdf": "/manuals/Private%20guide.pdf",
+            "assets/Übersicht: original.svg": "/assets/%C3%9Cbersicht%3A%20original.svg",
+            "guide with spaces/index.html": "/guide%20with%20spaces/",
+        }
+        for name in filenames:
+            self.files[name] = ("synthetic original bytes: " + name).encode()
+        raw = self.archive()
+        identity = self.inspect(raw)
+        assets = {item["route"]: item for item in build.served_assets(raw, identity)}
+        for name, route in filenames.items():
+            with self.subTest(name=name):
+                self.assertIn(name, identity["files"])
+                self.assertEqual(assets[route]["sha256"], identity["files"][name])
+                self.assertEqual(assets[route]["bytes"], len(self.files[name]))
+                self.assertNotIn(" ", route)
+
+    def test_preescaped_and_traversal_names_remain_refused(self):
+        for name in [
+            "manuals/Private%20guide.pdf",
+            "manuals/../guide.pdf",
+            "manuals/guide?.pdf",
+            "manuals/guide#.pdf",
+        ]:
+            with self.subTest(name=name), self.assertRaises(owner.Rejected):
+                build.served_assets(self.archive(extra=(name, b"synthetic")), {})
+
     def test_source_repository_revision_classification_and_policy_mismatch_refused(
         self,
     ):

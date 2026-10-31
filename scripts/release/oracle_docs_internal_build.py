@@ -12,6 +12,7 @@ import re
 import stat
 import zipfile
 from pathlib import PurePosixPath
+from urllib.parse import quote
 
 import oracle_docs_build as public
 import oracle_owner as owner
@@ -221,6 +222,10 @@ def served_assets(raw, descriptor):
             route = route[:-10]
         elif route.endswith(".html"):
             route = route[:-5]
+        # Receipt paths are HTTP paths. Native browser URL.pathname percent-
+        # encodes spaces and non-ASCII filenames; retain the original archive
+        # names and byte hashes, while binding observations to that exact URL.
+        route = quote(route, safe="/")
         canonical = route.rstrip("/") or "/"
         owner.require(canonical not in routes, "PRIVATE_ASSET_ROUTE_COLLISION")
         routes.add(canonical)

@@ -30,6 +30,48 @@ Installer fixtures also place disposable custody under the private home director
 when executed as root. The explicit writable-parent regression still requires the
 production verifier to reject shared writable ancestors; no custody guard changes.
 
+Consumer response parsing rejects excessive JSON nesting as an incompatible
+provider response, even when the body fits the byte limit. The regression verifies
+one request, no automatic retry and no provider details in the public error; this
+also protects the MCP bridge's shared response reader.
+
+Docs and owner dependency regressions exercise the installed package entry points
+for [minimatch globparts amplification](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249)
+and [glob traversal after cancellation](https://github.com/isaacs/node-glob/security/advisories/GHSA-3g3m-2fjr-6pw4).
+The affected modern consumers use exact upstream minimatch 11.0.1 and glob 14.0.2.
+Only serve-handler 6.1.7 and @ts-morph/common 0.11.1 receive the reviewed callable
+entry-point adapter; it delegates to the fixed upstream matcher without copying
+the old implementation. `make docs-security-pack` regenerates the source/archive
+provenance and identical owner-image copy. Preserve upstream license and hashes.
+
+After locked Docs installation, `make docs-security-test` covers hostile patterns,
+real static-file headers/rewrites/redirects and default-deny Swagger file allowlists.
+For the isolated owner tools, run `npm ci --ignore-scripts --prefix
+infra/oracle/vercel-tools` and `npm ci --ignore-scripts --prefix
+infra/oracle/npm-runtime`, then `node --test
+scripts/release/oracle_dependency_security.test.cjs`. It checks the real NFT,
+TypeScript/config, npm workspace and packlist consumers and asserts that both
+promise and streaming glob calls stop filesystem reads after cancellation.
+Adversarial matching runs in a worker with memory/time bounds so a regression
+fails the suite without exhausting the runner. CI retains low-severity audits,
+the actual owner-image build and its separate offline provider protocol tests.
+Local package tests cannot replace those image checks or hosted qualification.
+
+Chat's exact eslint 10.12.0, @eslint/config-array 0.23.5 and TypeScript ESTree
+8.71.1 consumers use scoped upstream minimatch 11.0.1 overrides. Run `node --test
+scripts/test_lint_globs.cjs` after the locked Chat install, then
+`make frontend-check`. Real ESLint fixtures must retain file discovery, dotfiles,
+directory ignores, negation, unmatched-pattern errors and fatal parse diagnostics;
+the TypeScript project service must retain its default-project allowlist. These
+checks are required in CI without changing the existing audit policy or toolchain.
+
+`test_ai_pre_request_resume.py` exercises the continuation command with a newer
+owner decision arriving during CI preflight and a signed authorization revoked
+during the operations check. Both must fail before reservation or provider calls,
+retaining the original consumed context and unissued intent. Current signed-chain
+and latest-decision reads occur under the same immediate SQLite write transaction
+as the single-use claim; source changes do not commission this optional extension.
+
 Consumer interoperability checks are in `tests/test_consumer.py` and
 `tests/test_mcp_stdio.py`. They cover unchanged consumer business code with Onesa
 and compatible provider transports, portable history/provenance, credential separation,
