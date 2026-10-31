@@ -157,7 +157,12 @@ async def json_response(
             if size > MAX_RESPONSE_BYTES:
                 raise CompletionError()
             chunks.append(part)
-        result = json.loads(b"".join(chunks))
+        try:
+            result = json.loads(b"".join(chunks))
+        except (ValueError, RecursionError):
+            # The byte ceiling does not bound JSON nesting. Treat decoder
+            # exhaustion as an incompatible provider, without exposing its body.
+            raise CompletionError() from None
         if not isinstance(result, dict) or "error" in result:
             raise CompletionError()
         return result

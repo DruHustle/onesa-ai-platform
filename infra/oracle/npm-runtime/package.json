@@ -7,7 +7,7 @@
     "ini": "^7.0.0",
     "tar": "^7.5.22",
     "diff": "^8.0.2",
-    "glob": "^13.0.6",
+    "glob": "14.0.2",
     "nopt": "^10.0.1",
     "read": "^6.0.0",
     "ssri": "^14.0.0",
@@ -26,7 +26,7 @@
     "proc-log": "^7.0.0",
     "bin-links": "^7.0.0",
     "libnpmorg": "^9.0.0",
-    "minimatch": "^10.2.5",
+    "minimatch": "11.0.1",
     "treeverse": "^3.0.0",
     "@npmcli/fs": "^6.0.0",
     "libnpmdiff": "^9.0.4",
@@ -73,6 +73,8 @@
     "json-parse-even-better-errors": "^6.0.0"
   },
   "overrides": {
+    "glob": "$glob",
+    "minimatch": "$minimatch",
     "undici": "6.29.1",
     "ip-address": "10.7.5"
   }

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Source correction: bind protected asset observations to percent-encoded HTTP
+  paths while preserving original archive names, exact byte digests and all access
+  checks. Space and Unicode filenames require fresh hosted qualification.
+- Add an owner-only continuation command for an original intent proven to have
+  issued no provider request. Separate exact-intent commissioning, fresh existing
+  authorization and an atomic one-use claim remain mandatory; it cannot renew
+  contexts or repeat a provider request.
+
 - Source correction: serve authenticated generated Mermaid source as UTF-8 plain
   text instead of Pages' karaoke MIME type. Preserve exact bytes, private headers,
   anonymous denial and all existing Access checks; fresh hosted acceptance is required.
@@ -37,6 +45,14 @@
   schema and model readiness in release qualification. The full middleware regression
   proves no database checkout even with a configured failing engine. Deployment and
   CU-hour savings remain separately unverified.
+
+## 2026-10-31 — Independent API foundation accepted
+
+- The API foundation at `0487419` passed exact-source hosted staging and production
+  verification. Existing authentication, persistence, independent components and
+  rollback were preserved; Twins and Cybersecurity activation remain separate.
+- Production acceptance triggered scoped unused-image cleanup. Frontend and Docs
+  release work continues independently; no physical operation was enabled.
 
 ## 2026-10-23 — V1.1 application and isolated demo components accepted
 
