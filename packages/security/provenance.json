@@ -86,5 +86,29 @@
       "package.json": "f4d0c51d2d6278176f2b0a54f509bf0f2efaa072465ffb036d8fa592db3accb5",
       "security.patch": "d500b3b1cc459511ff041c281f2bc6eea1d12e8ff2433addaae999f29e7c04d6"
     }
+  },
+  "minimatch-callable": {
+    "upstream_version": "11.0.1",
+    "advisory": "GHSA-g3hv-75wg-m249",
+    "archive": "onesa-ai-platform-frontend/apps/docs/vendor/onesa-minimatch-callable-1.0.0.tgz",
+    "archive_sha256": "45cc0d1fa89cc9ddd8a27aa3d7c2e730cae9711dc310c5a0814c5137132d1b7f",
+    "npm_integrity": "sha512-lxjEfl3wr4jCc1Z+KcRAJPqhZ59m7jhPBZYU71PWMyII7bmNMsrueVv33ZFtFoeC7ZGHkfR9n4U70ETSGPTeRA==",
+    "source_files": {
+      "README.md": "b2f8589aac0a5bbac80db7e4ecd6efea0d4179f24ff0f494335c80f421cd8a45",
+      "UPSTREAM.json": "095b399cac69fe9e548869022678f7b8a99821820b6cdd95cfedc764935b7745",
+      "UPSTREAM_LICENSE.md": "2c7c5d22ed5a8ee968c64757710979afcd77438c48b4a265b94e615babd8a901",
+      "index.cjs": "1be5cd319dc8a9d8a8de8a22739f4d334ebc5aaa18d54a86beee1754864ecedd",
+      "package.json": "19caa75ca62ff1dd70ee5e6b3a3b53e25aebeb60d5a3e6146ecda39daeb2ebee"
+    },
+    "shipped_files": {
+      "README.md": "b2f8589aac0a5bbac80db7e4ecd6efea0d4179f24ff0f494335c80f421cd8a45",
+      "UPSTREAM_LICENSE.md": "2c7c5d22ed5a8ee968c64757710979afcd77438c48b4a265b94e615babd8a901",
+      "UPSTREAM.json": "095b399cac69fe9e548869022678f7b8a99821820b6cdd95cfedc764935b7745",
+      "index.cjs": "1be5cd319dc8a9d8a8de8a22739f4d334ebc5aaa18d54a86beee1754864ecedd",
+      "package.json": "19caa75ca62ff1dd70ee5e6b3a3b53e25aebeb60d5a3e6146ecda39daeb2ebee"
+    },
+    "additional_archives": [
+      "infra/oracle/vercel-tools/vendor/onesa-minimatch-callable-1.0.0.tgz"
+    ]
   }
 }
