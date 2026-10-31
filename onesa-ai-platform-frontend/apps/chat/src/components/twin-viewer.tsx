@@ -1,6 +1,12 @@
 "use client";
 // Onesa owns delivery, identity, validation and rendering; no peer app dependency.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   EquipmentViewer,
   type CommandRequest,
@@ -31,6 +37,9 @@ type Props = {
   annotations?: Note[];
   highlights?: string[];
   inspection?: InspectionControls;
+  referencePath?: string;
+  fallback?: ReactNode;
+  modelTestId?: string;
 };
 
 export default function TwinViewer({
@@ -49,6 +58,9 @@ export default function TwinViewer({
   annotations = [],
   highlights = [],
   inspection = DEFAULT_INSPECTION,
+  referencePath,
+  fallback,
+  modelTestId,
 }: Props) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
@@ -69,10 +81,12 @@ export default function TwinViewer({
       },
       provenance: {
         description: model.definition.provenance,
-        rights: "Owner-authorized uploaded model; retained provenance applies",
-        illustrative: model.definition.provenance
-          .toLowerCase()
-          .includes("illustrative"),
+        rights:
+          model.definition.rights ||
+          "Owner-authorized uploaded model; retained provenance applies",
+        illustrative:
+          model.definition.illustrative ||
+          model.definition.provenance.toLowerCase().includes("illustrative"),
       },
       unit: model.definition.unit as "m" | "cm" | "mm",
       metersPerUnit: model.definition.meters_per_unit,
@@ -242,18 +256,25 @@ export default function TwinViewer({
   );
   const loadModel = useCallback<ModelLoader>(
     async (signal, progress) => {
+      if (
+        referencePath &&
+        !/^nvidia-[a-z-]+\/compact\.[a-f0-9]{16}\.glb$/.test(referencePath)
+      )
+        throw new Error("Unsupported reference model path");
       const response = await fetch(
-        `/api/v1/twins/files/${encodeURIComponent(model.file_id)}/content`,
+        referencePath
+          ? `/models/nvidia/${referencePath}`
+          : `/api/v1/twins/files/${encodeURIComponent(model.file_id)}/content`,
         {
-          credentials: "same-origin",
+          credentials: referencePath ? "omit" : "same-origin",
           cache: "no-store",
           signal: AbortSignal.any([signal, AbortSignal.timeout(45000)]),
         },
       );
-      if (response.status === 401)
+      if (!referencePath && response.status === 401)
         window.dispatchEvent(new Event("onesa-session-expired"));
       if (!response.ok)
-        throw new Error("Onesa private model delivery unavailable");
+        throw new Error("Onesa model delivery unavailable");
       const reader = response.body?.getReader();
       if (!reader) throw new Error("Model stream unavailable");
       const chunks: Uint8Array[] = [];
@@ -280,7 +301,7 @@ export default function TwinViewer({
       }
       return bytes.buffer;
     },
-    [model.file_id],
+    [model.file_id, referencePath],
   );
   return (
     <EquipmentViewer
@@ -289,11 +310,14 @@ export default function TwinViewer({
       command={command}
       loadModel={loadModel}
       onEvent={onEvent}
+      modelTestId={modelTestId}
       fallback={
-        <p role="status">
-          3D graphics are unavailable. Continue with the Onesa component list
-          and Details, History and Documents panels.
-        </p>
+        fallback || (
+          <p role="status">
+            3D graphics are unavailable. Continue with the Onesa component list
+            and Details, History and Documents panels.
+          </p>
+        )
       }
     />
   );

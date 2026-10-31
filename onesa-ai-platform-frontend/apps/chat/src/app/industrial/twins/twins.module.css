@@ -176,6 +176,24 @@
 .viewport > p {
   padding: 24px;
 }
+.viewport:has(> .referenceFallback),
+.viewport:has(> [role="alert"]) {
+  height: auto;
+  min-height: 300px;
+}
+.referenceFallback {
+  padding: 16px;
+}
+.referenceFallback img {
+  width: 100%;
+  height: 230px;
+  object-fit: contain;
+  background: #f3f5f8;
+  border-radius: 8px;
+}
+.referenceFallback p {
+  margin: 10px 0 0;
+}
 .caption {
   font-size: 0.78rem;
   color: var(--muted);

@@ -1,5 +1,28 @@
 # Separate application builds and tests
 
+## NVIDIA visual reference library
+
+`tests/test_twin_references.py` validates the pinned catalog, exact GLB, thumbnail,
+licence and conversion-provenance bytes, and equality of the independently packaged
+frontend/backend copies. Real PostgreSQL tests cover account isolation, CSRF,
+revocation after parsing, concurrent and lost-response retries, existing quota limits,
+corrupt/missing files and absence of invented readings or device connections.
+Run it through the ordinary backend suite against a disposable `_test` database.
+
+`tests/twin-references.spec.ts` runs through the normal three-engine browser matrix.
+It exercises automatic rendering, selection, private import and reload, retry after
+a lost import response, file/catalog failures, graphics-context loss and disposal,
+mobile framing and fallback, keyboard accessibility and live system-theme changes.
+External network requests are blocked in this loopback-only synthetic fixture.
+Browser rendering does not qualify
+physical behaviour, collision accuracy, robot articulation or real model quality.
+
+Both components package their own copied `twin_reference_data` / `public/models/nvidia`
+bytes; no sibling checkout, remote asset server or NVIDIA service is required at
+runtime. Imports retain the source revision, attribution, licence and conversion
+metadata in private owned records. Existing Digital Twins activation, durable storage,
+source-bound CI and owner-controlled hosted release gates remain required.
+
 `node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
 worker with synthetic signed identities. Generated Mermaid sources must retain
 their exact bytes and private headers while overriding Pages' karaoke MIME type
