@@ -129,6 +129,11 @@ def test_same_consumer_business_code_preserves_history_across_providers():
         httpx.Response(401, text="private-provider-details"),
         httpx.Response(302, headers={"Location": "https://foreign.example.test"}),
         httpx.Response(200, text="not-json", headers={"Content-Type": "application/json"}),
+        httpx.Response(
+            200,
+            content=b'{"private-provider-details":' + b"[" * 2000 + b"0" + b"]" * 2000 + b"}",
+            headers={"Content-Type": "application/json"},
+        ),
         httpx.Response(200, json=[]),
         httpx.Response(200, json={"error": {"message": "private-provider-details"}}),
         httpx.Response(200, json={"model": "model", "choices": []}),

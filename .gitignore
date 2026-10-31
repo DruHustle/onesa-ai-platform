@@ -136,3 +136,8 @@ credentials*.json
 /packages/security/deepmerge/dist/*
 !/packages/security/deepmerge/dist/cjs.js
 !/packages/security/deepmerge/dist/umd.js
+
+# Generated working tools are private or host-specific; keep reusable source in scripts/.
+local-tools/
+working-tools/
+.venv*/
