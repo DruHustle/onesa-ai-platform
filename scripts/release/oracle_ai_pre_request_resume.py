@@ -99,48 +99,8 @@ def zero_request_evidence(config, plan, failure, *, operation_exists, actual):
     }
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["inspect", "execute"])
-    parser.add_argument("--store", type=Path, required=True)
-    args = parser.parse_args()
-    require(
-        os.geteuid() == 0
-        and os.getenv("SUDO_USER") == "ubuntu"
-        and not os.getenv("GITHUB_ACTIONS"),
-        "EXTERNAL_OWNER_SSH_REQUIRED",
-    )
-    registry = json.loads(private("/etc/onesa/oracle-release-trust.json").read_bytes())
-    anchor = registry["installations"][str(args.store)]
-    extension = anchor.get("pre_request_resume")
-    require(
-        anchor["active"] is True and extension and extension["active"] is True,
-        "EXPLICIT_OWNER_EXTENSION_COMMISSION_REQUIRED",
-    )
-    require(
-        str(Path(__file__).resolve()) == extension["path"]
-        and digest(private(__file__)) == extension["sha256"],
-        "COMMISSIONED_EXTENSION_BYTES_REQUIRED",
-    )
-    config = json.loads(private(extension["configuration"]).read_bytes())
-    require(
-        digest(extension["configuration"]) == extension["configuration_sha256"],
-        "COMMISSIONED_CONTINUATION_SCOPE_CHANGED",
-    )
-    require(config["store"] == str(args.store), "WRONG_ISSUER_STORE")
-    version = private(config["installation"], directory=True)
-    for name, pin in config["files"].items():
-        require(digest(private(version / name)) == pin, "ORIGINAL_PINNED_TOOL_CHANGED")
-    sys.path[:0] = [str(version), str(version / "runners")]
-    import oracle_ai_runner as runner
-    import oracle_owner as owner
-
-    request = json.load(sys.stdin)
-    require(
-        set(request) == {"owner_token"},
-        "AUTHENTICATED_OWNER_ONLY_NO_CALLER_APPROVAL_JSON",
-    )
-    store = owner.Store(args.store, owner.GitHub(request.pop("owner_token")))
+def original_chain(store, config):
+    """Read current signed records and the latest owner decision without renewing them."""
     intent = store.get(config["operation"], "deployment-intent", config["binding"])[
         "record"
     ]
@@ -185,6 +145,52 @@ def main():
         ).fetchone(),
         "EXISTING_PROVIDER_RECEIPT_REQUIRES_INSPECTION_ONLY",
     )
+    return intent, authorization, qualification
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("action", choices=["inspect", "execute"])
+    parser.add_argument("--store", type=Path, required=True)
+    args = parser.parse_args()
+    require(
+        os.geteuid() == 0
+        and os.getenv("SUDO_USER") == "ubuntu"
+        and not os.getenv("GITHUB_ACTIONS"),
+        "EXTERNAL_OWNER_SSH_REQUIRED",
+    )
+    registry = json.loads(private("/etc/onesa/oracle-release-trust.json").read_bytes())
+    anchor = registry["installations"][str(args.store)]
+    extension = anchor.get("pre_request_resume")
+    require(
+        anchor["active"] is True and extension and extension["active"] is True,
+        "EXPLICIT_OWNER_EXTENSION_COMMISSION_REQUIRED",
+    )
+    require(
+        str(Path(__file__).resolve()) == extension["path"]
+        and digest(private(__file__)) == extension["sha256"],
+        "COMMISSIONED_EXTENSION_BYTES_REQUIRED",
+    )
+    config = json.loads(private(extension["configuration"]).read_bytes())
+    require(
+        digest(extension["configuration"]) == extension["configuration_sha256"],
+        "COMMISSIONED_CONTINUATION_SCOPE_CHANGED",
+    )
+    require(config["store"] == str(args.store), "WRONG_ISSUER_STORE")
+    version = private(config["installation"], directory=True)
+    for name, pin in config["files"].items():
+        require(digest(private(version / name)) == pin, "ORIGINAL_PINNED_TOOL_CHANGED")
+    sys.path[:0] = [str(version), str(version / "runners")]
+    import oracle_ai_runner as runner
+    import oracle_owner as owner
+
+    request = json.load(sys.stdin)
+    require(
+        set(request) == {"owner_token"},
+        "AUTHENTICATED_OWNER_ONLY_NO_CALLER_APPROVAL_JSON",
+    )
+    store = owner.Store(args.store, owner.GitHub(request.pop("owner_token")))
+    intent, authorization, qualification = original_chain(store, config)
     folder, plan = runner.validate_plan(config["binding"])
     require(
         plan["mode"] == "foundation" and plan["verifier_store"] == str(store.root),
@@ -232,6 +238,14 @@ def main():
     )
 
     def reserve():
+        # CI and operations checks may have waited while the owner changed their
+        # decision. Re-read signatures, expiry/revocation, chain and latest attempt
+        # while the write lock prevents another decision from racing this claim.
+        current = original_chain(store, config)
+        require(
+            current == (intent, authorization, qualification),
+            "ORIGINAL_AUTHORIZATION_CHAIN_CHANGED",
+        )
         require(
             not (folder / "operations" / intent["id"]).exists(),
             "PROVIDER_ACTIVITY_APPEARED",

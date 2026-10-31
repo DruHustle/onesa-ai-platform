@@ -8,6 +8,7 @@ RUN for attempt in 1 2 3; do \
     done
 WORKDIR /opt/onesa-vercel-tool
 COPY infra/oracle/vercel-tools/package.json infra/oracle/vercel-tools/package-lock.json ./
+COPY infra/oracle/vercel-tools/vendor/ ./vendor/
 RUN npm ci --ignore-scripts && npm cache clean --force
 COPY infra/oracle/npm-runtime/package.json infra/oracle/npm-runtime/package-lock.json infra/oracle/npm-runtime/upstream.json /opt/npm-runtime/
 RUN npm ci --ignore-scripts --prefix /opt/npm-runtime && npm cache clean --force

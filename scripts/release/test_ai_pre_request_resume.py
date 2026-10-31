@@ -2,15 +2,22 @@
 
 import copy
 import hashlib
+import io
 import json
+import os
 import sqlite3
+import sys
 import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import TestCase, main
+from unittest.mock import Mock, patch
 
 import oracle_ai_pre_request_resume as extension
+import oracle_ai_runner as runner
+import oracle_owner as owner
 
 
 class ZeroRequestTests(TestCase):
@@ -198,6 +205,204 @@ class AtomicClaimTests(TestCase):
             )
         finally:
             db.close()
+
+
+class PreflightDecisionTests(TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.db = sqlite3.connect(":memory:", isolation_level=None)
+        self.addCleanup(self.db.close)
+        self.db.executescript(
+            "CREATE TABLE deployments(id TEXT PRIMARY KEY,state TEXT);"
+            "CREATE TABLE contexts(id TEXT PRIMARY KEY,state TEXT);"
+            "CREATE TABLE records(sequence INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT,kind TEXT,scope TEXT,parent TEXT);"
+            "INSERT INTO deployments VALUES('operation','request-recorded');"
+            "INSERT INTO contexts VALUES('context','consumed');"
+            "INSERT INTO records(id,kind,scope) VALUES('original-attempt','authorization-attempt','DruHustle/onesa-ai-platform:api');"
+        )
+        self.binding = {
+            "repository": "DruHustle/onesa-ai-platform",
+            "component": "api",
+            "candidate_commit": "a" * 40,
+        }
+        self.records = {
+            "operation": {
+                "id": "operation",
+                "parent": "authorization",
+                "details": {
+                    "authorization": "authorization",
+                    "provider_request_budget": 1,
+                    "automatic_retry": False,
+                },
+            },
+            "authorization": {
+                "id": "authorization",
+                "parent": "qualification",
+                "details": {"attempt_id": "original-attempt"},
+            },
+            "qualification": {"id": "qualification", "parent": "context"},
+        }
+        self.revoked = False
+        self.reads = []
+
+        def get(identifier, _kind, binding):
+            self.assertEqual(binding, self.binding)
+            self.reads.append((identifier, self.db.in_transaction))
+            if identifier == "authorization" and self.revoked:
+                raise owner.Rejected("synthetic signed authorization revoked")
+            return {"record": copy.deepcopy(self.records[identifier])}
+
+        self.store = SimpleNamespace(
+            root=self.root,
+            db=self.db,
+            get=Mock(side_effect=get),
+            put=Mock(),
+            github=SimpleNamespace(qualify=Mock()),
+            runner=Mock(),
+        )
+        actual = {"image": "retained-image", "container_id": "retained-container"}
+        plan = {
+            "mode": "foundation",
+            "verifier_store": str(self.root),
+            "baseline": {"production": actual},
+        }
+        plan_path = self.root / "plan.json"
+        plan_path.write_text(json.dumps(plan))
+        failure = {
+            "phase": "deploy",
+            "status": "FAILED_NOT_QUALIFIED",
+            "diagnostic_only": True,
+            "provider_retry_allowed": False,
+            "failure_code": "OPERATIONS_ALERT_OR_UNQUALIFIED_SAMPLE",
+            "candidate_commit": self.binding["candidate_commit"],
+            "component": "api",
+            "record_ids": {
+                "authorization_id": "authorization",
+                "operation_id": "operation",
+            },
+            "observed_at": "2026-10-31T00:14:20+00:00",
+        }
+        failure_path = self.root / "failure.json"
+        failure_path.write_text(json.dumps(failure))
+        config = {
+            "store": str(self.root),
+            "installation": str(self.root),
+            "files": {},
+            "binding": self.binding,
+            "operation": "operation",
+            "authorization": "authorization",
+            "qualification": "qualification",
+            "plan": str(plan_path),
+            "plan_sha256": extension.digest(plan_path),
+            "failure": str(failure_path),
+            "failure_sha256": extension.digest(failure_path),
+        }
+        config_path = self.root / "config.json"
+        config_path.write_text(json.dumps(config))
+        registry_path = self.root / "synthetic-registry.json"
+        registry_path.write_text(
+            json.dumps(
+                {
+                    "installations": {
+                        str(self.root): {
+                            "active": True,
+                            "pre_request_resume": {
+                                "active": True,
+                                "path": str(Path(extension.__file__).resolve()),
+                                "sha256": extension.digest(extension.__file__),
+                                "configuration": str(config_path),
+                                "configuration_sha256": extension.digest(config_path),
+                            },
+                        }
+                    }
+                }
+            )
+        )
+        # Real command/preflight/reservation code, disposable custody and no token,
+        # commissioning registry, production filesystem or provider access.
+        self.enterContext(
+            patch.object(
+                extension,
+                "private",
+                side_effect=lambda path, **_: (
+                    registry_path
+                    if str(path) == "/etc/onesa/oracle-release-trust.json"
+                    else Path(path)
+                ),
+            )
+        )
+        self.enterContext(patch.object(os, "geteuid", return_value=0))
+        self.enterContext(
+            patch.dict(os.environ, {"SUDO_USER": "ubuntu", "GITHUB_ACTIONS": ""})
+        )
+        self.enterContext(
+            patch.object(sys, "argv", ["resume", "execute", "--store", str(self.root)])
+        )
+        self.enterContext(
+            patch.object(sys, "stdin", io.StringIO('{"owner_token":"synthetic-only"}'))
+        )
+        self.enterContext(patch.object(sys, "path", list(sys.path)))
+        self.enterContext(patch.object(owner, "Store", return_value=self.store))
+        self.enterContext(patch.object(owner, "GitHub"))
+        self.enterContext(
+            patch.object(runner, "validate_plan", return_value=(self.root, plan))
+        )
+        self.enterContext(
+            patch.object(
+                runner, "inventory", return_value={runner.TARGET["production"]: actual}
+            )
+        )
+        self.enterContext(
+            patch.object(runner, "summary", side_effect=lambda value: value)
+        )
+        self.enterContext(
+            patch.object(
+                runner, "read", return_value={"checked_at": "2026-10-31T00:21:00+00:00"}
+            )
+        )
+
+    def assert_no_reservation_or_provider_call(self):
+        self.store.put.assert_not_called()
+        self.assertEqual(
+            [call.args[0] for call in self.store.runner.call_args_list], ["operations"]
+        )
+        self.assertEqual(
+            self.db.execute("SELECT state FROM deployments").fetchone(),
+            ("request-recorded",),
+        )
+        self.assertEqual(
+            self.db.execute("SELECT state FROM contexts").fetchone(), ("consumed",)
+        )
+        self.assertEqual(
+            self.db.execute(
+                "SELECT count(*) FROM records WHERE kind='pre-request-resume-attempt'"
+            ).fetchone(),
+            (0,),
+        )
+        self.assertFalse(self.db.in_transaction)
+
+    def test_owner_decision_during_ci_preflight_blocks_reservation_and_provider(self):
+        def supersede(_binding):
+            self.db.execute(
+                "INSERT INTO records(id,kind,scope) VALUES('newer-attempt','authorization-attempt','DruHustle/onesa-ai-platform:api')"
+            )
+
+        self.store.github.qualify.side_effect = supersede
+        with self.assertRaisesRegex(ValueError, "OWNER_DECISION_SUPERSEDED"):
+            extension.main()
+        self.assert_no_reservation_or_provider_call()
+        for identifier in self.records:
+            self.assertIn((identifier, True), self.reads)
+
+    def test_revocation_during_operations_preflight_revalidates_signed_chain(self):
+        def revoke(*_):
+            self.revoked = True
+
+        self.store.runner.side_effect = revoke
+        with self.assertRaisesRegex(owner.Rejected, "authorization revoked"):
+            extension.main()
+        self.assert_no_reservation_or_provider_call()
+        self.assertIn(("authorization", True), self.reads)
 
 
 if __name__ == "__main__":

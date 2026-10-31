@@ -2,6 +2,50 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-31 — Bound provider failures and repair dependency security gates
+
+The bounded consumer response reader now converts JSON decoder recursion failure
+into the existing redacted incompatibility error. The regression reproduces a
+small, deeply nested provider response and verifies no retry or provider-detail
+disclosure. The shared reader also serves the read-only MCP bridge.
+
+Retain the recovered pypdf 6.21.4 pin and both hash-locked dependency sets, plus
+the compatible Docs follow-redirects 1.16.2 and joi 17.13.9 security updates.
+Replace the remaining affected matchers with upstream minimatch 11.0.1 and glob
+14.0.2 in the affected Docs and isolated owner-tool dependency paths. Vercel stays
+at 65.2.0 and its official npm source stays at 12.2.1. Audit thresholds remain
+unchanged; the runtime Python, Chat, Docs, Vercel-tool and separate npm-runtime locks
+pass their local vulnerability audits.
+
+Chat's three modern lint consumers also use exact-version scoped minimatch
+11.0.1 overrides: eslint 10.12.0, @eslint/config-array 0.23.5 and
+@typescript-eslint/typescript-estree 8.71.1. Their toolchain versions and all
+unrelated optional-platform lock entries remain unchanged. Real ESLint fixtures
+retain file/ignore/negation selection and fatal diagnostics; the TypeScript
+project service still refuses files outside its explicit default-project pattern.
+The Chat lock additionally passes a low-threshold local audit with no findings.
+
+The two legacy callable consumers, serve-handler 6.1.7 and @ts-morph/common
+0.11.1, use a narrow local entry-point adapter to the unchanged fixed upstream
+matcher. It contains no old matcher code. Exact consumer overrides, upstream
+integrity/license, source/archive provenance and the identical owner-image archive
+are recorded. Installed-artifact regressions cover bounded hostile patterns,
+post-cancellation filesystem work, static Docs serving, Swagger file allowlists,
+TypeScript config, NFT asset tracing, npm workspace patterns and exclusion of
+private files from packages. The owner compatibility suite is a required CI step.
+
+The previously prepared pre-request continuation helper now rereads its signed
+intent/authorization/qualification chain and latest owner decision inside the
+SQLite write transaction immediately before claiming the one allowed attempt.
+A superseding decision or revocation during CI/operations preflight cannot leave
+a continuation reservation or issue a provider request. It never renews the
+original context or authorization; interrupted attempts still require inspection.
+
+These prepared source changes do not establish a live application, documentation
+or owner-tool release. Hosted CI, immutable image/protocol checks and the existing
+owner qualification path remain required; accepted production component versions
+remain recorded separately in the root changelog.
+
 ## 2026-10-28 — Isolate release-unit commissioning fixtures
 
 Docs visual acceptance and its native-owner regression now resolve the existing
