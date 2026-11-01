@@ -1,4 +1,4 @@
-"""Verify NVIDIA public assets over HTTP from an isolated running frontend image."""
+"""Verify reference assets and renderer notice from an isolated frontend image."""
 
 import argparse
 import hashlib
@@ -9,8 +9,12 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = (
-    ROOT / "onesa-ai-platform-frontend/apps/chat/public/models/nvidia/manifest.json"
+PUBLIC = ROOT / "onesa-ai-platform-frontend/apps/chat/public"
+MANIFEST = PUBLIC / "models/nvidia/manifest.json"
+RENDERER_NOTICE_PATH = "/licenses/three.txt"
+RENDERER_NOTICE_SIZE = 1081
+RENDERER_NOTICE_SHA256 = (
+    "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
 )
 MEDIA_TYPES = {
     "glb": "model/gltf-binary",
@@ -46,7 +50,7 @@ def verify(origin):
     )
     files = [
         (
-            "manifest.json",
+            "/models/nvidia/manifest.json",
             len(manifest),
             hashlib.sha256(manifest).hexdigest(),
             "application/json",
@@ -65,7 +69,28 @@ def verify(origin):
                 and re.fullmatch(r"[a-f0-9]{64}", artifact["sha256"]) is not None,
                 "Invalid source artifact descriptor",
             )
-            files.append((path, artifact["byteLength"], artifact["sha256"], media_type))
+            files.append(
+                (
+                    "/models/nvidia/" + path,
+                    artifact["byteLength"],
+                    artifact["sha256"],
+                    media_type,
+                )
+            )
+    notice = (PUBLIC / RENDERER_NOTICE_PATH.lstrip("/")).read_bytes()
+    require(
+        len(notice) == RENDERER_NOTICE_SIZE
+        and hashlib.sha256(notice).hexdigest() == RENDERER_NOTICE_SHA256,
+        "Source Three.js notice differs from the reviewed installed license",
+    )
+    files.append(
+        (
+            RENDERER_NOTICE_PATH,
+            RENDERER_NOTICE_SIZE,
+            RENDERER_NOTICE_SHA256,
+            "text/plain",
+        )
+    )
     require(len({item[0] for item in files}) == len(files), "Duplicate artifact paths")
     for path, size, checksum, media_type in files:
         # HTTPConnection neither follows redirects nor reads proxy/auth environment
@@ -74,9 +99,7 @@ def verify(origin):
             target.hostname, target.port, timeout=10
         )
         try:
-            connection.request(
-                "GET", "/models/nvidia/" + path, headers={"Accept-Encoding": "identity"}
-            )
+            connection.request("GET", path, headers={"Accept-Encoding": "identity"})
             response = connection.getresponse()
             require(
                 response.status == 200,
@@ -107,7 +130,8 @@ def main():
     parser.add_argument("origin")
     count = verify(parser.parse_args().origin)
     print(
-        f"PASS: {count} reference artifacts served with exact bytes, hashes and media types"
+        f"PASS: {count - 1} reference artifacts and the Three.js license "
+        "served with exact bytes, hashes and media types"
     )
 
 
