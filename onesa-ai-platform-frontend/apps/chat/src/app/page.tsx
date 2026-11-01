@@ -476,7 +476,7 @@ export default function Chat() {
           <IndustrialNav />
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
-          <Link href="/settings" lang="en">Account settings</Link>
+          <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
           <DocumentationNav />
         </nav>
         <ApplicationsNav />

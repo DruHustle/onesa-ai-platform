@@ -82,6 +82,7 @@ export default function FeatureShell({
           <nav className="workspace-resources" aria-label="Workspace resources">
             <Link
               href="/settings"
+              prefetch={false}
               aria-current={pathname === "/settings" ? "page" : undefined}
             >
               Account settings
