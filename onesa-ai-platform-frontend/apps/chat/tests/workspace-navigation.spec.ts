@@ -99,3 +99,57 @@ test("mobile workspace options preserve the task and return keyboard focus", asy
   await chat.click();
   await expect(page.getByLabel("Message Onesa AI")).toBeEnabled();
 });
+
+for (const route of ["/", "/knowledge"]) {
+  for (const width of [390, 1440]) {
+    test(`account settings loads on selection from ${route} at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      await page.route("**/api/v1/auth/me", route => route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ id: "navigation-fixture", display_name: "Synthetic navigation tester", email: "navigation@example.com" }),
+      }));
+      await page.route("**/api/v1/auth/sessions", route => route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], total: 0, limit: 20 }),
+      }));
+      const errors: string[] = [];
+      const settingsBeforeSelection: string[] = [];
+      const primaryPrefetches: string[] = [];
+      let selected = false;
+      page.on("pageerror", error => errors.push(error.message));
+      page.on("request", request => {
+        const url = new URL(request.url());
+        if (!selected && url.pathname === "/settings" && url.searchParams.has("_rsc")) {
+          settingsBeforeSelection.push(url.pathname);
+        }
+        if (url.pathname === "/agents" && request.headers()["next-router-prefetch"] === "1") {
+          primaryPrefetches.push(url.pathname);
+        }
+      });
+
+      await page.goto(route);
+      if (route === "/") {
+        await expect(page.getByLabel("Message Onesa AI")).toBeEnabled();
+        if (width === 390) await page.getByRole("button", { name: "Toggle conversations" }).click();
+      } else {
+        await expect(page.getByRole("heading", { name: "Your knowledge", exact: true })).toBeVisible();
+        if (width === 390) await page.getByRole("button", { name: "Workspace options", exact: true }).click();
+      }
+      const settings = page.getByRole("link", { name: "Account settings", exact: true });
+      await expect(settings).toBeVisible();
+      await settings.hover();
+      // A real primary-route prefetch keeps this check meaningful in a production build.
+      await expect.poll(() => primaryPrefetches.length).toBeGreaterThan(0);
+      expect(settingsBeforeSelection).toEqual([]);
+      await page.evaluate(() => { document.documentElement.dataset.navigationFixture = "preserved"; });
+      selected = true;
+      await settings.click();
+      await expect(page).toHaveURL(/\/settings$/);
+      await expect(page.getByRole("heading", { name: "Account settings", exact: true })).toBeVisible();
+      await expect(page.getByText("Signed in as navigation@example.com", { exact: true })).toBeVisible();
+      await expect(page.getByLabel("Display name", { exact: true })).toHaveValue("Synthetic navigation tester");
+      expect(await page.evaluate(() => document.documentElement.dataset.navigationFixture)).toBe("preserved");
+      expect(errors).toEqual([]);
+    });
+  }
+}
