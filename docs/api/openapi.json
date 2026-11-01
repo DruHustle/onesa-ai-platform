@@ -2796,6 +2796,83 @@
         ]
       }
     },
+    "/api/v1/twins/references": {
+      "get": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Reference Catalog",
+        "operationId": "reference_catalog_api_v1_twins_references_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reference Catalog Api V1 Twins References Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/twins/references/{reference_id}/import": {
+      "post": {
+        "tags": [
+          "digital twins v1"
+        ],
+        "summary": "Import Reference",
+        "operationId": "import_reference_api_v1_twins_references__reference_id__import_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Reference Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Import Reference Api V1 Twins References  Reference Id  Import Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/twins/assets": {
       "post": {
         "tags": [

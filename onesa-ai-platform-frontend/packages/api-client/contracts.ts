@@ -223,6 +223,8 @@ export interface Operations {
   "POST /twins/models": { body: paths["/api/v1/twins/models"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/twins/models"]["post"]["responses"][201]["content"]["application/json"] };
   "GET /twins/notes/{identifier}": { body: undefined; response: paths["/api/v1/twins/notes/{identifier}"]["get"]["responses"][200]["content"]["application/json"] };
   "GET /twins/readiness": { body: undefined; response: paths["/api/v1/twins/readiness"]["get"]["responses"][200]["content"]["application/json"] };
+  "GET /twins/references": { body: undefined; response: paths["/api/v1/twins/references"]["get"]["responses"][200]["content"]["application/json"] };
+  "POST /twins/references/{reference_id}/import": { body: undefined; response: paths["/api/v1/twins/references/{reference_id}/import"]["post"]["responses"][201]["content"]["application/json"] };
   "DELETE /twins/sources/{identifier}": { body: undefined; response: void };
   "POST /twins/sources/{identifier}/readings": { body: paths["/api/v1/twins/sources/{identifier}/readings"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/twins/sources/{identifier}/readings"]["post"]["responses"][200]["content"]["application/json"] };
   "POST /twins/templates": { body: paths["/api/v1/twins/templates"]["post"]["requestBody"]["content"]["application/json"]; response: paths["/api/v1/twins/templates"]["post"]["responses"][201]["content"]["application/json"] };

@@ -22,6 +22,9 @@ def make_engine(url: str) -> Engine:
         # Transaction-local settings survive PgBouncer backend switching without
         # unsupported startup options or leaking session state to another client.
         connection.exec_driver_sql("SET LOCAL statement_timeout = '5s'")
+        # Stable API/export timestamps must not depend on the host or pooled
+        # connection's timezone. In-memory timestamps already use UTC.
+        connection.exec_driver_sql("SET LOCAL TIME ZONE 'UTC'")
 
     return engine
 

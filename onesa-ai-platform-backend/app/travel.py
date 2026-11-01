@@ -12,9 +12,15 @@ from pydantic import Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth import DB, Auth
+from app.auth import DB, Auth, eligible, lock_account
 from app.errors import fail
-from app.inference import InferenceError, ModelClient, ModelMessage
+from app.inference import (
+    GenerationStats,
+    InferenceError,
+    ModelClient,
+    ModelMessage,
+    observe_generation,
+)
 from app.models import Trip
 from app.observability import travel_planning_failure_reasons
 from app.pagination import page
@@ -87,6 +93,7 @@ def itinerary_failure_reason(error: Exception) -> str:
                 "itinerary_non_json_markup",
                 "itinerary_invalid_schema",
                 "itinerary_day_sequence",
+                "itinerary_incomplete_response",
             }
             else "planning_internal_error"
         )
@@ -121,11 +128,21 @@ class ModelItineraryPlanner:
         ]
         chunks: list[str] = []
         size = 0
-        async for part in self.client.stream(messages):
-            size += len(part)
-            if size > 64000:
-                raise ItineraryPlanningError("itinerary_size_limit")
-            chunks.append(part)
+        stats = GenerationStats()
+        iterator = self.client.stream(messages)
+        try:
+            with observe_generation(stats):
+                async for part in iterator:
+                    size += len(part)
+                    if size > 64000:
+                        raise ItineraryPlanningError("itinerary_size_limit")
+                    chunks.append(part)
+        finally:
+            close = getattr(iterator, "aclose", None)
+            if close is not None:
+                await close()
+        if stats.finish_reason not in {None, "stop"}:
+            raise ItineraryPlanningError("itinerary_incomplete_response")
         text = "".join(chunks)
         if not text.strip():
             raise ItineraryPlanningError("itinerary_empty")
@@ -215,6 +232,10 @@ async def planning(body: Preferences, request: Request) -> dict[str, Any]:
 @router.post("/trips", status_code=201, response_model=TripOut)
 async def create(body: Preferences, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
     plan = await planning(body, request)
+    # Inference can outlast a session, password reset or invitation revocation.
+    # Serialize the final write with account/session changes and recheck access.
+    user = lock_account(db, auth)
+    eligible(request, db, user)
     row = Trip(user_id=auth[0].id, **body.model_dump(), itinerary=plan)
     db.add(row)
     db.commit()
@@ -257,6 +278,8 @@ async def revise(
     db.commit()
     preferences = Preferences.model_validate(body.model_dump(exclude={"expected_revision"}))
     plan = await planning(preferences, request)
+    user = lock_account(db, auth)
+    eligible(request, db, user)
     row = owned(db, identifier, auth[0].id, lock=True)
     if row.revision != body.expected_revision:
         fail(409, "revision_conflict", "Trip changed; reload before revising")

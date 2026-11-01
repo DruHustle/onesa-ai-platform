@@ -1,5 +1,53 @@
 # Separate application builds and tests
 
+## NVIDIA visual reference library
+
+`tests/test_twin_references.py` validates the pinned catalog, exact GLB, thumbnail,
+licence and conversion-provenance bytes, and equality of the independently packaged
+frontend/backend copies. Real PostgreSQL tests cover account isolation, CSRF,
+revocation after parsing, concurrent and lost-response retries, existing quota limits,
+corrupt/missing files and absence of invented readings or device connections.
+Run it through the ordinary backend suite against a disposable `_test` database.
+
+`tests/twin-references.spec.ts` runs through the normal three-engine browser matrix.
+It exercises automatic rendering, selection, private import and reload, retry after
+a lost import response, file/catalog failures, graphics-context loss and disposal,
+mobile framing and fallback, keyboard accessibility and live system-theme changes.
+External network requests are blocked in this loopback-only synthetic fixture.
+Protected-preview coverage uses a synthetic HttpOnly cookie gate and real model
+rendering. A redirected reference must fail before the browser requests its target;
+retry after restoring local delivery preserves the signed-in session.
+Browser rendering does not qualify
+physical behaviour, collision accuracy, robot articulation or real model quality.
+
+Both components package their own copied `twin_reference_data` / `public/models/nvidia`
+bytes; no sibling checkout, remote asset server or NVIDIA service is required at
+runtime. Imports retain the source revision, attribution, licence and conversion
+metadata in private owned records. Existing Digital Twins activation, durable storage,
+source-bound CI and owner-controlled hosted release gates remain required.
+
+The frontend Docker runtime explicitly copies `apps/chat/public` alongside the
+standalone server and generated static files. Next.js standalone tracing does not
+copy this public directory automatically. The existing container job runs
+`python3 scripts/check_reference_delivery.py http://127.0.0.1:3120` against its
+running image through the isolated staging proxy. This credential-free HTTP check
+requires the exact source manifest and all twelve model, thumbnail, licence and
+provenance files, plus `/licenses/three.txt`, with matching byte lengths, SHA-256
+digests and media types.
+Missing files, redirects and changed bytes fail the container job. A local
+standalone-server rehearsal is supplemental; it does not replace image or hosted
+qualification.
+
+The browser distribution retains the complete Three.js MIT notice, copied unchanged
+from the installed `three@0.186.1` package's `LICENSE` (1,081 bytes; SHA-256
+`8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc`). Its provenance is
+the exact registry archive and SHA-512 integrity recorded in the application's
+`package-lock.json`. Every frontend build first runs
+`node scripts/check_renderer_notice.mjs` from `apps/chat`, comparing the pinned
+dependency, lock entry, installed package and complete public notice. Vendor upgrades
+must preserve the installed licence and update reviewed delivery metadata when its
+bytes change. This notice is separate from the unchanged NVIDIA CC BY artifacts.
+
 `node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
 worker with synthetic signed identities. Generated Mermaid sources must retain
 their exact bytes and private headers while overriding Pages' karaoke MIME type
@@ -314,6 +362,18 @@ needs an isolated PostgreSQL/pgvector database named with `_test`; tests truncat
 users. Use the existing integration guide before running `make integration`. Browser
 checks use an isolated mock stack, not the active application or a real inference service.
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
+
+Structured planning regressions use the actual provider stream parser with synthetic
+responses. Valid JSON with an incomplete finish reason must fail, later choices cannot
+replace a terminal result, and a rejected oversized stream must close before the planner
+returns. A trailing usage-only frame remains supported. These tests check protocol and
+resource handling; they do not qualify a real model's answer quality.
+
+The PostgreSQL planning-authority tests revoke the session during inference and require
+both new/revised Travel plans and agent runs to refuse persistence or tool execution.
+The refusal must retain its structured authentication error. Transaction-timezone tests
+start connections in non-UTC zones, require stable UTC timestamps inside each transaction,
+and confirm the transaction-local setting does not leak to the next pool user.
 
 The Industrial database suite includes a fresh status read while another transaction
 holds the record's writer lock. The read must return the committed snapshot promptly;
