@@ -66,6 +66,9 @@ jobs:
           onesa-ai-platform-backend/requirements-dev.lock
 
           onesa-ai-platform-backend/requirements.lock'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24.22.1'
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
     - run: make install
@@ -96,6 +99,10 @@ jobs:
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
     - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
+    - name: Verify installed contract matcher safety and header selection
+      run: node scripts/contract-tools/matcher-security.test.cjs
+    - name: Audit locked contract generator dependencies
+      run: python3 scripts/ci/npm_audit.py --prefix scripts/contract-tools
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
     - name: Audit locked backend development dependencies
@@ -416,6 +423,9 @@ jobs:
     - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config
         --quiet
     - run: docker compose build api chat
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f
         compose.staging.yaml up --wait --wait-timeout 180
     - run: curl --fail http://localhost:3120/ready
