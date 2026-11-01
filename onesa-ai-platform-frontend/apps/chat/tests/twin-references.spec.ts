@@ -359,21 +359,21 @@ test("theme changes preserve selected model and do not download it again", async
     .click();
   await ready(page);
   const before = loads;
-  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await expect(
-    page.getByRole("button", { name: "Warehouse rack", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Fit reference view" }).click();
-  await ready(page);
-  await page.emulateMedia({ colorScheme: "light" });
-  await ready(page);
-  expect(loads).toBe(before);
-  const violations = (
-    await new AxeBuilder({ page })
-      .include('section[aria-labelledby="reference-library-title"]')
-      .analyze()
-  ).violations;
-  expect(violations).toEqual([]);
+  for (const colorScheme of ["dark", "light"] as const) {
+    await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
+    await expect(
+      page.getByRole("button", { name: "Warehouse rack", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Fit reference view" }).click();
+    await ready(page);
+    expect(loads).toBe(before);
+    const violations = (
+      await new AxeBuilder({ page })
+        .include('section[aria-labelledby="reference-library-title"]')
+        .analyze()
+    ).violations;
+    expect(violations, `${colorScheme} reference library contrast`).toEqual([]);
+  }
 });
 
 test("catalog failure can recover while existing equipment controls stay available", async ({
