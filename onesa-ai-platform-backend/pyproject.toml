@@ -44,7 +44,7 @@ dev = [
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["twin_fixture_data/*"]
+app = ["twin_fixture_data/*", "twin_reference_data/*", "twin_reference_data/*/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
