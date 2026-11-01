@@ -53,7 +53,7 @@ export default function Chat() {
   const sidebar = useRef<HTMLElement | null>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const abort = useRef<AbortController | null>(null),
-    bottom = useRef<HTMLDivElement | null>(null),
+    messageViewport = useRef<HTMLDivElement | null>(null),
     entry = useRef<HTMLTextAreaElement | null>(null);
   const credentialDraft = useRef<HTMLInputElement | null>(null);
   const detailRequest = useRef(0);
@@ -134,7 +134,8 @@ export default function Chat() {
     };
   }, [user]);
   useEffect(() => {
-    if (followLatest.current) bottom.current?.scrollIntoView({ behavior: "auto" });
+    const viewport = messageViewport.current;
+    if (followLatest.current && viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [messages, partial]);
   const closeMenu = useCallback(() => {
     setMenu(false);
@@ -202,6 +203,7 @@ export default function Chat() {
       AbortSignal.any([controller.signal, AbortSignal.timeout(8000)])).then(response => response.json()) : Promise.resolve({messages: []});
     read.then(result => {
       if (controller.signal.aborted || sequence !== detailRequest.current) return;
+      followLatest.current = true;
       setMessages(result.messages); setSelected(selectedLocation); setPartial(null);
     }).catch(() => {if (!controller.signal.aborted) setError("Unable to reopen this conversation. Select it again to retry.");});
     return () => controller.abort();
@@ -215,12 +217,13 @@ export default function Chat() {
       const r = await call(`/conversations/${id}`, "GET", undefined, AbortSignal.timeout(8000));
       const result = await r.json();
       if (request !== detailRequest.current || epoch !== identityEpoch.current) return;
+      followLatest.current = true;
       setMessages(result.messages);
       setSelectedLocation(id);
       setSelected(id);
       setPartial(null);
       setMenu(false);
-      entry.current?.focus();
+      entry.current?.focus({ preventScroll: true });
     } catch (e) {
       setError((e as Error).message);
     }
@@ -256,6 +259,7 @@ export default function Chat() {
     if (!input.trim() || busy || !knowledgeReady) return;
     const content = input, epoch = identityEpoch.current;
     detailRequest.current += 1;
+    followLatest.current = true;
     setBusy(true);
     setError("");
     setInput("");
@@ -317,7 +321,7 @@ export default function Chat() {
         }
       }
       refreshList();
-      entry.current?.focus();
+      entry.current?.focus({ preventScroll: true });
       }
     }
   }
@@ -445,6 +449,7 @@ export default function Chat() {
   return (
     <main className="workspace">
       <aside
+        id="conversation-sidebar"
         ref={sidebar}
         className={`sidebar ${menu ? "open" : ""}`}
         role={menu ? "dialog" : undefined}
@@ -463,15 +468,17 @@ export default function Chat() {
         <div className="brand">
           Onesa <span>AI Platform</span>
         </div>
-        <div className="feature-nav">
+        <nav className="feature-nav" aria-label="AI workspace">
           <Link href="/" aria-current="page">{copy.chat}</Link>
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
           <IndustrialNav />
+        </nav>
+        <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" lang="en">Account settings</Link>
           <DocumentationNav />
-        </div>
+        </nav>
         <ApplicationsNav />
         <button
           className="new"
@@ -482,13 +489,14 @@ export default function Chat() {
             setSelected(null);
             setMessages([]);
             setPartial(null);
+            followLatest.current = true;
             setMenu(false);
-            entry.current?.focus();
+            entry.current?.focus({ preventScroll: true });
           }}
         >
           {copy.newConversation}
         </button>
-        <nav aria-label="Conversations">
+        <nav className="conversation-history" aria-label="Conversations">
           <RecordPageControls page={history} />
           {list.map((c) => (
             <button
@@ -526,11 +534,13 @@ export default function Chat() {
             ref={toggle}
             className="mobile-toggle"
             aria-label="Toggle conversations"
+            aria-expanded={menu}
+            aria-controls="conversation-sidebar"
             onClick={() => setMenu(!menu)}
           >
             ☰
           </button>
-          <h1>{list.find((c) => c.id === selected)?.title || "Chat"}</h1>
+          <h1 title={list.find((c) => c.id === selected)?.title || "Chat"}>{list.find((c) => c.id === selected)?.title || "Chat"}</h1>
           {selected && (
             <>
               <button disabled={busy} onClick={rename}>
@@ -553,8 +563,8 @@ export default function Chat() {
             {model.model_identifier}
           </> : "Loading inference configuration…"}
         </p>
-        <p className="inference-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
-        <div className="messages" aria-busy={busy} onScroll={event => {
+        <p className="inference-status conversation-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
+        <div ref={messageViewport} className="messages" aria-busy={busy} onScroll={event => {
           const element = event.currentTarget;
           followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
         }}>
@@ -581,7 +591,7 @@ export default function Chat() {
                     key={text}
                     onClick={() => {
                       setInput(text);
-                      entry.current?.focus();
+                      entry.current?.focus({ preventScroll: true });
                     }}
                   >
                     {text} ↗
@@ -629,7 +639,6 @@ export default function Chat() {
               </Suspense>
             </article>
           )}
-          <div ref={bottom} />
         </div>
         <div className="composer">
           {(!!documents.length || knowledge.error || knowledge.loading) && (
@@ -697,8 +706,8 @@ export default function Chat() {
             )}
           </form>
           <div className="caption">
+            <span className="composer-shortcuts">Enter to send · Shift + Enter for a new line.</span>
             <DocumentationHelp topic="chat" /> · Check important information.
-            The selected inference backend is shown above.
           </div>
         </div>
       </section>
