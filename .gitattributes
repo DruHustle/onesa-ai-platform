@@ -1,0 +1,7 @@
+# Pinned vendor artifacts retain their original bytes on every checkout.
+onesa-ai-platform-backend/app/twin_reference_data/** -text
+onesa-ai-platform-frontend/apps/chat/public/models/nvidia/** -text
+onesa-ai-platform-frontend/apps/chat/public/licenses/three.txt -text
+# The upstream CC BY licence ends with a blank line; its exact hash is verified.
+onesa-ai-platform-backend/app/twin_reference_data/*/LICENSE.txt whitespace=-blank-at-eof
+onesa-ai-platform-frontend/apps/chat/public/models/nvidia/*/LICENSE.txt whitespace=-blank-at-eof

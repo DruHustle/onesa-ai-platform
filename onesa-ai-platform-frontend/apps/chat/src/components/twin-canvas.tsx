@@ -46,6 +46,7 @@ export type EquipmentViewerProps = {
   command?: CommandRequest | null;
   onEvent: (event: ViewerEvent) => void;
   fallback?: React.ReactNode;
+  modelTestId?: string;
 };
 export type Loaded = {
   gltf: GLTF;
@@ -250,9 +251,18 @@ function fit(
     if (box.isEmpty()) box.setFromObject(loaded.gltf.scene);
     const center = box.getCenter(new THREE.Vector3()),
       size = Math.max(0.05, box.getSize(new THREE.Vector3()).length());
+    const direction = new THREE.Vector3(0.7, 0.55, 0.9).normalize();
+    let distance = size * 1.3;
+    if (camera instanceof THREE.PerspectiveCamera) {
+      // A bounding sphere fits every model orientation, including tall racks
+      // and narrow mobile previews. Reserve room around the complete model.
+      const vertical = THREE.MathUtils.degToRad(camera.getEffectiveFOV()) / 2;
+      const horizontal = Math.atan(Math.tan(vertical) * camera.aspect);
+      distance = (size * 0.56) / Math.sin(Math.min(vertical, horizontal));
+    }
     camera.position
       .copy(center)
-      .add(new THREE.Vector3(size * 0.7, size * 0.55, size * 0.9));
+      .addScaledVector(direction, distance);
     controls.target.copy(center);
     if (camera instanceof THREE.PerspectiveCamera) {
       camera.near = Math.max(0.001, size / 1000);
@@ -613,6 +623,7 @@ function ValidViewer({
   loadModel,
   onEvent,
   fallback: suppliedFallback,
+  modelTestId = "equipment-model-loaded",
 }: EquipmentViewerProps) {
   const [loaded, setLoaded] = useState<Loaded | null>(null),
     [error, setError] = useState(""),
@@ -674,7 +685,7 @@ function ValidViewer({
     <Boundary fallback={fallback}>
       <div
         ref={metrics}
-        data-testid="equipment-model-loaded"
+        data-testid={modelTestId}
         data-load-ms={Math.round(loaded.loadMs)}
         data-transfer-ms={loaded.transferMs.toFixed(2)}
         data-validation-ms={loaded.validationMs.toFixed(2)}
@@ -702,8 +713,13 @@ function ValidViewer({
               "Equipment assembly. Use the application’s component list for keyboard selection.",
             );
             gl.domElement.setAttribute("role", "img");
-            cleanup.current = () =>
+            cleanup.current = () => {
               gl.domElement.removeEventListener("webglcontextlost", lost);
+              // Release this model's context when its owner is removed. The
+              // canvas library may defer its own reconciler teardown.
+              gl.dispose();
+              gl.forceContextLoss();
+            };
           }}
         >
           <Scene

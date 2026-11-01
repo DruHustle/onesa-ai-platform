@@ -195,6 +195,14 @@ Smart Factory and any custom shared SDK are not dependencies. See the
 [local setup, formats, telemetry and rollback guide](docs/engineering/DIGITAL_TWINS.md).
 Production exposure remains unchanged until the established release process qualifies it.
 
+The reference-library candidate includes three NVIDIA SimReady visual derivatives:
+transfer conveyor, mobile cart and warehouse rack. Their source revision, CC BY 4.0
+attribution, conversion record and local hashes are retained. Selecting a reference
+loads its 3D preview automatically; unsupported graphics retain an image of the same
+model. Explicit import creates an owned model and equipment record without telemetry,
+device connections or physical-operation authority. The normal Digital Twins feature
+and durable-storage release gates still apply.
+
 ```sh
 make install check
 npm --prefix onesa-ai-platform-frontend run ci
