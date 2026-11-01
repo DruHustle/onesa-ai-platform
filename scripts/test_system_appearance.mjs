@@ -34,7 +34,7 @@ test('shared text and product actions satisfy measured contrast in light and dar
   for(const [role,fg,bg] of [['border-light','#6e7d90','#f5f7fa'],['border-dark','#7592ac','#14243a']])assert.ok(contrast(fg,bg)>=3,`${role}: ${contrast(fg,bg).toFixed(2)}`);
 });
 test('product navigation is an immutable four-product contract',()=>{
- for(const artifact of manifest.applications.local_artifacts){const bytes=fs.readFileSync(artifact);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),manifest.applications.sha256);const products=JSON.parse(bytes).applications;assert.deepEqual(products.map(p=>p.label),['Onesa UG','Onesa AI Platform','Onesa AI Robot','Onesa Developer Docs']);assert.equal(new Set(products.map(p=>p.href)).size,4);}
+ for(const artifact of manifest.applications.local_artifacts){const bytes=fs.readFileSync(artifact);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),manifest.applications.sha256);const products=JSON.parse(bytes).applications;assert.deepEqual(products.map(p=>p.label),['Onesa UG','Onesa AI Platform','Onesa Robot','Onesa Developer Docs']);assert.equal(new Set(products.map(p=>p.href)).size,4);}
 });
 test('approved product icon derivatives retain pinned provenance and safe small-size formats',()=>{
  assert.equal(manifest.identity_icons.version,'1.0.0');
