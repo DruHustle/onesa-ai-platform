@@ -381,9 +381,20 @@ for (const colorScheme of ["light", "dark"] as const) {
       ]) {
         await page.setViewportSize(viewport);
         for (const locale of ["en", "de"]) {
+          const options = page.getByRole("button", {
+            name: /^(Workspace options|Arbeitsbereich-Menü)$/,
+          });
+          if (viewport.width <= 700) {
+            await options.click();
+            await expect(options).toHaveAttribute("aria-expanded", "true");
+          }
           await page
             .getByLabel(/Interface language|Sprache der Oberfläche/)
             .selectOption(locale);
+          if (viewport.width <= 700) {
+            await options.click();
+            await expect(options).toHaveAttribute("aria-expanded", "false");
+          }
           await expect(
             page.getByRole("heading", {
               name:
