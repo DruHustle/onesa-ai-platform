@@ -1,10 +1,12 @@
 "use client";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import RequireSession from "../../../components/require-session";
 import FeatureShell from "../../../components/feature-shell";
 import TwinSetup from "../../../components/twin-setup";
+import TwinReferenceLibrary from "../../../components/twin-reference-library";
 import TwinSecurityOverlay from "../../../components/twin-security-overlay";
 import TwinInspectionControls, {
   TwinExplosionControls,
@@ -55,6 +57,7 @@ function Workspace() {
     [setup, setSetup] = useState(false),
     [connected, setConnected] = useState(true);
   const [securityHighlights, setSecurityHighlights] = useState<string[]>([]);
+  const [referencesOpen, setReferencesOpen] = useState(false);
   const linkedFocus = useRef(false);
   const [hidden, setHidden] = useState<string[]>([]),
     [isolated, setIsolated] = useState<string | null>(null),
@@ -92,6 +95,7 @@ function Workspace() {
       const result = await refreshCatalog();
       const target = id || selectedAsset || result.assets[0]?.id;
       if (target) {
+        if (id) setReferencesOpen(false);
         setSelectedAsset(target);
         setDetail(await twin<Detail>(`/assets/${target}?mode=${mode}`));
       }
@@ -133,6 +137,7 @@ function Workspace() {
             : result.assets[0]?.id || "",
         );
         setSetup(!result.assets.length);
+        setReferencesOpen(!result.assets.length);
       })
       .catch((reason) => {
         if (!controller.signal.aborted) setError((reason as Error).message);
@@ -212,6 +217,7 @@ function Workspace() {
     setEvidence(null);
   }, []);
   function chooseAsset(id: string) {
+    setReferencesOpen(false);
     setSelectedAsset(id);
     setDetail(null);
     setSelected("");
@@ -239,6 +245,14 @@ function Workspace() {
       <div className={styles.workspace}>
         <div className={styles.topline}>
           <p>Industrial AI / Digital Twins</p>
+          <button
+            onClick={() => setReferencesOpen((value) => !value)}
+            aria-expanded={referencesOpen}
+          >
+            {referencesOpen
+              ? "Close reference library"
+              : "NVIDIA reference library"}
+          </button>
           <button onClick={() => setSetup((v) => !v)} aria-expanded={setup}>
             {setup ? "Close setup" : "Equipment setup"}
           </button>
@@ -294,9 +308,11 @@ function Workspace() {
               ? "Saving…"
               : !connected
                 ? "Platform disconnected · last observations retained"
-                : mode === "replay"
-                  ? "Replay · live state and alarms are unchanged"
-                  : `${mode === "simulated" ? "Simulated" : "Live"} data · resynchronizes every 5 seconds`}
+                : asset?.definition.visual_only && !safeDetail?.sources.length
+                  ? "Visual reference · no telemetry connected"
+                  : mode === "replay"
+                    ? "Replay · live state and alarms are unchanged"
+                    : `${mode === "simulated" ? "Simulated" : "Live"} data · resynchronizes every 5 seconds`}
           </p>
         </fieldset>
         {safeDetail && (
@@ -376,6 +392,24 @@ function Workspace() {
               Viewer={Viewer}
             />
           </fieldset>
+        )}
+        {loaded && readiness && referencesOpen && (
+          <TwinReferenceLibrary
+            busy={busy}
+            canImport={readiness.ready}
+            onImport={(id) =>
+              run(async () => {
+                const result = await twin<{ asset: TwinAsset }>(
+                  `/references/${encodeURIComponent(id)}/import`,
+                  "POST",
+                );
+                chooseAsset(result.asset.id);
+                await reload(result.asset.id);
+                setSetup(false);
+                setTab("Model");
+              })
+            }
+          />
         )}
         {asset && (
           <>
@@ -585,6 +619,24 @@ function Workspace() {
                       focus={focus}
                       camera={savedCamera}
                       onCamera={onCamera}
+                      fallback={
+                        asset.definition.reference ? (
+                          <div className={styles.referenceFallback}>
+                            <Image
+                              src={`/models/nvidia/${asset.definition.reference.thumbnail.path}`}
+                              alt={`${asset.definition.reference.name}, rendered from the same NVIDIA reference model`}
+                              width={600}
+                              height={360}
+                              unoptimized
+                            />
+                            <p>
+                              3D is unavailable. This image shows the original
+                              reference; equipment details and saved records
+                              remain available.
+                            </p>
+                          </div>
+                        ) : undefined
+                      }
                     />
                   ) : (
                     <p>
@@ -633,6 +685,27 @@ function Workspace() {
                     {model.definition.unit} · {model.definition.frame}. Orbit:
                     drag; pan: right-drag or two fingers; zoom: wheel or pinch.
                     Component selection also works from the list.
+                  </p>
+                )}
+                {asset.definition.reference && (
+                  <p className={styles.caption}>
+                    {asset.definition.reference.attribution} Visual geometry
+                    only; physical behaviour has not been validated.{" "}
+                    <a
+                      href={asset.definition.reference.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      NVIDIA source
+                    </a>
+                    {" · "}
+                    <a
+                      href={`/models/nvidia/${asset.definition.reference.licenseFile.path}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      CC BY 4.0 licence
+                    </a>
                   </p>
                 )}
                 <div className={styles.toolbar}>

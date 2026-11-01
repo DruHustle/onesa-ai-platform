@@ -201,6 +201,29 @@ def create_template(body: TemplateCreate, request: Request, db: DB, auth: Auth) 
     return Identifier(id=row.id)
 
 
+@router.get("/references")
+def reference_catalog(request: Request, db: DB, auth: Auth) -> dict[str, Any]:
+    from app import twin_references
+
+    enabled(request)
+    try:
+        return twin_references.catalog()
+    except (OSError, ValueError, KeyError, TypeError):
+        fail(503, "twin_reference_unavailable", "The reviewed reference library is unavailable")
+
+
+@router.post("/references/{reference_id}/import", status_code=201)
+def import_reference(reference_id: str, request: Request, db: DB, auth: Auth) -> dict[str, Any]:
+    from app import twin_references
+
+    enabled(request)
+    store(request)
+    try:
+        return twin_references.import_reference(reference_id, request, db, auth)
+    except (OSError, ValueError, KeyError, TypeError):
+        fail(503, "twin_reference_unavailable", "The reviewed reference library is unavailable")
+
+
 def installation(template: TwinTemplate, body: AssetCreate, owner: UUID) -> TwinAsset:
     ids = {c["id"]: str(uuid4()) for c in template.definition["components"]}
     components = [

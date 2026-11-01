@@ -29,6 +29,8 @@ export type TwinAsset = {
     source_import_id?: string;
     reference_version?: string;
     demo?: boolean;
+    visual_only?: boolean;
+    reference?: Omit<ReferenceAsset, "preview_model">;
     external_id?: string;
     aas_id?: string;
   };
@@ -45,10 +47,35 @@ export type Model = {
     frame: string;
     transform: number[];
     provenance: string;
+    rights?: string;
+    illustrative?: boolean;
     sha256: string;
     byte_length: number;
     inspection?: ModelManifest["inspection"];
   };
+};
+export type ReferenceArtifact = {
+  path: string;
+  sha256: string;
+  byteLength: number;
+};
+export type ReferenceAsset = {
+  id: string;
+  name: string;
+  kind: string;
+  author: string;
+  sourceRevision: string;
+  sourceUrl: string;
+  license: string;
+  licenseUrl: string;
+  attribution: string;
+  glb: ReferenceArtifact;
+  thumbnail: ReferenceArtifact;
+  licenseFile: ReferenceArtifact;
+  sourceFile: ReferenceArtifact;
+  triangles: number;
+  visualOnly: boolean;
+  preview_model: Model;
 };
 export type Reading = {
   id: string;
