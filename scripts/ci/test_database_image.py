@@ -10,6 +10,13 @@ from unittest.mock import patch
 import pull_image
 
 IMAGE = "pgvector/pgvector:pg16@sha256:" + "a" * 64
+BLOB_ERROR = (
+    b"unknown: failed to copy: httpReadSeeker: failed open: "
+    b"unexpected status from GET request to "
+    b"https://registry-1.docker.io/v2/pgvector/pgvector/blobs/sha256:"
+    b"b3e09271b7213599bbf0d8ede6a4c8a5b00b4ea7272a1550860d7197214d6de3"
+    b": 502 Bad Gateway"
+)
 
 
 def response(code=0, error=b""):
@@ -61,6 +68,112 @@ class DatabaseImageTests(unittest.TestCase):
             ]
         )
         self.assertEqual(run.call_count, 3)
+
+    def test_observed_registry_blob_502_recovers_only_same_immutable_read(self):
+        run, delay = self.execute([response(1, BLOB_ERROR), response(), identity()])
+        self.assertEqual(run.call_count, 3)
+        for call in run.call_args_list[:2]:
+            self.assertEqual(call.args[0], ["docker", "image", "pull", IMAGE])
+            self.assertEqual(call.kwargs["timeout"], 90)
+        self.assertEqual(
+            run.call_args_list[2].args[0][0:4], ["docker", "image", "inspect", IMAGE]
+        )
+        delay.assert_called_once_with(3)
+
+    def test_other_approved_blob_5xx_reads_have_the_same_bound(self):
+        for status in [
+            b"500 Internal Server Error",
+            b"503 Service Unavailable",
+            b"504 Gateway Timeout",
+        ]:
+            with self.subTest(status=status):
+                error = BLOB_ERROR.replace(b"502 Bad Gateway", status)
+                run, delay = self.execute([response(1, error), response(), identity()])
+                self.assertEqual(run.call_count, 3)
+                self.assertEqual(run.call_args_list[0].args, run.call_args_list[1].args)
+                delay.assert_called_once_with(3)
+
+    def assert_blob_error_refused(self, error):
+        marker = b" synthetic-private-marker"
+        with (
+            patch.object(
+                pull_image.subprocess, "run", return_value=response(1, error + marker)
+            ) as run,
+            patch.object(pull_image.time, "sleep") as delay,
+            contextlib.redirect_stdout(io.StringIO()) as output,
+            self.assertRaisesRegex(RuntimeError, "no retry") as caught,
+        ):
+            pull_image.pull(IMAGE, database=True)
+        self.assertEqual(run.call_count, 1)
+        delay.assert_not_called()
+        self.assertNotIn(marker.decode(), str(caught.exception) + output.getvalue())
+
+    def test_unapproved_blob_error_shapes_never_retry_or_leak(self):
+        replacements = {
+            "http": (b"https://", b"http://"),
+            "wrong_host": (
+                b"registry-1.docker.io",
+                b"registry-1.docker.io.example.invalid",
+            ),
+            "userinfo": (b"https://", b"https://synthetic@"),
+            "wrong_repository": (b"pgvector/pgvector", b"pgvector/other"),
+            "wrong_path": (b"/blobs/", b"/manifests/"),
+            "short_digest": (b"sha256:b3", b"sha256:b"),
+            "long_digest": (b"sha256:b3", b"sha256:b33"),
+            "nonhex_digest": (b"sha256:b3", b"sha256:g3"),
+            "digest_query": (b": 502", b"?download=1: 502"),
+            "digest_fragment": (b": 502", b"#part: 502"),
+            "wrong_method": (b"GET request", b"POST request"),
+        }
+        for label, (original, replacement) in replacements.items():
+            with self.subTest(shape=label):
+                self.assert_blob_error_refused(
+                    BLOB_ERROR.replace(original, replacement)
+                )
+        for status in [
+            b"400",
+            b"401",
+            b"403",
+            b"404",
+            b"408",
+            b"429",
+            b"501",
+            b"505",
+            b"5020",
+            b"502x",
+        ]:
+            with self.subTest(status=status):
+                self.assert_blob_error_refused(BLOB_ERROR.replace(b"502", status))
+
+    def test_fatal_errors_take_precedence_over_blob_502(self):
+        for fatal in [
+            b"unauthorized",
+            b"denied",
+            b"manifest unknown",
+            b"not found",
+            b"Cannot connect to the Docker daemon",
+        ]:
+            with self.subTest(fatal=fatal):
+                self.assert_blob_error_refused(fatal + b"; " + BLOB_ERROR)
+
+    def test_exhausted_blob_502_stops_before_build_or_start(self):
+        with (
+            patch.object(
+                pull_image.subprocess, "run", return_value=response(1, BLOB_ERROR)
+            ) as run,
+            patch.object(pull_image.time, "sleep") as delay,
+            contextlib.redirect_stdout(io.StringIO()),
+            self.assertRaisesRegex(RuntimeError, "Application checks have not started"),
+        ):
+            pull_image.pull(IMAGE, database=True)
+        self.assertEqual(run.call_count, 2)
+        self.assertTrue(
+            all(
+                call.args[0] == ["docker", "image", "pull", IMAGE]
+                for call in run.call_args_list
+            )
+        )
+        delay.assert_called_once_with(3)
 
     def test_exhausted_transport_stops_before_build_or_start(self):
         with (
