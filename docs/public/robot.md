@@ -1,6 +1,6 @@
-# Onesa AI Robot
+# Onesa Robot
 
-**Under development.** Onesa AI Robot explores intelligent interaction with the physical world. Hardware, controller integration and perception capabilities are still being developed.
+**Under development.** Onesa Robot explores intelligent interaction with the physical world. Hardware, controller integration and perception capabilities are still being developed.
 
 ## Protected development workspace
 
@@ -16,6 +16,6 @@ Future hardware operation requires the intended controller, independent safety c
 
 ## Explore the product
 
-[Onesa AI Robot](https://robot.onesa.eu/) presents the product and its development direction. The [operator workspace](https://robot.onesa.eu/console) requires authorized access. Concept artwork and software simulation illustrate development possibilities rather than deployed hardware capabilities.
+[Onesa Robot](https://robot.onesa.eu/) presents the product and its development direction. The [operator workspace](https://robot.onesa.eu/console) requires authorized access. Concept artwork and software simulation illustrate development possibilities rather than deployed hardware capabilities.
 
 See the [Onesa ecosystem](ecosystem.md), [AI Platform](ai-platform.md) and [security and authorization overview](security-overview.md). Detailed implementation and operating procedures are restricted to authorized engineering documentation.
