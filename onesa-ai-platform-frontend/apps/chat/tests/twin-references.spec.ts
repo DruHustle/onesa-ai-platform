@@ -1,10 +1,17 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { randomUUID } from "node:crypto";
+import {
+  createServer,
+  request as httpRequest,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 
 const password = "nvidia-reference-synthetic-only-123!";
 const accounts = new WeakMap<Page, string>();
 const externalRequests = new WeakMap<Page, string[]>();
+const allowedOrigins = new WeakMap<Page, Set<string>>();
 
 async function headers(page: Page, origin: string) {
   return {
@@ -23,10 +30,12 @@ test.beforeEach(async ({ page, baseURL }) => {
       "Reference browser mutations require isolated loopback fixtures",
     );
   const requests: string[] = [];
+  const origins = new Set([origin]);
   externalRequests.set(page, requests);
+  allowedOrigins.set(page, origins);
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (url.origin === origin || ["blob:", "data:"].includes(url.protocol))
+    if (origins.has(url.origin) || ["blob:", "data:"].includes(url.protocol))
       return route.continue();
     requests.push(url.origin);
     return route.abort("blockedbyclient");
@@ -78,6 +87,100 @@ async function ready(page: Page) {
       .locator("canvas")
       .evaluate((canvas) => canvas.clientHeight),
   ).toBeGreaterThanOrEqual(300);
+}
+
+// Observe cookies and redirects on the wire, after the browser network stack.
+// Playwright routes run before Cookie is attached and cannot fulfill 3xx in WebKit.
+async function referenceProxy(
+  page: Page,
+  baseURL: string,
+  intercept: (request: IncomingMessage, response: ServerResponse) => boolean,
+) {
+  const upstream = new URL(baseURL);
+  if (
+    upstream.protocol !== "http:" ||
+    !["127.0.0.1", "localhost", "[::1]"].includes(upstream.hostname) ||
+    upstream.username ||
+    upstream.password ||
+    upstream.pathname !== "/" ||
+    upstream.search ||
+    upstream.hash
+  )
+    throw new Error("Reference transport fixtures require a loopback HTTP origin");
+  const violations: string[] = [];
+  const pending = new Set<ReturnType<typeof httpRequest>>();
+  const server = createServer((request, response) => {
+    if (
+      !["GET", "HEAD"].includes(request.method || "") ||
+      !request.url?.startsWith("/") ||
+      request.url.startsWith("//")
+    ) {
+      response.writeHead(400).end();
+      return;
+    }
+    if (/^\/models\/nvidia\/.*\.glb$/.test(request.url)) {
+      if (request.method !== "GET") violations.push("Reference method is not GET");
+      if (request.headers.authorization !== undefined)
+        violations.push("Reference request contains an Authorization header");
+      if (violations.length) {
+        response.writeHead(400).end();
+        return;
+      }
+    }
+    if (intercept(request, response)) return;
+    const forwarded = httpRequest(
+      {
+        hostname: upstream.hostname.replace(/^\[|\]$/g, ""),
+        port: upstream.port,
+        path: request.url,
+        method: request.method,
+        headers: {
+          ...request.headers,
+          host: upstream.host,
+          connection: "close",
+        },
+      },
+      (received) => {
+        response.writeHead(received.statusCode || 502, {
+          ...received.headers,
+          "cache-control": "no-store",
+        });
+        received.pipe(response);
+      },
+    );
+    pending.add(forwarded);
+    forwarded.once("close", () => pending.delete(forwarded));
+    forwarded.on("error", () => {
+      if (!response.headersSent) response.writeHead(502);
+      response.end();
+    });
+    forwarded.setTimeout(10000, () => forwarded.destroy());
+    forwarded.end();
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, upstream.hostname.replace(/^\[|\]$/g, ""), () => {
+      server.removeListener("error", reject);
+      resolve();
+    });
+  });
+  const address = server.address();
+  if (!address || typeof address === "string")
+    throw new Error("Reference transport fixture did not bind a TCP port");
+  const origin = `${upstream.protocol}//${upstream.hostname}:${address.port}`;
+  allowedOrigins.get(page)!.add(origin);
+  return {
+    origin,
+    violations,
+    async close() {
+      allowedOrigins.get(page)!.delete(origin);
+      for (const request of pending) request.destroy();
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+        server.closeAllConnections();
+      });
+    },
+  };
 }
 
 test("references load automatically, remain local and retain source attribution", async ({
@@ -232,61 +335,110 @@ test("protected preview cookies permit same-origin reference rendering", async (
   page,
   baseURL,
 }) => {
-  const origin = new URL(baseURL!).origin;
   const cookie = "onesa_reference_preview=synthetic-preview-session";
-  await page.context().addCookies([
-    {
-      name: "onesa_reference_preview",
-      value: "synthetic-preview-session",
-      url: origin,
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  ]);
-  let accepted = 0;
+  const accepted = new Set<string>();
   let refused = 0;
-  await page.route("**/models/nvidia/**/*.glb", async (route) => {
-    const headers = await route.request().allHeaders();
-    if (!(headers.cookie || "").split(";").some((value) => value.trim() === cookie)) {
+  const proxy = await referenceProxy(page, baseURL!, (request, response) => {
+    if (!/^\/models\/nvidia\/.*\.glb$/.test(request.url!)) return false;
+    if (
+      !(request.headers.cookie || "")
+        .split(";")
+        .some((value) => value.trim() === cookie)
+    ) {
       refused++;
-      return route.fulfill({ status: 401, body: "Preview authentication required" });
+      response
+        .writeHead(401, { "cache-control": "no-store" })
+        .end("Preview authentication required");
+      return true;
     }
-    accepted++;
-    return route.continue();
+    accepted.add(request.url!);
+    return false;
   });
-  await page.goto("/industrial/twins");
-  await expect.poll(() => accepted + refused).toBeGreaterThan(0);
-  expect(refused).toBe(0);
-  await ready(page);
-  expect(accepted).toBeGreaterThan(0);
+  try {
+    await page.goto(`${proxy.origin}/industrial/twins`);
+    await expect(
+      page.getByAltText(
+        "Transfer conveyor, rendered from the same NVIDIA reference model",
+      ),
+    ).toBeVisible();
+    expect(refused).toBeGreaterThan(0);
+    expect(accepted.size).toBe(0);
+    const before = refused;
+    await page.context().addCookies([
+      {
+        name: "onesa_reference_preview",
+        value: "synthetic-preview-session",
+        url: proxy.origin,
+        httpOnly: true,
+        sameSite: "Lax",
+      },
+    ]);
+    expect(await page.evaluate(() => document.cookie)).not.toContain(
+      "onesa_reference_preview",
+    );
+    await page.getByRole("button", { name: "Reload 3D preview" }).click();
+    await ready(page);
+    for (const name of ["Mobile cart", "Warehouse rack"]) {
+      await page.getByRole("button", { name, exact: true }).click();
+      await ready(page);
+    }
+    expect(refused).toBe(before);
+    expect(accepted.size).toBe(3);
+    expect((await page.request.get("/api/v1/twins/catalog")).status()).toBe(200);
+  } finally {
+    await proxy.close();
+    expect(proxy.violations).toEqual([]);
+  }
 });
 
 test("reference redirects are refused before a second request and can recover", async ({
   page,
   baseURL,
 }) => {
-  const target = new URL("/reference-redirect-fixture.glb", baseURL!).href;
+  const targetPath = "/reference-redirect-fixture.glb";
+  let wireRequests = 0;
+  let redirects = 0;
   let redirectedRequests = 0;
   let redirect = true;
+  const proxy = await referenceProxy(page, baseURL!, (request, response) => {
+    if (request.url === targetPath) {
+      wireRequests++;
+      response.writeHead(410).end();
+      return true;
+    }
+    if (redirect && /^\/models\/nvidia\/.*\.glb$/.test(request.url!)) {
+      redirects++;
+      response
+        .writeHead(302, { Location: targetPath, "cache-control": "no-store" })
+        .end();
+      return true;
+    }
+    return false;
+  });
+  const target = new URL(targetPath, proxy.origin).href;
   page.on("request", (request) => {
     if (request.url() === target) redirectedRequests++;
   });
-  await page.route("**/models/nvidia/**/*.glb", (route) =>
-    redirect
-      ? route.fulfill({ status: 302, headers: { Location: target }, body: "" })
-      : route.continue(),
-  );
-  await page.goto("/industrial/twins");
-  await expect(
-    page.getByAltText(
-      "Transfer conveyor, rendered from the same NVIDIA reference model",
-    ),
-  ).toBeVisible();
-  expect(redirectedRequests).toBe(0);
-  expect((await page.request.get("/api/v1/twins/catalog")).status()).toBe(200);
-  redirect = false;
-  await page.getByRole("button", { name: "Reload 3D preview" }).click();
-  await ready(page);
+  try {
+    await page.goto(`${proxy.origin}/industrial/twins`);
+    await expect(
+      page.getByAltText(
+        "Transfer conveyor, rendered from the same NVIDIA reference model",
+      ),
+    ).toBeVisible();
+    expect(redirects).toBeGreaterThan(0);
+    expect(wireRequests).toBe(0);
+    expect(redirectedRequests).toBe(0);
+    expect((await page.request.get("/api/v1/twins/catalog")).status()).toBe(200);
+    redirect = false;
+    await page.getByRole("button", { name: "Reload 3D preview" }).click();
+    await ready(page);
+    expect(wireRequests).toBe(0);
+    expect(redirectedRequests).toBe(0);
+  } finally {
+    await proxy.close();
+    expect(proxy.violations).toEqual([]);
+  }
 });
 
 test("mobile fallback keeps explanation, keyboard actions and import reachable", async ({
