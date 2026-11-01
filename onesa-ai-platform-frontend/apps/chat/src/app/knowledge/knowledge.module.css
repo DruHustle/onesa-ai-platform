@@ -1,0 +1,197 @@
+.workspace,
+.documents,
+.results {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.intro {
+  margin: 0;
+}
+
+/* Keep live regions mounted without an empty grid row. */
+.liveStatus:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tools {
+  display: grid;
+  align-items: start;
+  gap: 24px;
+  min-width: 0;
+}
+
+.panel,
+.empty {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  overflow-wrap: anywhere;
+}
+
+.panel h2,
+.sectionHeading h2,
+.results > h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.panel h3,
+.empty h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.panel p,
+.empty p,
+.sectionHeading p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.supporting,
+.searchStatus {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.fileInput {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.875rem;
+}
+
+.searchForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.searchForm label {
+  grid-column: 1 / -1;
+}
+
+.searchForm input {
+  min-width: 0;
+}
+
+.feedback {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.pending {
+  color: var(--onesa-info);
+  background: var(--onesa-info-surface);
+}
+
+.success {
+  color: var(--onesa-success);
+  background: var(--onesa-success-surface);
+}
+
+.sectionHeading,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sectionHeading {
+  justify-content: space-between;
+}
+
+.documentList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.actions button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.delete {
+  color: var(--onesa-error);
+}
+
+.documentLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.empty {
+  border-style: dashed;
+}
+
+.excerpt {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 960px) {
+  .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .panel,
+  .empty {
+    padding: 16px;
+  }
+
+  .searchForm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media print {
+  .feedback {
+    color: var(--ink);
+    background: transparent;
+  }
+}

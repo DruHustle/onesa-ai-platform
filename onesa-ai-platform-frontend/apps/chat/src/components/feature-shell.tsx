@@ -6,6 +6,7 @@ import IndustrialNav from "./industrial-nav";
 import DocumentationHelp from "./documentation-help";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId, useRef, useState } from "react";
 import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function FeatureShell({
   title,
@@ -18,16 +19,31 @@ export default function FeatureShell({
   contentLang?: "en" | "de";
   wide?: boolean;
 }) {
-  const { copy } = useLocale();
+  const { copy, locale } = useLocale();
   const pathname = usePathname();
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const optionsId = useId();
+  const optionsToggle = useRef<HTMLButtonElement | null>(null);
   return (
     <main
       className={wide ? "feature-shell feature-shell-wide" : "feature-shell"}
     >
       <header>
-        <Link href="/" className="brand">
-          Onesa <span>AI Platform</span>
-        </Link>
+        <div className="feature-brand-row">
+          <Link href="/" className="brand">
+            Onesa <span>AI Platform</span>
+          </Link>
+          <button
+            ref={optionsToggle}
+            className="workspace-options-toggle"
+            type="button"
+            aria-expanded={optionsOpen}
+            aria-controls={optionsId}
+            onClick={() => setOptionsOpen(open => !open)}
+          >
+            {locale === "de" ? "Arbeitsbereich-Menü" : "Workspace options"}
+          </button>
+        </div>
         <nav aria-label="AI workspace">
           <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
             {copy.chat}
@@ -51,16 +67,31 @@ export default function FeatureShell({
             {copy.travel}
           </Link>
           <IndustrialNav />
-          <Link
-            href="/settings"
-            aria-current={pathname === "/settings" ? "page" : undefined}
-          >
-            Account settings
-          </Link>
-          <DocumentationNav />
         </nav>
-        <ApplicationsNav />
-        <LanguageSelect />
+        <div
+          id={optionsId}
+          className={`workspace-tools${optionsOpen ? " open" : ""}`}
+          onKeyDown={event => {
+            if (event.key === "Escape" && optionsOpen) {
+              event.preventDefault();
+              setOptionsOpen(false);
+              optionsToggle.current?.focus({ preventScroll: true });
+            }
+          }}
+        >
+          <nav className="workspace-resources" aria-label="Workspace resources">
+            <Link
+              href="/settings"
+              prefetch={false}
+              aria-current={pathname === "/settings" ? "page" : undefined}
+            >
+              Account settings
+            </Link>
+            <DocumentationNav />
+          </nav>
+          <ApplicationsNav />
+          <LanguageSelect />
+        </div>
       </header>
       <section lang={contentLang}>
         <p className="eyebrow">Onesa AI Platform · {copy.workspace}</p>
