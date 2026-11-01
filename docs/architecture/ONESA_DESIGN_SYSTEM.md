@@ -4,7 +4,7 @@ Purpose: maintain the shared interface contract and its independently adopted pr
 
 ## Foundation and ownership
 
-The Company, AI Platform, AI Robot and Docs experiences share semantic roles and familiar interactions. Each keeps its own authentication, data ownership, framework and release. Chat, Knowledge, Agents and Travel are capabilities within Onesa AI Platform. Administration and operator consoles inherit their product identity.
+The Company, AI Platform, Robot and Docs experiences share semantic roles and familiar interactions. Each keeps its own authentication, data ownership, framework and release. Chat, Knowledge, Agents and Travel are capabilities within Onesa AI Platform. Administration and operator consoles inherit their product identity.
 
 The canonical CSS source is `onesa-company-portal-frontend/src/styles/onesa-foundation.css` in the Company repository. This repository commits two byte-identical consumer artifacts and records their version, source path and SHA256 in `docs/engineering/design-system.consumer.json`. Builds import only their local copy. Review an owner-source revision, verify its digest, copy the reviewed artifact, update the consumer manifest, run affected checks and promote through `dev → staging → main`. Roll back the consumer independently using its prior qualified artifact. There is no runtime token service or sibling checkout import.
 
@@ -13,7 +13,7 @@ flowchart TB
   Source[Company repository canonical contract 1.0.0] --> Review[Reviewed immutable source and SHA256]
   Review --> Company[Company local artifact]
   Review --> AI[AI Platform local artifact]
-  Review --> Robot[AI Robot local artifact]
+  Review --> Robot[Robot local artifact]
   Review --> Docs[Docs local artifact]
   Company --> Marketing[Public editorial and protected administration shells]
   AI --> Workspace[Chat Knowledge Agents Travel workspace]
@@ -44,7 +44,7 @@ Use `--onesa-font-body` (Arial, Helvetica, sans-serif) and `--onesa-font-code` (
 | --- | --- | --- |
 | Company | Onesa / Company; Company Portal / Administration | Navy/blue with restrained cyan |
 | AI | Onesa AI Platform; focused persistent workspace navigation | Indigo |
-| Robot | Onesa AI Robot; public story or Operator Console | Teal |
+| Robot | Onesa Robot; public story or Operator Console | Teal |
 | Docs | Onesa Developer Docs or Onesa Engineering Docs; technical publication | Neutral/slate with restrained blue |
 
 Set deterministic `data-onesa-product` on the root HTML element. Product names, document titles, layout and relevant imagery provide identity even without color. Non-production environment labels come from trusted deployment configuration; operational simulation/live/stale labels come from actual data. Neither follows the palette.
@@ -65,7 +65,7 @@ Measure ordinary text at 4.5:1 and qualifying large text and applicable non-text
 
 ## Navigation, identity assets and imagery
 
-The logo links to the current product home; the active capability has `aria-current="page"`. Account controls stay product scoped. External product links use the unique Onesa UG, Onesa AI Platform, Onesa AI Robot and Onesa Developer Docs labels and indicate leaving the current product. Navigation does not merge sessions or confer access.
+The logo links to the current product home; the active capability has `aria-current="page"`. Account controls stay product scoped. External product links use the unique Onesa UG, Onesa AI Platform, Onesa Robot and Onesa Developer Docs labels and indicate leaving the current product. Navigation does not merge sessions or confer access.
 
 Preserve the approved master mark and recorded source/rights. Use existing approved favicon derivatives and router metadata; do not invent an official mark or add a service worker for icons. Validate icon bytes, dimensions, MIME, HTTP status, document titles and actual tabs at each deployed target. Private customer content, governance records and live telemetry never become decorative screenshots. Internal annotated examples use synthetic fixtures and captions.
 
