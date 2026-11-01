@@ -338,6 +338,19 @@ These fixture checks qualify prepared source behavior; they do not measure hoste
 startup latency or establish a production deployment. See
 [Performance checks](../testing/PERFORMANCE_TESTS.md) for the startup boundaries.
 
+`apps/chat/tests/workspace-navigation.spec.ts` covers long saved conversations,
+viewport-bound navigation/composer layout, reading-position and draft preservation,
+and the narrow-screen resource disclosure's keyboard behavior.
+`apps/chat/tests/knowledge-feedback.spec.ts` covers actual rendered upload/search
+feedback, unsuccessful requests, submitted-query identity, duplicate actions and
+late read responses invalidated by document changes. Both use explicit synthetic
+loopback API fixtures; they do not claim backend or real-model acceptance.
+With a fresh production frontend running on an isolated loopback port, run
+`ONESA_BROWSER_URL=http://127.0.0.1:<port> npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/workspace-navigation.spec.ts tests/knowledge-feedback.spec.ts`.
+Retain all three configured engines and existing deadlines. Run the existing
+system-appearance and record-navigation suites for shared shell or scrolling
+changes, then the normal complete native workflow before source promotion.
+
 The Chat image install uses a BuildKit npm download cache, locked integrity checks,
 and explicit bounded fetch retries/timeouts. It omits installation-time audit/funding
 requests; the separate mandatory CI npm audit and final-image vulnerability/secret gates

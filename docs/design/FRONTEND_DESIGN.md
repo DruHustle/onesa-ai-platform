@@ -15,8 +15,37 @@ and no raw HTML plugin. Copy uses the browser clipboard with a visible failure p
 Global design tokens control color/type/spacing. Responsive navigation supports a
 close button, backdrop, Escape, focus containment and inert background. Message entry
 supports Enter to send, Shift+Enter for a newline, and IME composition handling. Loading,
-empty, disabled and alert states are explicit. Three Chromium flows verify core desktop,
-feature and mobile behavior; comprehensive assistive-technology auditing is still pending.
+empty, disabled and alert states are explicit. Browser flows cover core desktop,
+feature and mobile behavior across the pinned Chromium, Firefox and WebKit engines;
+comprehensive assistive-technology auditing is still pending.
+
+## Workspace navigation and feedback
+
+Chat follows new messages inside its message viewport. Opening saved history or
+returning focus to the composer must not scroll the document and move navigation
+off screen. Users can scroll back through a response without a system-appearance
+change moving their reading position. The composer retains its unsent text; its
+Send control stays on one line and the keyboard shortcuts are visible.
+
+Primary workspace links have full-height touch targets. Account, documentation,
+application links and language controls form a separate resource group. On narrow
+feature pages, the labelled Workspace options button reveals that group while
+Chat, Knowledge, Agents, Travel and available industrial capabilities remain
+directly accessible. Escape closes the resource disclosure and returns focus to
+its button; it does not clear the current task.
+
+Knowledge separates adding a document, finding a passage and managing documents.
+Upload confirmation follows the successful completion response. Pending actions,
+empty lists, confirmed zero matches and failed requests have distinct messages.
+Search results name the submitted query even when the input contains a later
+draft. Document changes invalidate prior search and preview requests so late
+responses cannot restore stale material. Dependency failures preserve input and
+do not imply that an authenticated user needs to sign in again; session renewal
+remains the responsibility of the existing session boundary.
+
+The focused navigation and Knowledge feedback browser regressions use explicit
+synthetic API fixtures against the actual local frontend. They verify interface
+behavior only and do not replace backend, real-model or hosted acceptance.
 
 ## Interface internationalization
 
