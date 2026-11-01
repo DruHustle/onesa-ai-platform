@@ -108,7 +108,8 @@
       "package.json": "19caa75ca62ff1dd70ee5e6b3a3b53e25aebeb60d5a3e6146ecda39daeb2ebee"
     },
     "additional_archives": [
-      "infra/oracle/vercel-tools/vendor/onesa-minimatch-callable-1.0.0.tgz"
+      "infra/oracle/vercel-tools/vendor/onesa-minimatch-callable-1.0.0.tgz",
+      "scripts/contract-tools/vendor/onesa-minimatch-callable-1.0.0.tgz"
     ]
   }
 }

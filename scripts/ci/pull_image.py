@@ -36,6 +36,9 @@ def pull(image, *, database=False):
                 )
                 if fatal or not re.search(
                     rb"(?:unexpected HTTP status: (?:500|502|503|504)\b|"
+                    rb"unexpected status from GET request to "
+                    rb"https://registry-1\.docker\.io/v2/pgvector/pgvector/"
+                    rb"blobs/sha256:[a-f0-9]{64}: (?:500|502|503|504)(?=[ \r\n]|$)|"
                     rb"Client\.Timeout exceeded|TLS handshake timeout|i/o timeout)",
                     detail,
                 ):
