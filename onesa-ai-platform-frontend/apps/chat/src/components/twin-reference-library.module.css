@@ -4,7 +4,21 @@
   border-radius: 16px;
   padding: clamp(16px, 2vw, 24px);
   background: var(--panel);
+  color: var(--ink);
   min-width: 0;
+}
+/* Keep foreground and surface changes synchronous under reduced motion. */
+.library,
+.library * {
+  transition-property: none;
+}
+.header h2,
+.header p,
+.badge,
+.details h3,
+.details > p,
+.links a {
+  color: var(--ink);
 }
 .header {
   display: flex;
