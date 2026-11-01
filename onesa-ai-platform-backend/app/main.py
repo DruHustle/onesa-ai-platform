@@ -154,7 +154,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
             )
         if lease_id is not None:
             # Error handlers produce a regular response; release immediately in that case.
-            if hasattr(response, "body_iterator"):
+            if response.status_code < 400 and hasattr(response, "body_iterator"):
                 stream = cast(StreamingResponse, response)
                 original = stream.body_iterator
                 identifier = lease_id
