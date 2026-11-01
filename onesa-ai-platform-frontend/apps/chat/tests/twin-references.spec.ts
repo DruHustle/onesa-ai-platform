@@ -228,6 +228,67 @@ for (const status of [401, 503])
     await ready(page);
   });
 
+test("protected preview cookies permit same-origin reference rendering", async ({
+  page,
+  baseURL,
+}) => {
+  const origin = new URL(baseURL!).origin;
+  const cookie = "onesa_reference_preview=synthetic-preview-session";
+  await page.context().addCookies([
+    {
+      name: "onesa_reference_preview",
+      value: "synthetic-preview-session",
+      url: origin,
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
+  let accepted = 0;
+  let refused = 0;
+  await page.route("**/models/nvidia/**/*.glb", async (route) => {
+    const headers = await route.request().allHeaders();
+    if (!(headers.cookie || "").split(";").some((value) => value.trim() === cookie)) {
+      refused++;
+      return route.fulfill({ status: 401, body: "Preview authentication required" });
+    }
+    accepted++;
+    return route.continue();
+  });
+  await page.goto("/industrial/twins");
+  await expect.poll(() => accepted + refused).toBeGreaterThan(0);
+  expect(refused).toBe(0);
+  await ready(page);
+  expect(accepted).toBeGreaterThan(0);
+});
+
+test("reference redirects are refused before a second request and can recover", async ({
+  page,
+  baseURL,
+}) => {
+  const target = new URL("/reference-redirect-fixture.glb", baseURL!).href;
+  let redirectedRequests = 0;
+  let redirect = true;
+  page.on("request", (request) => {
+    if (request.url() === target) redirectedRequests++;
+  });
+  await page.route("**/models/nvidia/**/*.glb", (route) =>
+    redirect
+      ? route.fulfill({ status: 302, headers: { Location: target }, body: "" })
+      : route.continue(),
+  );
+  await page.goto("/industrial/twins");
+  await expect(
+    page.getByAltText(
+      "Transfer conveyor, rendered from the same NVIDIA reference model",
+    ),
+  ).toBeVisible();
+  expect(redirectedRequests).toBe(0);
+  expect((await page.request.get("/api/v1/twins/catalog")).status()).toBe(200);
+  redirect = false;
+  await page.getByRole("button", { name: "Reload 3D preview" }).click();
+  await ready(page);
+});
+
 test("mobile fallback keeps explanation, keyboard actions and import reachable", async ({
   page,
 }) => {

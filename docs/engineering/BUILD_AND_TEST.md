@@ -14,6 +14,9 @@ It exercises automatic rendering, selection, private import and reload, retry af
 a lost import response, file/catalog failures, graphics-context loss and disposal,
 mobile framing and fallback, keyboard accessibility and live system-theme changes.
 External network requests are blocked in this loopback-only synthetic fixture.
+Protected-preview coverage uses a synthetic HttpOnly cookie gate and real model
+rendering. A redirected reference must fail before the browser requests its target;
+retry after restoring local delivery preserves the signed-in session.
 Browser rendering does not qualify
 physical behaviour, collision accuracy, robot articulation or real model quality.
 
