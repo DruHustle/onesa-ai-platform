@@ -266,7 +266,8 @@ export default function TwinViewer({
           ? `/models/nvidia/${referencePath}`
           : `/api/v1/twins/files/${encodeURIComponent(model.file_id)}/content`,
         {
-          credentials: referencePath ? "omit" : "same-origin",
+          credentials: "same-origin",
+          ...(referencePath ? { redirect: "error" as const } : {}),
           cache: "no-store",
           signal: AbortSignal.any([signal, AbortSignal.timeout(45000)]),
         },
