@@ -58,7 +58,7 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
         assert json.loads(observed) == {
             "migration_revision": REQUIRED_SCHEMA_REVISION,
             "runtime_DDL_granted": False,
-            "runtime_new_tables_DML_granted": 21,
+            "runtime_new_tables_DML_granted": 24,
         }
         assert os.environ["ONESA_DATABASE_URL"] == pg.url.set(
             drivername="postgresql+psycopg"
@@ -74,6 +74,9 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
                 "cyber_findings",
                 "cyber_investigations",
                 "cyber_actions",
+                "identity_sessions",
+                "identity_transactions",
+                "shared_identities",
             ]:
                 assert connection.scalar(
                     text("SELECT has_table_privilege(:role,:table,:permissions)"),

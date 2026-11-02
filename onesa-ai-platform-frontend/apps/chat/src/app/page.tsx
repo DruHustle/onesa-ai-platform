@@ -7,10 +7,11 @@ import IndustrialNav from "../components/industrial-nav";
 import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "../components/onesa-sign-in";
 
 const MessageContent = lazy(() => import("../components/message-content"));
 
-type User = { id: string; display_name: string };
+type User = { id: string; display_name: string; identity_mode?: string; administrator?: boolean };
 type Conversation = { id: string; title: string };
 type Message = {
   id: string;
@@ -23,6 +24,8 @@ import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function Chat() {
   const { copy, locale } = useLocale();
+  const identityMethod = useOnesaIdentity();
+  const [hasWorkspace, setHasWorkspace] = useState(false);
   const [model, setModel] = useState<{
     backend: string;
     model_identifier: string;
@@ -60,6 +63,7 @@ export default function Chat() {
   const identityEpoch = useRef(0), draftOwner = useRef<string | null>(null);
   const refreshList = history.reload;
   const acceptUser = useCallback((current: User) => {
+    setHasWorkspace(true);
     identityEpoch.current += 1;
     if (draftOwner.current && draftOwner.current !== current.id) {
       setInput(""); setMessages([]); setSelected(null); detailRequest.current += 1;
@@ -173,7 +177,8 @@ export default function Chat() {
   }, [menu, closeMenu]);
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (checking || busy || unavailable) return;
+    if (checking || busy || unavailable || !identityMethod || identityMethod.pending ||
+        identityMethod.unavailable || identityMethod.enabled) return;
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -358,9 +363,19 @@ export default function Chat() {
   async function logout() {
     detailRequest.current += 1;
     try {
-      await call("/auth/logout", "POST");
+      let notice = "";
+      try {
+        await call("/auth/logout", "POST");
+      } catch (reason) {
+        if (!(reason instanceof ApiError && reason.code === "identity_logout_incomplete")) throw reason;
+        notice = reason.message;
+      }
       identityEpoch.current += 1;
       setUser(null);
+      setHasWorkspace(false);
+      setError(notice);
+      setInput("");
+      draftOwner.current = null;
       setLinkedDocument(null);
       setDocumentIds([]);
       setKnowledgeReady(false);
@@ -371,6 +386,20 @@ export default function Chat() {
       setError((e as Error).message);
     }
   }
+  if (!user && (!identityMethod || identityMethod.unavailable))
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Dein Onesa-Arbeitsbereich" : "Your Onesa workspace"}</h1>
+      <IdentityEntryStatus method={identityMethod}/><LanguageSelect/>
+    </section></main>;
+  if (!user && identityMethod?.enabled)
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Ein Konto. Dein Onesa-Arbeitsbereich." : "One account. Your Onesa workspace."}</h1>
+      {error && <p className="error" role="alert">{error}</p>}
+      <OnesaSignIn method={identityMethod} preserveDraft={hasWorkspace} onAuthenticated={acceptUser}/>
+      <LanguageSelect/>
+    </section></main>;
   if (!user)
     return (
       <main className="auth-shell">
@@ -382,7 +411,7 @@ export default function Chat() {
           <p>{locale==='de'?'Gespräche führen, eigenes Wissen nutzen und Aufgaben mit geführten Werkzeugen bearbeiten. Onesa AI Platform ist unser geschützter KI-Arbeitsbereich.':'Talk through ideas, use your own knowledge and work with guided tools. Onesa AI Platform is our protected AI workspace.'}</p>
           <p>{signup?(locale==='de'?'Die Registrierung hängt von der Freigabe dieser Umgebung ab. Wenn eine Einladung erforderlich ist, verwenden Sie Ihren privaten Einladungslink.':'Registration depends on this environment’s access policy. If an invitation is required, use your private invitation link.'):(locale==='de'?'Mit Ihrem bestehenden Plattformkonto anmelden. Ein Plattformkonto gewährt keinen Administrator-, Engineering- oder Robot-Zugriff.':'Sign in with your existing platform account. A platform account does not grant administrator, engineering or Robot access.')}</p>
           <nav className="auth-orientation" aria-label={locale==='de'?'Plattform kennenlernen':'Learn about the platform'}><a href={documentationUrls.public+'/docs/public/ai-platform'}>{locale==='de'?'Produkt und Funktionen':'Product and capabilities'}</a><a href={documentationUrls.public+'/docs/public/quickstart'}>{locale==='de'?'Entwickler-Schnellstart':'Developer quickstart'}</a></nav>
-          {checking && <p role="status">{copy.opening}</p>}
+          {(checking || identityMethod?.pending) && <p role="status">{copy.opening}</p>}
           <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
           {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => {
             setChecking(true);
@@ -391,7 +420,7 @@ export default function Chat() {
             setSessionAttempt(previous => previous + 1);
             credentialDraft.current?.focus();
           }}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
-          <form onSubmit={authenticate} aria-busy={checking || busy}>
+          <form onSubmit={authenticate} aria-busy={checking || busy || identityMethod?.pending}>
             {signup && (
               <label>
                 {copy.name}
@@ -428,14 +457,14 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <button className="send" disabled={busy || checking || unavailable}>
+            <button className="send" disabled={busy || checking || unavailable || identityMethod?.pending}>
               {busy ? copy.wait : signup ? copy.create : copy.signIn}
             </button>
           </form>
           <LanguageSelect />
           <button
             className="switch"
-            disabled={checking || busy || unavailable}
+            disabled={checking || busy || unavailable || identityMethod?.pending}
             onClick={() => {
               setSignup(!signup);
               setError("");
@@ -477,6 +506,7 @@ export default function Chat() {
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
+          {user.administrator && identityMethod?.account_url && <a href={identityMethod.account_url + "?tab=access"}>{locale === "de" ? "Anwendungen verwalten" : "Manage applications"}</a>}
           <DocumentationNav />
         </nav>
         <ApplicationsNav />
@@ -516,7 +546,7 @@ export default function Chat() {
         <div className="account">
           <span>{user.display_name}</span>
           <button disabled={busy} onClick={logout}>
-            {copy.signOut}
+            {user.identity_mode === "onesa" ? (locale === "de" ? "Von Onesa abmelden" : "Sign out of Onesa") : copy.signOut}
           </button>
         </div>
       </aside>

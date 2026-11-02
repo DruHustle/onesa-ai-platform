@@ -1058,6 +1058,7 @@ engine = create_engine(sys.stdin.read())
 try:
     records = persistent_fingerprints(engine, [])
     assert 'cyber_investigations' in records and 'twin_models' in records
+    assert {'identity_sessions', 'identity_transactions', 'shared_identities'} <= set(records)
     assert len([name for name in records if name.startswith('cyber_')]) == 12
     print('STANDALONE_MIGRATED_PRESERVATION_PASS')
 finally:

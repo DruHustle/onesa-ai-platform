@@ -38,6 +38,57 @@ const context = {
 };
 vm.runInNewContext(compiled, context, {filename: 'backend-proxy-regression.js'});
 
+async function identityMethodBootstrap() {
+  const compile = relative => ts.transpileModule(fs.readFileSync(path.join(chat, relative), 'utf8'), {
+    compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022},
+  }).outputText;
+  const methods = {}, bootstrap = {};
+  vm.runInNewContext(compile('src/lib/identity-method.ts'), {exports: methods, URL});
+  vm.runInNewContext(compile('src/lib/server/identity-method.ts'), {
+    exports: bootstrap, Request, AbortSignal,
+    require: name => {
+      if (name === 'server-only') return {};
+      if (name === '../backend') return exported;
+      assert.equal(name, '../identity-method');
+      return methods;
+    },
+  });
+  for (const [status, body, expected] of [
+    [200, {enabled:false, account_url:null}, {enabled:false, account_url:null}],
+    [200, {enabled:true, account_url:'https://account.example.test/account'}, {enabled:true, account_url:'https://account.example.test/account'}],
+    [404, {detail:'Not Found'}, {enabled:false, account_url:null}],
+    ...[401, 403, 503].map(status => [status, {error:{message:'synthetic'}}, {enabled:false, account_url:null, unavailable:true}]),
+    ...[{}, {enabled:'false', account_url:null}, {enabled:true, account_url:null},
+      {enabled:true, account_url:'javascript:synthetic'},
+      {enabled:true, account_url:'https://synthetic:password@account.example.test/account'},
+    ].map(body => [200, body, {enabled:false, account_url:null, unavailable:true}]),
+  ]) {
+    context.fetch = async (url, options) => {
+      assert.equal(url.pathname, '/api/v1/auth/onesa/config');
+      assert.equal(options.headers.get('cookie'), null);
+      assert.equal(options.headers.get('authorization'), null);
+      assert.equal(options.cache, 'no-store');
+      assert.equal(options.redirect, 'manual');
+      return Response.json(body, {status});
+    };
+    assert.deepEqual(JSON.parse(JSON.stringify(await bootstrap.loadIdentityMethod())), expected);
+  }
+  context.fetch = async () => new Response('invalid synthetic JSON', {status:200});
+  assert.equal((await bootstrap.loadIdentityMethod()).unavailable, true);
+  context.fetch = (_url, options) => new Promise((_, reject) => {
+    options.signal.addEventListener('abort', () => reject(options.signal.reason), {once:true});
+  });
+  let watchdog;
+  try {
+    const result = await Promise.race([
+      bootstrap.loadIdentityMethod(),
+      new Promise((_, reject) => {watchdog=setTimeout(() => reject(new Error('Sign-in bootstrap deadline exceeded')), 3000);}),
+    ]);
+    assert.equal(result.unavailable, true);
+  } finally {clearTimeout(watchdog);}
+  console.log('Identity method bootstrap: PASS; native/shared rendering capability, explicit legacy404, credential-free transport, malformed/unavailable responses and bounded timeout');
+}
+
 async function main() {
   const response = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {
     headers: {
@@ -134,5 +185,6 @@ async function main() {
   assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}))).status, 503);
   assert.equal(fetches, count + 2);
   console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 10 unchanged-route, configuration, sleeping-upstream and failed-session cases');
+  await identityMethodBootstrap();
 }
 main().catch(error => {console.error(error);process.exitCode=1;});

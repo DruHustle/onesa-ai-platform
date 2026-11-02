@@ -1,5 +1,12 @@
 # Onesa AI Platform
 
+The shared-account source candidate adds **Continue with Onesa**, one central
+account/access hub, explicit existing-account linking and MFA-protected cross-product
+administration. It remains disabled until the existing owner-controlled staging and
+release process qualifies the issuer, migration and private client configuration.
+See [shared identity](docs/engineering/SHARED_IDENTITY.md) for the permission boundary,
+account migration and activation requirements. Oracle hosting remains unchanged.
+
 The owner-run qualification candidate identifies its active probe from a private
 Docker CID and verifies its image, command, mounts and isolation before observing
 a controlled staging replacement. Other temporary clients still block the check.

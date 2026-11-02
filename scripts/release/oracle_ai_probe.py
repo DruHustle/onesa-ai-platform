@@ -227,7 +227,10 @@ def persistent_fingerprints(engine, exclude):
                 continue
             table = Base.metadata.tables.get(name)
             require(table is not None, "UNKNOWN_PERSISTENT_TABLE")
-            path = ownership(table)
+            # Pending sign-in transactions have no account until authentication
+            # finishes. Preserve every row; none may be excluded as a test owner.
+            pending_identity = name == "identity_transactions"
+            path = [] if pending_identity else ownership(table)
             require(path is not None, "UNKNOWN_PERSISTENT_OWNERSHIP")
             joins = ""
             last = "t0"
@@ -249,7 +252,11 @@ def persistent_fingerprints(engine, exclude):
                     + '"'
                 )
                 last = following
-            where = " WHERE NOT (" + last + ".id=ANY(CAST(:owners AS uuid[])))"
+            where = (
+                ""
+                if pending_identity
+                else " WHERE NOT (" + last + ".id=ANY(CAST(:owners AS uuid[])))"
+            )
             source = ' FROM public."' + name + '" t0' + joins + where
             count, size = db.execute(
                 text("SELECT count(*),coalesce(sum(pg_column_size(t0)),0)" + source),

@@ -40,6 +40,9 @@ async function setup(page: Page, items: (typeof sampleDocument)[] = []) {
       503,
     ),
   );
+  await page.route("**/api/v1/auth/onesa/config", (route) =>
+    reply(route, { enabled: false, account_url: null }),
+  );
   await page.route("**/api/v1/auth/me", (route) =>
     reply(route, { id: "synthetic-knowledge-owner" }),
   );
