@@ -177,7 +177,8 @@ export default function Chat() {
   }, [menu, closeMenu]);
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (checking || busy || unavailable) return;
+    if (checking || busy || unavailable || !identityMethod || identityMethod.pending ||
+        identityMethod.unavailable || identityMethod.enabled) return;
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -410,7 +411,7 @@ export default function Chat() {
           <p>{locale==='de'?'Gespräche führen, eigenes Wissen nutzen und Aufgaben mit geführten Werkzeugen bearbeiten. Onesa AI Platform ist unser geschützter KI-Arbeitsbereich.':'Talk through ideas, use your own knowledge and work with guided tools. Onesa AI Platform is our protected AI workspace.'}</p>
           <p>{signup?(locale==='de'?'Die Registrierung hängt von der Freigabe dieser Umgebung ab. Wenn eine Einladung erforderlich ist, verwenden Sie Ihren privaten Einladungslink.':'Registration depends on this environment’s access policy. If an invitation is required, use your private invitation link.'):(locale==='de'?'Mit Ihrem bestehenden Plattformkonto anmelden. Ein Plattformkonto gewährt keinen Administrator-, Engineering- oder Robot-Zugriff.':'Sign in with your existing platform account. A platform account does not grant administrator, engineering or Robot access.')}</p>
           <nav className="auth-orientation" aria-label={locale==='de'?'Plattform kennenlernen':'Learn about the platform'}><a href={documentationUrls.public+'/docs/public/ai-platform'}>{locale==='de'?'Produkt und Funktionen':'Product and capabilities'}</a><a href={documentationUrls.public+'/docs/public/quickstart'}>{locale==='de'?'Entwickler-Schnellstart':'Developer quickstart'}</a></nav>
-          {checking && <p role="status">{copy.opening}</p>}
+          {(checking || identityMethod?.pending) && <p role="status">{copy.opening}</p>}
           <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
           {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => {
             setChecking(true);
@@ -419,7 +420,7 @@ export default function Chat() {
             setSessionAttempt(previous => previous + 1);
             credentialDraft.current?.focus();
           }}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
-          <form onSubmit={authenticate} aria-busy={checking || busy}>
+          <form onSubmit={authenticate} aria-busy={checking || busy || identityMethod?.pending}>
             {signup && (
               <label>
                 {copy.name}
@@ -456,14 +457,14 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <button className="send" disabled={busy || checking || unavailable}>
+            <button className="send" disabled={busy || checking || unavailable || identityMethod?.pending}>
               {busy ? copy.wait : signup ? copy.create : copy.signIn}
             </button>
           </form>
           <LanguageSelect />
           <button
             className="switch"
-            disabled={checking || busy || unavailable}
+            disabled={checking || busy || unavailable || identityMethod?.pending}
             onClick={() => {
               setSignup(!signup);
               setError("");

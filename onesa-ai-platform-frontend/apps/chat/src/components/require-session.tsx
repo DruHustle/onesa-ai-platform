@@ -72,7 +72,8 @@ export default function RequireSession({
   }, [loginEpoch, expired]);
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || !identityMethod || identityMethod.pending ||
+        identityMethod.unavailable || identityMethod.enabled) return;
     const form = event.currentTarget,
       data = new FormData(form);
     pending.current = true;
@@ -161,7 +162,7 @@ export default function RequireSession({
                       required
                     />
                   </label>
-                  <button className="send">
+                  <button className="send" disabled={identityMethod.pending}>
                     {busy
                       ? de
                         ? "Anmeldung…"
