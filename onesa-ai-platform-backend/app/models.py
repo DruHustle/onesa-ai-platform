@@ -52,6 +52,33 @@ class AuthSession(Record):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class IdentitySession(Base):
+    __tablename__ = "identity_sessions"
+    session_id: Mapped[UUID] = mapped_column(
+        ForeignKey("auth_sessions.id", ondelete="CASCADE"), primary_key=True
+    )
+    issuer: Mapped[str] = mapped_column(String(1000))
+    subject: Mapped[str] = mapped_column(String(36))
+    encrypted_token: Mapped[str] = mapped_column(String(8192))
+
+
+class SharedIdentity(Record):
+    __tablename__ = "shared_identities"
+    issuer: Mapped[str] = mapped_column(String(1000))
+    subject: Mapped[str] = mapped_column(String(36))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    __table_args__ = (UniqueConstraint("issuer", "subject"),)
+
+
+class IdentityTransaction(Base):
+    __tablename__ = "identity_transactions"
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    browser_hash: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[str] = mapped_column(String(16384))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class Conversation(Record):
     __tablename__ = "conversations"
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)

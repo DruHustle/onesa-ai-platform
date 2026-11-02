@@ -1,5 +1,43 @@
 # Separate application builds and tests
 
+## Shared Onesa identity source candidate
+
+Run `tests/test_onesa_identity.py` and `tests/test_shared_identity.py` through the
+normal Python 3.11 backend suite against a disposable PostgreSQL/pgvector database
+whose name ends in `_test`. The shared adapter tests cover explicit account proof,
+immutable ownership, encrypted token custody, state expiry/replay/races, issuer
+failure, live central revocation, concurrent local logout/disable, subject-bound
+fresh reauthentication, preserved explicit user-ID grants, shared-account switching,
+refresh metadata and truthful partial/global sign-out. Generation regressions cover
+midstream central/local revocation, expiry/disable, quiet-upstream cancellation,
+forced final validation, local commit races, explicit browser-disconnect polling,
+existing real socket-disconnect cleanup and compatible callback lock ordering.
+Protocol tests independently
+exercise bounded HTTP parsing, reserved Basic credentials, current product roles,
+product/global administrator MFA and explicit global-revocation confirmation.
+
+The ordinary full suite also validates the additive schema and its owner DML grant
+set. Run `python -m unittest discover -s scripts/release -p 'test_oracle_ai_*.py'`
+for the existing release observation, backup and owner-runner policy checks. These
+checks keep prior release profiles closed; they do not commission hosted identity
+activation. Regenerate OpenAPI, typed clients and database documentation using the
+existing generators after changing authentication contracts.
+
+The Chat `tests/shared-identity.spec.ts` fixtures are loopback-only and use synthetic
+intercepted responses. They cover English/German mobile and keyboard entry, loading
+or unavailable sign-in configuration, central code-flow navigation, retry, explicit
+legacy account proof, the common administration/settings hub, draft recovery,
+verified completion and partial global logout. Run them in the existing Chromium,
+Firefox and WebKit matrix. A separately supplied Chromium 153 binary can provide
+supplemental feedback where the normal Playwright browser download is unavailable;
+record its identity and safe launch options separately. It does not substitute for
+the pinned native browser matrix, actual issuer integration, manual accessibility,
+or source-bound staging acceptance. No hosted identity or production release is
+inferred from these synthetic checks.
+
+See [shared identity](SHARED_IDENTITY.md) for dependency provenance, private
+configuration, account migration and owner-controlled activation prerequisites.
+
 ## NVIDIA visual reference library
 
 `tests/test_twin_references.py` validates the pinned catalog, exact GLB, thumbnail,

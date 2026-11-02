@@ -242,6 +242,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/onesa/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Method */
+        get: operations["method_api_v1_auth_onesa_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/onesa/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start_api_v1_auth_onesa_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/onesa/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link */
+        post: operations["link_api_v1_auth_onesa_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge/uploads": {
         parameters: {
             query?: never;
@@ -1949,6 +2000,11 @@ export interface components {
             /** Model Id */
             model_id?: string | null;
         };
+        /** Authorization */
+        Authorization: {
+            /** Authorize Url */
+            authorize_url: string;
+        };
         /** BaselineCreate */
         BaselineCreate: {
             /** Revision */
@@ -2857,6 +2913,13 @@ export interface components {
             /** Embedding Version */
             embedding_version: string;
         };
+        /** Link */
+        Link: {
+            /** Current Password */
+            current_password: string;
+            /** Email */
+            email: string;
+        };
         /** Mapping */
         Mapping: {
             /** Node */
@@ -2900,6 +2963,13 @@ export interface components {
             status: string;
             /** Sequence */
             sequence: number;
+        };
+        /** Method */
+        Method: {
+            /** Enabled */
+            enabled: boolean;
+            /** Account Url */
+            account_url?: string | null;
         };
         /** ModelCreate */
         ModelCreate: {
@@ -3261,6 +3331,22 @@ export interface components {
             email: string;
             /** Display Name */
             display_name: string;
+            /**
+             * Identity Mode
+             * @default local
+             * @enum {string}
+             */
+            identity_mode: "local" | "onesa";
+            /**
+             * Global Admin
+             * @default false
+             */
+            global_admin: boolean;
+            /**
+             * Administrator
+             * @default false
+             */
+            administrator: boolean;
         };
         /** Sample */
         Sample: {
@@ -3384,17 +3470,6 @@ export interface components {
              * @enum {string}
              */
             scenario: "cycle" | "normal" | "alarm" | "recovery" | "disconnect";
-        };
-        /** Start */
-        Start: {
-            /** Filename */
-            filename: string;
-            /** Media Type */
-            media_type: string;
-            /** Size */
-            size: number;
-            /** Sha256 */
-            sha256: string;
         };
         /** SummaryRequest */
         SummaryRequest: {
@@ -3648,6 +3723,19 @@ export interface components {
             /** Review Note */
             review_note: string;
         };
+        /** Start */
+        app__shared_identity__Start: {
+            /**
+             * Next
+             * @default /
+             */
+            next: string;
+            /**
+             * Reauthenticate
+             * @default false
+             */
+            reauthenticate: boolean;
+        };
         /** AssetCreate */
         app__twin_schemas__AssetCreate: {
             /**
@@ -3691,6 +3779,17 @@ export interface components {
             external_asset_id: string;
             /** Bindings */
             bindings: components["schemas"]["Binding"][];
+        };
+        /** Start */
+        app__uploads__Start: {
+            /** Filename */
+            filename: string;
+            /** Media Type */
+            media_type: string;
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string;
         };
     };
     responses: never;
@@ -4111,6 +4210,94 @@ export interface operations {
             };
         };
     };
+    method_api_v1_auth_onesa_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Method"];
+                };
+            };
+        };
+    };
+    start_api_v1_auth_onesa_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__shared_identity__Start"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Authorization"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_api_v1_auth_onesa_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Link"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     start_api_v1_knowledge_uploads_post: {
         parameters: {
             query?: never;
@@ -4120,7 +4307,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Start"];
+                "application/json": components["schemas"]["app__uploads__Start"];
             };
         };
         responses: {
