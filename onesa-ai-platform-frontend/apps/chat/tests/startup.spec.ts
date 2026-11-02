@@ -41,6 +41,34 @@ test.beforeEach(async ({ page, baseURL }) => {
   await page.route("**/api/**", route => json(route, {
     error: { code: "fixture_missing", message: "No synthetic fixture for this endpoint" },
   }, 404));
+  await page.route("**/api/v1/auth/onesa/config", route => json(route, { enabled: false, account_url: null }));
+});
+
+test("native drafts remain editable while sign-in method revalidation guards submission", async ({ page }) => {
+  await authenticated(page);
+  await page.route("**/api/v1/auth/me", route => json(route, anonymous.body, anonymous.status));
+  const method = await hold(page, "/auth/onesa/config", { enabled: false, account_url: null });
+  const mutations: string[] = [];
+  page.on("request", request => {
+    if (request.method() === "POST") mutations.push(new URL(request.url()).pathname);
+  });
+  try {
+    await page.goto("/");
+    await method.requested;
+    await page.getByLabel("Email", { exact: true }).fill("draft@example.test");
+    await page.getByLabel("Password", { exact: true }).fill("synthetic-bootstrap-draft");
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeDisabled();
+    await page.getByLabel("Password", { exact: true }).press("Enter");
+    await page.locator(".auth-card form").evaluate(form => (form as HTMLFormElement).requestSubmit());
+    expect(mutations).toEqual([]);
+    method.release();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue("draft@example.test");
+    await expect(page.getByLabel("Password", { exact: true })).toHaveValue("synthetic-bootstrap-draft");
+    expect(mutations).toEqual([]);
+  } finally {
+    method.release();
+  }
 });
 
 for (const locale of ["en", "de"] as const) {

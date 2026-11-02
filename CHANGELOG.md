@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Source candidate: central Onesa sign-in and account/access management across AI,
+  Drone and Robot, using the existing Portal issuer. Preserve AI ownership through
+  explicit password-proved linking, encrypt server-side tokens and PKCE material,
+  validate current entitlement/revocation on every request, bind sensitive
+  reauthentication to the same session/account, and distinguish local from global
+  sign-out. Global/product administration requires MFA; existing explicit native
+  engineering/cyber grants remain scoped to verified linked users and fresh MFA.
+  Localized sign-in and draft-preserving recovery are included. The additive
+  migration and feature remain subject to owner-controlled staging qualification.
+
 - Source correction: bind protected asset observations to percent-encoded HTTP
   paths while preserving original archive names, exact byte digests and all access
   checks. Space and Unicode filenames require fresh hosted qualification.

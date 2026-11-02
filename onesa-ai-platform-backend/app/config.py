@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     knowledge_upload_concurrency: int = Field(default=1, ge=1, le=4)
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
+    identity_enabled: bool = False
+    identity_issuer: str = ""
+    identity_client_id: str = ""
+    identity_client_secret: str = Field(default="", repr=False)
+    identity_callback_url: str = ""
+    identity_encryption_key: str = Field(default="", repr=False)
     access_operator_user_ids: list[str] = Field(default_factory=list)
     auth_delivery_key: str = ""
     mail_provider: Literal["disabled", "resend"] = "disabled"
@@ -84,6 +90,28 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def production_defaults(self) -> Self:
         from uuid import UUID
+
+        if self.identity_enabled:
+            from cryptography.fernet import Fernet
+
+            from app.onesa_identity import IdentityConfig
+
+            IdentityConfig(
+                self.identity_issuer,
+                self.identity_client_id,
+                self.identity_client_secret,
+                self.identity_callback_url,
+                "ai",
+                self.environment in {"development", "test"},
+            )
+            if self.identity_callback_url != self.public_origin + "/api/v1/auth/onesa/callback":
+                raise ValueError("Identity callback must belong to this exact application origin")
+            try:
+                Fernet(self.identity_encryption_key.encode("ascii"))
+            except (ValueError, TypeError, UnicodeError):
+                raise ValueError(
+                    "Identity requires a private 32-byte Fernet encryption key"
+                ) from None
 
         if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
             raise ValueError("Security operators require canonical configured user UUIDs")

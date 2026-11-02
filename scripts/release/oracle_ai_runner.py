@@ -1679,15 +1679,15 @@ from alembic import command
 from urllib.parse import urlsplit
 request=json.load(sys.stdin)
 target=request.get('target_revision','20261025_twins')
-assert target in ['20261025_twins','20261026_cybersecurity']
+assert target in ['20261025_twins','20261026_cybersecurity','20261102_shared_identity']
 role=urlsplit(request['runtime']).username
 assert re.fullmatch('[a-z_][a-z0-9_]{0,62}',role)
 owner=make_url(request['owner']).set(drivername='postgresql+psycopg')
 engine=create_engine(owner,connect_args={'connect_timeout':10,'sslmode':'verify-full','sslrootcert':'/etc/ssl/cert.pem','channel_binding':'require'})
 with engine.begin() as connection:
  revision=connection.scalar(text('SELECT version_num FROM alembic_version'))
- assert revision in ['20261010_capacity','20261021_industrial','20261025_twins','20261026_cybersecurity']
- assert revision!='20261026_cybersecurity' or target=='20261026_cybersecurity'
+ revisions=['20261010_capacity','20261021_industrial','20261025_twins','20261026_cybersecurity','20261102_shared_identity']
+ assert revision in revisions and revisions.index(target)>=revisions.index(revision)
  assert connection.scalar(text("SELECT has_schema_privilege(current_user,'public','CREATE') AND pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass"))
  config=Config('alembic.ini');config.attributes['connection']=connection
  # env.py requires the URL even when the already verified connection is supplied.
@@ -1695,7 +1695,8 @@ with engine.begin() as connection:
  os.environ['ONESA_DATABASE_URL']=owner.render_as_string(hide_password=False)
  command.upgrade(config,target)
  tables=['industrial_investigations','twin_files','twin_templates','twin_assets','twin_models','twin_notes','twin_sources','twin_readings','twin_events']
- if target=='20261026_cybersecurity':tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
+ if target in ['20261026_cybersecurity','20261102_shared_identity']:tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
+ if target=='20261102_shared_identity':tables+=['identity_sessions','identity_transactions','shared_identities']
  connection.execute(text('GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE '+','.join('public.'+table for table in tables)+' TO "'+role+'"'))
  assert not connection.scalar(text("SELECT has_schema_privilege(:role,'public','CREATE') OR has_table_privilege(:role,'alembic_version','INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')"),{'role':role})
  assert connection.scalar(text('SELECT version_num FROM alembic_version'))==target

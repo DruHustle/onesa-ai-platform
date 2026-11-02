@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -23,6 +23,9 @@ class SafeUser(Strict):
     id: UUID
     email: str
     display_name: str
+    identity_mode: Literal["local", "onesa"] = "local"
+    global_admin: bool = False
+    administrator: bool = False
 
 
 class ProfileUpdate(Strict):
@@ -30,7 +33,7 @@ class ProfileUpdate(Strict):
 
 
 class PasswordProof(Strict):
-    current_password: str = Field(min_length=1, max_length=128)
+    current_password: str = Field(max_length=128)
 
 
 class PasswordChange(PasswordProof):

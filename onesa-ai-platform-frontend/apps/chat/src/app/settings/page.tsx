@@ -3,8 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import FeatureShell from "../../components/feature-shell";
 import { api, type SafeUser, type SessionList } from "../../lib/api";
+import { useOnesaIdentity } from "../../components/onesa-sign-in";
 
 export default function Settings() {
+  const identityMethod = useOnesaIdentity();
   const [user, setUser] = useState<SafeUser | null>(null);
   const [sessions, setSessions] = useState<SessionList | null>(null);
   const [error, setError] = useState("");
@@ -45,6 +47,13 @@ export default function Settings() {
     setError("");
     setNotice("");
     try {
+      if (user?.identity_mode === "onesa") {
+        const current = await api("GET /auth/me");
+        if (current.id !== user.id) {
+          setUser(current); setSessions(null);
+          throw new Error("The signed-in account changed. Review this account before continuing.");
+        }
+      }
       if (action === "profile") {
         await api("PATCH /auth/profile", {
           body: { display_name: String(data.get("display_name") || "").trim() },
@@ -93,9 +102,9 @@ export default function Settings() {
         });
         setUser(null);
         setSessions(null);
-        setNotice(
-          "Your account and live application data were deleted. Backup retention is handled separately.",
-        );
+        setNotice(user?.identity_mode === "onesa"
+          ? "Your AI workspace data were deleted. Your shared Onesa account and other applications remain available. Backup retention is handled separately."
+          : "Your account and live application data were deleted. Backup retention is handled separately.");
         return;
       } else {
         await api("POST /auth/sessions/revoke-others", {
@@ -103,7 +112,9 @@ export default function Settings() {
             current_password: String(data.get("current_password") || ""),
           },
         });
-        setNotice("Other sessions signed out. This browser remains signed in.");
+        setNotice(user?.identity_mode === "onesa"
+          ? "Other AI Platform sessions signed out. This browser remains signed in."
+          : "Other sessions signed out. This browser remains signed in.");
       }
       await load();
     } catch (reason) {
@@ -134,6 +145,14 @@ export default function Settings() {
       </p>
       {user && (
         <>
+          {user.identity_mode === "onesa" ? <section className="feature-card">
+            <h2>Your Onesa account</h2><p>Signed in as {user.email}</p>
+            <p>Manage your profile, password, MFA and application access in one place.</p>
+            {identityMethod?.account_url && <p><a href={identityMethod.account_url}>Open account and access</a></p>}
+            {user.administrator && identityMethod?.account_url && <p><a href={identityMethod.account_url + "?tab=access"}>Manage access across applications</a></p>}
+            <p>Before exporting or deleting data, confirm a recent sign-in. Your current workspace stays open.</p>
+            <a href="/auth/continue?next=/auth/complete&reauthenticate=true" target="_blank" rel="noopener noreferrer">Confirm Onesa sign-in in a new window</a>
+          </section> : <>
           <form
             className="feature-card"
             onSubmit={(event) => submit(event, "profile")}
@@ -199,8 +218,9 @@ export default function Settings() {
               Change password
             </button>
           </form>
+          </>}
           <section className="feature-card" aria-labelledby="sessions-heading">
-            <h2 id="sessions-heading">Active sessions</h2>
+            <h2 id="sessions-heading">{user.identity_mode === "onesa" ? "AI Platform sessions" : "Active sessions"}</h2>
             {sessions && (
               <>
                 <p>
@@ -220,7 +240,7 @@ export default function Settings() {
               </>
             )}
             <form onSubmit={(event) => submit(event, "sessions")}>
-              <label>
+              {user.identity_mode !== "onesa" && <label>
                 Password to sign out other sessions
                 <input
                   name="current_password"
@@ -229,8 +249,8 @@ export default function Settings() {
                   maxLength={128}
                   autoComplete="current-password"
                 />
-              </label>
-              <button disabled={busy}>Sign out other sessions</button>
+              </label>}
+              <button disabled={busy}>{user.identity_mode === "onesa" ? "Sign out other AI sessions" : "Sign out other sessions"}</button>
             </form>
           </section>
           <form
@@ -244,7 +264,7 @@ export default function Settings() {
               excluded. Large exports require support; data is never silently
               truncated.
             </p>
-            <label>
+            {user.identity_mode !== "onesa" && <label>
               Password to export your data
               <input
                 name="current_password"
@@ -253,14 +273,15 @@ export default function Settings() {
                 maxLength={128}
                 autoComplete="current-password"
               />
-            </label>
-            <button disabled={busy}>Download account export</button>
+            </label>}
+            <button disabled={busy}>{user.identity_mode === "onesa" ? "Download AI workspace export" : "Download account export"}</button>
           </form>
           <form
             className="feature-card"
             onSubmit={(event) => submit(event, "delete")}
           >
-            <h2>Delete your account</h2>
+            <h2>{user.identity_mode === "onesa" ? "Delete AI workspace data" : "Delete your account"}</h2>
+            {user.identity_mode === "onesa" && <p>Your shared Onesa account and access to other applications stay available.</p>}
             <p>
               This permanently deletes your profile, sessions, conversations,
               documents and their search vectors, tool runs, trips and Industrial investigations from the
@@ -268,7 +289,7 @@ export default function Settings() {
               anything you want to keep. Backup copies require separate
               retention processing.
             </p>
-            <label>
+            {user.identity_mode !== "onesa" && <label>
               Password to delete your account
               <input
                 name="current_password"
@@ -277,12 +298,12 @@ export default function Settings() {
                 maxLength={128}
                 autoComplete="current-password"
               />
-            </label>
+            </label>}
             <label>
               Type DELETE MY ACCOUNT to confirm
               <input name="confirmation" required autoComplete="off" />
             </label>
-            <button disabled={busy}>Delete my account permanently</button>
+            <button disabled={busy}>{user.identity_mode === "onesa" ? "Delete AI workspace data permanently" : "Delete my account permanently"}</button>
           </form>
         </>
       )}

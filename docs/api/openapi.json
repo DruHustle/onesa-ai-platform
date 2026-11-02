@@ -150,12 +150,7 @@
           "204": {
             "description": "Successful Response"
           }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/auth/profile": {
@@ -559,6 +554,113 @@
         }
       }
     },
+    "/api/v1/auth/onesa/config": {
+      "get": {
+        "tags": [
+          "shared Onesa identity"
+        ],
+        "summary": "Method",
+        "operationId": "method_api_v1_auth_onesa_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Method"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/onesa/start": {
+      "post": {
+        "tags": [
+          "shared Onesa identity"
+        ],
+        "summary": "Start",
+        "operationId": "start_api_v1_auth_onesa_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__shared_identity__Start"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Authorization"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/onesa/link": {
+      "post": {
+        "tags": [
+          "shared Onesa identity"
+        ],
+        "summary": "Link",
+        "operationId": "link_api_v1_auth_onesa_link_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Link"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Link Api V1 Auth Onesa Link Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/knowledge/uploads": {
       "post": {
         "tags": [
@@ -570,7 +672,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Start"
+                "$ref": "#/components/schemas/app__uploads__Start"
               }
             }
           },
@@ -7773,6 +7875,20 @@
         ],
         "title": "AssetChange"
       },
+      "Authorization": {
+        "properties": {
+          "authorize_url": {
+            "type": "string",
+            "title": "Authorize Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authorize_url"
+        ],
+        "title": "Authorization"
+      },
       "BaselineCreate": {
         "properties": {
           "revision": {
@@ -8576,7 +8692,6 @@
           "current_password": {
             "type": "string",
             "maxLength": 128,
-            "minLength": 1,
             "title": "Current Password"
           },
           "confirmation": {
@@ -9811,7 +9926,6 @@
           "current_password": {
             "type": "string",
             "maxLength": 128,
-            "minLength": 1,
             "title": "Current Password"
           },
           "email": {
@@ -9903,6 +10017,28 @@
           "embedding_version"
         ],
         "title": "KnowledgeSource"
+      },
+      "Link": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Current Password"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current_password",
+          "email"
+        ],
+        "title": "Link"
       },
       "Mapping": {
         "properties": {
@@ -10013,6 +10149,31 @@
           "sequence"
         ],
         "title": "MessageOut"
+      },
+      "Method": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "account_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "Method"
       },
       "ModelCreate": {
         "properties": {
@@ -10290,7 +10451,6 @@
           "current_password": {
             "type": "string",
             "maxLength": 128,
-            "minLength": 1,
             "title": "Current Password"
           },
           "new_password": {
@@ -10313,7 +10473,6 @@
           "current_password": {
             "type": "string",
             "maxLength": 128,
-            "minLength": 1,
             "title": "Current Password"
           }
         },
@@ -10869,6 +11028,25 @@
           "display_name": {
             "type": "string",
             "title": "Display Name"
+          },
+          "identity_mode": {
+            "type": "string",
+            "enum": [
+              "local",
+              "onesa"
+            ],
+            "title": "Identity Mode",
+            "default": "local"
+          },
+          "global_admin": {
+            "type": "boolean",
+            "title": "Global Admin",
+            "default": false
+          },
+          "administrator": {
+            "type": "boolean",
+            "title": "Administrator",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -11140,42 +11318,6 @@
           "component_id"
         ],
         "title": "Simulation"
-      },
-      "Start": {
-        "properties": {
-          "filename": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "pattern": "^[^/\\\\]+\\.(txt|pdf)$",
-            "title": "Filename"
-          },
-          "media_type": {
-            "type": "string",
-            "pattern": "^(text/plain|application/pdf)$",
-            "title": "Media Type"
-          },
-          "size": {
-            "type": "integer",
-            "maximum": 5242880.0,
-            "minimum": 1.0,
-            "title": "Size"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$",
-            "title": "Sha256"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "filename",
-          "media_type",
-          "size",
-          "sha256"
-        ],
-        "title": "Start"
       },
       "SummaryRequest": {
         "properties": {
@@ -11773,6 +11915,24 @@
         ],
         "title": "SourceCreate"
       },
+      "app__shared_identity__Start": {
+        "properties": {
+          "next": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Next",
+            "default": "/"
+          },
+          "reauthenticate": {
+            "type": "boolean",
+            "title": "Reauthenticate",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Start"
+      },
       "app__twin_schemas__AssetCreate": {
         "properties": {
           "template_id": {
@@ -11861,6 +12021,42 @@
           "bindings"
         ],
         "title": "SourceCreate"
+      },
+      "app__uploads__Start": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "pattern": "^[^/\\\\]+\\.(txt|pdf)$",
+            "title": "Filename"
+          },
+          "media_type": {
+            "type": "string",
+            "pattern": "^(text/plain|application/pdf)$",
+            "title": "Media Type"
+          },
+          "size": {
+            "type": "integer",
+            "maximum": 5242880.0,
+            "minimum": 1.0,
+            "title": "Size"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "filename",
+          "media_type",
+          "size",
+          "sha256"
+        ],
+        "title": "Start"
       }
     },
     "securitySchemes": {
