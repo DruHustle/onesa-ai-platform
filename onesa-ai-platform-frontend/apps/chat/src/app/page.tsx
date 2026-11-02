@@ -7,10 +7,11 @@ import IndustrialNav from "../components/industrial-nav";
 import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "../components/onesa-sign-in";
 
 const MessageContent = lazy(() => import("../components/message-content"));
 
-type User = { id: string; display_name: string };
+type User = { id: string; display_name: string; identity_mode?: string; administrator?: boolean };
 type Conversation = { id: string; title: string };
 type Message = {
   id: string;
@@ -23,6 +24,8 @@ import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function Chat() {
   const { copy, locale } = useLocale();
+  const identityMethod = useOnesaIdentity();
+  const [hasWorkspace, setHasWorkspace] = useState(false);
   const [model, setModel] = useState<{
     backend: string;
     model_identifier: string;
@@ -60,6 +63,7 @@ export default function Chat() {
   const identityEpoch = useRef(0), draftOwner = useRef<string | null>(null);
   const refreshList = history.reload;
   const acceptUser = useCallback((current: User) => {
+    setHasWorkspace(true);
     identityEpoch.current += 1;
     if (draftOwner.current && draftOwner.current !== current.id) {
       setInput(""); setMessages([]); setSelected(null); detailRequest.current += 1;
@@ -358,9 +362,19 @@ export default function Chat() {
   async function logout() {
     detailRequest.current += 1;
     try {
-      await call("/auth/logout", "POST");
+      let notice = "";
+      try {
+        await call("/auth/logout", "POST");
+      } catch (reason) {
+        if (!(reason instanceof ApiError && reason.code === "identity_logout_incomplete")) throw reason;
+        notice = reason.message;
+      }
       identityEpoch.current += 1;
       setUser(null);
+      setHasWorkspace(false);
+      setError(notice);
+      setInput("");
+      draftOwner.current = null;
       setLinkedDocument(null);
       setDocumentIds([]);
       setKnowledgeReady(false);
@@ -371,6 +385,20 @@ export default function Chat() {
       setError((e as Error).message);
     }
   }
+  if (!user && (!identityMethod || identityMethod.unavailable))
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Dein Onesa-Arbeitsbereich" : "Your Onesa workspace"}</h1>
+      <IdentityEntryStatus method={identityMethod}/><LanguageSelect/>
+    </section></main>;
+  if (!user && identityMethod?.enabled)
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Ein Konto. Dein Onesa-Arbeitsbereich." : "One account. Your Onesa workspace."}</h1>
+      {error && <p className="error" role="alert">{error}</p>}
+      <OnesaSignIn method={identityMethod} preserveDraft={hasWorkspace} onAuthenticated={acceptUser}/>
+      <LanguageSelect/>
+    </section></main>;
   if (!user)
     return (
       <main className="auth-shell">
@@ -477,6 +505,7 @@ export default function Chat() {
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
+          {user.administrator && identityMethod?.account_url && <a href={identityMethod.account_url + "?tab=access"}>{locale === "de" ? "Anwendungen verwalten" : "Manage applications"}</a>}
           <DocumentationNav />
         </nav>
         <ApplicationsNav />
@@ -516,7 +545,7 @@ export default function Chat() {
         <div className="account">
           <span>{user.display_name}</span>
           <button disabled={busy} onClick={logout}>
-            {copy.signOut}
+            {user.identity_mode === "onesa" ? (locale === "de" ? "Von Onesa abmelden" : "Sign out of Onesa") : copy.signOut}
           </button>
         </div>
       </aside>

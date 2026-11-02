@@ -6,17 +6,19 @@ from datetime import timedelta
 from typing import Annotated
 
 from argon2 import PasswordHasher
-from argon2.exceptions import VerificationError
+from argon2.exceptions import InvalidHashError, VerificationError
 from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyCookie
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import database
 from app.errors import fail
-from app.models import AccessGrant, AuthSession, RateBucket, User, now
+from app.models import AccessGrant, AuthSession, IdentitySession, RateBucket, User, now
+from app.onesa_identity import Identity
 from app.schemas import (
     Credentials,
     PasswordChange,
@@ -86,6 +88,17 @@ def authenticated(
     user = db.get(User, row.user_id) if row else None
     if row is None or user is None or user.status != "active":
         fail(401, "unauthorized", "Sign in to continue")
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import authenticate_shared
+
+        authenticate_shared(request, db, user, row)
+    elif (
+        db.scalar(text("SELECT to_regclass('identity_sessions') IS NOT NULL"))
+        and db.get(IdentitySession, row.id) is not None
+    ):
+        # Flag rollback must not turn central authority into an unchecked native
+        # session. Pre-migration schemas and genuine legacy sessions still work.
+        fail(401, "shared_sign_in_required", "Shared sign-in is currently unavailable")
     eligible(request, db, user)
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         origin(request)
@@ -100,6 +113,12 @@ Auth = Annotated[tuple[User, AuthSession], Depends(authenticated)]
 
 def eligible(request: Request, db: Session, user: User) -> None:
     settings = request.app.state.settings
+    if settings.identity_enabled:
+        from app.shared_identity import current_identity
+
+        if current_identity(request, user.id) is None:
+            fail(401, "shared_sign_in_required", "Continue with your Onesa account")
+        return
     if (
         settings.registration_mode == "invitation"
         and str(user.id) not in settings.access_operator_user_ids
@@ -109,33 +128,49 @@ def eligible(request: Request, db: Session, user: User) -> None:
             fail(403, "invitation_required", "An active invitation is required")
 
 
-def issue(request: Request, response: Response, db: Session, user: User) -> None:
+def issue(
+    request: Request,
+    response: Response,
+    db: Session,
+    user: User,
+    *,
+    shared: tuple[Identity, str] | None = None,
+) -> None:
     eligible(request, db, user)
     config = request.app.state.settings
     old_token = request.cookies.get("onesa_session")
     if old_token:
-        db.execute(
-            update(AuthSession)
-            .where(AuthSession.token_hash == digest(old_token), AuthSession.user_id == user.id)
-            .values(revoked_at=now())
-        )
+        previous = update(AuthSession).where(AuthSession.token_hash == digest(old_token))
+        if shared is None:
+            previous = previous.where(AuthSession.user_id == user.id)
+        # A shared-account switch replaces this browser's prior authority even
+        # when the new immutable account owns a different native user record.
+        db.execute(previous.values(revoked_at=now()))
     token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
-    db.add(
-        AuthSession(
-            user_id=user.id,
-            token_hash=digest(token),
-            csrf_hash=digest(csrf),
-            expires_at=now() + timedelta(hours=config.session_hours),
-        )
+    row = AuthSession(
+        user_id=user.id,
+        token_hash=digest(token),
+        csrf_hash=digest(csrf),
+        expires_at=now() + timedelta(hours=config.session_hours),
     )
+    db.add(row)
+    if shared is not None:
+        from app.shared_identity import attach
+
+        attach(request, db, row, shared[0], shared[1])
     db.commit()
+    cookie_seconds = (
+        config.session_hours * 3600
+        if shared is None
+        else max(1, int((row.expires_at - now()).total_seconds()))
+    )
     response.set_cookie(
         "onesa_session",
         token,
         httponly=True,
         secure=config.secure_cookies,
         samesite="lax",
-        max_age=config.session_hours * 3600,
+        max_age=cookie_seconds,
         path="/",
     )
     response.set_cookie(
@@ -144,7 +179,7 @@ def issue(request: Request, response: Response, db: Session, user: User) -> None
         httponly=False,
         secure=config.secure_cookies,
         samesite="lax",
-        max_age=config.session_hours * 3600,
+        max_age=cookie_seconds,
         path="/",
     )
 
@@ -152,6 +187,7 @@ def issue(request: Request, response: Response, db: Session, user: User) -> None
 @router.post("/register", status_code=201, response_model=SafeUser)
 def register(body: Register, request: Request, response: Response, db: DB) -> User:
     origin(request)
+    local_credentials(request)
     throttle(request, db, str(body.email))
     invitation = None
     if request.app.state.settings.registration_mode == "invitation":
@@ -181,13 +217,14 @@ def register(body: Register, request: Request, response: Response, db: DB) -> Us
 @router.post("/login", response_model=SafeUser)
 def login(body: Credentials, request: Request, response: Response, db: DB) -> User:
     origin(request)
+    local_credentials(request)
     throttle(request, db, str(body.email))
     # Account mutations and login serialize on the user before issuing sessions.
     user = db.scalar(select(User).where(User.email == str(body.email).casefold()).with_for_update())
     try:
         with request.app.state.auth_hash_semaphore:
             hasher.verify(user.password_hash if user else DUMMY, body.password)
-    except VerificationError:
+    except (VerificationError, InvalidHashError):
         fail(401, "invalid_credentials", "Invalid email or password")
     if user is None or user.status != "active":
         fail(401, "invalid_credentials", "Invalid email or password")
@@ -195,13 +232,36 @@ def login(body: Credentials, request: Request, response: Response, db: DB) -> Us
     return user
 
 
+def local_credentials(request: Request) -> None:
+    if request.app.state.settings.identity_enabled:
+        fail(403, "shared_sign_in_required", "Continue with your Onesa account")
+
+
+def safe_user(request: Request, user: User) -> SafeUser:
+    from app.shared_identity import administrator, current_identity
+
+    result = SafeUser.model_validate(user)
+    identity = current_identity(request, user.id)
+    if identity:
+        result = result.model_copy(
+            update={
+                "identity_mode": "onesa",
+                "email": identity.email,
+                "display_name": identity.name[:80],
+                "global_admin": identity.global_admin,
+                "administrator": administrator(request, user.id),
+            }
+        )
+    return result
+
+
 @router.get("/me", response_model=SafeUser)
-def me(auth: Auth) -> User:
-    return auth[0]
+def me(request: Request, auth: Auth) -> SafeUser:
+    return safe_user(request, auth[0])
 
 
 @router.post("/refresh", response_model=SafeUser)
-def refresh(request: Request, response: Response, db: DB, auth: Auth) -> User:
+def refresh(request: Request, response: Response, db: DB, auth: Auth) -> SafeUser:
     lock_account(db, auth)
     # Serialize rotation: a consumed token cannot create another session.
     old = db.scalar(
@@ -213,16 +273,56 @@ def refresh(request: Request, response: Response, db: DB, auth: Auth) -> User:
     if old is None or old.revoked_at is not None:
         fail(401, "unauthorized", "Session already rotated")
     old.revoked_at = now()
-    issue(request, response, db, auth[0])
-    return auth[0]
+    shared = None
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import current_identity, decrypt
+
+        record = db.get(IdentitySession, old.id)
+        identity = current_identity(request, auth[0].id)
+        if record is None or identity is None:
+            fail(401, "shared_sign_in_required", "Continue with your Onesa account")
+        shared = (identity, decrypt(request, record.encrypted_token))
+    issue(request, response, db, auth[0], shared=shared)
+    return safe_user(request, auth[0])
 
 
 @router.post("/logout", status_code=204)
-def logout(response: Response, db: DB, auth: Auth) -> None:
-    auth[1].revoked_at = now()
-    db.commit()
+def logout(request: Request, response: Response, db: DB) -> Response:
+    # Local sign-out remains available when the identity provider is unavailable.
+    # This narrowly scoped route still proves possession of the local session,
+    # exact Origin and session-bound CSRF before revoking an active session.
+    origin(request)
+    response.status_code = 204
+    central_signed_out = not request.app.state.settings.identity_enabled
+    session = db.scalar(
+        select(AuthSession)
+        .where(AuthSession.token_hash == digest(request.cookies.get("onesa_session", "")))
+        .with_for_update()
+    )
+    if session is not None and session.revoked_at is None and session.expires_at > now():
+        csrf = request.headers.get("X-CSRF-Token", "")
+        if not csrf or not secrets.compare_digest(digest(csrf), session.csrf_hash):
+            fail(403, "csrf_rejected", "Invalid CSRF token")
+        session.revoked_at = now()
+        db.commit()
+        if request.app.state.settings.identity_enabled:
+            from app.shared_identity import sign_out
+
+            central_signed_out = sign_out(request, db, session)
+    if not central_signed_out:
+        response = JSONResponse(
+            status_code=503,
+            content={
+                "error": {
+                    "code": "identity_logout_incomplete",
+                    "message": "Signed out here. Central sign-out could not be confirmed",
+                    "request_id": request.state.request_id,
+                }
+            },
+        )
     response.delete_cookie("onesa_session", path="/")
     response.delete_cookie("onesa_csrf", path="/")
+    return response
 
 
 def lock_account(db: Session, auth: tuple[User, AuthSession]) -> User:
@@ -255,16 +355,22 @@ def prove_password(
 ) -> User:
     throttle(request, db, auth[0].email)
     user = lock_account(db, auth)
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import require_recent
+
+        require_recent(request)
+        return user
     try:
         with request.app.state.auth_hash_semaphore:
             hasher.verify(user.password_hash, proof.current_password)
-    except VerificationError:
+    except (VerificationError, InvalidHashError):
         fail(403, "reauthentication_failed", "Current password is incorrect")
     return user
 
 
 @router.patch("/profile", response_model=SafeUser)
-def profile(body: ProfileUpdate, db: DB, auth: Auth) -> User:
+def profile(body: ProfileUpdate, request: Request, db: DB, auth: Auth) -> User:
+    local_credentials(request)
     user = lock_account(db, auth)
     user.display_name = body.display_name.strip()
     db.commit()
@@ -319,6 +425,7 @@ def revoke_others(body: PasswordProof, request: Request, db: DB, auth: Auth) -> 
 def change_password(
     body: PasswordChange, request: Request, response: Response, db: DB, auth: Auth
 ) -> User:
+    local_credentials(request)
     user = prove_password(request, db, auth, body)
     if body.new_password == body.current_password:
         fail(422, "password_unchanged", "Choose a different password")

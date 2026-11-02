@@ -1,5 +1,15 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Shared account configuration — 2026-11-02 candidate
+
+`ONESA_IDENTITY_ENABLED=false` retains the existing native flow. Enabling shared
+sign-in requires private `ONESA_IDENTITY_ISSUER`, `ONESA_IDENTITY_CLIENT_ID`,
+`ONESA_IDENTITY_CLIENT_SECRET`, `ONESA_IDENTITY_CALLBACK_URL` and
+`ONESA_IDENTITY_ENCRYPTION_KEY`, the additive schema and the reviewed existing
+Portal client. No browser token/secret or separate paid service is introduced.
+See [shared identity](SHARED_IDENTITY.md#private-configuration-and-storage) for
+exact defaults, callback binding, encryption custody, linking and rollout limits.
+
 ## Consumer inference and MCP source candidate
 
 `ONESA_CONSUMER_INFERENCE_ENABLED=false` is the server-only default. Enabling it

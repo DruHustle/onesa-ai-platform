@@ -4,6 +4,7 @@ import Link from "next/link";
 import { api, call, ApiError } from "../lib/api";
 import { useLocale } from "../lib/i18n";
 import FeatureShell from "./feature-shell";
+import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "./onesa-sign-in";
 type Identity = { id: string };
 /** The original task stays mounted during same-user reauthentication. */
 export default function RequireSession({
@@ -23,6 +24,7 @@ export default function RequireSession({
 }) {
   const { locale } = useLocale(),
     de = locale === "de";
+  const identityMethod = useOnesaIdentity();
   const [identity, setIdentity] = useState<Identity | null>(null),
     [checking, setChecking] = useState(true),
     [expired, setExpired] = useState(false),
@@ -131,7 +133,10 @@ export default function RequireSession({
                   {error}
                 </p>
               )}
-              <form
+              {!identityMethod || identityMethod.unavailable ? <IdentityEntryStatus method={identityMethod}/> : identityMethod.enabled ? <OnesaSignIn method={identityMethod} next={destination}
+                preserveDraft={Boolean(identity)} onAuthenticated={user => {
+                  setIdentity(user); setExpired(false); setLoginEpoch(previous => previous + 1);
+                }}/> : <><form
                 className="feature-card session-signin"
                 onSubmit={signIn}
                 aria-label={de ? "Anmelden" : "Sign in"}
@@ -175,6 +180,7 @@ export default function RequireSession({
               <Link href={`/?next=${encodeURIComponent(destination)}`}>
                 {de ? "Konto erstellen" : "Create an account"}
               </Link>
+              </>}
             </>
           )}
         </FeatureShell>

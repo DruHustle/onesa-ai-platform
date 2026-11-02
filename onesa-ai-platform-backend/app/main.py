@@ -78,6 +78,9 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     from app.identity import router as identity_router
 
     api.include_router(identity_router)
+    from app.shared_identity import router as shared_identity_router
+
+    api.include_router(shared_identity_router)
     from app.uploads import router as uploads_router
 
     api.include_router(uploads_router)
@@ -205,6 +208,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
                 valid = revision in {
                     REQUIRED_SCHEMA_REVISION,
+                    "20261026_cybersecurity",
                     "20261025_twins",
                     "20261021_industrial",
                     "20261010_capacity",
@@ -212,11 +216,18 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.industrial_demo_enabled:
                     valid = revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261026_cybersecurity",
                         "20261025_twins",
                         "20261021_industrial",
                     }
                 if config.digital_twins_enabled:
-                    valid = revision in {REQUIRED_SCHEMA_REVISION, "20261025_twins"}
+                    valid = revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261026_cybersecurity",
+                        "20261025_twins",
+                    }
+                if config.identity_enabled:
+                    valid = valid and revision == "20261102_shared_identity"
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(

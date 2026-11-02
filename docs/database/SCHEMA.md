@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261026_cybersecurity. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261102_shared_identity. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -376,6 +376,19 @@ Indexes: []
 
 Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id", "attempts BETWEEN 0 AND 5", "state IN ('queued', 'leased', 'accepted', 'failed', 'cancelled')"]
 
+## identity_sessions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| session_id | UUID | False | primary key; FK auth_sessions.id / CASCADE |
+| issuer | VARCHAR(1000) | False |  |
+| subject | VARCHAR(36) | False |  |
+| encrypted_token | VARCHAR(8192) | False |  |
+
+Indexes: []
+
+Constraints: ["ForeignKeyConstraint: session_id", "PrimaryKeyConstraint: session_id"]
+
 ## identity_tokens
 
 | Field | PostgreSQL type | Nullable | Constraints / relationship |
@@ -394,6 +407,20 @@ Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id"
 Indexes: [{"name": "ix_identity_tokens_expires_at", "columns": ["expires_at"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash", "purpose IN ('invitation', 'recovery')"]
+
+## identity_transactions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| state_hash | VARCHAR(64) | False | primary key |
+| browser_hash | VARCHAR(64) | False |  |
+| payload | VARCHAR(16384) | False |  |
+| expires_at | TIMESTAMP WITH TIME ZONE | False |  |
+| consumed_at | TIMESTAMP WITH TIME ZONE | True |  |
+
+Indexes: [{"name": "ix_identity_transactions_expires_at", "columns": ["expires_at"], "unique": false}]
+
+Constraints: ["PrimaryKeyConstraint: state_hash"]
 
 ## industrial_investigations
 
@@ -471,6 +498,20 @@ Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
 Indexes: [{"name": "ix_rate_buckets_expires_at", "columns": ["expires_at"], "unique": false}]
 
 Constraints: ["PrimaryKeyConstraint: key"]
+
+## shared_identities
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| issuer | VARCHAR(1000) | False |  |
+| subject | VARCHAR(36) | False |  |
+| user_id | UUID | False | unique; FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: []
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: issuer, subject", "UniqueConstraint: user_id"]
 
 ## trips
 
