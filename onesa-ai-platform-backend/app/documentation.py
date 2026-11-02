@@ -24,6 +24,18 @@ class Question(Strict):
 
 
 def engineering_access(request: Request, user_id: object) -> bool:
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import administrator, current_identity
+
+        identity = current_identity(request, user_id)
+        return bool(
+            identity
+            and identity.fresh(mfa=True)
+            and (
+                administrator(request, user_id)
+                or str(user_id) in request.app.state.settings.documentation_engineering_user_ids
+            )
+        )
     return str(user_id) in request.app.state.settings.documentation_engineering_user_ids
 
 

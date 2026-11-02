@@ -26,7 +26,7 @@ export async function proxy(request: Request): Promise<Response> {
     // Provider login/bypass cookies belong to Vercel, never the upstream API.
     const applicationCookies = (headers.get('cookie') || '').split(';')
       .map(cookie => cookie.trim())
-      .filter(cookie => ['onesa_session', 'onesa_csrf'].includes(cookie.split('=', 1)[0]));
+      .filter(cookie => ['onesa_session', 'onesa_csrf', 'onesa_identity_flow'].includes(cookie.split('=', 1)[0]));
     if (applicationCookies.length) headers.set('cookie', applicationCookies.join('; '));
     else headers.delete('cookie');
     // Avoid transparent fetch decompression leaving incorrect response headers.

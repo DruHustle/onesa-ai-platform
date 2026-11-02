@@ -44,6 +44,18 @@ def sha(value: Any) -> str:
 
 
 def operator(request: Request, owner: UUID) -> bool:
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import administrator, current_identity
+
+        identity = current_identity(request, owner)
+        return bool(
+            identity
+            and identity.fresh(mfa=True)
+            and (
+                administrator(request, owner)
+                or str(owner) in request.app.state.settings.cybersecurity_operator_user_ids
+            )
+        )
     return str(owner) in request.app.state.settings.cybersecurity_operator_user_ids
 
 
