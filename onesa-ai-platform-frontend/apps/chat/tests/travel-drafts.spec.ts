@@ -25,6 +25,9 @@ test.beforeEach(async ({ page, baseURL }) => {
   await page.route("**/api/**", (route) =>
     reply(route, { error: { message: "Unconfigured synthetic request" } }, 503),
   );
+  await page.route("**/api/v1/auth/onesa/config", (route) =>
+    reply(route, { enabled: false, account_url: null }),
+  );
   await page.route("**/api/v1/auth/me", (route) =>
     reply(route, { id: "synthetic-user-a" }),
   );

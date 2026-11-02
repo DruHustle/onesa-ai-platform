@@ -16,6 +16,13 @@ administrators to `/account?tab=access`; AI content remains owned by its existin
 native user UUID. Administrator status does not expose another user's private
 conversations, documents, exports or activity.
 
+The first server render resolves the public sign-in method through the configured
+API proxy, without forwarding browser credentials, and with a bounded timeout.
+The browser rechecks that method before accepting credential submissions. Native
+email/password drafts remain editable during this check. Only an explicit missing
+configuration route selects the older native flow; an unavailable or malformed
+response keeps sign-in unavailable instead of guessing an authentication mode.
+
 Profile, password, recovery, MFA and product access are managed at the central
 account. AI's separate native registration/login/profile/password/recovery paths
 refuse credential changes while shared identity is enabled. The settings page

@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { ApiError, call } from "../lib/api";
 import { useLocale } from "../lib/i18n";
+import { parseIdentityMethod, type OnesaMethod } from "../lib/identity-method";
 
-export type OnesaMethod = { enabled: boolean; account_url: string | null; unavailable?: boolean };
+export type { OnesaMethod } from "../lib/identity-method";
 type Identity = { id: string; email: string; display_name: string };
+const IdentityMethodContext = createContext<OnesaMethod | null>(null);
 
-export function useOnesaIdentity() {
-  const [method, setMethod] = useState<OnesaMethod | null>(null);
+export function OnesaIdentityProvider({ initialMethod, children }:
+  { initialMethod: OnesaMethod; children: React.ReactNode }) {
+  const [method, setMethod] = useState<OnesaMethod>({ ...initialMethod, pending: true });
   useEffect(() => {
     const controller = new AbortController();
     call("/auth/onesa/config", "GET", undefined, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]))
       .then(response => response.json()).then(value => {
-        if (typeof value.enabled !== "boolean") throw new Error("Invalid sign-in configuration");
-        if (!controller.signal.aborted) setMethod(value);
+        const verified = parseIdentityMethod(value);
+        if (!controller.signal.aborted) setMethod(verified);
       }).catch(reason => {
         if (controller.signal.aborted) return;
         // Only an older API's explicit missing route selects the native flow.
@@ -22,7 +25,11 @@ export function useOnesaIdentity() {
       });
     return () => controller.abort();
   }, []);
-  return method;
+  return <IdentityMethodContext.Provider value={method}>{children}</IdentityMethodContext.Provider>;
+}
+
+export function useOnesaIdentity() {
+  return useContext(IdentityMethodContext);
 }
 
 export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) {
@@ -62,7 +69,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
   }, [de]);
 
   async function start() {
-    if (pending.current) return;
+    if (pending.current || method.pending || method.unavailable) return;
     pending.current = true; setBusy(true); setError("");
     try {
       if (preserveDraft && onAuthenticated) {
@@ -99,7 +106,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
 
   async function link(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || method.pending || method.unavailable) return;
     const form = event.currentTarget, data = new FormData(form);
     pending.current = true; setBusy(true); setError("");
     try {
@@ -121,8 +128,8 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
       <p>{de ? "Bestätige dein bisheriges AI-Passwort einmalig. Deine Gespräche und Dateien bleiben deinem Konto zugeordnet." : "Confirm your existing AI password once. Your conversations and files stay with your account."}</p>
       <label>{de ? "E-Mail" : "Email"}<input name="email" type="email" autoComplete="username" required disabled={busy}/></label>
       <label>{de ? "Bisheriges AI-Passwort" : "Existing AI password"}<input name="password" type="password" autoComplete="current-password" required disabled={busy}/></label>
-      <button className="send" disabled={busy}>{busy ? (de ? "Wird verbunden…" : "Connecting…") : (de ? "Konto verbinden" : "Connect account")}</button>
-    </form> : <button className="send" type="button" onClick={start} disabled={busy}>
+      <button className="send" disabled={busy || method.pending}>{busy ? (de ? "Wird verbunden…" : "Connecting…") : (de ? "Konto verbinden" : "Connect account")}</button>
+    </form> : <button className="send" type="button" onClick={start} disabled={busy || method.pending}>
       {busy ? (de ? "Anmeldung wird bestätigt…" : "Waiting for sign-in…") : (de ? "Mit Onesa fortfahren" : "Continue with Onesa")}
     </button>}
     {busy && preserveDraft && <p role="status">{de ? "Schließe die Anmeldung im neuen Fenster ab. Dein Entwurf bleibt hier erhalten." : "Finish signing in in the new window. Your draft stays here."}</p>}

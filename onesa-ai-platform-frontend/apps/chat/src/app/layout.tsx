@@ -5,6 +5,8 @@ import {company} from "../lib/company";
 import "./globals.css";
 import { cookies } from "next/headers";
 import { LocaleProvider, type Locale } from "../lib/i18n";
+import { OnesaIdentityProvider } from "../components/onesa-sign-in";
+import { loadIdentityMethod } from "../lib/server/identity-method";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { default: "Chat | Onesa AI Platform", template: "%s | Onesa AI Platform" },
@@ -26,7 +28,8 @@ export default async function Layout({
       "ONESA_UI_LOCALE must name an available interface catalog: en or de",
     );
   }
-  const preference = (await cookies()).get("onesa_ui_locale")?.value;
+  const [preferences, identityMethod] = await Promise.all([cookies(), loadIdentityMethod()]);
+  const preference = preferences.get("onesa_ui_locale")?.value;
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
   return (
@@ -37,7 +40,9 @@ export default async function Layout({
           return environment ? <div className="environment-context" role="region" aria-label="Deployment context">{environment} · Onesa AI Platform</div> : null;
         })()}
         <LocaleProvider initialLocale={locale}>
-          <DraftNavigationProvider>{children}</DraftNavigationProvider>
+          <OnesaIdentityProvider initialMethod={identityMethod}>
+            <DraftNavigationProvider>{children}</DraftNavigationProvider>
+          </OnesaIdentityProvider>
           <CompanyFooter legalName={company.legalName} />
         </LocaleProvider>
       </body>
