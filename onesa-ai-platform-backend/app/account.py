@@ -6,7 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Request, Response
 from sqlalchemy import select, text
 
-from app.auth import DB, Auth, lock_account, prove_password
+from app.auth import DB, Auth, lock_account, prove_password, safe_user
 from app.errors import fail
 from app.industrial import InvestigationOut
 from app.industrial import output as investigation_output
@@ -155,7 +155,7 @@ def export_account(
         )
     exported = AccountExport(
         exported_at=now(),
-        account=SafeUser.model_validate(user),
+        account=safe_user(request, user),
         conversations=[
             ExportConversation(
                 conversation=ConversationOut.model_validate(row),
