@@ -53,7 +53,10 @@ English remains default. Shared auth/navigation copy is externalized in lib/i18n
 English/German catalogs and typed keys; language selection persists in a non-sensitive cookie.
 Server layout validates cookie and ONESA_UI_LOCALE against installed catalogs, renders html.lang
 and initializes context. Invalid preferences fall back to the configured catalog; invalid
-operator configuration fails explicitly. Other chat/knowledge/agent/travel workspace text and
+operator configuration fails explicitly. The shared company footer consumes this context,
+so its contact and legal link labels and Portal destinations follow language changes
+immediately while retaining the server-selected locale on first render.
+Other chat/knowledge/agent/travel workspace text and
 API error messages remain English. Complete reviewed translations are separate work, not claimed.
 Add French/Spanish/other catalogs and migrate remaining strings incrementally; retain model output
 verbatim and never infer language performance from interface availability. No official tagline

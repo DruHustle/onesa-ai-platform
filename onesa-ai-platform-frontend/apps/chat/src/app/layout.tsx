@@ -1,4 +1,5 @@
 import { DraftNavigationProvider } from "../components/draft-navigation";
+import { CompanyFooter } from "../components/company-footer";
 import type { Metadata } from "next";
 import {company} from "../lib/company";
 import "./globals.css";
@@ -35,8 +36,10 @@ export default async function Layout({
           const environment = process.env.VERCEL_ENV === "preview" ? "STAGING" : process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "development" ? "DEVELOPMENT" : null;
           return environment ? <div className="environment-context" role="region" aria-label="Deployment context">{environment} · Onesa AI Platform</div> : null;
         })()}
-        <LocaleProvider initialLocale={locale}><DraftNavigationProvider>{children}</DraftNavigationProvider></LocaleProvider>
-        <footer className="company-footer"><span>{company.legalName}</span><a href={`https://onesa.eu/${locale}/contact`}>{locale === "de" ? "Kontakt" : "Contact"}</a><a href={`https://onesa.eu/${locale}/impressum`}>{locale === "de" ? "Impressum" : "Legal Notice"}</a><a href={`https://onesa.eu/${locale}/privacy`}>{locale === "de" ? "Datenschutz" : "Privacy"}</a></footer>
+        <LocaleProvider initialLocale={locale}>
+          <DraftNavigationProvider>{children}</DraftNavigationProvider>
+          <CompanyFooter legalName={company.legalName} />
+        </LocaleProvider>
       </body>
     </html>
   );
