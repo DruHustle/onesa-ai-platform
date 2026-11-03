@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {validateIdentity,validateAuthorization,validateCallback,totp,freshCode,scopeIdentityRequests} from './oracle_ai_identity_browser.mjs';
+import {validateIdentity,validateAuthorization,validateCallback,totp,freshCode,scopeIdentityRequests,signInIdentity} from './oracle_ai_identity_browser.mjs';
 import contextContract from './oracle_ai_identity_context.cjs';
 
 function identity(){
@@ -77,4 +77,51 @@ test('a foreign bypass redirect is refused before its target is visited',async()
  const value=identity();let added=false,closed=false;
  const context={setExtraHTTPHeaders:async()=>{},addCookies:async()=>{added=true;},route:async()=>assert.fail(),browser:()=>({newContext:async()=>({request:{get:async(_origin,options)=>{assert.equal(options.maxRedirects,0);return {status:()=>307,headers:()=>({location:'https://foreign.example.test/'})};}},close:async()=>{closed=true;}})})};
  await assert.rejects(scopeIdentityRequests(context,value,'synthetic-bypass'));assert.equal(added,false);assert.equal(closed,true);
+});
+
+test('UI identity validates the actual browser transaction when its response body is unavailable',async t=>{
+ for(const mutation of ['none','start_status','start_frame','start_method','client','method','frame','non_navigation','foreign_origin'])await t.test(mutation,async()=>{
+  const value=identity(),frame={},observers={};let bodyReads=0,portalObservations=0,beforeClick;
+  const response={url:()=>value.origin+'/api/v1/auth/onesa/start',request:()=>({method:()=>mutation==='start_method'?'GET':'POST',frame:()=>mutation==='start_frame'?{}:frame}),status:()=>mutation==='start_status'?503:200,
+   async json(){bodyReads++;throw new Error('Response body was discarded during document replacement');}};
+  const page={url:()=>value.origin,mainFrame:()=>frame,
+   async route(){assert.fail('The protocol observer must not install another request route');},
+   waitForResponse(predicate,options){assert.equal(options.timeout,15000);return new Promise((resolve,reject)=>{observers.start={predicate,resolve,reject};});},
+   waitForRequest(predicate,options){const key=options.timeout===90000?'callback':'authorization';assert.equal(options.timeout,key==='callback'?90000:20000);return new Promise((resolve,reject)=>{observers[key]={predicate,resolve,reject};});},
+   getByRole(role,options){assert.equal(role,'button');assert.deepEqual(options,{name:'Continue with Onesa',exact:true});return {async click(){
+    beforeClick={start:!!observers.start,authorization:!!observers.authorization,callback:!!observers.callback};assert(observers.start);
+    if(observers.start.predicate(response))observers.start.resolve(response);else observers.start.reject(new Error('Synthetic start observer timeout'));
+    const destination=authorization(value);
+    if(mutation==='client')destination.searchParams.set('client_id','foreign-client');
+    if(mutation==='foreign_origin')destination.hostname='foreign.example.test';
+    const request={url:()=>destination.href,method:()=>mutation==='method'?'POST':'GET',frame:()=>mutation==='frame'?{}:frame,isNavigationRequest:()=>mutation!=='non_navigation'};
+    if(observers.authorization){if(observers.authorization.predicate(request))observers.authorization.resolve(request);else observers.authorization.reject(new Error('Synthetic authorization observer timeout'));}
+    if(observers.callback){
+     const callback={url:()=>value.origin+'/api/v1/auth/onesa/callback',method:()=>'GET',frame:()=>frame,isNavigationRequest:()=>true};
+     assert(observers.callback.predicate(callback));
+     for(const changed of [{method:()=>'POST'},{frame:()=>({})},{isNavigationRequest:()=>false}])assert(!observers.callback.predicate({...callback,...changed}));
+    }
+   }};},
+   async waitForURL(){portalObservations++;throw new Error('Synthetic observer stops before Portal credentials');},
+  };
+  const context={async setExtraHTTPHeaders(headers){assert.deepEqual(headers,{});},async route(){}};
+  await assert.rejects(signInIdentity(page,context,value),{message:'AI_IDENTITY_FLOW_FAILED'});
+  assert.equal(bodyReads,0,'UI qualification must not read a discarded response body');
+  assert.deepEqual(beforeClick,{start:true,authorization:true,callback:true});assert.equal(portalObservations,mutation==='none'?1:0);
+ });
+});
+
+test('API-only identity keeps its original request and never installs a navigation hold',async()=>{
+ const value=identity(),expected=authorization(value).href,events=[],frame={};let posts=0,callbackRegistered=false;
+ const context={async setExtraHTTPHeaders(headers){assert.deepEqual(headers,{});},async route(){},request:{async post(url,options){
+  posts++;assert(callbackRegistered);assert.equal(url,value.origin+'/api/v1/auth/onesa/start');
+  assert.deepEqual(options,{maxRedirects:0,headers:{Origin:value.origin},data:{next:'/',reauthenticate:false}});events.push('post');
+  return {status:()=>200,async json(){events.push('body');return {authorize_url:expected};}};
+ }}};
+ const page={url:()=>value.origin,mainFrame:()=>frame,async route(){assert.fail('API-only must not install a page route');},waitForResponse(){assert.fail('API-only must not observe a browser start response');},
+  waitForRequest(_predicate,options){assert.equal(options.timeout,90000);callbackRegistered=true;return new Promise(()=>{});},async goto(url){assert.equal(url,expected);events.push('navigation');},
+  async waitForURL(){events.push('portal-observation');throw new Error('Synthetic observer stops before Portal credentials');},
+ };
+ await assert.rejects(signInIdentity(page,context,value,{apiOnly:true}),{message:'AI_IDENTITY_FLOW_FAILED'});
+ assert.equal(posts,1);assert.deepEqual(events,['post','body','navigation','portal-observation']);
 });

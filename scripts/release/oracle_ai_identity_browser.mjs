@@ -91,26 +91,50 @@ async function jsonGet(context,origin,path){
  return JSON.parse(raw.toString('utf8'));
 }
 
+function observeIdentityStart(page,identity,frame){
+ let rejectBudget,timer;
+ const captured=page.waitForResponse(response=>response.request().method()==='POST'&&response.request().frame()===frame&&response.url()===identity.origin+'/api/v1/auth/onesa/start',{timeout:15000}).then(response=>{
+  requireValue(response.status()===200);
+ });
+ const budget=new Promise((_resolve,reject)=>{rejectBudget=reject;timer=setTimeout(()=>reject(new Error('AI_IDENTITY_START_TIMEOUT')),15000);});
+ const promise=Promise.race([captured,budget]).finally(()=>clearTimeout(timer));
+ promise.catch(()=>{});
+ return {promise,close(){clearTimeout(timer);rejectBudget(new Error('AI_IDENTITY_START_CLOSED'));}};
+}
+
 export async function signInIdentity(page,context,identity,{actor='primary',appBypass=null,stepUp=false,apiOnly=false,code=freshCode,observe=()=>{}}={}){
+ let startObserver;
  try{
   const {app,portal,account}=validateIdentity(identity,actor);
   const {expect}=require('@playwright/test');
   await scopeIdentityRequests(context,identity,appBypass);
   requireValue(new URL(page.url()).origin===app);
-  let response;
+  const frame=page.mainFrame();
+  const callback=page.waitForRequest(request=>{
+   const target=new URL(request.url());return request.isNavigationRequest()&&request.frame()===frame&&request.method()==='GET'&&target.origin===app&&target.pathname==='/api/v1/auth/onesa/callback';
+  },{timeout:90000});
+  callback.catch(()=>{}); // Register before action; never miss an immediate callback.
+  const readAuthorization=async response=>{
+   requireValue(response.status()===200);
+   return validateAuthorization((await response.json()).authorize_url,identity,stepUp);
+  };
+  let authorization;
   if(apiOnly){
    requireValue(stepUp===false);
-   response=await context.request.post(app+'/api/v1/auth/onesa/start',{maxRedirects:0,headers:{Origin:app},data:{next:'/',reauthenticate:false}});
+   authorization=await readAuthorization(await context.request.post(app+'/api/v1/auth/onesa/start',{maxRedirects:0,headers:{Origin:app},data:{next:'/',reauthenticate:false}}));
   }else{
-   const start=page.waitForResponse(response=>response.request().method()==='POST'&&response.url()===app+'/api/v1/auth/onesa/start',{timeout:15000});
-   start.catch(()=>{});
+   startObserver=observeIdentityStart(page,identity,frame);
+   const start=startObserver.promise;
+   // Validate the actual browser transaction without retaining a response body
+   // across document replacement or changing native request handling.
+   const outgoing=page.waitForRequest(request=>{
+    const target=new URL(request.url());return request.isNavigationRequest()&&request.frame()===frame&&request.method()==='GET'&&target.origin===portal&&target.pathname===new URL(identity.issuer).pathname+'/auth';
+   },{timeout:20000}).then(request=>validateAuthorization(request.url(),identity,stepUp));
+   outgoing.catch(()=>{});
    await page.getByRole('button',{name:stepUp?'Confirm administrator sign-in':'Continue with Onesa',exact:true}).click();
-   response=await start;
+   await start; // The same main-frame start POST must have succeeded.
+   authorization=await outgoing;
   }
-  requireValue(response.status()===200);
-  const authorization=validateAuthorization((await response.json()).authorize_url,identity,stepUp);
-  const callback=page.waitForRequest(request=>{const target=new URL(request.url());return target.origin===app&&target.pathname==='/api/v1/auth/onesa/callback';},{timeout:90000});
-  callback.catch(()=>{});
   if(apiOnly)await page.goto(authorization.href);
   await page.waitForURL(url=>url.origin===portal&&/^\/account\/sign-in\/[A-Za-z0-9_-]{8,128}$/.test(url.pathname),{timeout:20000});
   await expect(page.locator('input[name="email"]')).toBeEditable();
@@ -179,6 +203,7 @@ export async function signInIdentity(page,context,identity,{actor='primary',appB
   return {schema_version:1,origin:app,issuer:identity.issuer,subject:account.subject,local_user_id:account.local_user_id,csrf:csrf.value,
    cookies:[cookie,csrf].map(value=>Object.fromEntries(['name','value','domain','path','expires','httpOnly','secure','sameSite'].map(key=>[key,value[key]])))};
  }catch{throw new Error('AI_IDENTITY_FLOW_FAILED');}
+ finally{startObserver?.close();}
 }
 
 export async function acquireIdentity(request){
