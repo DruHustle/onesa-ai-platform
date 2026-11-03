@@ -13,7 +13,7 @@ const routes = {
 };
 
 async function navigateInterface(
-  page, origin, route = "/", { authentication = false, timeout = 30000 } = {},
+  page, origin, route = "/", { authentication = false, sharedIdentity = false, timeout = 30000 } = {},
 ) {
   const target = new URL(route, origin);
   if (!Object.hasOwn(routes, route) || target.origin !== new URL(origin).origin)
@@ -46,7 +46,9 @@ async function navigateInterface(
     if (landed.origin !== target.origin || landed.pathname !== target.pathname)
       throw Error("Interface route changed");
     const content = authentication
-      ? page.getByLabel("Email", { exact: true })
+      ? sharedIdentity ? page.getByRole("button", { name: "Continue with Onesa", exact: true }) : page.getByLabel("Email", { exact: true })
+      : sharedIdentity && route === "/settings"
+        ? page.getByRole("heading", { name: "Your Onesa account", exact: true, level: 2 })
       : profile.label
         ? page.getByLabel(profile.label, { exact: true })
         : page.getByRole("heading", { name: profile.heading, exact: true, level: 1 });

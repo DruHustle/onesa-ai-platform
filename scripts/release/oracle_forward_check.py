@@ -41,6 +41,23 @@ with TestClient(create_app(settings),base_url="http://localhost:3100") as client
 
 def check(folder, binding, operation):
     r.require(str(UUID(operation)) == operation, "FORWARD_CHECK_OPERATION")
+    shared = binding.get("component") in r.profiles.IDENTITY
+    plan = r.read(r.plan_path(binding)) if shared else None
+    revision = "20261026_cybersecurity"
+    if shared:
+        r.identity_profile(binding, plan)
+        enabled = r.profiles.enabled_features(
+            r.runtime_values(r.candidate_environment(binding, "staging")), "identity"
+        )
+        r.require(
+            plan["binding"] == binding
+            and r.profiles.workflow_mode("identity", enabled) == "foundation"
+            and plan.get("migration_revision")
+            == plan.get("expected_schema_revision")
+            == r.IDENTITY_SCHEMA,
+            "EXACT_IDENTITY_FOUNDATION_FORWARD_PROFILE_REQUIRED",
+        )
+        revision = r.IDENTITY_SCHEMA
     name = "onesa-forward-check-" + UUID(operation).hex
     socket = folder / "forward-check-socket"
     socket.mkdir(mode=0o700)
@@ -63,7 +80,7 @@ def check(folder, binding, operation):
         "alembic",
         binding["artifact_digest"],
         "upgrade",
-        "20261026_cybersecurity",
+        revision,
         "--sql",
         timeout=60,
     )
@@ -206,6 +223,10 @@ def check(folder, binding, operation):
             "--no-acl",
             timeout=60,
         )
+        r.require(
+            dump.startswith(b"PGDMP") and len(dump) <= 16 * 1024 * 1024,
+            "FORWARD_SYNTHETIC_DUMP_BOUND",
+        )
         r.docker(
             "exec",
             name,
@@ -245,7 +266,7 @@ def check(folder, binding, operation):
             "status": "PASS",
             "binding": binding,
             "operation_id": operation,
-            "schema_revision": "20261026_cybersecurity",
+            "schema_revision": revision,
             "candidate_image": binding["artifact_digest"],
             "twins_disabled": True,
             "cybersecurity_disabled": True,
@@ -256,6 +277,10 @@ def check(folder, binding, operation):
             "scope": "offline synthetic forward-schema rollback compatibility; no production data or inference",
         }
         r.write(folder / "forward-check-receipt.json", result)
+        if shared:
+            import oracle_identity_rollback
+
+            oracle_identity_rollback.check(folder, binding, operation, plan)
         return result
     finally:
         if started:
