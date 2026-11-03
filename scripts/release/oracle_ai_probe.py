@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import UUID
 
+import oracle_ai_identity_probe as shared
 import oracle_release_profiles as profiles
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -363,7 +364,9 @@ def run_node(script, env, *, args=(), timeout=1200):
     require(r.returncode == 0, "PINNED_BROWSER_PROBE_FAILED")
 
 
-def export_owned_restore(engine, users, binding, operation, profile="twins"):
+def export_owned_restore(
+    engine, users, binding, operation, profile="twins", *, plan=None
+):
     from oracle_twin_restore import CYBER_TABLES, TABLES
     from sqlalchemy import text
 
@@ -372,7 +375,10 @@ def export_owned_restore(engine, users, binding, operation, profile="twins"):
     with engine.connect() as db, db.begin():
         db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
         require(profile in ["twins", "cybersecurity"], "RESTORE_EXPORT_PROFILE")
-        for table in CYBER_TABLES if profile == "cybersecurity" else TABLES:
+        names = list(CYBER_TABLES if profile == "cybersecurity" else TABLES)
+        if plan is not None and plan["mode"] == "identity":
+            names.append("shared_identities")
+        for table in names:
             if table == "users":
                 where = "id = ANY(CAST(:owners AS uuid[]))"
             elif table in ["twin_readings", "twin_events"]:
@@ -398,20 +404,25 @@ def export_owned_restore(engine, users, binding, operation, profile="twins"):
     bundle = {
         "binding": binding,
         "operation_id": operation,
-        "scope": "new-owned-release-fixtures-only",
+        "scope": "existing-owned-identity-fixtures-only"
+        if plan is not None and plan["mode"] == "identity"
+        else "new-owned-release-fixtures-only",
         "tables": tables,
         "profile": profile,
     }
     from oracle_twin_restore import validate
 
-    validate(bundle, binding, operation)
+    if plan is not None and plan["mode"] == "identity":
+        validate(bundle, binding, operation, plan=plan)
+    else:
+        validate(bundle, binding, operation)
     # Export only these two fixtures' rows. The pinned host copies their exact
     # referenced blobs; this browser container never mounts other owners' files.
     require(len(json.dumps(bundle)) <= 16 * 1024 * 1024, "RESTORE_FIXTURE_BOUND")
     write(OUTPUT / "restore-fixtures.json", bundle)
 
 
-def ordinary_production(origin, users, project, hosted_suite):
+def ordinary_production(origin, users, project, hosted_suite, *, identity=None):
     clients = [hosted_suite.Session(origin), hosted_suite.Session(origin)]
     for client, user in zip(clients, users, strict=True):
         client.login(user)
@@ -451,7 +462,9 @@ def ordinary_production(origin, users, project, hosted_suite):
         }
     )
     os.environ["VERCEL_PROJECT_ID"] = project
-    checks = hosted_suite.production_probes(origin)
+    checks = hosted_suite.production_probes(
+        origin, **({"identity": identity} if identity is not None else {})
+    )
     require(
         checks and all(v == "PASS" for v in checks.values()),
         "ORDINARY_PRODUCTION_CRITICAL_WORKFLOWS_FAILED",
@@ -473,7 +486,17 @@ def feature_probe_flags(binding, environment):
 
 
 def feature_probe(
-    feature, phase, environment, binding, operation, origin, users, bypass, env
+    feature,
+    phase,
+    environment,
+    binding,
+    operation,
+    origin,
+    users,
+    bypass,
+    env,
+    *,
+    identity=None,
 ):
     """Exercise the other enabled feature across the same controlled replacement.
 
@@ -495,6 +518,7 @@ def feature_probe(
                 "users": users,
                 "output_dir": str(OUTPUT),
                 "bypass": bypass,
+                **({"identity": identity} if identity is not None else {}),
             },
         )
     scoped_env = {**env, "ONESA_ORACLE_" + name.upper() + "_CONTEXT": str(context_path)}
@@ -538,12 +562,13 @@ def execute(environment, request):
     )
     require(
         binding["repository"] == "DruHustle/onesa-ai-platform"
-        and profiles.component(binding) in profiles.SCOPED,
+        and profiles.component(binding) in profiles.EXPANDED,
         "PROBE_COMPONENT",
     )
     profiles.bound_mode(binding, plan["mode"])
     settings = runtime("/private/runtime.env")
     enabled = profiles.enabled_features(settings, plan["mode"])
+    workflow = profiles.workflow_mode(plan["mode"], enabled)
     config = private_json("/private/vercel.json")
     origin, bypass, deployment = provider(config, environment, binding, plan, request)
     if (
@@ -568,11 +593,33 @@ def execute(environment, request):
     ci = request["ci_run_id"]
     require(type(ci) is int and ci > 0, "GENUINE_CI_REFERENCE_REQUIRED")
     engine = fixture_engine(settings, environment, plan["expected_schema_revision"])
-    before = fingerprints(engine)
+    identity = (
+        shared.load_identity(plan, binding, request, environment, origin, settings)
+        if plan["mode"] == "identity"
+        else None
+    )
+    users = shared.fixture_users(identity) if identity is not None else []
+    if identity is not None:
+        shared.local_accounts(engine, identity)
+        before_owned = shared.owned_fingerprints(engine, users)
+        before_sessions = shared.session_baseline(engine, users)
+        with os.fdopen(
+            os.open(
+                identity["session_journal"],
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+            ),
+            "w",
+        ) as journal:
+            journal.flush()
+            os.fsync(journal.fileno())
+    before = fingerprints(engine, exclude={user["id"] for user in users})
     write(OUTPUT / "preservation-before.json", preservation_summary(before))
-    users = []
     clean = False
     preserved = False
+    own_preserved = False
+    authenticated = set()
+    original = None
     record = {
         "binding": binding,
         "operation_id": operation,
@@ -591,7 +638,8 @@ def execute(environment, request):
         "status": "FAIL",
     }
     try:
-        users = create_fixtures(engine, ci)
+        if identity is None:
+            users = create_fixtures(engine, ci)
         fixture = {
             "scope": "approved-synthetic-staging"
             if environment == "staging"
@@ -613,9 +661,28 @@ def execute(environment, request):
                 super().__init__(*a, **kw)
                 self.opener.addheaders = [("User-Agent", "OnesaOwnerOracleRelease/1.0")]
 
+            def login(self, user):
+                if identity is None:
+                    return super().login(user)
+                result = shared.login(self, user, identity, bypass)
+                authenticated.add(user["id"])
+                return result
+
         hosted_suite.Session = Identified
         if bypass:
             os.environ["VERCEL_AUTOMATION_BYPASS_SECRET"] = bypass
+        if identity is not None:
+            anonymous = Identified(origin)
+            require(
+                anonymous.call("GET", "/api/v1/auth/onesa/config")["enabled"] is True,
+                "SHARED_IDENTITY_MUST_BE_ENABLED",
+            )
+            anonymous.call(
+                "POST",
+                "/api/v1/auth/login",
+                {"email": users[0]["email"], "password": "synthetic-disabled-login"},
+                expected=403,
+            )
         env = {
             "PATH": "/usr/local/bin:/usr/bin:/bin",
             "LANG": "C.UTF-8",
@@ -635,6 +702,7 @@ def execute(environment, request):
                 "frontend_origin": origin,
                 "fixture_file": str(fixture_path),
                 "output_dir": str(OUTPUT),
+                **({"identity": identity} if identity is not None else {}),
             }
             context_path = OUTPUT / "oracle-context.json"
             write(context_path, context)
@@ -668,9 +736,13 @@ def execute(environment, request):
             }
         else:
             record["ordinary_workflows"] = ordinary_production(
-                origin, users, config["project_id"], hosted_suite
+                origin,
+                users,
+                config["project_id"],
+                hosted_suite,
+                **({"identity": identity} if identity is not None else {}),
             )
-        supplemental = sorted(enabled - {plan["mode"]})
+        supplemental = sorted(enabled - {workflow})
         supplemental_prepared = {}
         for feature in supplemental:
             supplemental_prepared[feature] = feature_probe(
@@ -683,8 +755,9 @@ def execute(environment, request):
                 users,
                 bypass,
                 env,
+                **({"identity": identity} if identity is not None else {}),
             )
-        if plan["mode"] == "foundation":
+        if workflow == "foundation":
             clients = [hosted_suite.Session(origin), hosted_suite.Session(origin)]
             for client, user in zip(clients, users, strict=True):
                 client.login(user)
@@ -745,7 +818,7 @@ def execute(environment, request):
                 ]
             }
             record["status"] = "PASS"
-        elif plan["mode"] == "cybersecurity":
+        elif workflow == "cybersecurity":
             context_path = OUTPUT / "private-cybersecurity-context.json"
             write(
                 context_path,
@@ -757,6 +830,7 @@ def execute(environment, request):
                     "users": users,
                     "output_dir": str(OUTPUT),
                     "bypass": bypass,
+                    **({"identity": identity} if identity is not None else {}),
                 },
             )
             env["ONESA_ORACLE_CYBERSECURITY_CONTEXT"] = str(context_path)
@@ -766,7 +840,14 @@ def execute(environment, request):
             prepared = private_json(OUTPUT / "cybersecurity-prepare-ui.json")
             require(prepared["status"] == "PASS", "CYBERSECURITY_PREPARE_FAILED")
             if environment == "staging" and profiles.kind(binding) == "api":
-                export_owned_restore(engine, users, binding, operation, "cybersecurity")
+                export_owned_restore(
+                    engine,
+                    users,
+                    binding,
+                    operation,
+                    "cybersecurity",
+                    **({"plan": plan} if identity is not None else {}),
+                )
                 write(
                     OUTPUT / "prepared-for-replacement.json",
                     {
@@ -810,7 +891,7 @@ def execute(environment, request):
             record["browser_observations"] = [prepared["scope"], verified["scope"]]
             record["status"] = "PASS"
         else:
-            require(plan["mode"] == "twins", "UNKNOWN_FEATURE_PROBE_MODE")
+            require(workflow == "twins", "UNKNOWN_FEATURE_PROBE_MODE")
             twin_context = {
                 "binding": binding,
                 "operation_id": operation,
@@ -819,6 +900,7 @@ def execute(environment, request):
                 "users": users,
                 "output_dir": str(OUTPUT),
                 "bypass": bypass,
+                **({"identity": identity} if identity is not None else {}),
             }
             twin_path = OUTPUT / "private-twin-context.json"
             write(twin_path, twin_context)
@@ -828,7 +910,13 @@ def execute(environment, request):
             prepare = private_json(OUTPUT / "twins-prepare-ui.json")
             require(prepare["status"] == "PASS", "TWINS_PREPARE_FAILED")
             if environment == "staging" and profiles.kind(binding) == "api":
-                export_owned_restore(engine, users, binding, operation)
+                export_owned_restore(
+                    engine,
+                    users,
+                    binding,
+                    operation,
+                    **({"plan": plan} if identity is not None else {}),
+                )
             write(
                 OUTPUT / "prepared-for-replacement.json",
                 {
@@ -890,6 +978,7 @@ def execute(environment, request):
                 users,
                 bypass,
                 env,
+                **({"identity": identity} if identity is not None else {}),
             )
             record["checks"].update(supplemental_prepared[feature]["checks"])
             record["checks"].update(verified["checks"])
@@ -899,6 +988,24 @@ def execute(environment, request):
                 "same_controlled_replacement": environment == "staging"
                 and profiles.kind(binding) == "api",
             }
+        if identity is not None:
+            shared.current(identity)
+            shared.local_accounts(engine, identity, linked=True)
+            require(
+                authenticated == {user["id"] for user in users},
+                "BOTH_SHARED_IDENTITIES_MUST_BE_OBSERVED",
+            )
+            record["checks"].update(
+                {
+                    name: "PASS"
+                    for name in [
+                        "shared_identity_pkce",
+                        "shared_identity_mfa",
+                        "identity_cookie_isolation",
+                        "identity_local_mapping",
+                    ]
+                }
+            )
     except Exception as error:
         record["status"] = "FAIL"
         record["failure_category"] = type(error).__name__
@@ -906,11 +1013,18 @@ def execute(environment, request):
     finally:
         try:
             if users:
-                disable_fixtures(engine, users, before, ci)
-                clean = True
+                if identity is not None:
+                    clean = shared.retire_sessions(engine, identity, before_sessions)
+                    own_preserved = shared.preserved_owned(
+                        before_owned, shared.owned_fingerprints(engine, users)
+                    )
+                    require(own_preserved, "EXISTING_SYNTHETIC_ACCOUNT_DATA_CHANGED")
+                else:
+                    disable_fixtures(engine, users, before, ci)
+                    clean = True
             after = fingerprints(engine, exclude={u["id"] for u in users})
             write(OUTPUT / "preservation-after.json", preservation_summary(after))
-            preserved = after == before
+            preserved = after == before and (identity is None or own_preserved)
             old_summary, new_summary = (
                 preservation_summary(before),
                 preservation_summary(after),
@@ -928,11 +1042,21 @@ def execute(environment, request):
             require(preserved, "EXISTING_ACCOUNT_OR_GRANT_CHANGED")
         finally:
             engine.dispose()
-            record["fixture_identities_disabled"] = clean
+            record["fixture_identities_disabled"] = clean and identity is None
+            if identity is not None:
+                record["fixture_identities_preserved"] = own_preserved
+                record["identity_sessions_retired"] = clean
+                if own_preserved and clean:
+                    record["checks"].update(
+                        identity_fixture_preservation="PASS",
+                        identity_sessions_retired="PASS",
+                    )
             record["existing_records_preserved"] = preserved
             record["observed_at"] = datetime.now(timezone.utc).isoformat()
             if not clean or not preserved:
                 record["status"] = "FAIL"
+            if original is not None:
+                hosted_suite.Session = original
             for name in [
                 "private-fixtures.json",
                 "private-twin-context.json",
@@ -941,7 +1065,8 @@ def execute(environment, request):
                 "cybersecurity-browser-state.json",
                 "oracle-context.json",
             ]:
-                (OUTPUT / name).unlink(missing_ok=True)
+                if identity is None or (clean and preserved):
+                    (OUTPUT / name).unlink(missing_ok=True)
             write(OUTPUT / "receipt.json", record)
     require(
         record["status"] == "PASS" and clean and preserved,
@@ -959,7 +1084,7 @@ def record_boundary_failure(environment, request, error):
             environment in {"staging", "production"}
             and str(UUID(operation)) == operation
             and binding["repository"] == "DruHustle/onesa-ai-platform"
-            and profiles.component(binding) in profiles.SCOPED
+            and profiles.component(binding) in profiles.EXPANDED
             and re.fullmatch("[a-f0-9]{40}", binding["candidate_commit"]),
             "FAILURE_RECORD_SCOPE",
         )

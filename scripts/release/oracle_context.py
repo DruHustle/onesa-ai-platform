@@ -40,6 +40,18 @@ def load_context(path):
         raise ValueError("Invalid Oracle qualification identity")
     fixture = private_json(value["fixture_file"])
     users = fixture.get("users", [])
+    shared = value.get("identity")
+    if shared is not None:
+        from oracle_ai_identity_probe import validate_fixture
+
+        validate_fixture(fixture, shared)
+        if (
+            shared["candidate_commit"] != value["candidate_commit"]
+            or shared["operation_id"] != value["qualification_id"]
+            or shared["origin"] != value["frontend_origin"]
+            or shared["environment"] != "staging"
+        ):
+            raise ValueError("Oracle shared identity source mismatch")
     if (
         fixture.get("candidate_commit") != value["candidate_commit"]
         or fixture.get("run_id") != str(value["ci_run_id"])
@@ -47,7 +59,8 @@ def load_context(path):
         or fixture.get("scope") != "approved-synthetic-staging"
         or len(users) != 2
         or len({user.get("id") for user in users}) != 2
-        or any(
+        or shared is None
+        and any(
             not re.fullmatch(
                 r"release-audit-"
                 + str(value["ci_run_id"])

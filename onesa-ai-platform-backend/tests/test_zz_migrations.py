@@ -33,7 +33,12 @@ def test_owner_runner_migration_uses_supplied_connection_without_inherited_url(
     request = {
         "owner": owner,
         "target_revision": REQUIRED_SCHEMA_REVISION,
-        "runtime": "postgresql+psycopg://" + role + ":synthetic@localhost/onesa_test",
+        # The identity migration requires the owner and runtime roles to address
+        # the same database. Preserve the actual isolated fixture's host/port;
+        # localhost is deliberately not treated as equivalent to another host.
+        "runtime": pg.url.set(
+            drivername="postgresql+psycopg", username=role, password="synthetic"
+        ).render_as_string(hide_password=False),
     }
 
     def supplied_engine(url, *, connect_args):

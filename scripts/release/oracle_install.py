@@ -27,6 +27,7 @@ ALLOWED = {
     "runners/oracle_ai_frontend.py": "scripts/release/oracle_ai_frontend.py",
     "runners/oracle_frontend_build.py": "scripts/release/oracle_frontend_build.py",
     "runners/oracle_forward_check.py": "scripts/release/oracle_forward_check.py",
+    "runners/oracle_identity_rollback.py": "scripts/release/oracle_identity_rollback.py",
     "runners/oracle_ai_runner.py": "scripts/release/oracle_ai_runner.py",
     "runners/oracle_release_profiles.py": "scripts/release/oracle_release_profiles.py",
     "runners/oracle_twin_restore.py": "scripts/release/oracle_twin_restore.py",
@@ -169,6 +170,7 @@ def validate(bundle, manifest_pin, github, *, uid=0):
         "cybersecurity-api",
         "cybersecurity-frontend",
     }
+    identity = scoped | {"identity-api", "identity-frontend"}
     require(
         set(policy["components"])
         in [
@@ -178,7 +180,7 @@ def validate(bundle, manifest_pin, github, *, uid=0):
                 if is_private_docs
                 else [{"docs-public"}]
                 if is_docs
-                else [legacy, scoped]
+                else [legacy, scoped, identity]
             )
         ],
         "Only literal legacy or independent feature profiles are eligible",

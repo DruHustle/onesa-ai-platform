@@ -400,6 +400,7 @@ def run_suite(origin, *, oracle_context=None):
             raw,
             oracle["project_id"] if oracle else os.environ["VERCEL_PROJECT_ID"],
             PRODUCT,
+            identity=oracle.get("identity") if oracle else None,
         )
     except FixtureError as error:
         if error.code == "FIXTURE_BINDING":
@@ -857,7 +858,7 @@ def run_suite(origin, *, oracle_context=None):
     return record
 
 
-def production_probes(origin):
+def production_probes(origin, *, identity=None):
     checks = {
         "authenticated_critical_workflows": "BLOCKED",
         "storage_integrations": "BLOCKED",
@@ -872,6 +873,7 @@ def production_probes(origin):
         os.environ["VERCEL_PROJECT_ID"],
         PRODUCT,
         scope="approved-synthetic-production",
+        identity=identity,
     )
     users = fixture["users"]
     clients = [Session(origin), Session(origin)]
