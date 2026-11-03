@@ -39,7 +39,13 @@ def decode_totp(value):
 
 
 def parse_fixtures(
-    raw, project_id, product, *, scope="approved-synthetic-staging", credentials=True
+    raw,
+    project_id,
+    product,
+    *,
+    scope="approved-synthetic-staging",
+    credentials=True,
+    identity=None,
 ):
     if product not in {"onesa-company-portal", "onesa-ai-platform"}:
         raise FixtureError("FIXTURE_PRODUCT")
@@ -62,6 +68,15 @@ def parse_fixtures(
         or not all(isinstance(user, dict) for user in users)
     ):
         raise FixtureError("FIXTURE_USERS")
+    if identity is not None:
+        if product != "onesa-ai-platform":
+            raise FixtureError("FIXTURE_PRODUCT")
+        from oracle_ai_identity_probe import validate_fixture
+
+        try:
+            return validate_fixture(config, identity)
+        except (ValueError, KeyError, TypeError):
+            raise FixtureError("FIXTURE_BINDING") from None
     emails = []
     for user in users:
         email = user.get("email")

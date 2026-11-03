@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Source candidate: add separately scoped identity API/frontend release profiles
+  and real owner-probe PKCE/MFA sign-in, retaining the native API, interface,
+  feature, persistence and rollback checks. Preserve existing synthetic account
+  IDs, credentials, grants and data; retire only observed new probe sessions.
+  Signed operations can renew only the bounded credential time envelope under
+  unchanged payload pins. Commissioning and live qualification remain required.
+
 - Source candidate: central Onesa sign-in and account/access management across AI,
   Drone and Robot, using the existing Portal issuer. Preserve AI ownership through
   explicit password-proved linking, encrypt server-side tokens and PKCE material,
