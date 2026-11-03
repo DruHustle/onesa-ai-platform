@@ -95,6 +95,16 @@ hashing or hosted acceptance. Run the browser boundary tests with
 `node --test scripts/release/oracle_ai_identity_browser.test.mjs` alongside the
 existing navigation and private-receipt tests. These tests exercise real parser,
 cookie-scope and callback checks without supplying a live identity or provider.
+The UI observer registers the successful main-frame start POST and actual issuer
+authorization GET before clicking. It validates client, callback, S256 challenge,
+nonce, state, scope and step-up fields on the actual browser request, then binds the
+callback to that transaction and requires the actual account, session and cookies.
+It reads no UI response body after document replacement and installs no additional
+request route. The backend still binds the callback to its stored state, browser
+cookie and PKCE verifier. API-only acceptance keeps its original request and parses
+the JSON before navigation. Deterministic regressions cover unavailable UI response
+bodies, request boundaries and API-only behavior before Portal credential entry;
+they do not establish hosted acceptance.
 
 The private credential payload pin covers all source, scope, environment, actor
 and secret fields. Only its `created_at` and `expires_at` envelope may change.
