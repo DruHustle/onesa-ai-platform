@@ -91,7 +91,37 @@ async function jsonGet(context,origin,path){
  return JSON.parse(raw.toString('utf8'));
 }
 
+function observeIdentityStart(page,identity,readAuthorization){
+ let rejectBudget,timer;
+ const captured=page.waitForResponse(response=>response.request().method()==='POST'&&response.url()===identity.origin+'/api/v1/auth/onesa/start',{timeout:15000}).then(readAuthorization);
+ const budget=new Promise((_resolve,reject)=>{rejectBudget=reject;timer=setTimeout(()=>reject(new Error('AI_IDENTITY_START_TIMEOUT')),15000);});
+ const promise=Promise.race([captured,budget]).finally(()=>clearTimeout(timer));
+ promise.catch(()=>{});
+ return {promise,close(){clearTimeout(timer);rejectBudget(new Error('AI_IDENTITY_START_CLOSED'));}};
+}
+
+async function holdIdentityNavigation(page,identity,start){
+ const issuer=new URL(identity.issuer),frame=page.mainFrame();
+ const matches=url=>url.origin===issuer.origin&&url.pathname===issuer.pathname+'/auth';
+ let active=true,resolveWait,rejectWait;
+ const wait=new Promise((resolve,reject)=>{resolveWait=resolve;rejectWait=reject;});
+ wait.catch(()=>{});
+ const timer=setTimeout(()=>{active=false;rejectWait(new Error('AI_IDENTITY_NAVIGATION_TIMEOUT'));},20000);
+ const handler=async route=>{
+  try{
+   const authorization=await start,request=route.request();
+   requireValue(active&&request.isNavigationRequest()&&request.frame()===frame&&request.method()==='GET'&&request.url()===authorization.href);
+   // Keep the existing context route guard and native cookie/redirect handling.
+   await route.fallback();clearTimeout(timer);resolveWait();
+  }catch(error){active=false;clearTimeout(timer);rejectWait(error);await route.abort().catch(()=>{});}
+ };
+ const close=async()=>{active=false;clearTimeout(timer);rejectWait(new Error('AI_IDENTITY_NAVIGATION_CLOSED'));await page.unroute(matches,handler);};
+ try{await page.route(matches,handler,{times:1});return {wait,close};}
+ catch(error){await close().catch(()=>{});throw error;}
+}
+
 export async function signInIdentity(page,context,identity,{actor='primary',appBypass=null,stepUp=false,apiOnly=false,code=freshCode,observe=()=>{}}={}){
+ let startObserver,navigation;
  try{
   const {app,portal,account}=validateIdentity(identity,actor);
   const {expect}=require('@playwright/test');
@@ -106,11 +136,12 @@ export async function signInIdentity(page,context,identity,{actor='primary',appB
    requireValue(stepUp===false);
    authorization=await readAuthorization(await context.request.post(app+'/api/v1/auth/onesa/start',{maxRedirects:0,headers:{Origin:app},data:{next:'/',reauthenticate:false}}));
   }else{
-   // Begin reading when the response arrives, before awaiting click completion:
-   // the UI can leave the originating document while its click is still pending.
-   const start=page.waitForResponse(response=>response.request().method()==='POST'&&response.url()===app+'/api/v1/auth/onesa/start',{timeout:15000}).then(readAuthorization);
-   start.catch(()=>{});
+   startObserver=observeIdentityStart(page,identity,readAuthorization);
+   const start=startObserver.promise;
+   // Retain the original response during Chromium's cross-origin document swap.
+   navigation=await holdIdentityNavigation(page,identity,start);
    await page.getByRole('button',{name:stepUp?'Confirm administrator sign-in':'Continue with Onesa',exact:true}).click();
+   await navigation.wait;
    authorization=await start;
   }
   const callback=page.waitForRequest(request=>{const target=new URL(request.url());return target.origin===app&&target.pathname==='/api/v1/auth/onesa/callback';},{timeout:90000});
@@ -183,6 +214,10 @@ export async function signInIdentity(page,context,identity,{actor='primary',appB
   return {schema_version:1,origin:app,issuer:identity.issuer,subject:account.subject,local_user_id:account.local_user_id,csrf:csrf.value,
    cookies:[cookie,csrf].map(value=>Object.fromEntries(['name','value','domain','path','expires','httpOnly','secure','sameSite'].map(key=>[key,value[key]])))};
  }catch{throw new Error('AI_IDENTITY_FLOW_FAILED');}
+ finally{
+  startObserver?.close();
+  if(navigation)try{await navigation.close();}catch{throw new Error('AI_IDENTITY_FLOW_FAILED');}
+ }
 }
 
 export async function acquireIdentity(request){

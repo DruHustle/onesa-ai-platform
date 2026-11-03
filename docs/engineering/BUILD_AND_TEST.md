@@ -95,10 +95,14 @@ hashing or hosted acceptance. Run the browser boundary tests with
 `node --test scripts/release/oracle_ai_identity_browser.test.mjs` alongside the
 existing navigation and private-receipt tests. These tests exercise real parser,
 cookie-scope and callback checks without supplying a live identity or provider.
-The UI observer starts reading the authorization response when it arrives, before
-awaiting click completion. A deterministic regression makes the response body
-unavailable after navigation and requires capture before that boundary; it stops
-before Portal credential entry and does not establish hosted acceptance.
+The UI observer temporarily holds only the exact issuer authorization navigation
+until the original response body passes validation. It requires the matching URL,
+main frame and GET method, then falls back to the existing context guard with native
+cookies and redirects. The response and navigation have bounded lifetimes; failures
+abort the held route and remove only its handler and timers. API-only requests remain
+outside this route. Deterministic regressions cover delayed bodies, changed navigation
+and timeout/late completion. They stop before Portal credential entry and do not
+establish hosted acceptance.
 
 The private credential payload pin covers all source, scope, environment, actor
 and secret fields. Only its `created_at` and `expires_at` envelope may change.
