@@ -97,18 +97,22 @@ export async function signInIdentity(page,context,identity,{actor='primary',appB
   const {expect}=require('@playwright/test');
   await scopeIdentityRequests(context,identity,appBypass);
   requireValue(new URL(page.url()).origin===app);
-  let response;
+  const readAuthorization=async response=>{
+   requireValue(response.status()===200);
+   return validateAuthorization((await response.json()).authorize_url,identity,stepUp);
+  };
+  let authorization;
   if(apiOnly){
    requireValue(stepUp===false);
-   response=await context.request.post(app+'/api/v1/auth/onesa/start',{maxRedirects:0,headers:{Origin:app},data:{next:'/',reauthenticate:false}});
+   authorization=await readAuthorization(await context.request.post(app+'/api/v1/auth/onesa/start',{maxRedirects:0,headers:{Origin:app},data:{next:'/',reauthenticate:false}}));
   }else{
-   const start=page.waitForResponse(response=>response.request().method()==='POST'&&response.url()===app+'/api/v1/auth/onesa/start',{timeout:15000});
+   // Begin reading when the response arrives, before awaiting click completion:
+   // the UI can leave the originating document while its click is still pending.
+   const start=page.waitForResponse(response=>response.request().method()==='POST'&&response.url()===app+'/api/v1/auth/onesa/start',{timeout:15000}).then(readAuthorization);
    start.catch(()=>{});
    await page.getByRole('button',{name:stepUp?'Confirm administrator sign-in':'Continue with Onesa',exact:true}).click();
-   response=await start;
+   authorization=await start;
   }
-  requireValue(response.status()===200);
-  const authorization=validateAuthorization((await response.json()).authorize_url,identity,stepUp);
   const callback=page.waitForRequest(request=>{const target=new URL(request.url());return target.origin===app&&target.pathname==='/api/v1/auth/onesa/callback';},{timeout:90000});
   callback.catch(()=>{});
   if(apiOnly)await page.goto(authorization.href);

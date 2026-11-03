@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {validateIdentity,validateAuthorization,validateCallback,totp,freshCode,scopeIdentityRequests} from './oracle_ai_identity_browser.mjs';
+import {validateIdentity,validateAuthorization,validateCallback,totp,freshCode,scopeIdentityRequests,signInIdentity} from './oracle_ai_identity_browser.mjs';
 import contextContract from './oracle_ai_identity_context.cjs';
 
 function identity(){
@@ -77,4 +77,25 @@ test('a foreign bypass redirect is refused before its target is visited',async()
  const value=identity();let added=false,closed=false;
  const context={setExtraHTTPHeaders:async()=>{},addCookies:async()=>{added=true;},route:async()=>assert.fail(),browser:()=>({newContext:async()=>({request:{get:async(_origin,options)=>{assert.equal(options.maxRedirects,0);return {status:()=>307,headers:()=>({location:'https://foreign.example.test/'})};}},close:async()=>{closed=true;}})})};
  await assert.rejects(scopeIdentityRequests(context,value,'synthetic-bypass'));assert.equal(added,false);assert.equal(closed,true);
+});
+
+test('UI identity captures the authorization body before click navigation invalidates it',async()=>{
+ const value=identity(),events=[];let emit,navigated=false,bodyReads=0;
+ const response={url:()=>value.origin+'/api/v1/auth/onesa/start',request:()=>({method:()=>'POST'}),status:()=>200,json:async()=>{
+  bodyReads++;assert.equal(navigated,false,'The originating response body is unavailable after navigation');
+  events.push('body');return {authorize_url:authorization(value).href};
+ }};
+ const page={url:()=>value.origin,
+  waitForResponse(predicate,options){assert.equal(options.timeout,15000);return new Promise(resolve=>{emit=()=>{assert(predicate(response));resolve(response);};});},
+  getByRole(role,options){assert.equal(role,'button');assert.deepEqual(options,{name:'Continue with Onesa',exact:true});return {async click(){
+   assert(emit);events.push('click');emit();
+   // The UI consumes its own JSON and navigates before the click promise resolves.
+   await new Promise(resolve=>setImmediate(resolve));navigated=true;events.push('navigation');
+  }};},
+  waitForRequest(){return new Promise(()=>{});},
+  async waitForURL(){events.push('portal-observation');throw new Error('Synthetic observer stops before Portal credentials');},
+ };
+ const context={async setExtraHTTPHeaders(headers){assert.deepEqual(headers,{});},async route(){}};
+ await assert.rejects(signInIdentity(page,context,value),{message:'AI_IDENTITY_FLOW_FAILED'});
+ assert.equal(bodyReads,1);assert.deepEqual(events,['click','body','navigation','portal-observation']);
 });
