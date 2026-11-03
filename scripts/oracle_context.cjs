@@ -32,10 +32,11 @@ function loadContext(file) {
       !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(c.qualification_id || ""))
     throw new Error("Invalid Oracle staging probe context");
   const f = privateJson(c.fixture_file), out = fs.lstatSync(c.output_dir);
+  if (c.identity) require('./release/oracle_ai_identity_context.cjs').validateContext(c, f.users);
   if (f.candidate_commit !== c.candidate_commit || f.run_id !== String(c.ci_run_id) ||
       f.project_id !== c.project_id || f.scope !== "approved-synthetic-staging" ||
       !Array.isArray(f.users) || f.users.length !== 2 || new Set(f.users.map(u => u.id)).size !== 2 ||
-      f.users.some(u => !new RegExp("^release-audit-"+c.ci_run_id+"-[a-f0-9]{24}@example\\.com$").test(u.email || "")) ||
+      (!c.identity && f.users.some(u => !new RegExp("^release-audit-"+c.ci_run_id+"-[a-f0-9]{24}@example\\.com$").test(u.email || ""))) ||
       !out.isDirectory() || (out.mode & 0o077) || out.uid !== process.getuid())
     throw new Error("Oracle fixture/output context mismatch");
   return c;

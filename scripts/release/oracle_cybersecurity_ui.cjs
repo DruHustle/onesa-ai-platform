@@ -20,7 +20,8 @@ const local = ['127.0.0.1', 'localhost', '[::1]'].includes(new URL(origin).hostn
 need((ctx.environment === 'staging' && /^https:\/\/onesa-ai-platform-[a-z0-9-]+\.vercel\.app$/.test(origin)) ||
   (ctx.environment === 'production' && origin === 'https://platform.onesa.eu') ||
   (local && ctx.environment === 'development' && process.argv.includes('--local-fixture')), 'OWNED_PROBE_ORIGIN');
-need(/^[a-f0-9]{40}$/.test(ctx.binding.candidate_commit) && /^[a-f0-9-]{36}$/.test(ctx.operation_id) && ctx.users.length === 2 &&
+if(ctx.identity)require('./oracle_ai_identity_context.cjs').validateContext(ctx);
+else need(/^[a-f0-9]{40}$/.test(ctx.binding.candidate_commit) && /^[a-f0-9-]{36}$/.test(ctx.operation_id) && ctx.users.length === 2 &&
   ctx.users.every(u => /^[a-f0-9-]{36}$/.test(u.id) && /^release-audit-[0-9]+-[a-f0-9]{24}@example\.com$/.test(u.email)), 'OWNED_FIXTURE_SCOPE');
 const phase = process.argv.includes('--verify') ? 'verify' : 'prepare';
 const apiOnly = process.argv.includes('--api-only');
@@ -32,28 +33,31 @@ function save(name, data) {
   fs.writeFileSync(path.join(output, name), JSON.stringify(data), {mode:0o600, flag:'wx'});
 }
 async function main() {
+  const identity = ctx.identity ? await import('./oracle_ai_identity_browser.mjs') : null;
   const browser = await chromium.launch({headless:true});
   let context;
   try {
     report.browser_version = browser.version();
     context = await browser.newContext({baseURL:origin,
-      extraHTTPHeaders:ctx.bypass ? {'x-vercel-protection-bypass':ctx.bypass} : {},
+      extraHTTPHeaders:!ctx.identity && ctx.bypass ? {'x-vercel-protection-bypass':ctx.bypass} : {},
       ...(phase === 'verify' ? {storageState:path.join(output, 'cybersecurity-browser-state.json')} : {})});
     const page = await context.newPage(), errors = [];
     page.on('pageerror', e => errors.push(e.name));
-    await context.route('**/*', route => {
+    if(identity) await identity.scopeIdentityRequests(context, ctx.identity, ctx.bypass);
+    else await context.route('**/*', route => {
       const u = new URL(route.request().url());
       return !['http:', 'https:'].includes(u.protocol) || u.origin === origin ? route.continue() : route.abort();
     });
     async function headers() { return {Origin:origin, 'X-CSRF-Token':(await context.cookies(origin)).find(c => c.name === 'onesa_csrf')?.value || ''}; }
     async function api(method, target, data, status=200) {
       need(target.startsWith('/api/v1/') && !target.includes('..'), 'PROBE_API_PATH');
-      const response = await page.request.fetch(target, {method, headers:await headers(), ...(data === undefined ? {} : {data})});
+      const response = await page.request.fetch(target, {method, maxRedirects:0, headers:await headers(), ...(data === undefined ? {} : {data})});
       need(response.status() === status, 'PROBE_STATUS_' + method + '_' + response.status());
       return status === 204 ? null : response.json();
     }
     if (phase === 'prepare') {
-      await api('POST', '/api/v1/auth/login', {email:ctx.users[0].email, password:ctx.users[0].password});
+      if(identity) await identity.signInFixture(context, ctx, 0);
+      else await api('POST', '/api/v1/auth/login', {email:ctx.users[0].email, password:ctx.users[0].password});
     } else {
       need((await api('GET', '/api/v1/auth/me')).id === ctx.users[0].id, 'PERSISTED_SESSION_OWNER');
       report.checks.session_persistence = 'PASS';
@@ -76,9 +80,9 @@ async function main() {
         eventType:'auth.authentication_failed', assetRef:{namespace:'qualification', assetId:'gateway', componentId:null},
         summary:'Explicit synthetic rejected access observation; no incident claimed', quality:'good', producerVersion:'owner-qualification/1',
         attributes:{service:'synthetic-release', outcome:'denied', reasonCode:'SYNTHETIC_REJECTION'}}));
-      const response = await page.request.post(base + '/ingest', {headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}});
+      const response = await page.request.post(base + '/ingest', {maxRedirects:0,headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}});
       need(response.status() === 200, 'SCOPED_BEARER_INGESTION');
-      const repeat = await page.request.post(base + '/ingest', {headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}});
+      const repeat = await page.request.post(base + '/ingest', {maxRedirects:0,headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}});
       need(repeat.status() === 200 && (await repeat.json()).duplicates === 5, 'IDEMPOTENT_DELIVERY');
       const workspace = await api('GET', base + '/workspace?mode=simulated');
       const finding = workspace.findings.find(f => f.asset_id === asset.id);
@@ -92,7 +96,7 @@ async function main() {
       const live = await api('GET', base + '/workspace?mode=live');
       need(live.events.some(e => e.wire.producerNamespace === 'onesa-owned-configuration' && e.event_type === 'config.changed'), 'ACTUAL_COMMITTED_NATIVE_EVIDENCE');
       await api('POST', base + `/sources/${source.id}/revoke`);
-      need((await page.request.post(base + '/ingest', {headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}})).status() === 401, 'REVOKED_SOURCE_REJECTED');
+      need((await page.request.post(base + '/ingest', {maxRedirects:0,headers:{Authorization:'Bearer ' + source.ingestion_token}, data:{events}})).status() === 401, 'REVOKED_SOURCE_REJECTED');
       owned = {asset:asset.id, source:source.id, finding:finding.id, investigation:investigation.id, snapshot_sha256:investigation.sha256,
         revision:decision.revision, summary:summary.id};
       save('cybersecurity-prepared.json', owned);
@@ -108,13 +112,16 @@ async function main() {
     report.checks.cybersecurity_export = 'PASS';
     report.checks.cybersecurity_decisions = 'PASS';
     report.checks.database_persistence = 'PASS';
-    const other = await browser.newContext({baseURL:origin, extraHTTPHeaders:ctx.bypass ? {'x-vercel-protection-bypass':ctx.bypass} : {}});
+    const other = await browser.newContext({baseURL:origin, extraHTTPHeaders:!ctx.identity && ctx.bypass ? {'x-vercel-protection-bypass':ctx.bypass} : {}});
     try {
-      need((await other.request.post('/api/v1/auth/login', {headers:{Origin:origin}, data:{email:ctx.users[1].email, password:ctx.users[1].password}})).status() === 200, 'SECOND_OWNER_LOGIN');
+      if(identity) await identity.signInFixture(other, ctx, 1);
+      else need((await other.request.post('/api/v1/auth/login', {maxRedirects:0,headers:{Origin:origin}, data:{email:ctx.users[1].email, password:ctx.users[1].password}})).status() === 200, 'SECOND_OWNER_LOGIN');
       for (const target of [`/assets/${owned.asset}`, `/findings/${owned.finding}`, `/investigations/${owned.investigation}`])
-        need((await other.request.get(base + target)).status() === 404, 'FOREIGN_OWNER_DENIED');
-      const foreign = await other.request.get(base + '/workspace?mode=simulated');
-      need(foreign.status() === 200 && !(await foreign.json()).findings.length, 'AGGREGATE_ISOLATION');
+        need((await other.request.get(base + target,{maxRedirects:0})).status() === 404, 'FOREIGN_OWNER_DENIED');
+      const foreign = await other.request.get(base + '/workspace?mode=simulated',{maxRedirects:0});
+      need(foreign.status() === 200, 'AGGREGATE_RESPONSE');
+      const foreignFindings = (await foreign.json()).findings;
+      need(ctx.identity ? foreignFindings.every(finding => finding.id !== owned.finding) : !foreignFindings.length, 'AGGREGATE_ISOLATION');
     } finally { await other.close(); }
     report.checks.owner_isolation = 'PASS';
     if (!apiOnly) {
