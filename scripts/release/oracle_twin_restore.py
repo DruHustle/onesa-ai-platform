@@ -51,14 +51,23 @@ CYBER_TABLES = [
 def fixture_tables(bundle):
     profile = bundle.get("profile", "twins")
     r.require(profile in ["twins", "cybersecurity"], "UNKNOWN_RESTORE_PROFILE")
-    return CYBER_TABLES if profile == "cybersecurity" else TABLES
+    tables = CYBER_TABLES if profile == "cybersecurity" else TABLES
+    if bundle.get("scope") == "existing-owned-identity-fixtures-only":
+        return ["users", "shared_identities", *tables[1:]]
+    return tables
 
 
-def validate(bundle, binding, operation):
+def validate(bundle, binding, operation, *, plan=None):
+    shared = binding.get("component") in r.profiles.IDENTITY
     r.require(
         bundle["binding"] == binding
         and bundle["operation_id"] == operation
-        and bundle["scope"] == "new-owned-release-fixtures-only",
+        and bundle["scope"]
+        == (
+            "existing-owned-identity-fixtures-only"
+            if shared
+            else "new-owned-release-fixtures-only"
+        ),
         "RESTORE_FIXTURE_BINDING",
     )
     r.require(
@@ -68,17 +77,48 @@ def validate(bundle, binding, operation):
     )
     users = bundle["tables"]["users"]
     owners = {row["id"] for row in users}
-    r.require(
-        len(owners) == 2
-        and all(
-            str(UUID(row["id"])) == row["id"]
-            and re.fullmatch(
-                "release-audit-[0-9]+-[a-f0-9]{24}@example.com", row["email"]
-            )
-            for row in users
-        ),
-        "RESTORE_IDENTITY_SCOPE",
-    )
+    r.require(len(owners) == 2, "RESTORE_IDENTITY_SCOPE")
+    if shared:
+        plan = plan if plan is not None else r.read(r.plan_path(binding))
+        identity = r.identity_profile(binding, plan)
+        r.require(
+            plan.get("binding") == binding
+            and plan.get("migration_revision")
+            == plan.get("expected_schema_revision")
+            == r.IDENTITY_SCHEMA,
+            "EXACT_IDENTITY_RESTORE_PLAN_REQUIRED",
+        )
+        selected = identity["environments"]["staging"]
+        accounts = selected["accounts"]
+        r.require(
+            {(row["id"], row["email"]) for row in users}
+            == {(row["local_user_id"], row["email"]) for row in accounts.values()}
+            and all(row.get("status") == "active" for row in users),
+            "PINNED_IDENTITY_RESTORE_OWNERS_REQUIRED",
+        )
+        mappings = bundle["tables"]["shared_identities"]
+        r.require(
+            len(mappings) == 2
+            and len({row["id"] for row in mappings}) == 2
+            and all(str(UUID(row["id"])) == row["id"] for row in mappings)
+            and {(row["user_id"], row["issuer"], row["subject"]) for row in mappings}
+            == {
+                (row["local_user_id"], selected["issuer"], row["subject"])
+                for row in accounts.values()
+            },
+            "EXACT_SHARED_IDENTITY_MAPPING_RESTORE_REQUIRED",
+        )
+    else:
+        r.require(
+            all(
+                str(UUID(row["id"])) == row["id"]
+                and re.fullmatch(
+                    "release-audit-[0-9]+-[a-f0-9]{24}@example.com", row["email"]
+                )
+                for row in users
+            ),
+            "RESTORE_IDENTITY_SCOPE",
+        )
     assets = {row["id"] for row in bundle["tables"].get("twin_assets", [])}
     for name, rows in bundle["tables"].items():
         r.require(len(rows) <= 1000, "RESTORE_ROW_BOUND")
@@ -220,6 +260,19 @@ def recover_encrypted_file(data, tool_image):
 
 def restore_revision(plan, binding, profile):
     revision = plan.get("expected_schema_revision")
+    if binding.get("component") in r.profiles.IDENTITY:
+        r.identity_profile(binding, plan)
+        enabled = r.profiles.enabled_features(
+            r.runtime_values(r.candidate_environment(binding, "staging")), "identity"
+        )
+        r.require(
+            plan.get("binding") == binding
+            and profile in {"twins", "cybersecurity"}
+            and profile == r.profiles.workflow_mode("identity", enabled)
+            and revision == plan.get("migration_revision") == r.IDENTITY_SCHEMA,
+            "EXACT_IDENTITY_RESTORE_SCHEMA_PROFILE_REQUIRED",
+        )
+        return revision
     r.require(
         plan.get("binding") == binding
         and profile in {"twins", "cybersecurity"}
@@ -236,9 +289,9 @@ def restore(folder, binding, operation):
     bundle_path = folder / "restore-fixtures.json"
     r.require(bundle_path.stat().st_size <= 16 * 1024 * 1024, "RESTORE_BUNDLE_BOUND")
     bundle = r.read(bundle_path)
-    refs = validate(bundle, binding, operation)
-    tables = fixture_tables(bundle)
     plan = r.read(r.plan_path(binding))
+    refs = validate(bundle, binding, operation, plan=plan)
+    tables = fixture_tables(bundle)
     revision = restore_revision(plan, binding, bundle.get("profile", "twins"))
     tool = r.trusted_toolchain(plan)
     container = "onesa-twin-restore-" + UUID(operation).hex
@@ -356,7 +409,7 @@ def restore(folder, binding, operation):
             dump.startswith(b"PGDMP") and len(dump) <= 16 * 1024 * 1024,
             "DISPOSABLE_DUMP_BOUND",
         )
-        if bundle.get("profile") == "cybersecurity":
+        if bundle.get("profile") == "cybersecurity" or plan.get("mode") == "identity":
             dump = recover_encrypted_file(dump, tool["cli_image"])
         r.docker(
             "exec",
@@ -429,6 +482,10 @@ def restore(folder, binding, operation):
             "scope": "new owned fixtures only; offline PostgreSQL dump/restore plus encrypted private file recovery with ephemeral test keys; production archive decryption is not claimed",
         }
         r.write(folder / "restore-receipt.json", result)
+        if plan.get("mode") == "identity":
+            import oracle_identity_rollback
+
+            oracle_identity_rollback.check(folder, binding, operation, plan)
         return result
     finally:
         if cleanup:

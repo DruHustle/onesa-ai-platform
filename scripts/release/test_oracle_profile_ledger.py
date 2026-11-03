@@ -48,10 +48,10 @@ class ProfileLedgerTests(unittest.TestCase):
         store = self.fixture.store
         contexts = {
             name: store.issue_context(self.binding(name))["record"]["id"]
-            for name in profiles.SCOPED
+            for name in profiles.EXPANDED
         }
-        self.assertEqual(len(set(contexts.values())), 6)
-        for name in profiles.SCOPED:
+        self.assertEqual(len(set(contexts.values())), 8)
+        for name in profiles.EXPANDED:
             changed = self.binding(name)
             changed["configuration_sha256"] = {
                 "staging": "2" * 64,

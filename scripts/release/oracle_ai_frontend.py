@@ -320,6 +320,16 @@ def validate(binding):
         and dependency["expected_schema_revision"] == plan["expected_schema_revision"],
         "FRONTEND_API_PLAN_MODE_OR_SCHEMA_CHANGED",
     )
+    if plan["mode"] == "identity":
+        r.require(
+            all(
+                api_binding[key] == binding[key]
+                for key in ["candidate_commit", "source_tree", "source_sha256"]
+            )
+            and dependency.get("identity") == plan.get("identity"),
+            "FRONTEND_IDENTITY_SOURCE_OR_CUSTODY_CHANGED",
+        )
+        r.identity_profile(binding, plan)
     for env in ["staging", "production"]:
         configured = r.private(r.candidate_environment(api_binding, env))
         r.require(
@@ -866,7 +876,7 @@ def main():
     api_plan = r.read(r.plan_path({"component": api_component}))
     api_binding = api_plan["binding"]
     r.require(
-        api_plan["mode"] in ["foundation", "twins", "cybersecurity"]
+        api_plan["mode"] in r.profiles.MODES
         and api_binding["component"] == api_component
         and (
             binding["component"] in r.profiles.LEGACY
@@ -923,6 +933,8 @@ def main():
     plan["observed_ci_run_id"] = next(
         row["run_id"] for row in ci if row["workflow"] == "ci.yml"
     )
+    if plan["mode"] == "identity" and phase in {"staging", "deploy"}:
+        r.renew_identity_credentials(binding, plan, context, phase)
     select_preview(binding, api_binding, chain, phase, folder, plan)
     if phase == "staging":
         details = r.probe(
@@ -982,8 +994,7 @@ def main():
             and hosted["binding"] == binding
             and hosted["operation_id"] == context["operation_id"]
             and hosted["status"] == "PASS"
-            and hosted["fixture_identities_disabled"] is True
-            and hosted["existing_records_preserved"] is True
+            and r.fixture_cleanup_complete(binding, hosted)
             and all(hosted["checks"].get(k) == "PASS" for k in required),
             "FRONTEND_PRODUCTION_WORKFLOWS_UNVERIFIED",
         )
@@ -992,6 +1003,7 @@ def main():
         verify_static(folder, plan, dep)
         details = {
             "deployment_id": dep["id"],
+            "backend_runtime": actual["backend_runtime"],
             "runtime_source": binding["candidate_commit"],
             "artifact_sha256": receipt["artifact_sha256"],
             "hosted_receipt_sha256": r.sha(output / "receipt.json"),

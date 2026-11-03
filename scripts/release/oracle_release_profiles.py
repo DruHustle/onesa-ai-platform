@@ -1,8 +1,9 @@
 """Literal AI release scopes; this module never issues or transfers authority.
 
-The legacy two-profile policy remains supported. A newly commissioned six-profile
-policy gives foundation, Twins and Cybersecurity separate exact component scopes,
-each with one context per source. Paths and modes cannot be supplied by callers.
+The existing two- and six-profile policies remain supported. An explicitly
+commissioned eight-profile policy adds shared identity without changing any
+existing profile's authority. Each profile has one context per source. Paths and
+modes cannot be supplied by callers.
 """
 
 import re
@@ -16,9 +17,14 @@ PROFILES = {
     "twins-frontend": ("frontend", "twins"),
     "cybersecurity-api": ("api", "cybersecurity"),
     "cybersecurity-frontend": ("frontend", "cybersecurity"),
+    "identity-api": ("api", "identity"),
+    "identity-frontend": ("frontend", "identity"),
 }
 LEGACY = frozenset({"api", "frontend"})
-SCOPED = frozenset(PROFILES)
+IDENTITY = frozenset({"identity-api", "identity-frontend"})
+SCOPED = frozenset(PROFILES) - IDENTITY
+EXPANDED = frozenset(PROFILES)
+MODES = frozenset({"foundation", "twins", "cybersecurity", "identity"})
 
 
 class ProfileError(ValueError):
@@ -56,10 +62,15 @@ def policy_components(policy):
     require(isinstance(policy, dict), "AI_POLICY_REQUIRED")
     profiles = policy.get("components")
     require(isinstance(profiles, dict), "AI_POLICY_COMPONENTS_REQUIRED")
-    scopes = {REPOSITORY + ":" + c for c in LEGACY}
-    complete = {REPOSITORY + ":" + c for c in SCOPED}
-    require(set(profiles) in [scopes, complete], "AI_POLICY_PROFILE_SET_REFUSED")
-    selected = LEGACY if set(profiles) == scopes else SCOPED
+    selected = next(
+        (
+            names
+            for names in (LEGACY, SCOPED, EXPANDED)
+            if set(profiles) == {REPOSITORY + ":" + c for c in names}
+        ),
+        None,
+    )
+    require(selected is not None, "AI_POLICY_PROFILE_SET_REFUSED")
     for name in selected:
         profile = profiles[REPOSITORY + ":" + name]
         require(
@@ -68,7 +79,7 @@ def policy_components(policy):
             and profile["qualification_attempt_limit"] == 1,
             "ONE_CONTEXT_PER_PROFILE_SOURCE_REQUIRED",
         )
-        if selected == SCOPED:
+        if selected != LEGACY:
             require(
                 profile.get("release_mode") == PROFILES[name][1],
                 "FIXED_AI_PROFILE_MODE_REQUIRED",
@@ -83,14 +94,15 @@ def validate_mode(binding, mode, policy):
     selected = policy_components(policy)
     require(value in selected, "AI_PROFILE_NOT_COMMISSIONED")
     bound_mode(binding, mode)
-    if selected == SCOPED:
+    if selected != LEGACY:
         require(mode == PROFILES[value][1], "AI_PROFILE_MODE_MISMATCH")
     return mode
 
 
 def bound_mode(binding, mode):
     value = component(binding)
-    require(mode in {"foundation", "twins", "cybersecurity"}, "UNKNOWN_AI_RELEASE_MODE")
+    require(mode in MODES, "UNKNOWN_AI_RELEASE_MODE")
+    require(mode != "identity" or value in IDENTITY, "IDENTITY_PROFILE_REQUIRED")
     if value not in LEGACY:
         require(mode == PROFILES[value][1], "AI_PROFILE_MODE_MISMATCH")
     return mode
@@ -98,7 +110,7 @@ def bound_mode(binding, mode):
 
 def enabled_features(values, mode):
     """Use actual private runtime flags, never a caller-selected test subset."""
-    require(mode in {"foundation", "twins", "cybersecurity"}, "UNKNOWN_AI_RELEASE_MODE")
+    require(mode in MODES, "UNKNOWN_AI_RELEASE_MODE")
     require(isinstance(values, dict), "AI_RUNTIME_FLAGS_REQUIRED")
     flags = {
         "twins": values.get("ONESA_DIGITAL_TWINS_ENABLED", "false"),
@@ -113,10 +125,28 @@ def enabled_features(values, mode):
     )
     enabled = frozenset(name for name, value in flags.items() if value == "true")
     require(
-        not enabled if mode == "foundation" else mode in enabled,
+        mode == "identity"
+        or (not enabled if mode == "foundation" else mode in enabled),
         "AI_RUNTIME_FEATURE_MODE_MISMATCH",
     )
     return enabled
+
+
+def workflow_mode(mode, enabled):
+    """Preserve native acceptance when shared identity is the changed capability."""
+    require(mode in MODES, "UNKNOWN_AI_RELEASE_MODE")
+    require(isinstance(enabled, (set, frozenset)), "ACTUAL_AI_FEATURE_SET_REQUIRED")
+    require(enabled <= {"twins", "cybersecurity"}, "UNKNOWN_AI_RUNTIME_FEATURE")
+    require(
+        mode == "identity"
+        or (not enabled if mode == "foundation" else mode in enabled),
+        "AI_RUNTIME_FEATURE_MODE_MISMATCH",
+    )
+    if mode != "identity":
+        return mode
+    return (
+        "twins" if "twins" in enabled else "cybersecurity" if enabled else "foundation"
+    )
 
 
 def plan_path(binding, api_plan, frontend_plan):

@@ -19,9 +19,93 @@ product/global administrator MFA and explicit global-revocation confirmation.
 The ordinary full suite also validates the additive schema and its owner DML grant
 set. Run `python -m unittest discover -s scripts/release -p 'test_oracle_ai_*.py'`
 for the existing release observation, backup and owner-runner policy checks. These
-checks keep prior release profiles closed; they do not commission hosted identity
-activation. Regenerate OpenAPI, typed clients and database documentation using the
-existing generators after changing authentication contracts.
+checks keep prior release profiles closed. Explicit `identity-api` and
+`identity-frontend` profiles add source-bound identity activation without changing
+the existing foundation, Twins or Cybersecurity scopes. The identity profile
+preserves every native feature flag and requires its normal workflow, persistence,
+restore and replacement checks as well as real PKCE/MFA and immutable local-account
+mapping. Existing synthetic accounts retain their passwords, ownership and grants;
+the probe retires only sessions it created. First-time linking uses the separate
+existing local-account password through the real application interface.
+
+Run `test_oracle_ai_identity_release.py`, `test_oracle_release_profiles.py`,
+`test_oracle_profile_ledger.py` and `test_oracle_install.py` with unittest discovery
+for source, exact policy, custody, preserved-configuration and adverse receipt
+regressions. The new migration response requires all 24 scoped table grants;
+runtime DDL and privileged roles remain refused. A newly commissioned profile
+must prove the retained image against the additive identity schema with the
+actual prior native feature flags; an older future-schema receipt does not cover
+this migration. These local checks do not establish a commissioned host, actual
+provider configuration or hosted acceptance. Regenerate OpenAPI, typed clients
+and database documentation using the existing generators after changing
+authentication contracts.
+
+An incompatible historical image needs an independently qualified compatible
+bridge before identity activation. Existing native profiles can qualify the new
+source with identity disabled and native features unchanged. The separate identity
+profile may then use the same source and image only with different, fully bound
+identity configurations and a real accepted native-profile record. Its fresh
+restore rehearsal still executes the retained image against the new additive
+schema for both environments. Sharing an image never transfers the native
+profile's deployment authority to the identity profile.
+
+The native bridge is qualified against its existing feature-compatible schema;
+it does not apply the shared-identity migration early. Current application
+readiness accepts the supported native revisions while identity is disabled and
+requires `20261102_shared_identity` when enabled. The migration runner continues
+to refuse a downgrade. The native frontend consumes its matching accepted native
+API plan and schema; identity API/frontend contexts remain independent.
+`test_native_bridge_runs_before_and_after_actual_identity_migration` creates fresh
+disposable `_test` databases at the real Capacity, Twins and Cybersecurity
+revisions. It runs native authentication, ownership and workflow checks before and
+after the actual additive upgrade for all four feature combinations, verifies
+preserved account IDs/password hashes and data, and checks that identity-enabled
+readiness refuses the old schema. It never rewrites the shared test database's
+revision label or presents current-source tests as retained-image acceptance.
+
+`test_oracle_identity_restore.py` covers exact existing fixture UUID/email and
+issuer/subject mappings, preserved native flags, old configuration hashes, an
+independently accepted retained image, failed restore manifests and unsafe cleanup.
+`tests/test_identity_rollback_workflows.py` runs the same application program used
+inside the isolated rollback images against real PostgreSQL for all four native
+feature combinations. It verifies password sign-in, persisted conversation and
+native asset ownership, CSRF refusal and logout with shared identity disabled.
+The owner rehearsal additionally generates the exact additive schema, dumps and
+restores only new synthetic databases, and executes both immutable image IDs.
+Its receipt is written only after successful isolated-container cleanup. Neither
+unit fixtures nor current-source PostgreSQL tests prove that a historical image
+can serve the future schema; the exact retained-image rehearsal remains required.
+
+The identity browser bridge completes the actual Portal password, MFA, S256
+authorization and application callback flow for both existing synthetic actors.
+It observes the original AI user IDs, current central subjects and host-only
+session/CSRF cookies. An initial link additionally proves the separate existing
+AI password. Protected Preview access uses isolated origin-specific cookie
+handshakes with redirects disabled; provider access headers never follow the
+identity navigation. The ordinary API suite, all 42 staging interface views and
+every enabled native feature journey remain required. Only sessions whose token
+and CSRF hashes this operation actually observed may be retired. An unmatched
+concurrent session, uncertain callback or changed existing data prevents a passing
+receipt and preserves the private diagnostic inputs.
+
+`test_oracle_ai_identity_probe.py` covers narrowed source/actor/expiry custody,
+fixture boundaries, host-only cookies, observed-session cleanup and native probe
+integration. Its isolated in-memory ORM cleanup tests do not establish PostgreSQL
+hashing or hosted acceptance. Run the browser boundary tests with
+`node --test scripts/release/oracle_ai_identity_browser.test.mjs` alongside the
+existing navigation and private-receipt tests. These tests exercise real parser,
+cookie-scope and callback checks without supplying a live identity or provider.
+
+The private credential payload pin covers all source, scope, environment, actor
+and secret fields. Only its `created_at` and `expires_at` envelope may change.
+After verifying an already reserved staging context or recorded deployment
+intent, the owner runner can issue one bounded lease for that operation, capped
+at one hour and the earliest expiry in the verified signed record chain. It writes
+a durable private intent before replacing the time envelope, rechecks the identical
+signed chain and custody bytes, and refuses an interrupted or repeated extension.
+This does not renew release authority or change provider/runtime configuration. Each probe still
+receives a separately byte-pinned, single-environment copy and checks expiry
+before using credentials. In-flight copies cannot extend their own lifetime.
 
 The Chat `tests/shared-identity.spec.ts` fixtures are loopback-only and use synthetic
 intercepted responses. They cover English/German mobile and keyboard entry, loading
