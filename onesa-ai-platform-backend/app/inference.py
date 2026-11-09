@@ -248,10 +248,11 @@ class CloudflareModelClient(OpenAIModelClient):
     """Workers AI native endpoint with strict text choices; no response coercion."""
 
     def completion_url(self) -> str:
-        # The compatible endpoint has emitted numeric content deltas for this
-        # model. The native route preserves its text choices, including leading
-        # zeroes. Keep the shared strict parser; the duplicate `response` field
-        # is not a second output channel or a fallback.
+        # Earlier provider responses on the compatible endpoint emitted numeric
+        # content deltas. Retain the native route and strict text choices across
+        # reviewed model changes, including leading zeroes. A duplicate `response`
+        # field is not a second output channel or a fallback; each model still
+        # requires hosted streaming acceptance.
         return (
             self.settings.model_base_url.rstrip("/").removesuffix("/v1")
             + "/run/"

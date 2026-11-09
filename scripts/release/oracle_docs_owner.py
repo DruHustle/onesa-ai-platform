@@ -21,12 +21,11 @@ RECEIPT = "documentation-preview-receipt"
 
 def component_scope(store, binding):
     owner.require(
-        binding["repository"] == "DruHustle/onesa-ai-platform"
-        and binding["component"] in {"docs-public", "docs-internal"},
+        owner.is_docs_binding(binding),
         "EXACT_DOCS_COMPONENT_REQUIRED",
     )
     owner.binding_valid(binding, store.policy)
-    return binding["repository"] + ":" + binding["component"]
+    return owner.component_scope(binding)
 
 
 def receipt_for(store, intent, *, reconcile=False):
@@ -75,7 +74,7 @@ def receipt_for(store, intent, *, reconcile=False):
 def publish_preview(store, binding):
     scope = component_scope(store, binding)
     docs = for_binding(binding)
-    ci = store.github.qualify(binding)
+    ci = store.qualify_source(binding)
     prepared = docs.prepare(store, binding)
     with store.transaction():
         rows = store.db.execute(
@@ -115,7 +114,7 @@ def native_preflight(store, binding):
     """Issue bounded target data for full preflight; never qualification or a PASS."""
     component_scope(store, binding)
     docs = for_binding(binding)
-    store.github.qualify(binding)
+    store.qualify_source(binding)
     preview = docs.preview_for_binding(store, binding)
     target = docs.target_for_observation(
         store, binding, preview["parent"], production=False
@@ -199,7 +198,10 @@ def main():
     }:
         owner.require(
             set(store.policy["components"])
-            == {"DruHustle/onesa-ai-platform:docs-internal"},
+            in (
+                {"DruHustle/onesa-ai-platform:docs-internal"},
+                {owner.CONSOLIDATED_REPOSITORY + ":platform:docs-internal"},
+            ),
             "PRIVATE_CONDITIONAL_OWNER_SCOPE_ONLY",
         )
         import oracle_docs_internal_conditional as conditional

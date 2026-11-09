@@ -5,6 +5,7 @@ The subprocess receives a separately commissioned identity through its environme
 """
 
 import asyncio
+import io
 import json
 import os
 import sys
@@ -13,9 +14,11 @@ from typing import Any, BinaryIO, TextIO
 import httpx
 
 from app.consumer import CompletionError, Connection, json_response
+from app.mcp_context import METHODS as CONTEXT_METHODS
+from app.mcp_context import Context, ContextError
+from app.mcp_transport import MAX_LINE, error, serve
 
 PROTOCOL_VERSION = "2025-11-25"
-MAX_LINE = 65536
 SCHEMAS: dict[str, dict[str, Any]] = {
     "text_stats": {
         "type": "object",
@@ -35,20 +38,20 @@ SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 
-def error(identifier: str | int | None, code: int, message: str) -> dict[str, Any]:
-    return {"jsonrpc": "2.0", "id": identifier, "error": {"code": code, "message": message}}
-
-
 class Server:
     def __init__(
         self,
         connection: Connection,
         allowed: set[str],
         transport: httpx.AsyncBaseTransport | None = None,
+        *,
+        resources: set[str] | None = None,
+        prompts: set[str] | None = None,
     ) -> None:
         if connection.provider != "onesa" or not allowed <= SCHEMAS.keys():
             raise ValueError("MCP requires an Onesa identity and known read-only permissions")
-        self.connection, self.allowed, self.transport = connection, allowed, transport
+        self.connection, self.allowed, self.transport = connection, frozenset(allowed), transport
+        self.context = Context(connection, resources or set(), prompts or set(), transport)
         self.initialized = False
         self.ready = False
 
@@ -86,13 +89,18 @@ class Server:
             self.initialized = True
             result: dict[str, Any] = {
                 "protocolVersion": PROTOCOL_VERSION,
-                "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": "onesa-read-only-tools", "version": "1.0.0"},
+                "capabilities": {"tools": {"listChanged": False}, **self.context.capabilities()},
+                "serverInfo": {"name": "onesa-read-only-tools", "version": "1.2.0"},
             }
         elif method == "ping":
             result = {}
         elif not self.ready:
             return error(identifier, -32002, "Initialize the MCP session first")
+        elif method in CONTEXT_METHODS:
+            try:
+                result = await self.context.dispatch(method, params)
+            except ContextError as refused:
+                return error(identifier, refused.code, refused.message)
         else:
             if method not in {"tools/list", "tools/call"}:
                 return error(identifier, -32601, "Method not found")
@@ -178,24 +186,18 @@ class Server:
 
 
 async def run(server: Server, stdin: BinaryIO, stdout: TextIO) -> None:
-    def reject_constant(value: str) -> None:
-        raise ValueError("Non-JSON number")
-
-    while line := stdin.readline(MAX_LINE + 1):
-        response: dict[str, Any] | None
-        if len(line) > MAX_LINE:
-            while line and not line.endswith(b"\n"):
-                line = stdin.readline(MAX_LINE + 1)
-            response = error(None, -32600, "Request exceeds the protocol limit")
-        else:
-            try:
-                value = json.loads(line.decode("utf-8"), parse_constant=reject_constant)
-                response = await server.dispatch(value)
-            except (ValueError, RecursionError):
-                response = error(None, -32700, "Invalid JSON")
-        if response is not None:
-            stdout.write(json.dumps(response, ensure_ascii=True, allow_nan=False) + "\n")
-            stdout.flush()
+    reader = asyncio.StreamReader(limit=MAX_LINE)
+    if isinstance(stdin, io.BytesIO):
+        reader.feed_data(stdin.read())
+        reader.feed_eof()
+        await serve(server.dispatch, reader, stdout)
+    else:
+        protocol = asyncio.StreamReaderProtocol(reader)
+        transport, _ = await asyncio.get_running_loop().connect_read_pipe(lambda: protocol, stdin)
+        try:
+            await serve(server.dispatch, reader, stdout)
+        finally:
+            transport.close()
 
 
 def main() -> None:
@@ -212,7 +214,23 @@ def main() -> None:
             for name in os.environ.get("ONESA_MCP_ALLOWED_TOOLS", "").split(",")
             if name.strip()
         }
-        asyncio.run(run(Server(connection, allowed), sys.stdin.buffer, sys.stdout))
+        resources = {
+            uri.strip()
+            for uri in os.environ.get("ONESA_MCP_ALLOWED_RESOURCES", "").split(",")
+            if uri.strip()
+        }
+        prompts = {
+            name.strip()
+            for name in os.environ.get("ONESA_MCP_ALLOWED_PROMPTS", "").split(",")
+            if name.strip()
+        }
+        asyncio.run(
+            run(
+                Server(connection, allowed, resources=resources, prompts=prompts),
+                sys.stdin.buffer,
+                sys.stdout,
+            )
+        )
     except (ValueError, OSError, httpx.HTTPError):
         print("MCP bridge unavailable; check approved local configuration", file=sys.stderr)
         raise SystemExit(1) from None

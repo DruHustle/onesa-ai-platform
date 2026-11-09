@@ -6,6 +6,7 @@ import re
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
+from email_validator import EmailNotValidError, validate_email
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -41,9 +42,9 @@ class Settings(BaseSettings):
     identity_callback_url: str = ""
     identity_encryption_key: str = Field(default="", repr=False)
     access_operator_user_ids: list[str] = Field(default_factory=list)
-    auth_delivery_key: str = ""
+    auth_delivery_key: str = Field(default="", repr=False)
     mail_provider: Literal["disabled", "resend"] = "disabled"
-    resend_api_key: str = ""
+    resend_api_key: str = Field(default="", repr=False)
     mail_from: str = ""
     mail_reply_to: str = ""
     invitation_hours: int = Field(default=48, ge=1, le=168)
@@ -81,6 +82,23 @@ class Settings(BaseSettings):
     digital_twins_storage_directory: str = ""
     digital_twins_persistent_mount: bool = False
     consumer_inference_enabled: bool = False
+
+    @field_validator("mail_from", "mail_reply_to")
+    @classmethod
+    def single_mail_address(cls, value: str) -> str:
+        if not value:
+            return value
+        if len(value) > 320 or any(
+            ord(character) < 32 or ord(character) == 127 for character in value
+        ):
+            raise ValueError("Mail headers require one address without control characters")
+        try:
+            validate_email(value, allow_display_name=True, check_deliverability=False)
+        except EmailNotValidError:
+            raise ValueError("Mail headers require one valid email address") from None
+        # Keep explicitly configured values, including an existing verified domain.
+        # Normalizing a header here would change an idempotent retry's payload.
+        return value
 
     @field_validator("model_quantization", "model_revision", mode="before")
     @classmethod
@@ -150,7 +168,7 @@ class Settings(BaseSettings):
                     self.model_base_url,
                 )
                 or len(self.model_api_key) < 32
-                or self.model_name != "@cf/qwen/qwen3-30b-a3b-fp8"
+                or self.model_name != "@cf/google/gemma-4-26b-a4b-it"
             ):
                 raise ValueError(
                     "Cloudflare inference requires its account HTTPS endpoint, "

@@ -111,8 +111,15 @@ def identity(
     raw, *, source, environment, approved_documents, source_files, backend_code_sha256
 ):
     """Derive identity from actual bytes and independently pinned source inputs."""
+    consolidated = source.get("repository") == owner.CONSOLIDATED_REPOSITORY
+    if consolidated:
+        owner.require(
+            set(source) == owner.AI_SOURCE_FIELDS | {"source_sha256"},
+            "COMPLETE_CANONICAL_PRIVATE_DOCS_SOURCE_REQUIRED",
+        )
+        owner.docs_operational_source({**source, "component": "docs-internal"})
     owner.require(
-        source["repository"] == public.REPOSITORY
+        (consolidated or source["repository"] == public.REPOSITORY)
         and re.fullmatch("[a-f0-9]{40}", source["candidate_commit"])
         and re.fullmatch("[a-f0-9]{40}", source["source_tree"])
         and owner.HEX.fullmatch(source["source_sha256"])
@@ -169,7 +176,7 @@ def identity(
             path: hashlib.sha256(body).hexdigest() for path, body in files.items()
         }
         return {
-            "schema_version": 1,
+            "schema_version": 2 if consolidated else 1,
             "custody": "private-owner-build-not-actions",
             "source": source,
             "environment": environment,

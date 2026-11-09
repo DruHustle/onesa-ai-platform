@@ -43,7 +43,7 @@ def artifact_folder(binding):
 
 def preview_binding(api_binding):
     component = r.profiles.companion(api_binding, "frontend")
-    binding = r.read(plan_path({"component": component}))["binding"]
+    binding = r.read(plan_path({**api_binding, "component": component}))["binding"]
     r.require(
         binding["component"] == component
         and all(
@@ -51,6 +51,10 @@ def preview_binding(api_binding):
             for k in ["repository", "candidate_commit", "source_tree", "source_sha256"]
         ),
         "PREVIEW_DEPENDENCY_CHANGED_SOURCE_OR_PROFILE",
+    )
+    r.require(
+        r.profiles.source_identity(binding) == r.profiles.source_identity(api_binding),
+        "PREVIEW_COMPLETE_SOURCE_IDENTITY",
     )
     return binding
 
@@ -206,7 +210,7 @@ def provider(path, *, data=None):
         return json.loads(raw)
 
 
-def protection(plan):
+def protection(plan, binding=None):
     cfg = r.read(PROVIDER)
     project = provider("/v9/projects/" + cfg["project_id"])
     fields = {
@@ -226,6 +230,11 @@ def protection(plan):
         == plan["vercel_protection_sha256"],
         "EXISTING_PROVIDER_PROTECTION_CHANGED",
     )
+    if r.profiles.is_canonical(binding):
+        r.require(
+            project.get("rootDirectory") == r.profiles.frontend_root(binding),
+            "CANONICAL_FRONTEND_PROVIDER_ROOT_CHANGED",
+        )
     # Manual prebuilt deployments have no Git source. Commit metadata does not
     # select branch-scoped variables, so verify the intended existing values and
     # pass the single nonsecret route explicitly for this deployment.
@@ -250,7 +259,8 @@ def protection(plan):
 
 def validate(binding):
     r.require(
-        binding.get("repository") == "DruHustle/onesa-ai-platform"
+        binding.get("repository")
+        in {r.profiles.REPOSITORY, r.profiles.CANONICAL_REPOSITORY}
         and r.profiles.kind(binding) == "frontend"
         and binding.get("target_environment") == "production",
         "FRONTEND_COMPONENT_SCOPE",
@@ -284,6 +294,14 @@ def validate(binding):
         )
         build = plan["builds"][env]
         receipt = r.read(folder / build["receipt"])
+        if r.profiles.is_canonical(binding):
+            r.require(
+                r.profiles.source_identity(receipt["binding"])
+                == r.profiles.source_identity(binding)
+                and receipt["binding"].get("component") == binding["component"]
+                and receipt["binding"].get("target_environment") == "production",
+                "CANONICAL_BUILD_SOURCE_IDENTITY",
+            )
         r.require(
             r.sha(folder / build["receipt"]) == build["receipt_sha256"]
             and receipt["binding"]["candidate_commit"] == binding["candidate_commit"]
@@ -310,8 +328,14 @@ def validate(binding):
         "AUTHORIZED_FRONTEND_ARTIFACT_BINDING",
     )
     api_component = r.profiles.companion(binding, "api")
-    dependency = r.read(r.plan_path({"component": api_component}))
+    dependency = r.read(r.plan_path({**binding, "component": api_component}))
     api_binding = dependency["binding"]
+    if r.profiles.is_canonical(binding):
+        r.require(
+            r.profiles.source_identity(api_binding)
+            == r.profiles.source_identity(binding),
+            "CANONICAL_FRONTEND_API_SOURCE_MISMATCH",
+        )
     r.require(
         api_binding["repository"] == binding["repository"]
         and api_binding["component"] == api_component
@@ -361,13 +385,21 @@ def validate(binding):
         "FRONTEND_PROCESSING_SCOPE",
     )
     r.verify_probe_bytes(folder, binding, plan)
-    protection(plan)
+    protection(plan, binding)
     cli_authentication(plan)
     return folder, plan
 
 
-def unpack(folder, build, destination):
+def unpack(folder, build, destination, binding=None):
     receipt = r.read(folder / build["receipt"])
+    if r.profiles.is_canonical(binding):
+        r.require(
+            r.profiles.source_identity(receipt["binding"])
+            == r.profiles.source_identity(binding)
+            and receipt["binding"].get("component") == binding["component"]
+            and receipt["binding"].get("target_environment") == "production",
+            "CANONICAL_BUILD_SOURCE_IDENTITY",
+        )
     expected = receipt["files"]
     seen = {}
     links = {}
@@ -466,12 +498,15 @@ def unpack(folder, build, destination):
         "PREBUILT_PROJECT_SCOPE",
     )
     r.require(
-        project.get("settings", {}).get("rootDirectory") == APP_ROOT,
+        project.get("settings", {}).get("rootDirectory")
+        == r.profiles.frontend_root(binding),
         "PREBUILT_APPLICATION_ROOT_SCOPE",
     )
     # The CLI resolves the provider's monorepo root even for --prebuilt.
     # Only its empty directory is needed; candidate source is never executed.
-    (destination / APP_ROOT).mkdir(mode=0o700, parents=True, exist_ok=False)
+    (destination / r.profiles.frontend_root(binding)).mkdir(
+        mode=0o700, parents=True, exist_ok=False
+    )
 
 
 def deployments_for(operation, plan):
@@ -500,6 +535,18 @@ def check_deployment(identifier, binding, env, plan):
         and row.get("target") == ("production" if env == "production" else None),
         "ACTUAL_FRONTEND_DEPLOYMENT_BINDING",
     )
+    r.require(
+        all(
+            row.get("meta", {}).get(key) == value
+            for key, value in r.profiles.source_metadata(binding).items()
+        ),
+        "CANONICAL_PROVIDER_SOURCE_IDENTITY",
+    )
+    r.require(
+        not r.profiles.is_canonical(binding)
+        or row.get("meta", {}).get("githubCommitRef") == "main",
+        "CANONICAL_PROVIDER_MAIN_SOURCE_REQUIRED",
+    )
     return row
 
 
@@ -508,9 +555,15 @@ def observe_provider(binding, env, plan, operation):
     # only bounded metadata plus the existing Preview protection bypass, never
     # a provider API token or deployment credential.
     cfg = r.read(PROVIDER)
-    project = protection(plan)
+    project = protection(plan, binding)
     if env == "staging":
         preview = r.read(Path(plan["preview_receipt_path"]))
+        if r.profiles.is_canonical(binding):
+            r.require(
+                r.profiles.source_identity(preview["binding"])
+                == r.profiles.source_identity(binding),
+                "CANONICAL_PREVIEW_SOURCE_IDENTITY",
+            )
         r.require(
             preview["environment"] == "staging"
             and all(
@@ -551,6 +604,19 @@ def observe_provider(binding, env, plan, operation):
         and dep.get("target") == ("production" if env == "production" else None),
         "ACTUAL_PROVIDER_READBACK_MISMATCH",
     )
+    if r.profiles.is_canonical(binding):
+        observed_binding = (
+            plan["retained_frontend"]["binding"]
+            if env == "production" and r.profiles.kind(binding) == "api"
+            else binding
+        )
+        r.require(
+            all(
+                dep.get("meta", {}).get(key) == value
+                for key, value in r.profiles.source_metadata(observed_binding).items()
+            ),
+            "CANONICAL_PROVIDER_SOURCE_IDENTITY",
+        )
     alias = provider("/v4/aliases/" + origin.removeprefix("https://"))
     r.require(
         alias["deployment"]["id"] == identifier
@@ -590,7 +656,7 @@ def verify_retained_frontend(binding, plan, metadata):
     retained = plan["retained_frontend"]
     old = retained["binding"]
     r.require(
-        old["repository"] == binding["repository"]
+        r.profiles.same_product(binding, old)
         and r.profiles.kind(old) == "frontend"
         and old["target_environment"] == "production"
         and old["candidate_commit"] == retained["source"]
@@ -599,14 +665,7 @@ def verify_retained_frontend(binding, plan, metadata):
         and metadata["provider"]["deployment_id"] == retained["deployment_id"],
         "RETAINED_FRONTEND_SOURCE_OR_PROVIDER_MISMATCH",
     )
-    operation = retained["operation_id"]
-    chain = r.verify_invocation(
-        old,
-        {"operation_id": operation, "read_only": True},
-        "production",
-        {"verifier_store": retained["verifier_store"]},
-        dependency=True,
-    )
+    chain = r.verify_retained_dependency(binding, retained, plan)
     accepted = next(row for row in chain if row["kind"] == "production-verification")
     observed = accepted["details"]["observations"]
     r.require(
@@ -653,8 +712,8 @@ def create(binding, env, operation, folder, plan):
     )
     workspace = op / "prebuilt"
     workspace.mkdir(mode=0o700)
-    unpack(folder, plan["builds"][env], workspace)
-    before = protection(plan)
+    unpack(folder, plan["builds"][env], workspace, binding)
+    before = protection(plan, binding)
     r.private(CLI_AUTH, directory=True)
     r.private(CLI_AUTH / "auth.json")
     r.private(CLI_AUTH / "config.json")
@@ -679,6 +738,11 @@ def create(binding, env, operation, folder, plan):
     r.write(
         transport / "scope.json",
         {
+            **(
+                r.profiles.source_binding(binding)
+                if r.profiles.is_canonical(binding)
+                else {}
+            ),
             "repository": binding["repository"],
             "component": "frontend",
             "candidate_commit": binding["candidate_commit"],
@@ -735,11 +799,23 @@ def create(binding, env, operation, folder, plan):
         "--env",
         "ONESA_API_URL=" + API_ORIGINS[env],
         "--meta",
-        "githubCommitRef=" + ("main" if env == "production" else "staging"),
+        "githubCommitRef="
+        + (
+            binding["branch"]
+            if r.profiles.is_canonical(binding)
+            else "main"
+            if env == "production"
+            else "staging"
+        ),
         "--meta",
         "githubCommitSha=" + binding["candidate_commit"],
         "--meta",
         "onesaOracleOperation=" + operation,
+        *[
+            item
+            for key, value in sorted(r.profiles.source_metadata(binding).items())
+            for item in ["--meta", key + "=" + value]
+        ],
         *(["--prod"] if env == "production" else ["--target=preview"]),
     ]
     with (op / "cli.stdout").open("xb") as out, (op / "cli.stderr").open("xb") as err:
@@ -795,7 +871,7 @@ def create(binding, env, operation, folder, plan):
         "observed_at": r.now().isoformat(),
     }
     r.write(op / "provider-receipt.json", receipt)
-    protection(plan)
+    protection(plan, binding)
     r.require(before["id"] == plan["project_id"], "PROJECT_PRESERVATION")
     deadline = time.monotonic() + 600
     while dep["readyState"] not in ["READY", "ERROR", "CANCELED"]:
@@ -832,10 +908,7 @@ def prepare_preview(api_binding, context):
     binding = preview_binding(api_binding)
     folder, plan = validate(binding)
     r.require(
-        all(
-            binding[k] == api_binding[k]
-            for k in ["repository", "candidate_commit", "source_tree", "source_sha256"]
-        ),
+        r.profiles.source_identity(binding) == r.profiles.source_identity(api_binding),
         "PREVIEW_DEPENDENCY_CHANGED_SOURCE",
     )
     # Called only by the pinned API staging runner after its context reservation.
@@ -845,10 +918,15 @@ def prepare_preview(api_binding, context):
 
 
 def select_preview(binding, api_binding, chain, phase, folder, plan):
-    if any(
-        binding[key] != api_binding[key]
-        for key in ["candidate_commit", "source_tree", "source_sha256"]
-    ):
+    same_source = (
+        r.profiles.source_identity(binding) == r.profiles.source_identity(api_binding)
+        if r.profiles.is_canonical(binding) or r.profiles.is_canonical(api_binding)
+        else all(
+            binding[k] == api_binding[k]
+            for k in ["candidate_commit", "source_tree", "source_sha256"]
+        )
+    )
+    if not same_source:
         qualification_context = next(
             row["id"] for row in chain if row["kind"] == "context"
         )
@@ -873,7 +951,7 @@ def main():
     context = request["context"]
     folder, plan = validate(binding)
     api_component = r.profiles.companion(binding, "api")
-    api_plan = r.read(r.plan_path({"component": api_component}))
+    api_plan = r.read(r.plan_path({**binding, "component": api_component}))
     api_binding = api_plan["binding"]
     r.require(
         api_plan["mode"] in r.profiles.MODES
@@ -889,7 +967,7 @@ def main():
     try:
         latest = db.execute(
             "SELECT d.id FROM deployments d JOIN records r ON r.id=d.id WHERE d.state='accepted' AND r.scope=? ORDER BY r.sequence DESC LIMIT 1",
-            (api_binding["repository"] + ":" + api_component,),
+            (r.profiles.scope(api_binding),),
         ).fetchone()
     finally:
         db.close()
@@ -930,9 +1008,7 @@ def main():
         return
     chain = r.verify_invocation(binding, context, phase, plan)
     ci = next(row["details"]["ci"] for row in chain if row["kind"] == "context")
-    plan["observed_ci_run_id"] = next(
-        row["run_id"] for row in ci if row["workflow"] == "ci.yml"
-    )
+    plan["observed_ci_run_id"] = r.ci_reference(binding, ci)
     if plan["mode"] == "identity" and phase in {"staging", "deploy"}:
         r.renew_identity_credentials(binding, plan, context, phase)
     select_preview(binding, api_binding, chain, phase, folder, plan)
