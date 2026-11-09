@@ -252,7 +252,7 @@ def test_persisted_history_reaches_native_cloudflare_request(api, stream):
     captured = []
 
     def provider(request):
-        assert request.url.path.endswith("/ai/run/@cf/qwen/qwen3-30b-a3b-fp8")
+        assert request.url.path.endswith("/ai/run/@cf/google/gemma-4-26b-a4b-it")
         captured.append(json.loads(request.content))
         content = "Acknowledged." if len(captured) == 1 else code
         return httpx.Response(
@@ -264,7 +264,7 @@ def test_persisted_history_reaches_native_cloudflare_request(api, stream):
 
     config = Settings(
         model_backend="cloudflare",
-        model_name="@cf/qwen/qwen3-30b-a3b-fp8",
+        model_name="@cf/google/gemma-4-26b-a4b-it",
         model_base_url="https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/ai/v1",
         model_api_key=secrets.token_hex(24),
     )

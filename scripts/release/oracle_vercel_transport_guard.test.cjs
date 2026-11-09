@@ -2,6 +2,12 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {createGuard}=require('./oracle_vercel_transport_guard.cjs');
 const modulePath=path.join(__dirname,'oracle_vercel_transport_guard.cjs');
 function fixture(){const p=fs.mkdtempSync(path.join(os.tmpdir(),'onesa-transport-test-'));fs.chmodSync(p,0o700);fs.writeFileSync(path.join(p,'scope.json'),JSON.stringify({request_budget:1,operation_id:crypto.randomUUID(),repository:'DruHustle/onesa-ai-platform',component:'frontend',environment:'staging'}),{mode:0o600});return p;}
+function canonicalFixture(component='frontend'){
+ const p=fixture(),file=path.join(p,'scope.json'),scope=JSON.parse(fs.readFileSync(file));
+ Object.assign(scope,{schema_version:2,repository:'DruHustle/onesa-ug',repository_id:1444746154,product:'platform',source_path:'onesa-ai-platform',branch:'main',candidate_commit:'a'.repeat(40),source_tree:'b'.repeat(40),product_source_tree:'c'.repeat(40),component});
+ fs.writeFileSync(file,JSON.stringify(scope),{mode:0o600});return p;
+}
+function canonicalBody(){return {meta:{githubCommitSha:'a'.repeat(40),githubCommitRef:'main',onesaSourceSchema:'2',onesaSourceRepository:'DruHustle/onesa-ug',onesaSourceRepositoryId:'1444746154',onesaSourceProduct:'platform',onesaSourcePath:'onesa-ai-platform',onesaSourceRootTree:'b'.repeat(40),onesaSourceProductTree:'c'.repeat(40),onesaSourceBranch:'main'}};}
 for(const component of ['frontend','docs-public','docs-internal','api','foreign'])test(`transport scope preserves the explicit ${component} component boundary`,()=>{
  const p=fixture();try{
   const scope=JSON.parse(fs.readFileSync(path.join(p,'scope.json')));scope.component=component;
@@ -28,8 +34,8 @@ for(const kind of ['fetch','http'])test(`${kind} transport cannot send a second 
  }finally{await new Promise(resolve=>server.close(resolve));fs.rmSync(p,{recursive:true});}
 });
 
-async function serverFixture(first,action,{interrupt=false,repeatMissing=false}={}){
- const p=fixture();let count=0;
+async function serverFixture(first,action,{interrupt=false,repeatMissing=false,canonical=false}={}){
+ const p=canonical?canonicalFixture(typeof canonical==='string'?canonical:'frontend'):fixture();let count=0;
  const server=http.createServer((req,res)=>{req.resume();if(req.url.startsWith('/v2/files')){res.writeHead(200);res.end('{}');return;}count++;
   if(interrupt){res.writeHead(400,{'Content-Type':'application/json','Content-Length':'500'});res.write('{"error":');setTimeout(()=>res.destroy(),20);return;}
   res.writeHead(count===1||repeatMissing?first.status:201,{'Content-Type':'application/json'});res.end(count===1||repeatMissing?first.body:'{"id":"dpl_fixture"}');
@@ -41,6 +47,59 @@ async function serverFixture(first,action,{interrupt=false,repeatMissing=false}=
  finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));fs.rmSync(p,{recursive:true});}
 }
 const missing={status:400,body:JSON.stringify({error:{code:'missing_files',missing:['a'.repeat(40)]}})};
+test('canonical source fields and explicit supported scope are mandatory before transport setup',()=>{
+ for(const key of ['schema_version','repository_id','product','source_path','branch','candidate_commit','source_tree','product_source_tree','component']){
+  const p=canonicalFixture();try{
+   const file=path.join(p,'scope.json'),scope=JSON.parse(fs.readFileSync(file));
+   scope[key]=key==='component'?'docs-internal':'foreign';fs.writeFileSync(file,JSON.stringify(scope),{mode:0o600});
+   assert.throws(()=>createGuard(p));assert.equal(fs.existsSync(path.join(p,'create-request.json')),false);
+  }finally{fs.rmSync(p,{recursive:true});}
+ }
+});
+test('canonical public Docs retains full JSON source validation before a real HTTP create',async()=>{
+ for(const key of Object.keys(canonicalBody().meta)){
+  await serverFixture({status:201,body:'{}'},async({p,setup,request,count})=>{
+   const body=canonicalBody();delete body.meta[key];
+   assert.equal(await child(setup+`(async()=>{${request(JSON.stringify(body))};process.exit(0)})().catch(()=>process.exit(2));`),73);
+   assert.equal(count(),0,key);assert.equal(fs.existsSync(path.join(p,'create-request.json')),false);
+  },{canonical:'docs-public'});
+ }
+});
+test('canonical public Docs uses the same durable one-create budget and refuses another process',async()=>{
+ await serverFixture({status:201,body:'{"id":"dpl_fixture"}'},async({p,setup,request,count})=>{
+  const body=JSON.stringify(canonicalBody());
+  assert.equal(await child(setup+`(async()=>{${request(body)};process.exit(0)})().catch(()=>process.exit(2));`),0);
+  assert.equal(await child(setup+`(async()=>{${request(body)};process.exit(0)})().catch(()=>process.exit(2));`),73);
+  assert.equal(count(),1);const record=JSON.parse(fs.readFileSync(path.join(p,'create-request.json')));
+  assert.equal(record.component,'docs-public');assert.equal(record.repository_id,1444746154);assert.equal(record.automatic_retry,false);
+ },{canonical:'docs-public'});
+});
+test('canonical source metadata is checked before any real HTTP create or durable reservation',async()=>{
+ for(const key of Object.keys(canonicalBody().meta)){
+  await serverFixture({status:201,body:'{}'},async({p,setup,request,count})=>{
+   const body=canonicalBody();delete body.meta[key];
+   assert.equal(await child(setup+`(async()=>{${request(JSON.stringify(body))};process.exit(0)})().catch(()=>process.exit(2));`),73);
+   assert.equal(count(),0,key);assert.equal(fs.existsSync(path.join(p,'create-request.json')),false);
+  },{canonical:true});
+ }
+});
+test('canonical exact JSON uses the existing one-create budget and identical missing-files continuation',async()=>{
+ await serverFixture(missing,async({p,setup,request,count})=>{
+  const body=JSON.stringify(canonicalBody());
+  assert.equal(await child(setup+`(async()=>{${request(body)};${request(body)};${request(body)};process.exit(0)})().catch(()=>process.exit(2));`),73);
+  assert.equal(count(),2);assert.equal(JSON.parse(fs.readFileSync(path.join(p,'create-request.json'))).repository,'DruHustle/onesa-ug');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(p,'missing-files-response.json'))).deployment_created,false);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(p,'create-continuation-request.json'))).automatic_retry,false);
+ },{canonical:true});
+});
+test('canonical raw HTTP and pre-captured fetch cannot bypass inspected source JSON',async()=>{
+ for(const kind of ['http','captured-fetch'])await serverFixture({status:201,body:'{}'},async({p,origin,setup,count})=>{
+  const target=JSON.stringify(origin+'/v13/deployments'),body=JSON.stringify(JSON.stringify(canonicalBody()));
+  const request=kind==='http'?`await new Promise((resolve,reject)=>{const r=require('node:http').request(${target},{method:'POST'},res=>{res.resume();res.on('end',resolve)});r.on('error',reject);r.end(${body});})`:`await capturedFetch(${target},{method:'POST',body:${body}})`;
+  assert.equal(await child('const capturedFetch=globalThis.fetch;'+setup+`(async()=>{${request};process.exit(0)})().catch(()=>process.exit(2));`),73);
+  assert.equal(count(),0);assert.equal(fs.existsSync(path.join(p,'create-request.json')),false);
+ },{canonical:true});
+});
 test('a complete non-creating missing-file response permits one identical continuation, never a third create',async()=>{
  await serverFixture(missing,async({p,origin,setup,request,count})=>{
   const code=setup+`(async()=>{${request()};await fetch(${JSON.stringify(origin+'/v2/files')},{method:'POST',body:'synthetic'});${request()};${request()}})().catch(()=>process.exit(2));`;

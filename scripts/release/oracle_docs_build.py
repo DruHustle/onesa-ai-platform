@@ -20,6 +20,7 @@ import oracle_docs_checks
 import oracle_owner as owner
 
 REPOSITORY = "DruHustle/onesa-ai-platform"
+CANONICAL_WORKFLOW = ".github/workflows/onesa-public-docs-build.yml"
 BUILD_STEPS = {
     "Capture fresh synthetic application screenshots",
     "Verify dependency security and build classified public documentation",
@@ -65,11 +66,28 @@ CONTRACT_FILES = {
 }
 
 
-def source_contract(github, sha):
+def canonical_source(source):
+    """The public build uses platform source evidence, never a Docs component grant."""
+    owner.require(
+        isinstance(source, dict) and set(source) == owner.AI_SOURCE_FIELDS,
+        "EXACT_CANONICAL_PUBLIC_DOCS_SOURCE_REQUIRED",
+    )
+    return owner.ai_operational_source(source)
+
+
+def source_contract(github, sha, *, source=None):
     """Read the qualified commit's public contracts, independent of install paths."""
     result = {}
-    for key, path in CONTRACT_FILES.items():
-        row = github.api("repos/" + REPOSITORY + "/contents/" + path + "?ref=" + sha)
+    repository = REPOSITORY
+    prefix = ""
+    if source is not None:
+        canonical_source(source)
+        owner.require(source["candidate_commit"] == sha, "DOCS_CONTRACT_SOURCE_CHANGED")
+        repository = source["repository"]
+        prefix = source["source_path"] + "/"
+    for key, relative in CONTRACT_FILES.items():
+        path = prefix + relative
+        row = github.api("repos/" + repository + "/contents/" + path + "?ref=" + sha)
         owner.require(
             row.get("type") == "file"
             and row.get("path") == path
@@ -100,7 +118,7 @@ def source_contract(github, sha):
     return result
 
 
-def local_checks(raw, artifact, sha, run_id, contract):
+def local_checks(raw, artifact, sha, run_id, contract, *, source=None):
     """Real CI custody of local checks is still not owner authorization."""
     owner.require(
         isinstance(raw, bytes)
@@ -146,10 +164,16 @@ def local_checks(raw, artifact, sha, run_id, contract):
                 "application_deployment_authorized",
                 "backend_deployment_authorized",
             }
+            | (
+                {"source", "verification_only", "release_authorized"}
+                if source is not None
+                else set()
+            )
             and type(value["schema_version"]) is int
-            and value["schema_version"] == 1
+            and value["schema_version"] == (2 if source is not None else 1)
             and value["evidence_kind"] == "onesa-public-docs-local-build-checks"
-            and value["repository"] == REPOSITORY
+            and value["repository"]
+            == (source["repository"] if source is not None else REPOSITORY)
             and value["candidate_commit"] == sha
             and type(value["actions_build_run_id"]) is int
             and value["actions_build_run_id"] == run_id
@@ -166,6 +190,14 @@ def local_checks(raw, artifact, sha, run_id, contract):
             ),
             "LOCAL_DOCS_CHECK_SOURCE_RUN_SCOPE_OR_AUTHORITY_REFUSED",
         )
+        if source is not None:
+            canonical_source(source)
+            owner.require(
+                value["source"] == source
+                and value["verification_only"] is True
+                and value["release_authorized"] is False,
+                "CANONICAL_DOCS_CHECK_SOURCE_OR_AUTHORITY_CHANGED",
+            )
         for environment, check in value["checks"].items():
             owner.require(
                 check["result"] == "PASS"
@@ -302,15 +334,41 @@ def archive_identity(raw, artifact, sha):
 
 
 def read_build(
-    github, source, run_id, archives, *, now=None, require_local_checks=False
+    github,
+    source,
+    run_id,
+    archives,
+    *,
+    now=None,
+    require_local_checks=False,
+    source_archives=None,
 ):
     """A pinned external consumer supplies downloaded bytes, never a supplied PASS."""
     owner.require(not os.getenv("GITHUB_ACTIONS"), "EXTERNAL_DOCS_READER_REQUIRED")
     owner.require(type(require_local_checks) is bool, "EXPLICIT_DOCS_CHECK_MODE")
+    consolidated = (
+        isinstance(source, dict)
+        and source.get("repository") == owner.CONSOLIDATED_REPOSITORY
+    )
+    if consolidated:
+        canonical_source(source)
+        owner.require(
+            require_local_checks
+            and isinstance(source_archives, dict)
+            and set(source_archives) == set(owner.CONSOLIDATED_ARTIFACTS["platform"]),
+            "CANONICAL_DOCS_REQUIRES_LOCAL_CHECKS_AND_PLATFORM_SOURCE_ARCHIVES",
+        )
+    else:
+        owner.require(source_archives is None, "LEGACY_DOCS_SOURCE_ARCHIVES_REFUSED")
     required_steps = BUILD_STEPS | (CHECK_STEPS if require_local_checks else set())
     owner.require(
-        set(source) == {"repository", "candidate_commit", "source_tree"}
-        and source["repository"] == REPOSITORY
+        (
+            consolidated
+            or (
+                set(source) == {"repository", "candidate_commit", "source_tree"}
+                and source["repository"] == REPOSITORY
+            )
+        )
         and all(
             re.fullmatch("[a-f0-9]{40}", source[key])
             for key in ["candidate_commit", "source_tree"]
@@ -320,18 +378,39 @@ def read_build(
         "REAL_ACTIONS_BUILD_ID_AND_EXACT_SOURCE_REQUIRED",
     )
     github.owner()
-    ci = github.qualify(source)
+
+    def qualify():
+        return (
+            github.qualify(source, source_archives)
+            if consolidated
+            else github.qualify(source)
+        )
+
+    ci = qualify()
     owner.require(ci, "MANDATORY_NATIVE_CI_REQUIRED")
-    prefix = "repos/" + REPOSITORY + "/actions/runs/" + str(run_id)
+    repository = source["repository"]
+    prefix = "repos/" + repository + "/actions/runs/" + str(run_id)
     run = github.api(prefix)
     sha = source["candidate_commit"]
     owner.require(
         run["id"] == run_id
-        and run["repository"]["full_name"] == REPOSITORY
-        and run["head_repository"]["full_name"] == REPOSITORY
+        and run["repository"]["full_name"] == repository
+        and run["head_repository"]["full_name"] == repository
+        and (
+            not consolidated
+            or (
+                type(run["repository"].get("id")) is int
+                and run["repository"]["id"] == source["repository_id"]
+                and type(run["head_repository"].get("id")) is int
+                and run["head_repository"]["id"] == source["repository_id"]
+            )
+        )
         and run["head_sha"] == sha
         and run["head_branch"] == "main"
-        and run["path"] == ".github/workflows/docs-hosting.yml"
+        and run["path"]
+        == (
+            CANONICAL_WORKFLOW if consolidated else ".github/workflows/docs-hosting.yml"
+        )
         and run["event"] == "workflow_dispatch"
         and type(run["run_attempt"]) is int
         and run["run_attempt"] == 1
@@ -362,7 +441,7 @@ def read_build(
         and job["conclusion"] == "success"
         and all(
             sum(step["name"] == name for step in job["steps"]) == 1
-            for name in required_steps | PROVIDER_STEPS
+            for name in required_steps | (set() if consolidated else PROVIDER_STEPS)
         )
         and all(
             step["status"] == "completed"
@@ -374,10 +453,14 @@ def read_build(
             and steps[name].get("conclusion") == "success"
             for name in required_steps
         )
-        and all(
-            steps.get(name, {}).get("status") == "completed"
-            and steps[name].get("conclusion") == "skipped"
-            for name in PROVIDER_STEPS
+        and (
+            not PROVIDER_STEPS.intersection(steps)
+            if consolidated
+            else all(
+                steps.get(name, {}).get("status") == "completed"
+                and steps[name].get("conclusion") == "skipped"
+                for name in PROVIDER_STEPS
+            )
         ),
         "MANDATORY_DOCS_BUILD_FAILED_SKIPPED_OR_PROVIDER_PATH_EXECUTED",
     )
@@ -392,7 +475,10 @@ def read_build(
     )
     result = []
     acceptance = None
-    contract = source_contract(github, sha) if require_local_checks else None
+    canonical = source if consolidated else None
+    contract = (
+        source_contract(github, sha, source=canonical) if require_local_checks else None
+    )
     for item in sorted(items, key=lambda item: item["name"]):
         owner.require(
             type(item["id"]) is int
@@ -403,11 +489,13 @@ def read_build(
             "DOCS_ARTIFACT_ORIGIN_EXPIRED_OR_CHANGED",
         )
         if item["name"] == CHECK_ARTIFACT:
-            acceptance = local_checks(archives[item["id"]], item, sha, run_id, contract)
+            acceptance = local_checks(
+                archives[item["id"]], item, sha, run_id, contract, source=canonical
+            )
         else:
             result.append(archive_identity(archives[item["id"]], item, sha))
     owner.require(
-        github.qualify(source) == ci
+        qualify() == ci
         and github.api(prefix) == run
         and github.api(prefix + "/artifacts?per_page=100") == listing,
         "DOCS_SOURCE_CI_OR_ARTIFACT_CUSTODY_CHANGED_DURING_READ",
@@ -435,4 +523,9 @@ def read_build(
         "production_deployment_authorized": False,
         "application_deployment_authorized": False,
         "backend_deployment_authorized": False,
+        **(
+            {"verification_only": True, "release_authorized": False}
+            if consolidated
+            else {}
+        ),
     }

@@ -53,6 +53,41 @@ expiry and unchanged custody after reading. Legacy two-archive inspection remain
 available separately; it cannot satisfy the new check mode. These local checks
 never claim an owner-run receipt, a hosted PASS or deployment authority.
 
+The consolidated repository has a separate generated, public build-only entrypoint:
+`onesa-public-docs-build.yml`. After reviewed source reaches canonical Main, the
+owner can dispatch it with `gh workflow run onesa-public-docs-build.yml --repo
+DruHustle/onesa-ug --ref main`. It has no Preview target, provider credential,
+deployment step or private source input. It preserves the existing classified
+build and local acceptance commands, uses the pinned imported Portal and Robot
+contracts, and uploads exactly the two public site archives and the local-check
+archive. Reference-only internal checks remain local to CI and are not uploaded.
+
+Its schema-2 local-check envelope binds numeric repository identity, exact root
+commit/tree and the `onesa-ai-platform` subtree, with verification-only status and
+all release grants false. The external reader requires the complete public trio
+and the separately pinned canonical Platform source-artifact ZIPs, reuses exact
+current-Main source/CI verification before and after the read, and retains all
+existing freshness, successful-step, archive, classification and context checks.
+Canonical build evidence cannot use the legacy two-archive inspection mode or
+contain provider steps. Schema-1 legacy evidence remains unchanged. This public
+build path grants no installation, owner context, publication or native authority.
+
+The separate canonical public operational profile explicitly selects schema 2 and
+`docs-public`. Installation, policy and every existing source/CI recheck bind the
+numeric repository, exact current-main commit/root tree, Platform subtree and
+fixed installed source-artifact ZIPs. Product-relative tar reconstruction remains
+separate from the root source identity. The full identity also travels through
+prepared publications, provider metadata and signed native observations. The
+existing public Docs project must remain independently pinned with no Git link.
+
+Canonical and legacy public installations retain the same global publication lock
+and operation journal scan. Uncertain older requests cannot be hidden by a new
+source/store; terminal provider inspection grants no production acceptance. The
+new policy is separate from all AI application profiles and cannot activate
+protected Engineering Docs. Legacy schema-1 records and private publication
+contracts remain unchanged. Actual controller cutover, installed custody, native
+observer commissioning and retained rollback facts require owner inspection.
+
 The public Docs owner adapter extends the existing external Oracle verifier. Its
 installation is checked against reviewed Main and fresh CI; installation, issuer
 commissioning and native-observer commissioning remain separate actions. A new

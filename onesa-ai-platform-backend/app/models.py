@@ -166,7 +166,10 @@ class IdentityMail(Base):
     lease_id: Mapped[UUID | None]
     provider_id: Mapped[str | None] = mapped_column(String(200))
     __table_args__ = (
-        CheckConstraint("state IN ('queued', 'leased', 'accepted', 'failed', 'cancelled')"),
+        CheckConstraint(
+            "state IN ('queued', 'leased', 'queued_html_v1', 'leased_html_v1', "
+            "'accepted', 'failed', 'cancelled')"
+        ),
         CheckConstraint("attempts BETWEEN 0 AND 5"),
     )
 

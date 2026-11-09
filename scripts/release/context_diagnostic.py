@@ -22,7 +22,7 @@ from hosted_suite import Session, generation, safe_suite_failure_reason
 
 SERVICE = "srv-db56mju7bikc73950f60"
 PROJECT = "prj_8Si7wnmrTvB9PNh0I8DEnOcMUWKJ"
-MODEL = "@cf/qwen/qwen3-30b-a3b-fp8"
+MODEL = "@cf/google/gemma-4-26b-a4b-it"
 MODEL_BASE = "https://api.cloudflare.com/client/v4/accounts/ffe41f6678793e8dcc7f4a1c2f5e60d8/ai/v1"
 ACTIVE = {
     "created",

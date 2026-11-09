@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.database import make_engine
 from app.identity import bearer
+from app.mail_presentation import identity_email_html_v1
 from app.models import BoundedUpload, IdentityMail, IdentityToken, now
 
 
@@ -26,7 +27,7 @@ def process_one(engine: Engine, settings: Settings, client: httpx.Client) -> boo
         job = db.scalar(
             select(IdentityMail)
             .where(
-                IdentityMail.state.in_(["queued", "leased"]),
+                IdentityMail.state.in_(["queued", "leased", "queued_html_v1", "leased_html_v1"]),
                 IdentityMail.attempts < 5,
                 IdentityMail.next_attempt_at <= now(),
                 or_(IdentityMail.lease_until.is_(None), IdentityMail.lease_until < now()),
@@ -54,7 +55,14 @@ def process_one(engine: Engine, settings: Settings, client: httpx.Client) -> boo
             )
             db.commit()
             return True
-        job.state, job.lease_id, job.lease_until = "leased", lease, now() + timedelta(seconds=60)
+        # New states persist presentation and keep an older plain-only worker
+        # from claiming HTML retries during binary rollback. Attempted legacy jobs
+        # keep the original plain body. Local HTTP fixtures remain plain.
+        branded = job.state in {"queued_html_v1", "leased_html_v1"} or (
+            job.attempts == 0 and settings.public_origin.startswith("https://")
+        )
+        job.state = "leased_html_v1" if branded else "leased"
+        job.lease_id, job.lease_until = lease, now() + timedelta(seconds=60)
         job.attempts += 1
         job_id, email, purpose = job.token_id, row.email, row.purpose
         db.commit()
@@ -70,6 +78,11 @@ def process_one(engine: Engine, settings: Settings, client: httpx.Client) -> boo
                 "Idempotency-Key": "onesa-identity-" + str(job_id),
             },
             json={
+                **(
+                    {"html": identity_email_html_v1(purpose, link, settings.public_origin)}
+                    if branded
+                    else {}
+                ),
                 "from": settings.mail_from,
                 "to": [email],
                 "reply_to": settings.mail_reply_to or settings.mail_from,
@@ -92,7 +105,13 @@ def process_one(engine: Engine, settings: Settings, client: httpx.Client) -> boo
         )
         if job is not None and job.lease_id == lease:
             job.provider_id = provider_id
-            job.state = "accepted" if accepted else "failed" if job.attempts >= 5 else "queued"
+            job.state = (
+                "accepted"
+                if accepted
+                else "failed"
+                if job.attempts >= 5
+                else ("queued_html_v1" if branded else "queued")
+            )
             job.lease_until, job.lease_id = None, None
             job.next_attempt_at = now() + timedelta(seconds=min(600, 15 * 2**job.attempts))
             db.commit()
@@ -163,7 +182,10 @@ def maintenance(engine: Engine) -> None:
         expired = select(IdentityToken.id).where(IdentityToken.expires_at <= now())
         db.execute(
             update(IdentityMail)
-            .where(IdentityMail.token_id.in_(expired), IdentityMail.state.in_(["queued", "leased"]))
+            .where(
+                IdentityMail.token_id.in_(expired),
+                IdentityMail.state.in_(["queued", "leased", "queued_html_v1", "leased_html_v1"]),
+            )
             .values(state="cancelled", lease_until=None, lease_id=None)
         )
         # A crash on the final claim must not leave work permanently leased.
@@ -171,7 +193,7 @@ def maintenance(engine: Engine) -> None:
         db.execute(
             update(IdentityMail)
             .where(
-                IdentityMail.state.in_(["queued", "leased"]),
+                IdentityMail.state.in_(["queued", "leased", "queued_html_v1", "leased_html_v1"]),
                 IdentityMail.attempts >= 5,
                 or_(IdentityMail.lease_until.is_(None), IdentityMail.lease_until < now()),
             )
