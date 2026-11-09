@@ -10,6 +10,20 @@ import re
 from pathlib import Path
 
 REPOSITORY = "DruHustle/onesa-ai-platform"
+CANONICAL_REPOSITORY = "DruHustle/onesa-ug"
+SOURCE_FIELDS = frozenset(
+    {
+        "schema_version",
+        "repository",
+        "repository_id",
+        "product",
+        "source_path",
+        "candidate_commit",
+        "source_tree",
+        "product_source_tree",
+        "branch",
+    }
+)
 PROFILES = {
     "api": ("api", "foundation"),
     "frontend": ("frontend", "foundation"),
@@ -36,13 +50,99 @@ def require(value, code):
         raise ProfileError(code)
 
 
+def source_binding(binding):
+    """Validate source identity only; never qualify or commission a component."""
+    require(
+        isinstance(binding, dict) and SOURCE_FIELDS <= set(binding),
+        "COMPLETE_CANONICAL_AI_SOURCE_REQUIRED",
+    )
+    source = {key: binding[key] for key in SOURCE_FIELDS}
+    require(
+        type(source["schema_version"]) is int
+        and source["schema_version"] == 2
+        and source["repository"] == CANONICAL_REPOSITORY
+        and type(source["repository_id"]) is int
+        and source["repository_id"] == 1444746154
+        and source["product"] == "platform"
+        and source["source_path"] == "onesa-ai-platform"
+        and source["branch"] == "main"
+        and all(
+            isinstance(source[key], str) and re.fullmatch(r"[a-f0-9]{40}", source[key])
+            for key in ("candidate_commit", "source_tree", "product_source_tree")
+        ),
+        "CANONICAL_AI_APPLICATION_SOURCE_SCOPE",
+    )
+    return source
+
+
+def is_canonical(binding):
+    return (
+        isinstance(binding, dict) and binding.get("repository") == CANONICAL_REPOSITORY
+    )
+
+
+def scope(binding):
+    name = component(binding)
+    return (
+        CANONICAL_REPOSITORY + ":platform:"
+        if is_canonical(binding)
+        else REPOSITORY + ":"
+    ) + name
+
+
+def source_identity(binding):
+    fields = {"repository", "candidate_commit", "source_tree", "source_sha256"}
+    if is_canonical(binding):
+        source_binding(binding)
+        fields |= SOURCE_FIELDS
+    return {key: binding[key] for key in fields}
+
+
+def frontend_root(binding=None):
+    if is_canonical(binding):
+        source_binding(binding)
+        return "onesa-ai-platform/onesa-ai-platform-frontend/apps/chat"
+    return "onesa-ai-platform-frontend/apps/chat"
+
+
+def source_metadata(binding):
+    if not is_canonical(binding):
+        return {}
+    source = source_binding(binding)
+    return {
+        "onesaSource" + suffix: str(source[key])
+        for suffix, key in [
+            ("Schema", "schema_version"),
+            ("Repository", "repository"),
+            ("RepositoryId", "repository_id"),
+            ("Product", "product"),
+            ("Path", "source_path"),
+            ("RootTree", "source_tree"),
+            ("ProductTree", "product_source_tree"),
+            ("Branch", "branch"),
+        ]
+    }
+
+
+def same_product(left, right):
+    """Only source compatibility; signed dependency validation is separate."""
+    component(left)
+    component(right)
+    return left.get("repository") == right.get("repository") or (
+        is_canonical(left) and right.get("repository") == REPOSITORY
+    )
+
+
 def component(binding):
     value = binding.get("component") if isinstance(binding, dict) else None
     require(isinstance(value, str) and value in PROFILES, "UNKNOWN_AI_RELEASE_PROFILE")
-    require(
-        "repository" not in binding or binding["repository"] == REPOSITORY,
-        "FOREIGN_AI_RELEASE_REPOSITORY",
-    )
+    if is_canonical(binding):
+        source_binding(binding)
+    else:
+        require(
+            "repository" not in binding or binding["repository"] == REPOSITORY,
+            "FOREIGN_AI_RELEASE_REPOSITORY",
+        )
     return value
 
 
@@ -62,17 +162,21 @@ def policy_components(policy):
     require(isinstance(policy, dict), "AI_POLICY_REQUIRED")
     profiles = policy.get("components")
     require(isinstance(profiles, dict), "AI_POLICY_COMPONENTS_REQUIRED")
+    canonical = policy.get("schema_version") == 2
+    if canonical:
+        source_binding(policy.get("toolchain", {}).get("source_binding"))
+    prefix = CANONICAL_REPOSITORY + ":platform:" if canonical else REPOSITORY + ":"
     selected = next(
         (
             names
             for names in (LEGACY, SCOPED, EXPANDED)
-            if set(profiles) == {REPOSITORY + ":" + c for c in names}
+            if set(profiles) == {prefix + c for c in names}
         ),
         None,
     )
     require(selected is not None, "AI_POLICY_PROFILE_SET_REFUSED")
     for name in selected:
-        profile = profiles[REPOSITORY + ":" + name]
+        profile = profiles[prefix + name]
         require(
             isinstance(profile, dict)
             and type(profile.get("qualification_attempt_limit")) is int
@@ -92,6 +196,10 @@ def policy_components(policy):
 def validate_mode(binding, mode, policy):
     value = component(binding)
     selected = policy_components(policy)
+    require(
+        is_canonical(binding) == (policy.get("schema_version") == 2),
+        "AI_PROFILE_SOURCE_POLICY_MISMATCH",
+    )
     require(value in selected, "AI_PROFILE_NOT_COMMISSIONED")
     bound_mode(binding, mode)
     if selected != LEGACY:
@@ -152,6 +260,8 @@ def workflow_mode(mode, enabled):
 def plan_path(binding, api_plan, frontend_plan):
     value = component(binding)
     base = Path(api_plan if kind(binding) == "api" else frontend_plan)
+    if is_canonical(binding):
+        return base.with_name("oracle-ai-canonical-" + value + "-release.json")
     if value in LEGACY:
         return base
     return base.with_name("oracle-ai-" + value + "-release.json")
@@ -160,13 +270,15 @@ def plan_path(binding, api_plan, frontend_plan):
 def artifact_folder(binding, root):
     value = component(binding)
     source = source_commit(binding)
-    folder = Path(root) / "artifacts" / source
+    base = Path(root) / "canonical-platform" if is_canonical(binding) else Path(root)
+    folder = base / "artifacts" / source
     return folder if value in LEGACY else folder / "profiles" / value
 
 
 def configuration_folder(binding, root):
     value = component(binding)
-    folder = Path(root) / source_commit(binding)
+    base = Path(root) / "canonical-platform" if is_canonical(binding) else Path(root)
+    folder = base / source_commit(binding)
     return folder if value in LEGACY else folder / "profiles" / value
 
 

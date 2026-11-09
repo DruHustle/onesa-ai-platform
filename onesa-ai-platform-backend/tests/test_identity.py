@@ -320,3 +320,43 @@ def test_crashed_final_mail_attempt_is_terminal_only_after_lease_expiry(api, pg,
         assert job.attempts == 5 and job.provider_id is None
     with httpx.Client(transport=httpx.MockTransport(lambda _: pytest.fail("Sixth send"))) as client:
         assert not process_one(pg, api.app.state.settings, client)
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_html_mail_version_survives_retry_without_restyling_legacy_attempts(api, pg, legacy):
+    configured(api)
+    identifier, token = invite(api, pg)
+    settings = api.app.state.settings.model_copy(
+        update={"public_origin": "https://ai.example.invalid"}
+    )
+    if legacy:
+        with Session(pg) as db:
+            job = db.get(IdentityMail, identifier)
+            job.attempts = 1
+            db.commit()
+    calls = []
+
+    def transport(request):
+        calls.append(request.content)
+        body = json.loads(request.content)
+        assert token in body["text"]
+        assert ("html" in body) is not legacy
+        if not legacy:
+            assert token in body["html"]
+            assert "You're invited to Onesa AI" in body["html"]
+        return httpx.Response(503 if len(calls) == 1 else 200, json={"id": "fixture-receipt"})
+
+    with httpx.Client(transport=httpx.MockTransport(transport)) as client:
+        assert process_one(pg, settings, client)
+        with Session(pg) as db:
+            job = db.get(IdentityMail, identifier)
+            assert job.state == ("queued" if legacy else "queued_html_v1")
+            # An older worker's unchanged selector must not claim HTML retries.
+            selected = db.scalar(
+                select(IdentityMail).where(IdentityMail.state.in_(["queued", "leased"]))
+            )
+            assert (selected is not None) is legacy
+            job.next_attempt_at = now() - timedelta(seconds=1)
+            db.commit()
+        assert process_one(pg, settings, client)
+    assert calls[0] == calls[1]

@@ -15,6 +15,7 @@ from app.auth import authenticated
 from app.config import Settings
 from app.consumer import (
     CONTRACT_VERSION,
+    MAX_CREDENTIAL_CHARS,
     CompletionError,
     Connection,
     Message,
@@ -75,6 +76,46 @@ def test_endpoint_must_be_operator_selected_verified_https(base):
         https_base(base)
 
 
+@pytest.mark.parametrize("field", ["session", "csrf", "api_key"])
+@pytest.mark.parametrize(
+    "value",
+    ["x\r\nInjected: value", "x\x00", "x\x7f", "x y", "é", "x" * (MAX_CREDENTIAL_CHARS + 1)],
+)
+def test_invalid_transport_credentials_are_rejected_before_client_creation(field, value):
+    config = {
+        "provider": "onesa" if field != "api_key" else "openai-compatible",
+        "base_url": "https://provider.example.test",
+        "session": "synthetic-session",
+        "csrf": "synthetic-csrf",
+        "origin": "https://console.example.test",
+        "api_key": "synthetic-key",
+        field: value,
+    }
+    with pytest.raises(ValueError) as failure:
+        Connection(**config)
+    assert value not in str(failure.value)
+
+
+@pytest.mark.parametrize(
+    "session",
+    ["synthetic; unrelated=extra", "synthetic,cookie", '"synthetic"', "synthetic\\cookie"],
+)
+def test_one_session_cannot_inject_other_cookie_values(session):
+    with pytest.raises(ValueError):
+        Connection(
+            "onesa",
+            "https://provider.example.test",
+            session=session,
+            csrf="synthetic-csrf",
+            origin="https://console.example.test",
+        )
+
+
+def test_unsupported_onesa_model_is_rejected_before_any_history_transmission():
+    with pytest.raises(ValueError, match="only the default model"):
+        onesa_connection(model="unsupported-model")
+
+
 def test_same_consumer_business_code_preserves_history_across_providers():
     requests, ledger = [], []
 
@@ -93,7 +134,13 @@ def test_same_consumer_business_code_preserves_history_across_providers():
                     "contract_version": CONTRACT_VERSION,
                     "outcome": "completed",
                     "text": "P-101",
-                    "model": {"model_identifier": "synthetic-model", "real_inference": False},
+                    "model": {
+                        "model_identifier": "synthetic-model",
+                        "backend": "mock",
+                        "real_inference": False,
+                        "revision": "synthetic-revision",
+                    },
+                    "request_id": "00000000-0000-4000-8000-000000000001",
                 },
             )
         assert request.url.path == "/gateway/v1/chat/completions"
@@ -118,9 +165,50 @@ def test_same_consumer_business_code_preserves_history_across_providers():
     assert len(requests) == 2 and ledger[0]["messages"] == ledger[1]["messages"]
     assert ledger[0]["completion"]["provider"] != ledger[1]["completion"]["provider"]
     assert ledger[0]["completion"]["inference_kind"] == "mock"
+    assert ledger[0]["completion"]["backend"] == "mock"
+    assert ledger[0]["completion"]["revision"] == "synthetic-revision"
+    assert ledger[0]["completion"]["request_id"] == "00000000-0000-4000-8000-000000000001"
+    assert ledger[1]["completion"]["backend"] is None
+    assert ledger[1]["completion"]["request_id"] is None
     assert "synthetic-key" not in repr(other) and "synthetic-session" not in repr(
         onesa_connection()
     )
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"backend": "mock", "real_inference": True},
+        {"backend": "cloudflare", "real_inference": False},
+        {"backend": "unqualified-provider"},
+        {"backend": []},
+        {"request_id": "not-a-request-uuid"},
+        {"request_id": 123},
+    ],
+)
+def test_inconsistent_provenance_does_not_become_a_completed_result(changes):
+    record = {
+        "contract_version": CONTRACT_VERSION,
+        "outcome": "completed",
+        "text": "P-101",
+        "model": {
+            "model_identifier": "synthetic-model",
+            "backend": "mock",
+            "real_inference": False,
+        },
+    }
+    if "request_id" in changes:
+        record["request_id"] = changes["request_id"]
+    else:
+        record["model"].update(changes)
+    with pytest.raises(CompletionError):
+        asyncio.run(
+            complete(
+                onesa_connection(),
+                HISTORY,
+                transport=httpx.MockTransport(lambda _: httpx.Response(200, json=record)),
+            )
+        )
 
 
 @pytest.mark.parametrize(
