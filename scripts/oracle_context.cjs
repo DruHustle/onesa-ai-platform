@@ -23,8 +23,22 @@ function privateJson(file) {
 }
 function loadContext(file) {
   const c = privateJson(file);
+  if (c.repository === "DruHustle/onesa-ug") {
+    const s = c.source_binding;
+    const keys = ["schema_version", "repository", "repository_id", "product", "source_path",
+      "candidate_commit", "source_tree", "product_source_tree", "branch"];
+    if (!s || typeof s !== "object" || Array.isArray(s) ||
+        Object.keys(s).length !== keys.length || keys.some(k => !Object.hasOwn(s, k)) ||
+        s.schema_version !== 2 || s.repository !== c.repository || s.repository_id !== 1444746154 ||
+        s.product !== "platform" || s.source_path !== "onesa-ai-platform" || s.branch !== "main" ||
+        ["candidate_commit", "source_tree", "product_source_tree"].some(k =>
+          typeof s[k] !== "string" || !/^[a-f0-9]{40}$/.test(s[k])) ||
+        s.candidate_commit !== c.candidate_commit)
+      throw new Error("Oracle canonical source context mismatch");
+  } else if (c.repository !== "DruHustle/onesa-ai-platform" || Object.hasOwn(c, "source_binding")) {
+    throw new Error("Invalid Oracle source context");
+  }
   if (c.execution_context !== "owner-operated-oracle-staging" ||
-      c.repository !== "DruHustle/onesa-ai-platform" ||
       !/^[a-f0-9]{40}$/.test(c.candidate_commit || "") ||
       !Number.isSafeInteger(c.ci_run_id) || c.ci_run_id <= 0 ||
       !/^prj_[A-Za-z0-9]+$/.test(c.project_id || "") ||

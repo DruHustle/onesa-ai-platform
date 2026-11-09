@@ -307,8 +307,9 @@ retaining the original consumed context and unissued intent. Current signed-chai
 and latest-decision reads occur under the same immediate SQLite write transaction
 as the single-use claim; source changes do not commission this optional extension.
 
-Consumer interoperability checks are in `tests/test_consumer.py` and
-`tests/test_mcp_stdio.py`. They cover unchanged consumer business code with Onesa
+Consumer interoperability checks are in `tests/test_consumer.py`,
+`tests/test_mcp_stdio.py`, `tests/test_mcp_context.py` and `tests/test_mcp_transport.py`.
+They cover unchanged consumer business code with Onesa
 and compatible provider transports, portable history/provenance, credential separation,
 strict completion/failure boundaries, response/input limits, cancellation and MCP
 discovery/explicit permissions. Route fixtures without PostgreSQL simulate admission
@@ -316,6 +317,18 @@ and identity; the separate database test verifies actual sessions, CSRF, shared 
 and absence of stored conversations/messages. Run both with the existing backend
 `pytest -q` command and the isolated `_test` database. A skipped database case is
 not an authenticated integration PASS. No live provider or physical tool is used.
+The context tests additionally use the actual API and PostgreSQL to prove enrolled
+document ownership, cross-user refusal, deletion and session revocation. Separate
+adverse transport tests cover URI/parameter refusal before transmission, immutable
+scope lists, redacted malformed responses, cancellation and prompt injection remaining
+untrusted data without tool or model invocation. These tests do not substitute for
+a commissioned service identity, an external MCP client or hosted acceptance.
+Transport tests additionally send real pipe messages to a separate bridge process
+while its synthetic HTTP response is pending. They require cancellation to close
+that response before stdin closes, preserve a later ping, and emit no cancelled
+response or credential. Other cases cover duplicate IDs, concurrent-work bounds,
+fragmented oversized lines, deadlines and session cleanup. The synthetic upstream
+in this subprocess test does not establish a live provider's cancellation behavior.
 
 Release-unit fixtures pin a disposable commissioning registry and keep its keys,
 policy and database inside their temporary directory. Root test execution uses a
@@ -684,6 +697,27 @@ scopes. Each scope still permits only one qualification context for an exact
 source. Mode changes, path aliases, expanded attempt limits, foreign repositories,
 changed CI, revoked dependencies and context reuse are rejected. Temporary test
 keys and a disposable signed ledger are not external release authority.
+
+`test_oracle_canonical_application.py` adds the explicit canonical application
+installation boundary: exact root/product source identity, the two fixed archived
+CI manifests, literal profile sets, installed-archive rechecks, one-use signed
+contexts, original retained verifier/key/chain binding, and refusal of borrowed
+source-only authority. It also checks product-relative build metadata against the
+canonical provider root and the fixed generation-only configuration transition.
+The signed-chain fixtures use real Ed25519 signatures and disposable ledgers;
+their synthetic commissioning registry is not an installed owner trust anchor.
+Root custody, real Docker builds, actual provider/model availability and hosted
+application/recovery acceptance are separate mandatory boundaries.
+
+Run that module with the existing Oracle release suite, including
+`test_oracle_context.py`, `test_oracle_ai_frontend.py`,
+`test_oracle_retained_frontend.py` and `test_oracle_profile_ledger.py`.
+The Python and Node context readers must retain the same private-fixture,
+source/origin and nonauthorizing receipt rules. The existing real loopback
+`oracle_vercel_transport_guard.test.cjs` also verifies canonical source metadata
+before a create, refuses uninspected raw transports, and preserves the single
+create plus bounded definitive missing-file continuation contract. Credential-free
+local fixtures and generated CI artifacts still cannot authorize runtime work.
 
 Qualification derives required feature journeys from the actual runtime flags.
 If both optional features are enabled, both journeys must pass across the same

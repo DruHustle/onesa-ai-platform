@@ -1,5 +1,21 @@
 # Onesa AI Platform
 
+Canonical source: [DruHustle/onesa-ai-platform](https://github.com/DruHustle/onesa-ai-platform).
+Run product commands from this repository root. The latest application changes
+from the former consolidated checkout are retained here with independent CI,
+release authority and runtime boundaries. See [standalone source](docs/engineering/standalone-source.md).
+
+The protected Docs source candidate supports its own canonical repository binding
+and manual count/hash metadata custody. It retains the existing private project,
+approved document provenance, independent native observer and original release
+journals. Unresolved original outcomes still block publication. The new metadata
+workflow carries no private document bytes or deployment authority; commissioning,
+hosted qualification and a controller cutover remain separate requirements. See
+[standalone source](docs/engineering/standalone-source.md) for the source boundary.
+The consolidated metadata workflow is preserved as a nonexecuting
+[source reference](docs/engineering/consolidated-source-reference/README.md).
+The active standalone Docs workflow is `.github/workflows/docs-hosting.yml`.
+
 The shared-account source candidate adds **Continue with Onesa**, one central
 account/access hub, explicit existing-account linking and MFA-protected cross-product
 administration. It remains disabled until the existing owner-controlled staging and
@@ -170,7 +186,7 @@ are implemented; other workspace copy remains English and is not claimed fully t
 | `docs` | Classified engineering references and approved public sources |
 | `scripts`, `infra`, `.github/workflows` | Verified build, operations and delivery tooling |
 
-This is an independent Git repository in the `onesa-ug` workspace.
+This is the independent `DruHustle/onesa-ai-platform` Git repository.
 Frontend/backend builds use their own contexts; builds do not import sibling source.
 
 ## Local quickstart

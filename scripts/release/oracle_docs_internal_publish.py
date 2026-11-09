@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import oracle_ai_runner as system
+import oracle_docs_internal_history as history
 import oracle_docs_internal_provider as provider
 import oracle_docs_internal_runner as docs
 import oracle_owner as owner
@@ -148,49 +149,74 @@ def inspect_retained(store):
         value = docs.read(path, store)
         operation_id = path.parent.name
         owner.identifier(operation_id)
+        owner.require(
+            value["operation_id"] == operation_id
+            and type(value["provider_create_budget"]) is int
+            and value["provider_create_budget"] == 1
+            and value["automatic_retry"] is False
+            and value["prepared"]["environment"] in {"staging", "production"},
+            "RETAINED_PRIVATE_DURABLE_INTENT_CHANGED",
+        )
         original = Path(value["verifier_store"])
-        owner.private(original, directory=True)
-        prior = owner.Store(original, store.github)
-        try:
-            kind = (
-                "deployment-intent"
-                if value["prepared"]["environment"] == "production"
-                else "documentation-preview-intent"
-            )
-            operation = prior.get(operation_id, kind, historical=True)["record"]
+        owner.private(original, directory=True, uid=store.uid)
+        kind = (
+            "deployment-intent"
+            if value["prepared"]["environment"] == "production"
+            else "documentation-preview-intent"
+        )
+        retained = history.operation(
+            original, value["binding"], operation_id, kind, uid=store.uid
+        )
+        operation = retained["record"]
+        owner.require(
+            operation["binding"] == value["binding"],
+            "RETAINED_PRIVATE_OPERATION_SOURCE_CHANGED",
+        )
+        rows = docs.operation_matches(store, operation_id)
+        owner.require(
+            len(rows) == 1,
+            "RETAINED_PRIVATE_OUTCOME_UNCERTAIN_INSPECT_WITHOUT_CREATE",
+        )
+        row = rows[0]
+        metadata = row["deployment_trigger"]["metadata"]
+        owner.require(
+            metadata["commit_hash"] == value["binding"]["candidate_commit"]
+            and metadata["commit_message"]
+            == "onesa-oracle:"
+            + operation_id
+            + ":"
+            + value["prepared"]["artifact"]["file_manifest_sha256"]
+            and row["project_id"] == value["prepared"]["project_id"]
+            and row["environment"]
+            == ("production" if kind == "deployment-intent" else "preview")
+            and metadata["branch"]
+            == (
+                "main"
+                if kind == "deployment-intent"
+                else "onesa-oracle-" + value["binding"]["candidate_commit"][:12]
+            ),
+            "RETAINED_PRIVATE_PROVIDER_SOURCE_OR_PROJECT_CHANGED",
+        )
+        state = row["latest_stage"]["status"]
+        owner.require(
+            state in {"success", "failure", "canceled"}
+            and (state != "success" or row["latest_stage"]["name"] == "deploy"),
+            "RETAINED_PRIVATE_PUBLICATION_STILL_ACTIVE",
+        )
+        if kind == "deployment-intent" and state == "success":
             owner.require(
-                operation["binding"] == value["binding"],
-                "RETAINED_PRIVATE_OPERATION_SOURCE_CHANGED",
+                retained["state"] == "accepted"
+                and retained["accepted_deployment_id"] == row["id"],
+                "RETAINED_PRIVATE_PRODUCTION_REQUIRES_OBSERVATION_FIRST",
             )
-            rows = docs.operation_matches(store, operation_id)
-            owner.require(
-                len(rows) == 1,
-                "RETAINED_PRIVATE_OUTCOME_UNCERTAIN_INSPECT_WITHOUT_CREATE",
-            )
-            row = rows[0]
-            state = row["latest_stage"]["status"]
-            owner.require(
-                state in {"success", "failure", "canceled"},
-                "RETAINED_PRIVATE_PUBLICATION_STILL_ACTIVE",
-            )
-            if kind == "deployment-intent" and state == "success":
-                accepted = prior.db.execute(
-                    "SELECT state FROM deployments WHERE id=?", (operation_id,)
-                ).fetchone()
-                owner.require(
-                    accepted and accepted[0] == "accepted",
-                    "RETAINED_PRIVATE_PRODUCTION_REQUIRES_OBSERVATION_FIRST",
-                )
-            observations.append(
-                {
-                    "operation_id": operation_id,
-                    "deployment_id": row["id"],
-                    "state": state,
-                    "provider_writes": 0,
-                }
-            )
-        finally:
-            prior.db.close()
+        observations.append(
+            {
+                "operation_id": operation_id,
+                "deployment_id": row["id"],
+                "state": state,
+                "provider_writes": 0,
+            }
+        )
     return observations
 
 
@@ -222,7 +248,7 @@ def create(store, operation, *, production):
             store.get(authorization["parent"], "qualification", binding)
             latest = store.db.execute(
                 "SELECT id FROM records WHERE scope=? AND kind='authorization-attempt' ORDER BY sequence DESC LIMIT 1",
-                (binding["repository"] + ":docs-internal",),
+                (owner.component_scope(binding),),
             ).fetchone()
             owner.require(
                 latest and latest[0] == authorization["details"]["attempt_id"],
