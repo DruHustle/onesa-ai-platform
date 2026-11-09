@@ -7,6 +7,8 @@ import stat
 from pathlib import Path
 from uuid import UUID
 
+import oracle_release_profiles as profiles
+
 
 def private_json(path):
     path = Path(path)
@@ -23,9 +25,16 @@ def private_json(path):
 
 def load_context(path):
     value = private_json(path)
+    if value.get("repository") == profiles.CANONICAL_REPOSITORY:
+        source = profiles.source_binding(value.get("source_binding"))
+        if set(value["source_binding"]) != profiles.SOURCE_FIELDS or (
+            source["candidate_commit"] != value.get("candidate_commit")
+        ):
+            raise ValueError("Oracle canonical source context mismatch")
+    elif value.get("repository") != profiles.REPOSITORY or "source_binding" in value:
+        raise ValueError("Invalid Oracle source context")
     if (
         value.get("execution_context") != "owner-operated-oracle-staging"
-        or value.get("repository") != "DruHustle/onesa-ai-platform"
         or not re.fullmatch(r"[a-f0-9]{40}", value.get("candidate_commit", ""))
         or type(value.get("ci_run_id")) is not int
         or value["ci_run_id"] <= 0
@@ -84,6 +93,14 @@ def load_context(path):
 
 def record_identity(context):
     return {
+        **(
+            {
+                "repository": context["repository"],
+                "source_binding": context["source_binding"],
+            }
+            if context["repository"] == profiles.CANONICAL_REPOSITORY
+            else {}
+        ),
         "candidate_commit": context["candidate_commit"],
         "workflow_run_id": 0,
         "ci_run_id": context["ci_run_id"],

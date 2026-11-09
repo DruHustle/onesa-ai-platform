@@ -37,4 +37,4 @@ def database(request: Request) -> Iterator[Session]:
         yield db
 
 
-REQUIRED_SCHEMA_REVISION = "20261102_shared_identity"
+REQUIRED_SCHEMA_REVISION = "20261104_email_presentation"

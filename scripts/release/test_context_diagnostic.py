@@ -138,6 +138,31 @@ class ContextDiagnosticTests(unittest.TestCase):
         # The artifact is deliberately distinct from release evidence.
         self.assertIn("name: staging-context-diagnostic", text)
 
+    def test_retired_or_unreviewed_model_refuses_before_provider_readback(self):
+        env = {
+            "RENDER_SERVICE_ID": diagnostic.SERVICE,
+            "VERCEL_PROJECT_ID": diagnostic.PROJECT,
+        }
+        for model in ["@cf/qwen/qwen3-30b-a3b-fp8", "@cf/qwen/qwen3.8-27b"]:
+            verified = {
+                "settings": {
+                    "ONESA_ENVIRONMENT": "staging",
+                    "ONESA_MODEL_BACKEND": "cloudflare",
+                    "ONESA_MODEL_NAME": model,
+                    "ONESA_MODEL_BASE_URL": diagnostic.MODEL_BASE,
+                }
+            }
+            with (
+                self.subTest(model=model),
+                patch.dict(os.environ, env),
+                patch.object(diagnostic, "execution_context", return_value=SHA),
+                patch.object(diagnostic, "preflight", return_value=verified),
+                patch.object(diagnostic, "provider") as provider,
+                self.assertRaises(Rejected),
+            ):
+                diagnostic.verify_target()
+            provider.assert_not_called()
+
     def test_failed_first_generation_stops_model_calls_and_logs_out_owned_sessions(
         self,
     ):

@@ -13,11 +13,10 @@ import tarfile
 from datetime import datetime
 from pathlib import Path
 
-sys.path[:0] = [
-    str(Path(__file__).resolve().parent.parent),
-    str(Path(__file__).resolve().parent),
-]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import oracle_ai_runner as source_parser
+import oracle_docs_contract as contract
 import oracle_docs_internal_access as access
 import oracle_docs_internal_build as builds
 import oracle_docs_internal_checks as checks
@@ -27,6 +26,7 @@ import oracle_docs_runner as common
 import oracle_owner as owner
 
 PLAN = Path("/etc/onesa/oracle-ai-docs-internal-release.json")
+CANONICAL_PLAN = Path("/etc/onesa/oracle-ai-canonical-docs-internal-release.json")
 ROOT = Path("/var/lib/onesa/release-verification/ai-docs-internal")
 ORIGIN = "https://docs.engineering.onesa.eu"
 
@@ -38,19 +38,26 @@ def read(path, store):
 def scoped(store, binding):
     profile = owner.binding_valid(binding, store.policy)
     owner.require(
-        binding["repository"] == "DruHustle/onesa-ai-platform"
+        owner.is_docs_binding(binding)
         and binding["component"] == "docs-internal"
-        and set(store.policy["components"])
-        == {binding["repository"] + ":docs-internal"}
+        and set(store.policy["components"]) == {owner.component_scope(binding)}
         and profile["publication_mechanism"]
         == "existing-isolated-owner-cloudflare-pages-cli",
         "ONLY_COMMISSIONED_INDEPENDENT_PROTECTED_DOCS_PROFILE_SUPPORTED",
     )
 
 
+def plan_path(binding):
+    return (
+        CANONICAL_PLAN
+        if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+        else PLAN
+    )
+
+
 def plan(store, binding):
     scoped(store, binding)
-    value = read(PLAN, store)
+    value = read(plan_path(binding), store)
     owner.require(
         set(value)
         == {
@@ -64,7 +71,8 @@ def plan(store, binding):
             "rollback",
         }
         and type(value["schema_version"]) is int
-        and value["schema_version"] == 1
+        and value["schema_version"]
+        == (2 if binding["repository"] == owner.CONSOLIDATED_REPOSITORY else 1)
         and value["binding"] == binding
         and value["verifier_store"] == str(store.root)
         and owner.digest(value["approved_documents"])
@@ -99,7 +107,9 @@ def plan_binding(store, component):
     owner.require(
         component == "docs-internal", "INDEPENDENT_PRIVATE_DOCS_COMPONENT_REQUIRED"
     )
-    binding = read(PLAN, store)["binding"]
+    canonical = owner.CONSOLIDATED_REPOSITORY + ":platform:docs-internal"
+    selected = CANONICAL_PLAN if canonical in store.policy["components"] else PLAN
+    binding = read(selected, store)["binding"]
     plan(store, binding)
     return binding
 
@@ -113,8 +123,8 @@ def prepare(store, binding):
     value = plan(store, binding)
     folder = ROOT / "artifacts" / binding["source_tree"]
     source = {
-        key: binding[key]
-        for key in ["repository", "candidate_commit", "source_tree", "source_sha256"]
+        **contract.source_identity(binding),
+        "source_sha256": binding["source_sha256"],
     }
     archive = Path(value["source_archive"])
     owner.require(
@@ -199,10 +209,7 @@ def publication_spec(store, binding, *, production):
         "provider": "cloudflare-pages",
         "project_id": value["provider"]["project_id"],
         "account_id": value["provider"]["account_id"],
-        "source": {
-            key: binding[key]
-            for key in ["repository", "candidate_commit", "source_tree"]
-        },
+        "source": contract.source_identity(binding),
         "artifact": prepared["artifacts"][environment],
         "environment": environment,
         "access_configuration_sha256": owner.digest(value["provider"]),
@@ -216,7 +223,10 @@ def operation_folder(binding, identifier):
 
 
 def operation_matches(store, operation_id):
-    value = read(PLAN, store)
+    canonical = owner.CONSOLIDATED_REPOSITORY + ":platform:docs-internal"
+    value = read(
+        CANONICAL_PLAN if canonical in store.policy["components"] else PLAN, store
+    )
     rows = provider.deployments(value["provider"])
     matches = [
         row
@@ -306,6 +316,11 @@ def deployment_for(
         "origin": ORIGIN if production else row["url"],
         "immutable_origin": row["url"],
         "source_revision": binding["candidate_commit"],
+        **(
+            {"source": contract.source_identity(binding)}
+            if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+            else {}
+        ),
         "artifact_manifest_sha256": spec["artifact"]["file_manifest_sha256"],
         "asset_count": len(spec["artifact"]["served_asset_paths"]),
         "target": expected_environment,
@@ -331,7 +346,7 @@ def inspect_production(store, operation):
 def preview_for_binding(store, binding):
     rows = store.db.execute(
         "SELECT id FROM records WHERE kind='documentation-preview-receipt' AND scope=?",
-        (binding["repository"] + ":docs-internal",),
+        (owner.component_scope(binding),),
     ).fetchall()
     records = [
         store.get(row[0], "documentation-preview-receipt", historical=True)["record"]
@@ -647,7 +662,7 @@ def runner(store, phase, binding, context):
         )
         latest = store.db.execute(
             "SELECT id FROM records WHERE scope=? AND kind='authorization-attempt' ORDER BY sequence DESC LIMIT 1",
-            (binding["repository"] + ":docs-internal",),
+            (owner.component_scope(binding),),
         ).fetchone()
         owner.require(
             latest and latest[0] == authorization["details"]["attempt_id"],

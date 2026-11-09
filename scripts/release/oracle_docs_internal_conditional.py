@@ -11,6 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import oracle_docs_internal_canonical as canonical
 import oracle_owner as owner
 
 FILES = frozenset(
@@ -23,12 +24,28 @@ FILES = frozenset(
 ROOT = Path("/var/lib/onesa/release-verification/ai-docs-internal")
 
 
+def source_files(binding):
+    return FILES | (
+        {"scripts/release/oracle_docs_internal_canonical.py"}
+        if binding.get("repository") == owner.CONSOLIDATED_REPOSITORY
+        else set()
+    )
+
+
+def source_archives(store):
+    return owner.ai_source_archives(
+        Path(owner.__file__).parent / "source-artifacts",
+        owner.ai_archive_pins(store.policy["toolchain"]),
+        uid=store.uid,
+    )
+
+
 def checked_checkout(store, binding):
     path = ROOT / "checkouts" / binding["candidate_commit"] / "onesa-ai-platform"
     owner.private(path, directory=True)
     tool = store.policy["toolchain"]
     owner.require(
-        tool["conditional_source_pins"].keys() == FILES,
+        tool["conditional_source_pins"].keys() == source_files(binding),
         "CLOSED_CONDITIONAL_VERIFIER_SOURCE_REQUIRED",
     )
     for name, pin in tool["conditional_source_pins"].items():
@@ -42,13 +59,28 @@ def checked_checkout(store, binding):
         "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_GLOBAL": "/dev/null",
     }
-    for command, expected in [
+    commands = [
         (["rev-parse", "HEAD"], binding["candidate_commit"].encode()),
         (["rev-parse", "HEAD^{tree}"], binding["source_tree"].encode()),
         (["status", "--porcelain", "--untracked-files=all"], b""),
-    ]:
+    ]
+    if binding.get("repository") == owner.CONSOLIDATED_REPOSITORY:
+        source = owner.docs_operational_source(binding)
+        commands.append(
+            (
+                ["rev-parse", "HEAD:" + source["source_path"]],
+                source["product_source_tree"].encode(),
+            )
+        )
+    for command, expected in commands:
         result = subprocess.run(
-            ["/usr/bin/git", *command],
+            [
+                "/usr/bin/git",
+                "--no-optional-locks",
+                "-c",
+                "core.fsmonitor=false",
+                *command,
+            ],
             cwd=path,
             env=environment,
             capture_output=True,
@@ -71,7 +103,9 @@ def load(store, binding):
     spec.loader.exec_module(evidence)
     owner.require(
         evidence.ROOT == checkout
-        and evidence.REPOSITORY == binding["repository"]
+        and evidence.REPOSITORY == "DruHustle/onesa-ai-platform"
+        and binding["repository"]
+        in {evidence.REPOSITORY, owner.CONSOLIDATED_REPOSITORY}
         and evidence.PRODUCT == "onesa-ai-platform",
         "EXACT_EXISTING_CONDITIONAL_VERIFIER_PRODUCT_REQUIRED",
     )
@@ -93,7 +127,10 @@ def load(store, binding):
         def api(self, path, pages=False, binary=False):
             owner.require(
                 isinstance(path, str)
-                and path.startswith("repos/" + binding["repository"] + "/")
+                and (
+                    path == "repos/" + binding["repository"]
+                    or path.startswith("repos/" + binding["repository"] + "/")
+                )
                 and ".." not in path
                 and "://" not in path,
                 "FIXED_REPOSITORY_CONDITIONAL_READS_ONLY",
@@ -153,6 +190,32 @@ def verify(store, binding, authorization_run, expected_metadata):
         "GENUINE_CONDITIONAL_ACTIONS_RUN_REQUIRED",
     )
     gate, github = load(store, binding)
+    if binding.get("repository") == owner.CONSOLIDATED_REPOSITORY:
+
+        def archive(identifier):
+            path = ROOT / "conditional-artifacts" / (str(identifier) + ".zip")
+            owner.private(path)
+            owner.require(
+                0 < path.stat().st_size <= canonical.MAX_ARCHIVE,
+                "BOUNDED_CANONICAL_METADATA_CUSTODY_REQUIRED",
+            )
+            return path.read_bytes()
+
+        try:
+            return canonical.verify(
+                github,
+                owner.docs_operational_source(binding),
+                source_archives(store),
+                authorization_run,
+                expected_metadata,
+                store.policy["toolchain"]["native_producer_sha256"],
+                archive,
+                gate,
+            )
+        except (gate.e.Rejected, OSError, ValueError, KeyError, TypeError):
+            raise owner.Rejected(
+                "GENUINE_CURRENT_CANONICAL_CONDITIONAL_HANDOFF_FAILED"
+            ) from None
     try:
         value = gate.internal_docs_conditional_verify(
             github,
@@ -218,14 +281,25 @@ def export(store, context_id):
     prepared = docs.prepare(store, binding)
     value = docs.plan(store, binding)
     gate, github = load(store, binding)
-    code, ci = gate.e.checked_ci(github, binding["candidate_commit"])
-    owner.require(code == "PASS", "CURRENT_PRIVATE_CONDITIONAL_CI_REQUIRED")
-    actual_ci = [item for item in ci if item["workflow"] == gate.e.POLICY["ci"]]
+    source = (
+        owner.docs_operational_source(binding)
+        if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+        else None
+    )
+    if source is not None:
+        ci = canonical.qualify_ci(github, source, source_archives(store))
+        workflow = ".github/workflows/verify.yml"
+    else:
+        code, ci = gate.e.checked_ci(github, binding["candidate_commit"])
+        owner.require(code == "PASS", "CURRENT_PRIVATE_CONDITIONAL_CI_REQUIRED")
+        workflow = gate.e.POLICY["ci"]
+    actual_ci = [item for item in ci if item["workflow"] == workflow]
     owner.require(len(actual_ci) == 1, "ONE_CURRENT_PRIVATE_CI_RUN_REQUIRED")
     preview = evidence["provider"]
     accepted = evidence["acceptance"]
     metadata = {
-        "schema_version": 2,
+        "schema_version": 3 if source is not None else 2,
+        **({"source": source} if source is not None else {}),
         "kind": "protected-docs-preview-qualification",
         "repository": binding["repository"],
         "candidate_commit": binding["candidate_commit"],
@@ -284,6 +358,7 @@ def export(store, context_id):
         ci,
         metadata["source_sha256"],
         store.clock(),
+        source=source,
     )
     with store.transaction():
         rows = store.db.execute(

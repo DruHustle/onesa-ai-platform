@@ -438,7 +438,7 @@ def bound_environments(binding, plan):
         == old.get("compatible_schema_revision")
         == r.IDENTITY_SCHEMA
         and old.get("retain_additive_schema_and_files") is True
-        and retained.get("repository") == binding["repository"] == r.profiles.REPOSITORY
+        and r.profiles.same_product(binding, retained)
         and r.profiles.kind(retained) == "api"
         and retained.get("target_environment") == "production"
         and retained.get("artifact_digest") == old["image"]
@@ -448,13 +448,7 @@ def bound_environments(binding, plan):
     )
     # The old accepted source is authority for this dependency. A new unsigned
     # compatibility report or a matching mutable image tag cannot replace it.
-    r.verify_invocation(
-        retained,
-        {"operation_id": old["operation_id"], "read_only": True},
-        "production",
-        {**plan, "verifier_store": old.get("verifier_store", plan["verifier_store"])},
-        dependency=True,
-    )
+    r.verify_retained_dependency(binding, old, plan)
     environments = {}
     for environment in r.ENV:
         current_path = r.candidate_environment(binding, environment)
