@@ -26,8 +26,7 @@ COMPLETE = "documentation-qualification-completion-intent"
 
 def scope(store, binding):
     owner.require(
-        binding["repository"] == "DruHustle/onesa-ai-platform"
-        and binding["component"] in {"docs-public", "docs-internal"},
+        owner.is_docs_binding(binding),
         "DOCS_NATIVE_COMPONENT_SCOPE",
     )
     owner.binding_valid(binding, store.policy)
@@ -72,7 +71,7 @@ def public_key(raw):
 
 def register(store, binding, pem):
     pin = scope(store, binding)
-    ci = store.github.qualify(binding)
+    ci = store.qualify_source(binding)
     raw = public_key(pem)
     digest = hashlib.sha256(raw).hexdigest()
     owner.require(
@@ -134,7 +133,7 @@ def commission(store, registration_id, signature):
     registered = store.get(registration_id, REGISTER)["record"]
     binding = registered["binding"]
     pin = scope(store, binding)
-    store.github.qualify(binding)
+    store.qualify_source(binding)
     owner.require(
         registered["details"]["producer_sha256"] == pin,
         "REGISTERED_NATIVE_SOURCE_CHANGED",
@@ -237,7 +236,7 @@ def begin_qualification(store, context_id, registration_id):
     binding = context["binding"]
     docs = drivers.for_binding(binding)
     active(store, registration_id, binding)
-    ci = store.github.qualify(binding)
+    ci = store.qualify_source(binding)
     preview = docs.preview_for_binding(store, binding)
     target = docs.target_for_observation(
         store, binding, preview["parent"], production=False
@@ -412,7 +411,7 @@ def complete_qualification(store, context_id):
             not previous, "NATIVE_QUALIFICATION_COMPLETION_ALREADY_STARTED_INSPECT_ONLY"
         )
         store.put(COMPLETE, binding, {"automatic_retry": False}, parent=context_id)
-    ci = store.github.qualify(binding)
+    ci = store.qualify_source(binding)
     stage = store.runner("staging", binding, {"context_id": context_id})
     operations = store.runner("operations", binding, {"context_id": context_id})
     with store.transaction():

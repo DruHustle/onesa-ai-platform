@@ -33,6 +33,34 @@ PRIVATE_SOURCE_CLOSURE = SOURCE_CLOSURE | frozenset(
 )
 
 
+def source_identity(binding):
+    """Bind either independent Docs source; source identity confers no authority."""
+    owner.require(owner.is_docs_binding(binding), "EXACT_DOCS_SOURCE_SCOPE_REQUIRED")
+    if binding["repository"] == owner.CONSOLIDATED_REPOSITORY:
+        return owner.docs_operational_source(binding)
+    return {
+        key: binding[key] for key in ("repository", "candidate_commit", "source_tree")
+    }
+
+
+def source_metadata(binding):
+    if binding["repository"] != owner.CONSOLIDATED_REPOSITORY:
+        return {}
+    source = source_identity(binding)
+    return {
+        "githubCommitSha": source["candidate_commit"],
+        "githubCommitRef": source["branch"],
+        "onesaSourceSchema": str(source["schema_version"]),
+        "onesaSourceRepository": source["repository"],
+        "onesaSourceRepositoryId": str(source["repository_id"]),
+        "onesaSourceProduct": source["product"],
+        "onesaSourcePath": source["source_path"],
+        "onesaSourceRootTree": source["source_tree"],
+        "onesaSourceProductTree": source["product_source_tree"],
+        "onesaSourceBranch": source["branch"],
+    }
+
+
 def source_closure(component="docs-public"):
     owner.require(
         component in {"docs-public", "docs-internal"},

@@ -93,6 +93,8 @@ class ProductionDefaultsTests(unittest.TestCase):
                 "ONESA_MODEL_BACKEND": "vllm",
                 "ONESA_MODEL_NAME": "reviewed-hosted-model",
                 "ONESA_MAIL_PROVIDER": "resend",
+                "ONESA_MAIL_FROM": "Onesa AI <noreply@mail.onesa.eu>",
+                "ONESA_MAIL_REPLY_TO": "operator@example.com",
             }
         )
         defaults.apply_defaults("placeholder", provider.call)
@@ -101,6 +103,12 @@ class ProductionDefaultsTests(unittest.TestCase):
         )
         self.assertNotIn("ONESA_MODEL_BACKEND", provider.writes)
         self.assertNotIn("ONESA_MAIL_PROVIDER", provider.writes)
+        self.assertNotIn("ONESA_MAIL_FROM", provider.writes)
+        self.assertNotIn("ONESA_MAIL_REPLY_TO", provider.writes)
+        self.assertEqual(
+            provider.environment["ONESA_MAIL_FROM"],
+            "Onesa AI <noreply@mail.onesa.eu>",
+        )
 
     def test_wrong_target_or_enabled_native_deployment_prevents_every_write(self):
         for key, value in (

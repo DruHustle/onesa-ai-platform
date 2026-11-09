@@ -340,9 +340,23 @@ def _internal_docs_diagram_count():
     return len(catalog)
 
 
-def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
+def _internal_docs_metadata(
+    record, sha, producer_sha256, ci, fingerprint, now, *, source=None
+):
     """Same strict no-grant metadata contract for draft or Actions custody."""
-    expected_ci = [item for item in ci if item["workflow"] == e.POLICY["ci"]]
+    if source is not None:
+        import oracle_owner as owner
+
+        e.require(
+            isinstance(source, dict) and set(source) == owner.AI_SOURCE_FIELDS,
+            "Complete canonical protected source required",
+        )
+        owner.docs_operational_source({**source, "component": "docs-internal"})
+        e.require(
+            source["candidate_commit"] == sha, "Canonical metadata source differs"
+        )
+    workflow = ".github/workflows/verify.yml" if source is not None else e.POLICY["ci"]
+    expected_ci = [item for item in ci if item["workflow"] == workflow]
     e.require(len(expected_ci) == 1, "One exact main CI producer required")
     keys = {
         "schema_version",
@@ -362,15 +376,19 @@ def _internal_docs_metadata(record, sha, producer_sha256, ci, fingerprint, now):
         "backend_deployment_authorized",
         "production_deployment_authorized",
     }
+    if source is not None:
+        keys.add("source")
     e.require(
         isinstance(record, dict) and record.keys() == keys,
         "Exact sanitized metadata schema required",
     )
     e.require(
         type(record["schema_version"]) is int
-        and record["schema_version"] == 2
+        and record["schema_version"] == (3 if source is not None else 2)
         and record["kind"] == "protected-docs-preview-qualification"
-        and record["repository"] == e.REPOSITORY
+        and record["repository"]
+        == (source["repository"] if source is not None else e.REPOSITORY)
+        and (source is None or record["source"] == source)
         and record["candidate_commit"] == sha
         and record["source_sha256"] == fingerprint
         and record["producer_sha256"] == producer_sha256

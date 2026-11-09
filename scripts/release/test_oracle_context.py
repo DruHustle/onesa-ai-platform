@@ -1,5 +1,6 @@
 """No network: local Oracle evidence cannot masquerade as Actions or production."""
 
+import copy
 import json
 import os
 import subprocess
@@ -148,6 +149,75 @@ class OracleContextTests(unittest.TestCase):
                     "https://platform.onesa.eu", oracle_context=self.path
                 )
             session.assert_not_called()
+
+    def canonical_context(self):
+        self.value["repository"] = "DruHustle/onesa-ug"
+        self.value["source_binding"] = {
+            "schema_version": 2,
+            "repository": self.value["repository"],
+            "repository_id": 1444746154,
+            "product": "platform",
+            "source_path": "onesa-ai-platform",
+            "branch": "main",
+            "candidate_commit": self.value["candidate_commit"],
+            "source_tree": "b" * 40,
+            "product_source_tree": "c" * 40,
+        }
+        self.write()
+
+    def test_canonical_owner_receipt_preserves_root_and_product_without_authority(self):
+        self.canonical_context()
+        identity = oracle.record_identity(oracle.load_context(self.path))
+        self.assertEqual(identity["repository"], self.value["repository"])
+        self.assertEqual(identity["source_binding"], self.value["source_binding"])
+        self.assertNotEqual(
+            identity["source_binding"]["source_tree"],
+            identity["source_binding"]["product_source_tree"],
+        )
+        self.assertEqual(identity["workflow_run_id"], 0)
+        self.assertNotIn("authorized", identity)
+        self.assertTrue(self.javascript_accepts())
+
+    def test_both_context_readers_refuse_incomplete_foreign_and_mismatched_canonical_source(
+        self,
+    ):
+        self.canonical_context()
+        source = copy.deepcopy(self.value["source_binding"])
+        for key in source:
+            self.value["source_binding"] = {k: v for k, v in source.items() if k != key}
+            self.write()
+            with self.subTest(missing=key):
+                self.rejected()
+        for key, value in [
+            ("schema_version", True),
+            ("repository", "DruHustle/onesa-ai-platform"),
+            ("repository_id", True),
+            ("product", "portal"),
+            ("source_path", "../onesa-ai-platform"),
+            ("branch", "staging"),
+            ("candidate_commit", "d" * 40),
+            ("source_tree", "main"),
+            ("product_source_tree", "c" * 39),
+            ("release_authorized", True),
+        ]:
+            self.value["source_binding"] = {**source, key: value}
+            self.write()
+            with self.subTest(changed=key):
+                self.rejected()
+
+    def test_canonical_context_keeps_fixture_origin_and_private_file_guards(self):
+        self.canonical_context()
+        self.fixture["candidate_commit"] = "d" * 40
+        self.write()
+        self.rejected()
+        self.fixture["candidate_commit"] = self.value["candidate_commit"]
+        self.write()
+        self.path.chmod(0o644)
+        self.rejected()
+        self.path.chmod(0o600)
+        self.value["frontend_origin"] = "https://platform.onesa.eu"
+        self.write()
+        self.rejected()
 
 
 if __name__ == "__main__":

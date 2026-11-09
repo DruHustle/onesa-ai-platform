@@ -30,6 +30,7 @@ sys.path[:0] = [
 ]
 import oracle_docs_build as builds
 import oracle_docs_checks as checks
+import oracle_docs_contract as docs_contract
 import oracle_docs_native as native
 import oracle_owner as owner
 
@@ -69,11 +70,11 @@ def read(path, store):
 def scoped(store, binding):
     owner.binding_valid(binding, store.policy)
     owner.require(
-        binding["repository"] == builds.REPOSITORY
+        owner.is_docs_binding(binding)
         and binding["component"] == "docs-public"
-        and store.policy["components"][
-            binding["repository"] + ":" + binding["component"]
-        ].get("publication_mechanism")
+        and store.policy["components"][owner.component_scope(binding)].get(
+            "publication_mechanism"
+        )
         == "existing-isolated-owner-vercel-cli",
         "ONLY_COMMISSIONED_PUBLIC_DOCS_PROFILE_SUPPORTED",
     )
@@ -110,7 +111,8 @@ def plan(store, binding):
             "vercel_configuration_sha256",
         }
         and type(value["schema_version"]) is int
-        and value["schema_version"] == 1
+        and value["schema_version"]
+        == (2 if binding["repository"] == owner.CONSOLIDATED_REPOSITORY else 1)
         and value["binding"] == binding
         and value["verifier_store"] == str(store.root),
         "EXACT_DOCS_PLAN_REQUIRED",
@@ -230,7 +232,7 @@ def project(store, plan_value):
 
 def prepare(store, binding):
     value = plan(store, binding)
-    source = {k: binding[k] for k in ["repository", "candidate_commit", "source_tree"]}
+    source = docs_contract.source_identity(binding)
     folder = (
         ROOT
         / "artifacts"
@@ -271,16 +273,26 @@ def prepare(store, binding):
     # This is the same source-checked stdlib Git-tree parser used by the installer.
     import oracle_ai_runner as parser
 
-    _app, files = parser.source_inventory(
-        archive, {"source_tree": binding["source_tree"]}
-    )
+    _app, files = parser.source_inventory(archive, source)
     owner.require(
         files["onesa-ai-platform-frontend/apps/docs/vercel.json"]
         == value["vercel_configuration_sha256"],
         "QUALIFIED_DOCS_HOST_CONFIGURATION_CHANGED",
     )
+    source_archives = {}
+    if binding["repository"] == owner.CONSOLIDATED_REPOSITORY:
+        source_archives["source_archives"] = owner.ai_source_archives(
+            Path(owner.__file__).parent / "source-artifacts",
+            owner.ai_archive_pins(store.policy["toolchain"]),
+            uid=store.root.stat().st_uid,
+        )
     result = builds.read_build(
-        store.github, source, value["build_run_id"], archives, require_local_checks=True
+        store.github,
+        source,
+        value["build_run_id"],
+        archives,
+        require_local_checks=True,
+        **source_archives,
     )
     owner.require(
         owner.digest(result) == binding["build_sha256"],
@@ -363,7 +375,7 @@ def inspect_retained_publications(store):
         operation_id = intent["operation_id"]
         owner.require(
             path.parent == operation_folder(binding, operation_id)
-            and binding["repository"] == builds.REPOSITORY
+            and owner.is_docs_binding(binding)
             and binding["component"] == "docs-public"
             and spec["project_id"] == project_id
             and spec["source"]["candidate_commit"] == binding["candidate_commit"]
@@ -371,6 +383,11 @@ def inspect_retained_publications(store):
             and intent["automatic_retry"] is False,
             "RETAINED_DOCS_REQUEST_SCOPE_CHANGED",
         )
+        if binding["repository"] == owner.CONSOLIDATED_REPOSITORY:
+            owner.require(
+                spec["source"] == docs_contract.source_identity(binding),
+                "RETAINED_CANONICAL_DOCS_SOURCE_CHANGED",
+            )
         rows = operation_matches(store, operation_id)
         owner.require(
             len(rows) == 1,
@@ -384,6 +401,13 @@ def inspect_retained_publications(store):
         )
         row = provider_get(store, "/v13/deployments/" + deployment_id)
         meta = row.get("meta", {})
+        owner.require(
+            all(
+                meta.get(key) == value
+                for key, value in docs_contract.source_metadata(binding).items()
+            ),
+            "RETAINED_CANONICAL_DOCS_PROVIDER_SOURCE_CHANGED",
+        )
         owner.require(
             row.get("id") == deployment_id
             and row.get("projectId") == project_id
@@ -481,6 +505,13 @@ def deployment_for(
         == expected["artifact"]["file_manifest_sha256"],
         "ACTUAL_DOCS_SOURCE_ARTIFACT_TARGET_OR_CLAIM_CHANGED",
     )
+    owner.require(
+        all(
+            meta.get(key) == value
+            for key, value in docs_contract.source_metadata(binding).items()
+        ),
+        "ACTUAL_CANONICAL_DOCS_PROVIDER_SOURCE_CHANGED",
+    )
     created = row.get("createdAt", row.get("created"))
     owner.require(
         type(created) is int
@@ -503,6 +534,11 @@ def deployment_for(
         "origin": ORIGIN if production else "https://" + host,
         "immutable_origin": "https://" + host,
         "source_revision": binding["candidate_commit"],
+        **(
+            {"source": docs_contract.source_identity(binding)}
+            if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+            else {}
+        ),
         "artifact_manifest_sha256": expected["artifact"]["file_manifest_sha256"],
         "asset_count": expected["artifact"]["files"],
         "target": "production" if production else None,
@@ -538,7 +574,7 @@ def target_for_observation(store, binding, operation_id, *, production):
 def preview_for_binding(store, binding):
     rows = store.db.execute(
         "SELECT id FROM records WHERE kind='documentation-preview-receipt' AND scope=?",
-        (binding["repository"] + ":" + binding["component"],),
+        (owner.component_scope(binding),),
     ).fetchall()
     matches = []
     for row in rows:
@@ -633,7 +669,15 @@ def validate_native(store, challenge, payload):
         and browser["connection"] == "existing-owner-native-cdp",
         "SOURCE_PINNED_HEADED_NATIVE_BROWSER_REQUIRED",
     )
-    contract = builds.source_contract(store.github, binding["candidate_commit"])
+    contract = builds.source_contract(
+        store.github,
+        binding["candidate_commit"],
+        **(
+            {"source": docs_contract.source_identity(binding)}
+            if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+            else {}
+        ),
+    )
     checks.validate(
         evidence["acceptance"],
         contract["registry"],
@@ -863,7 +907,7 @@ def runner(store, phase, binding, context):
         store.get(qualification["parent"], "context", binding)
         latest = store.db.execute(
             "SELECT id FROM records WHERE scope=? AND kind='authorization-attempt' ORDER BY sequence DESC LIMIT 1",
-            (binding["repository"] + ":" + binding["component"],),
+            (owner.component_scope(binding),),
         ).fetchone()
         owner.require(
             latest and latest[0] == authorization["details"]["attempt_id"],
@@ -1107,7 +1151,7 @@ def create_publication(store, operation, *, production):
             store.get(authorization["parent"], "qualification", binding)
             latest = store.db.execute(
                 "SELECT id FROM records WHERE scope=? AND kind='authorization-attempt' ORDER BY sequence DESC LIMIT 1",
-                (binding["repository"] + ":" + binding["component"],),
+                (owner.component_scope(binding),),
             ).fetchone()
             owner.require(
                 latest and latest[0] == authorization["details"]["attempt_id"],
@@ -1130,6 +1174,11 @@ def create_publication(store, operation, *, production):
             transport / "scope.json",
             owner.canonical(
                 {
+                    **(
+                        docs_contract.source_identity(binding)
+                        if binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+                        else {}
+                    ),
                     "repository": binding["repository"],
                     "component": "docs-public",
                     "candidate_commit": binding["candidate_commit"],
@@ -1202,7 +1251,12 @@ def create_publication(store, operation, *, production):
             "--project",
             spec["project_id"],
             "--meta",
-            "githubCommitRef=" + ("main" if production else "staging"),
+            "githubCommitRef="
+            + (
+                "main"
+                if production or binding["repository"] == owner.CONSOLIDATED_REPOSITORY
+                else "staging"
+            ),
             "--meta",
             "githubCommitSha=" + binding["candidate_commit"],
             "--meta",
@@ -1211,6 +1265,12 @@ def create_publication(store, operation, *, production):
             "onesaOracleOperation=" + operation["id"],
             "--meta",
             "onesaArtifactManifest=" + spec["artifact"]["file_manifest_sha256"],
+            *[
+                part
+                for key, value in docs_contract.source_metadata(binding).items()
+                if key not in {"githubCommitSha", "githubCommitRef"}
+                for part in ("--meta", key + "=" + value)
+            ],
             *(["--prod"] if production else ["--target=preview"]),
         ]
         with (

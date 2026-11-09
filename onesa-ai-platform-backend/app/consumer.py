@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 from urllib.parse import urlsplit
+from uuid import UUID
 
 import httpx
 
@@ -18,11 +19,22 @@ MAX_MESSAGES = 32
 MAX_INPUT_CHARS = 32000
 MAX_OUTPUT_CHARS = 8000
 MAX_RESPONSE_BYTES = 65536
+MAX_CREDENTIAL_CHARS = 8192
 
 
 class CompletionError(ValueError):
     def __init__(self) -> None:
         super().__init__("Inference provider unavailable or response incompatible")
+
+
+def credential(value: str, *, cookie: bool = False) -> bool:
+    """Validate transport syntax without normalizing or exposing credential bytes."""
+    return (
+        isinstance(value, str)
+        and 0 < len(value) <= MAX_CREDENTIAL_CHARS
+        and all(33 <= ord(char) <= 126 for char in value)
+        and (not cookie or not any(char in value for char in '",;\\'))
+    )
 
 
 def https_base(value: str) -> str:
@@ -61,17 +73,24 @@ class Connection:
         https_base(self.base_url)
         if self.provider not in {"onesa", "openai-compatible"}:
             raise ValueError("Unknown inference provider")
-        if not self.model or len(self.model) > 200 or any(ord(c) < 32 for c in self.model):
+        if (
+            not isinstance(self.model, str)
+            or not self.model
+            or len(self.model) > 200
+            or any(ord(c) < 32 or ord(c) == 127 for c in self.model)
+        ):
             raise ValueError("Invalid inference model")
         if self.provider == "onesa":
+            if self.model != "default":
+                raise ValueError("Onesa text inference supports only the default model")
             origin = urlsplit(https_base(self.origin))
             if (
                 self.origin != f"{origin.scheme}://{origin.netloc}"
-                or not self.session
-                or not self.csrf
+                or not credential(self.session, cookie=True)
+                or not credential(self.csrf)
             ):
                 raise ValueError("Onesa requires a dedicated session, CSRF and exact origin")
-        elif not self.api_key or len(self.api_key) > 8192:
+        elif not credential(self.api_key):
             raise ValueError("Compatible provider requires an approved server credential")
 
     def client(self, transport: httpx.AsyncBaseTransport | None = None) -> httpx.AsyncClient:
@@ -109,6 +128,8 @@ class Completion:
     revision: str | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    backend: str | None = None
+    request_id: str | None = None
 
 
 def message_records(messages: Sequence[Message]) -> list[dict[str, str]]:
@@ -177,6 +198,7 @@ async def complete(
     records = message_records(messages)
     try:
         async with asyncio.timeout(25), connection.client(transport) as client:
+            backend, request_id = None, None
             if connection.provider == "onesa":
                 result = await json_response(
                     client,
@@ -197,6 +219,17 @@ async def complete(
                     raise CompletionError()
                 kind: Literal["real", "mock", "unverified"] = "real" if real else "mock"
                 revision = metadata.get("revision")
+                backend = metadata.get("backend")
+                if backend is not None and (
+                    backend not in {"mock", "ollama", "vllm", "cloudflare"}
+                    or (backend == "mock") == real
+                ):
+                    raise CompletionError()
+                request_id = result.get("request_id")
+                if request_id is not None and (
+                    not isinstance(request_id, str) or str(UUID(request_id)) != request_id
+                ):
+                    raise CompletionError()
             else:
                 result = await json_response(
                     client,
@@ -242,7 +275,16 @@ async def complete(
             if any(v is not None and (type(v) is not int or v < 0) for v in counts):
                 raise CompletionError()
             return Completion(
-                text, connection.provider, model, kind, CONTRACT_VERSION, revision, *counts
+                text,
+                connection.provider,
+                model,
+                kind,
+                CONTRACT_VERSION,
+                revision,
+                input_tokens=counts[0],
+                output_tokens=counts[1],
+                backend=backend,
+                request_id=request_id,
             )
     except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError, TimeoutError):
         # Provider URLs, credentials, response bodies and exceptions never enter diagnostics.
