@@ -42,6 +42,7 @@ async function signIn(page, context, account, bypass, observe) {
   await page.getByRole("button", {name: "Sign in", exact: true}).click();
 }
 const sourceIdentity = () => oracle ? {
+  ...(oracle.source_binding ? {repository: oracle.repository, source_binding: oracle.source_binding} : {}),
   candidate_commit: oracle.candidate_commit,
   workflow_run_id: 0,
   ci_run_id: oracle.ci_run_id,

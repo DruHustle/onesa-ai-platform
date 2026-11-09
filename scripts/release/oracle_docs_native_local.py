@@ -49,6 +49,9 @@ def unique(pairs):
 
 def installed(path):
     cfg = read(path)
+    consolidated = (
+        cfg.get("binding", {}).get("repository") == owner.CONSOLIDATED_REPOSITORY
+    )
     owner.require(
         set(cfg)
         == {
@@ -63,16 +66,16 @@ def installed(path):
             "journal",
         }
         and type(cfg["schema_version"]) is int
-        and cfg["schema_version"] == 1,
+        and cfg["schema_version"] == (2 if consolidated else 1),
         "EXPLICIT_NATIVE_INSTALLATION_REQUIRED",
     )
     checkout = private(cfg["checkout"], directory=True)
     owner.require(
-        checkout.name == "onesa-ai-platform"
-        and cfg["binding"]["repository"] == builds.REPOSITORY
-        and cfg["binding"]["component"] in {"docs-public", "docs-internal"},
+        checkout.name == "onesa-ai-platform" and owner.is_docs_binding(cfg["binding"]),
         "ISOLATED_INDEPENDENT_DOCS_INSTALLATION_ONLY",
     )
+    if consolidated:
+        owner.docs_operational_source(cfg["binding"])
     owner.require(
         cfg["source_pins"].keys()
         == contract.source_closure(cfg["binding"]["component"]),
@@ -295,14 +298,15 @@ def observe(cfg, record, archive, *, probe=False):
     owner.require(
         environment in {"staging", "production"}
         and publication["environment"] == environment
-        and publication["source"]
-        == {
-            k: cfg["binding"][k]
-            for k in ["repository", "candidate_commit", "source_tree"]
-        }
+        and publication["source"] == contract.source_identity(cfg["binding"])
         and provider["source_revision"] == cfg["binding"]["candidate_commit"],
         "NATIVE_TARGET_SOURCE_OR_ENVIRONMENT_CHANGED",
     )
+    if cfg["binding"]["repository"] == owner.CONSOLIDATED_REPOSITORY:
+        owner.require(
+            provider.get("source") == contract.source_identity(cfg["binding"]),
+            "NATIVE_CANONICAL_PROVIDER_SOURCE_CHANGED",
+        )
     archive_path = private(archive)
     owner.require(
         0 < archive_path.stat().st_size <= 128 * 1024**2

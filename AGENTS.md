@@ -10,8 +10,11 @@ credentials, history and working functionality; stage only inspected paths.
 Onesa AI Platform is European-based, general-purpose and international; regional
 languages/domains are optional specializations. Preserve Chat/Knowledge/Agents/Travel,
 Next.js/TypeScript, FastAPI/Python, PostgreSQL/pgvector and provider interchangeability.
-Portal/Robot remain independent. No fourth repository, coupled releases, new license,
-paid resource, training or download authority is granted here.
+The canonical source is the standalone `DruHustle/onesa-ai-platform` repository.
+Commands, paths and references to the root mean this repository root. Its existing
+root workflows execute the product checks. Portal/Robot retain independent
+repositories, runtimes and release authority. No coupled releases, new license,
+paid resource, training, download or deployment authority is granted here.
 
 ## Non-negotiable security, privacy and safety
 

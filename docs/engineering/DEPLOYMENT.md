@@ -46,6 +46,27 @@ Repository code or an unsigned JSON file supplies no release authority.
 The protected guide contains installation, qualification and recovery instructions;
 source implementation alone does not establish commissioning or deployment.
 
+Canonical application source is a separate, explicit schema-2 installation option.
+It binds the `onesa-ug` repository's numeric identity, exact `main` commit and root
+tree to the `platform` product path/tree and both pinned hosted source-artifact
+archives. The application tar remains product-relative. Source verification is
+read-only evidence and never commissions a component or authorizes a release.
+Only the existing literal application profile sets are supported; public/internal
+Docs remain under their existing independent source and publication contracts.
+
+The canonical API and its Preview frontend must use the same complete source
+identity. Their configuration, artifact, component and provider identities remain
+separate. The credential-free build uses the product-relative application root,
+then seals the canonical provider root into its deployment metadata. Provider
+readback and the pinned deployment transport check that full source identity.
+
+A retained legacy API or frontend is only a read-only dependency. Its original
+commissioned verifier bytes, trust anchor, public key, policy and accepted signed
+chain must remain available and unrevoked. The new reader neither executes that
+controller nor writes, relabels, renews or transfers its records. Missing original
+custody or an unsupported rollback blocks the transition. Actual installation,
+commissioning, protected recovery evidence and hosted acceptance remain required.
+
 The AI component runners, reviewed installer and credential-free prebuilt builder
 now accompany the adapter. They keep candidate application bytes separate from
 commissioned verification tools and record deployment intent before a provider
