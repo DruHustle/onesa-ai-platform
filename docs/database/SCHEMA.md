@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261102_shared_identity. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261104_email_presentation. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -374,7 +374,7 @@ Constraints: ["ForeignKeyConstraint: actor_id", "PrimaryKeyConstraint: id"]
 
 Indexes: []
 
-Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id", "attempts BETWEEN 0 AND 5", "state IN ('queued', 'leased', 'accepted', 'failed', 'cancelled')"]
+Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id", "attempts BETWEEN 0 AND 5", "state IN ('queued', 'leased', 'queued_html_v1', 'leased_html_v1', 'accepted', 'failed', 'cancelled')"]
 
 ## identity_sessions
 

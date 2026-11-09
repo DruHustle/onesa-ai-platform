@@ -308,8 +308,16 @@ An optional local MCP stdio bridge pins protocol `2025-11-25` and exposes only
 explicitly permitted `text_stats`/`arithmetic` tools through existing authenticated
 Onesa services. It opens no HTTP listener, accepts no arbitrary tool or URL and invokes
 no model planner. Its lifecycle, discovery, explicit calls, refusal, revocation and
-bounded JSON transport have synthetic regressions. HTTP MCP/OAuth discovery, resource/
-prompt adapters and authenticated external-client qualification remain separate work.
+bounded JSON transport have synthetic regressions. The version 1.1 source candidate
+adds independently enrolled model and caller-owned Knowledge resources plus a
+user-selected `summarize-text` prompt. Every discovery/read/get reauthenticates;
+documents retain existing API ownership and embedding identity. Context scopes
+default empty, and prompt retrieval invokes no model or tool. Version 1.2 also
+processes request-scoped wire cancellation while API work is pending, with bounded
+concurrency and response-stream cleanup. Cancellation never replays or rolls back
+an already committed remote request. HTTP MCP/OAuth
+discovery, dedicated service credentials, authenticated external-client qualification
+and hosted acceptance remain separate work.
 Robot's optional read-only asset-context import remains an ordinary HTTP integration.
 
 The internal `ModelClient` adapters still support mock, Ollama, vLLM and Cloudflare.

@@ -33,6 +33,11 @@ proxies, provider retries and cross-provider fallback are disabled. Each complet
 call has a 25-second budget and a 64-KiB uncompressed JSON response ceiling.
 Caller task cancellation closes the owned HTTP operation. Complete history remains
 an explicit list of role/content records; callers retain it and the returned provenance.
+The Onesa adapter rejects model IDs other than `default` before transmitting history.
+Credentials are bounded ASCII transport values; control characters and cookie
+delimiters are rejected without displaying the value. Returned provenance retains
+the Onesa inference backend and canonical request identifier when supplied, and
+rejects contradictory mock/real metadata. Missing provider facts remain unknown.
 Chat selection does not modify Knowledge embedding identity, normalization or index.
 
 The optional local command `python -m app.mcp_stdio` runs from the backend using
@@ -47,6 +52,37 @@ the existing API. Explicit tool steps bypass model planning and retain local sch
 permission and deadline checks. The bridge never exposes mission, hardware, arbitrary
 HTTP, file, shell, or administrative tools. Standard input/output carry only bounded
 JSON-RPC lines; no network listener or remote OAuth server is introduced.
+
+The version 1.1 context adapter additionally accepts private
+`ONESA_MCP_ALLOWED_RESOURCES` and `ONESA_MCP_ALLOWED_PROMPTS` lists. Both default
+empty and are independent of the tool allowlist. Resource entries are the exact
+URI `onesa://models/default` or `onesa://knowledge/documents/<canonical-uuid>`;
+at most eight resources may be enrolled. Document enrollment permits only the
+existing caller-owned API read: it cannot grant another user's document. List
+and read operations revalidate current identity and document access, preserve
+model/embedding metadata, and refuse incomplete, malformed or oversized responses.
+Deleted documents and revoked sessions cannot reuse a cached result. Discovery
+does not enumerate other documents or grant access to URLs or local files.
+
+The only prompt is `summarize-text`, with one required `text` argument of at most
+4,000 characters. It returns a user-role prompt containing separately JSON-encoded
+untrusted input. It does not execute instructions in that input, call a tool, or
+invoke an inference provider. Prompt discovery and retrieval both reauthenticate.
+Resources/prompts are advertised only when explicitly enrolled; no subscriptions,
+list-change notifications or pagination are advertised. Each context operation has
+one 25-second budget, including authentication and all enrolled resource reads.
+Cancellation closes the owned HTTP operation; there are no retries or fallbacks.
+
+Version 1.2 keeps pipe input responsive while requests are in flight. At most four
+requests may execute concurrently, each with a 25-second total deadline. Further
+requests receive a bounded busy error before contacting the API; ping and lifecycle
+notifications remain responsive. A valid `notifications/cancelled` targets only its
+outstanding request ID and produces no response for that request. Invalid, unknown
+or completed IDs cannot cancel other work, and initialization cannot be cancelled.
+Cancellation closes local HTTP work; it cannot reverse a remote record that was
+already committed and must never trigger replay. Oversized lines are drained in
+full before another frame is accepted. EOF drains already accepted bounded work;
+process cancellation closes every outstanding task.
 
 This is an opt-in software candidate, with synthetic fixtures only. Hosted activation,
 dedicated credentials, provider/privacy processing approval and external MCP-client
@@ -79,7 +115,81 @@ application URL, account, token or package is required. They are not production 
 Optional MQTT credentials remain in separate private operator configuration/environment,
 outside browsers and this Settings inventory. See [Digital Twins](DIGITAL_TWINS.md).
 
-## Current supported Cloudflare release profile — 2026-10-12
+## Cloudflare generation transition candidate — 2026-11-06
+
+Cloudflare's [2026-11-05 retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/)
+lists `@cf/qwen/qwen3-30b-a3b-fp8` for removal on **2026-11-20**. Its
+[2026-11-06 revision](https://github.com/cloudflare/cloudflare-docs/commit/a5a271f2fc6de7009ef4eec2af393ada7c8a3269)
+moved the originally published 2026-11-15 date to 2026-11-20 and states that
+requests will then fail with HTTP `410 Gone` and error code `5028`. The model
+remains in the historical acceptance records below; those records do not qualify
+a replacement or establish the current private runtime configuration.
+
+The source candidate now accepts only
+`ONESA_MODEL_NAME=@cf/google/gemma-4-26b-a4b-it` when
+`ONESA_MODEL_BACKEND=cloudflare`. The existing account URL, private credential
+fields, mock/Ollama/vLLM selectors and local-model defaults are unchanged. The
+retired Qwen model and unreviewed alternatives fail configuration validation;
+there is no automatic model substitution or mock fallback. The bounded staging
+context diagnostic selects the same candidate and still cannot deploy, change
+configuration or establish hosted qualification.
+
+The [Gemma 4 catalog](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/)
+documents native `/ai/run/` message requests, `stream: true`, SSE output,
+`stream_options`, bounded `max_tokens` (deprecated but supported), and temperature
+from 0 to 2. Its separate synchronous JSON response is not the application's
+streaming contract. The adapter retains native SSE, strict textual choice deltas,
+usage and terminal handling, output/deadline bounds and cancellation. It does not
+coerce numeric output, expose reasoning fields or accept synchronous JSON as a
+completed stream. Catalog compatibility and synthetic tests do not prove an
+actual model's streamed response or language quality.
+
+At this review, Cloudflare lists Gemma 4 at **$0.10 per million input tokens and
+$0.30 per million output tokens**, compared with **$0.45/$3.20** for the suggested
+[Qwen 3.8 alternative](https://developers.cloudflare.com/workers-ai/models/qwen3.8-27b/).
+These published rates explain the candidate selection, not a spending approval.
+The existing free-only policy remains in force; the
+[Workers AI allowance and pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+must be checked before activation. Review the linked model terms and existing
+privacy/content requirements during the normal hosted qualification.
+
+`@cf/qwen/qwen3-embedding-0.6b` is not named in this retirement notice. Its native
+1024-dimensional response, reviewed normalized MRL256 prefix, vector index and
+`cf-qwen3-mrl256-v1` namespace remain unchanged. No embedding migration, reindex,
+speech model, image model or new provider fallback is part of this transition.
+
+Before any runtime change, use the authorized owner path to verify the actual
+serving source, configured model, credential validity and available allowance
+without recording secret values. Changing the generation selector is an explicit
+release configuration change, not a silent startup repair. Qualify exact source
+and that configuration through `dev → staging → main`, with existing real
+streaming/Stop, persisted history and recall, retrieval, ownership/isolation,
+readiness, privacy and rollback checks. Preserve embeddings and existing records.
+Install the accepted source and model override together: the old source rejects
+Gemma 4, and this candidate rejects the old Qwen override. Do not change either
+side independently on the serving runtime.
+The previous model is not a viable rollback after its removal; retain an
+independently qualified supported serving option before promotion. No hosted
+generation, private configuration update or production acceptance is implied by
+this source candidate.
+
+The canonical owner application adapter exposes one opt-in configuration transition,
+`cloudflare-qwen3-to-gemma4`. It permits only the reviewed generation-name change
+and the existing separate staging-origin selection. Provider/account settings,
+credentials, embedding settings, identity settings and every enabled native
+feature must match the current and configuration-bound retained release. The
+literal foundation, Twins and Cybersecurity profiles keep their existing gates;
+identity activation cannot be combined with this generation transition.
+
+An original accepted source/configuration rollback remains mandatory, including
+the existing recovery and availability evidence. A rollback still selecting the
+old Qwen model is refused once its remaining catalog lifetime is less than the
+maximum 24-hour owner authorization interval. That date check is not an availability
+probe and does not establish a supported rollback after retirement. If no genuinely
+qualified supported source/configuration pair exists, promotion remains blocked.
+Their presence in source does not establish or change the installed configuration.
+
+## Historical Cloudflare release profile — 2026-10-12
 
 The implemented model selectors include `ONESA_MODEL_BACKEND=cloudflare` and
 `ONESA_EMBEDDING_BACKEND=cloudflare`. The release preflight now accepts these real
@@ -195,8 +305,8 @@ Secrets below are never included as values in this document.
 | `ONESA_MAIL_PROVIDER` | B/identity_worker.py | `disabled` or `resend` | Nonsecret; API + worker | Missing override; code default `disabled`. Keep disabled until AI-scoped mail settings, worker and approved recipient tested. |
 | `ONESA_AUTH_DELIVERY_KEY` | B/auth.py/identity_worker.py | >=48 chars when mail enabled; persistent HMAC key for invitation/recovery hashes | Secret; API + worker, same per environment | Missing; independently generate and inject privately. This is not a session signing key. |
 | `ONESA_RESEND_API_KEY` | B/identity_worker.py | Required when mail enabled | Secret; worker + validated API configuration | Missing; newly generated AI-scoped sending credential, do not reuse exposed chat value. |
-| `ONESA_MAIL_FROM` | B/identity_worker.py | Required nonempty sender when mail enabled | Nonsecret; both hosted | Missing; proposed `Onesa AI <noreply@mail.onesa.eu>`, separately verify authorized sender. Portal domain verification is not AI delivery acceptance. |
-| `ONESA_MAIL_REPLY_TO` | B/identity_worker.py | Optional sender reply address | Nonsecret; both hosted | Missing; owner mailbox direction `hello@onesa.eu`, delivery unverified. |
+| `ONESA_MAIL_FROM` | B/identity_worker.py | One address, optionally with a display name, at most 320 characters and no controls; required when mail enabled | Nonsecret; both hosted | Current source example: `Onesa AI <notifications-ai@onesa.eu>`. Verify the parent domain and key before a runtime cutover; keep an existing explicit sender until pending deliveries are reconciled. Domain verification is not AI delivery acceptance. |
+| `ONESA_MAIL_REPLY_TO` | B/identity_worker.py | Optional single email address or display-name/address pair; no controls | Nonsecret; both hosted | Current example reuses the existing approved `info@onesa.eu` contact. No mailbox or alias is created by setting this value. |
 | `ONESA_API_URL` | frontend `src/lib/backend.ts`, server-only BFF | Required hosted exact backend origin, no `/api` or `/v1` suffix | Nonsecret; Vercel production/isolated preview | Missing. **Actual production candidate `https://onesa-ai-platform-backend.onrender.com`**, read from Render serviceDetails.url. Prepared, not remotely saved. Preview must point to its isolated staging backend. |
 | `ONESA_PROXY_TIMEOUT_SECONDS` | frontend backend.ts | Optional finite 1..600 seconds, default135 | Nonsecret; Vercel | Missing override; proposed135, greater than backend generation timeout60. |
 | `NEXT_PUBLIC_ONESA_DOCUMENTATION_URL` | frontend `src/lib/documentation.ts` | Public docs URL | Nonsecret; Vercel build/runtime | Missing in Vercel; known `https://docs.onesa.eu`. Misplaced copy on Render preserved (not deleted). DNS availability remains separate. |

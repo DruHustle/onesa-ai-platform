@@ -208,6 +208,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
                 valid = revision in {
                     REQUIRED_SCHEMA_REVISION,
+                    "20261102_shared_identity",
                     "20261026_cybersecurity",
                     "20261025_twins",
                     "20261021_industrial",
@@ -216,6 +217,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.industrial_demo_enabled:
                     valid = revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
                         "20261026_cybersecurity",
                         "20261025_twins",
                         "20261021_industrial",
@@ -223,11 +225,15 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.digital_twins_enabled:
                     valid = revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
                         "20261026_cybersecurity",
                         "20261025_twins",
                     }
                 if config.identity_enabled:
-                    valid = valid and revision == "20261102_shared_identity"
+                    valid = valid and revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
+                    }
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(

@@ -561,7 +561,7 @@ def execute(environment, request):
         "PROBE_BINDING",
     )
     require(
-        binding["repository"] == "DruHustle/onesa-ai-platform"
+        binding["repository"] in {profiles.REPOSITORY, profiles.CANONICAL_REPOSITORY}
         and profiles.component(binding) in profiles.EXPANDED,
         "PROBE_COMPONENT",
     )
@@ -693,6 +693,11 @@ def execute(environment, request):
             env["VERCEL_AUTOMATION_BYPASS_SECRET"] = bypass
         if environment == "staging":
             context = {
+                **(
+                    {"source_binding": profiles.source_binding(binding)}
+                    if profiles.is_canonical(binding)
+                    else {}
+                ),
                 "execution_context": "owner-operated-oracle-staging",
                 "repository": binding["repository"],
                 "candidate_commit": binding["candidate_commit"],
@@ -710,6 +715,11 @@ def execute(environment, request):
             write(OUTPUT / "ordinary-hosted-api.json", suite)
             require(
                 suite["workflow_run_id"] == 0
+                and suite["repository"] == binding["repository"]
+                and (
+                    not profiles.is_canonical(binding)
+                    or suite.get("source_binding") == profiles.source_binding(binding)
+                )
                 and suite["ci_run_id"] == ci
                 and suite["candidate_commit"] == binding["candidate_commit"]
                 and suite["status"] == "PASS"
@@ -722,6 +732,13 @@ def execute(environment, request):
             ui = private_json(OUTPUT / "hosted-ui.json")
             require(
                 ui["workflow_run_id"] == 0
+                and (
+                    not profiles.is_canonical(binding)
+                    or (
+                        ui.get("repository") == binding["repository"]
+                        and ui.get("source_binding") == profiles.source_binding(binding)
+                    )
+                )
                 and ui["candidate_commit"] == binding["candidate_commit"]
                 and ui["status"] == "PASS"
                 and set(ui["workflow_checks"]) == hosted.PLATFORM_UI_WORKFLOWS
@@ -1083,7 +1100,8 @@ def record_boundary_failure(environment, request, error):
         require(
             environment in {"staging", "production"}
             and str(UUID(operation)) == operation
-            and binding["repository"] == "DruHustle/onesa-ai-platform"
+            and binding["repository"]
+            in {profiles.REPOSITORY, profiles.CANONICAL_REPOSITORY}
             and profiles.component(binding) in profiles.EXPANDED
             and re.fullmatch("[a-f0-9]{40}", binding["candidate_commit"]),
             "FAILURE_RECORD_SCOPE",
