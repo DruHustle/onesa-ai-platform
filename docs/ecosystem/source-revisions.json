@@ -37,7 +37,7 @@
     }
   },
   "onesa-ai-robot": {
-    "repository": "https://github.com/DruHustle/onesa-ai-robot",
+    "repository": "https://github.com/DruHustle/onesa-robot",
     "commit": "98f8291501b7eafb088a17b12b27a3064ea2e7cf",
     "sources": {
       "README.md": "a6714661a4a8511ab233eb2bf5223ea149391ef749f39c97c585ec72c56ca0c2",
