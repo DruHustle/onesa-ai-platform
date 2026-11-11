@@ -16,6 +16,8 @@ Protocol tests independently
 exercise bounded HTTP parsing, reserved Basic credentials, current product roles,
 product/global administrator MFA and explicit global-revocation confirmation.
 
+Explicitly rejected, substituted or unmapped shared sessions are permanently revoked locally before the request fails; restoring central access requires a fresh sign-in. Transient issuer 503 responses preserve the session for retry. Real PostgreSQL regressions also ensure this revocation discards unrelated uncommitted application changes and preserves the existing post-introspection logout/expiry fence.
+
 The ordinary full suite also validates the additive schema and its owner DML grant
 set. Run `python -m unittest discover -s scripts/release -p 'test_oracle_ai_*.py'`
 for the existing release observation, backup and owner-runner policy checks. These
