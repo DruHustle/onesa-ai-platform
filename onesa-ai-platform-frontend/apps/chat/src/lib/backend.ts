@@ -14,6 +14,13 @@ export async function proxy(request: Request): Promise<Response> {
         base.pathname !== '/' || base.search || base.hash) {
       throw new Error("Invalid server API origin");
     }
+    const loopback = (host: string) => ["localhost", "127.0.0.1", "[::1]"].includes(host);
+    const hosted = process.env.VERCEL || !loopback(incoming.hostname) || !loopback(base.hostname);
+    const passwordEndpoint = /^\/api\/v1\/auth\/(login|register|recovery\/(request|complete))\/?$/;
+    if (hosted && request.method === "POST" && passwordEndpoint.test(incoming.pathname)) {
+      return Response.json({ error: { code: "shared_sign_in_required", message: "Continue with your Onesa account" } },
+        { status: 403, headers: { "cache-control": "no-store" } });
+    }
     const headers = new Headers(request.headers);
     for (const name of ['host', 'connection', 'transfer-encoding', 'content-length',
                         'forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto',

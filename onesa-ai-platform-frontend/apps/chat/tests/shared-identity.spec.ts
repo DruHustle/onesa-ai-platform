@@ -23,7 +23,7 @@ for (const locale of ["en", "de"] as const) {
     const button = page.getByRole("button", { name: locale === "de" ? "Mit Onesa fortfahren" : "Continue with Onesa", exact: true });
     await expect(button).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
-    await expect(page.getByRole("link", { name: locale === "de" ? "Onesa-Konto erstellen" : "Create an Onesa account" })).toHaveAttribute("href", method.account_url + "/register");
+    await expect(page.getByRole("link", { name: locale === "de" ? "Konto und Zugriff" : "Account and access" })).toHaveAttribute("href", method.account_url);
     await button.focus();
     await expect(button).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -132,3 +132,14 @@ test("partial global logout clears the local private workspace and shows the lim
   await expect(page.getByRole("alert").filter({ hasText: "Signed out here" })).toBeVisible();
   await expect(page.getByLabel("Message Onesa AI")).toHaveCount(0);
 });
+
+
+for (const path of ["/invitation", "/recovery"]) {
+  test(`legacy bookmark ${path} opens Company Portal account management`, async ({ page }) => {
+    await page.goto(path + "#token=synthetic-legacy-bookmark");
+    await expect(page.getByRole("button", { name: "Continue with Onesa" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Account and access" })).toHaveAttribute("href", method.account_url);
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+    expect(new URL(page.url()).hash).toBe("");
+  });
+}

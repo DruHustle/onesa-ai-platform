@@ -83,6 +83,14 @@ class Settings(BaseSettings):
     digital_twins_persistent_mount: bool = False
     consumer_inference_enabled: bool = False
 
+    @property
+    def local_credentials_allowed(self) -> bool:
+        return (
+            not self.identity_enabled
+            and self.environment in {"development", "test"}
+            and urlsplit(self.public_origin).hostname in {"localhost", "127.0.0.1", "::1"}
+        )
+
     @field_validator("mail_from", "mail_reply_to")
     @classmethod
     def single_mail_address(cls, value: str) -> str:

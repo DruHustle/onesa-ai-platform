@@ -6,12 +6,13 @@ export type OnesaMethod = {
   pending?: boolean;
 };
 
-export function parseIdentityMethod(value: unknown): OnesaMethod {
+export function parseIdentityMethod(value: unknown, allowLocal: boolean): OnesaMethod {
   if (!value || typeof value !== "object") throw new Error("Invalid sign-in configuration");
   const method = value as Record<string, unknown>;
   if (typeof method.enabled !== "boolean" ||
       (method.account_url !== null && typeof method.account_url !== "string"))
     throw new Error("Invalid sign-in configuration");
+  if (!method.enabled && !allowLocal) return { enabled: false, account_url: null, unavailable: true };
   if (method.enabled) {
     if (typeof method.account_url !== "string") throw new Error("Missing account destination");
     const url = new URL(method.account_url);
