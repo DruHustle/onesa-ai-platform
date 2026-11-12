@@ -40,7 +40,7 @@
     },
     {
       "id": "ai-robot-architecture",
-      "title": "Robot Architecture",
+      "title": "Onesa Robot Architecture",
       "diagram": "robot-current",
       "url": "/docs/ecosystem/ROBOT_DESIGN",
       "summary": "Separate cloud simulation from unavailable physical control."
