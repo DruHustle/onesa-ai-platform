@@ -1877,7 +1877,7 @@
   },
   {
     "id": "public-robot",
-    "title": "AI Robot architecture",
+    "title": "Onesa Robot architecture",
     "view": "logical",
     "status": "Software simulator only; all physical actuation disabled",
     "source": "docs/diagrams/public-robot.mmd",
@@ -2590,8 +2590,8 @@
       },
       {
         "id": "Robot",
-        "label": "AI Robot software and simulation",
-        "responsibility": "AI Robot software and simulation. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "label": "Onesa Robot software and simulation",
+        "responsibility": "Onesa Robot software and simulation. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
         "url": "/docs/ecosystem/ROBOT_DESIGN"
       },
       {
