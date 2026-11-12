@@ -29,8 +29,11 @@ export default async function Layout({
     );
   }
   const [preferences, incoming] = await Promise.all([cookies(), headers()]);
-  const allowLocal = !process.env.VERCEL && /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(incoming.get("host") ?? "");
+  const host = incoming.get("host") ?? "";
+  const publicPlatform = host === "platform.onesa.eu" || process.env.ONESA_PUBLIC_ORIGIN === "https://platform.onesa.eu";
+  const allowLocal = !publicPlatform && !process.env.VERCEL && /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(host);
   const identityMethod = await loadIdentityMethod(allowLocal);
+  const accountHelp = identityMethod.account_url ?? (publicPlatform ? "https://portal.onesa.eu/account" : null);
   const preference = preferences.get("onesa_ui_locale")?.value;
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
@@ -42,7 +45,7 @@ export default async function Layout({
           return environment ? <div className="environment-context" role="region" aria-label="Deployment context">{environment} · Onesa AI Platform</div> : null;
         })()}
         <LocaleProvider initialLocale={locale}>
-          <OnesaIdentityProvider initialMethod={identityMethod} allowLocal={allowLocal}>
+          <OnesaIdentityProvider initialMethod={identityMethod} allowLocal={allowLocal} accountHelp={accountHelp}>
             <DraftNavigationProvider>{children}</DraftNavigationProvider>
           </OnesaIdentityProvider>
           <CompanyFooter legalName={company.legalName} />

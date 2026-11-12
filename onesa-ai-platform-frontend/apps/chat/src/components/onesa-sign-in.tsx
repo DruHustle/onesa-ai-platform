@@ -9,8 +9,8 @@ export type { OnesaMethod } from "../lib/identity-method";
 type Identity = { id: string; email: string; display_name: string };
 const IdentityMethodContext = createContext<OnesaMethod | null>(null);
 
-export function OnesaIdentityProvider({ initialMethod, allowLocal, children }:
-  { initialMethod: OnesaMethod; allowLocal: boolean; children: React.ReactNode }) {
+export function OnesaIdentityProvider({ initialMethod, allowLocal, accountHelp, children }:
+  { initialMethod: OnesaMethod; allowLocal: boolean; accountHelp: string | null; children: React.ReactNode }) {
   const [method, setMethod] = useState<OnesaMethod>({ ...initialMethod, pending: true });
   useEffect(() => {
     const controller = new AbortController();
@@ -25,7 +25,8 @@ export function OnesaIdentityProvider({ initialMethod, allowLocal, children }:
       });
     return () => controller.abort();
   }, [allowLocal]);
-  return <IdentityMethodContext.Provider value={method}>{children}</IdentityMethodContext.Provider>;
+  const entry = method.unavailable ? { ...method, account_url: accountHelp } : method;
+  return <IdentityMethodContext.Provider value={entry}>{children}</IdentityMethodContext.Provider>;
 }
 
 export function useOnesaIdentity() {
@@ -37,6 +38,7 @@ export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) 
   return method?.unavailable ? <div>
     <p role="alert">{de ? "Die Anmeldemethode konnte nicht geladen werden. Bitte versuche es erneut." : "We could not load the sign-in method. Please try again."}</p>
     <button type="button" onClick={() => window.location.reload()}>{de ? "Erneut versuchen" : "Retry sign-in"}</button>
+    {method.account_url && <p><a href={method.account_url}>{de ? "Company Portal öffnen" : "Open Company Portal"}</a></p>}
   </div> : <p role="status">{de ? "Anmeldung wird vorbereitet…" : "Preparing sign-in…"}</p>;
 }
 
