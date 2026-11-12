@@ -15,7 +15,9 @@ export async function proxy(request: Request): Promise<Response> {
       throw new Error("Invalid server API origin");
     }
     const loopback = (host: string) => ["localhost", "127.0.0.1", "[::1]"].includes(host);
-    const hosted = process.env.VERCEL || !loopback(incoming.hostname) || !loopback(base.hostname);
+    // The default local Compose frontend reaches its API by the internal service name.
+    const localUpstream = loopback(base.hostname) || base.origin === "http://api:8000";
+    const hosted = process.env.VERCEL || !loopback(incoming.hostname) || !localUpstream;
     const passwordEndpoint = /^\/api\/v1\/auth\/(login|register|recovery\/(request|complete))\/?$/;
     if (hosted && request.method === "POST" && passwordEndpoint.test(incoming.pathname)) {
       return Response.json({ error: { code: "shared_sign_in_required", message: "Continue with your Onesa account" } },
