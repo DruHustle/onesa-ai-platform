@@ -10,6 +10,9 @@
   An unavailable issuer keeps hosted credential entry closed. Development and
   test credentials remain scoped to loopback fixtures.
 
+- Use Onesa Robot in public and engineering documentation, architecture drawings
+  and the generated technical design manual.
+
 - Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
   commissioned standalone AI API plan. Both the standalone and historical plan
   names are bound to their respective repositories. The configuration, rollback
