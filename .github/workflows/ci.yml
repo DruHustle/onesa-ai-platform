@@ -352,7 +352,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       if: github.event.repository.private == false
       with:
-        repository: DruHustle/onesa-ai-robot
+        repository: DruHustle/onesa-robot
         ref: ${{ steps.docs-sources.outputs.robot }}
         path: data/docs-sources/robot
         persist-credentials: false
