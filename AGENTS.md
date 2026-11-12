@@ -37,6 +37,16 @@ unrelated credential rotation or production deletion without specific authority.
 
 ## Structure and configuration
 
+Keep extra worktrees in `local-tools/worktrees`, release/deployment evidence in
+`local-tools/deployment-evidence`, release verification in
+`local-tools/release-verification`, and local migration records in
+`local-tools/migrations`, all inside this repository and ignored by Git.
+Keep versioned schema migrations in their established application source paths.
+Do not create a shared verification directory above the nine product repositories.
+Read current remote refs and open PRs before editing; a checked-out branch,
+consolidated history and deployed source revision can differ. Preserve the exact
+source identity in each verification and deployment receipt.
+
 - `onesa-ai-platform-frontend/apps/chat`: one Chat/Knowledge/Agents/Travel application.
 - `onesa-ai-platform-frontend/apps/docs`: separate public/internal Docusaurus artifacts.
 - `onesa-ai-platform-frontend/packages/api-client`: generated types and SSE transport.
