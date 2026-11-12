@@ -6,6 +6,11 @@
 
 ## Unreleased
 
+- Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
+  commissioned standalone AI API plan. Both the standalone and historical plan
+  names are bound to their respective repositories. The configuration, rollback
+  and hosted acceptance requirements apply to both.
+
 - Source candidate: add an independent canonical protected Docs consumer with
   exact repository, main commit, root tree and Platform subtree binding. Preserve
   the original approved document map, separate private builds, provider project,

@@ -181,6 +181,16 @@ feature must match the current and configuration-bound retained release. The
 literal foundation, Twins and Cybersecurity profiles keep their existing gates;
 identity activation cannot be combined with this generation transition.
 
+For the standalone `DruHustle/onesa-ai-platform` API, the owner adapter accepts
+`standalone-cloudflare-qwen3-to-gemma4` in a newly prepared, exact-source plan.
+The historical consolidated-repository identifier remains bound to its original
+scope. Each plan follows its repository's commissioned policy, staging and
+production configuration hashes, accepted rollback chain, feature boundaries and
+hosted provider checks. A standalone plan requires its own accepted standalone
+rollback. The model-name change and compatible source must be installed together.
+The protected operator needs the current host, original signed release evidence,
+private runtime configuration and provider allowance to qualify the transition.
+
 An original accepted source/configuration rollback remains mandatory, including
 the existing recovery and availability evidence. A rollback still selecting the
 old Qwen model is refused once its remaining catalog lifetime is less than the
