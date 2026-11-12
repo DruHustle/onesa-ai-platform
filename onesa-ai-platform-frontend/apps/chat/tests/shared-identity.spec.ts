@@ -112,6 +112,23 @@ test("configuration failure offers a retry before any credential form", async ({
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
 });
 
+test("a disconnected production sign-in page still opens Company Portal", async ({ page, baseURL }) => {
+  const frontend = new URL(baseURL || "http://localhost:3100");
+  await page.route(frontend.origin + "/", async route => {
+    const document = await route.fetch({ headers: { ...route.request().headers(), host: "platform.onesa.eu" } });
+    await route.fulfill({ response: document });
+  });
+  await page.route("**/api/v1/auth/onesa/config", route => json(route, {}, 404));
+  await page.route("https://portal.onesa.eu/account", route => route.fulfill({ contentType: "text/html", body: "<h1>Company Portal fixture</h1>" }));
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Retry sign-in" })).toBeEnabled();
+  await expect(page.locator('input[type="password"]')).toHaveCount(0);
+  const account = page.getByRole("link", { name: "Open Company Portal" });
+  await expect(account).toHaveAttribute("href", "https://portal.onesa.eu/account");
+  await account.click();
+  await expect(page.getByRole("heading", { name: "Company Portal fixture" })).toBeVisible();
+});
+
 test("completion page verifies the session before confirming sign-in", async ({ page }) => {
   await page.goto("/auth/complete");
   await expect(page.getByRole("alert").filter({ hasText: "could not confirm your sign-in" })).toBeVisible();
