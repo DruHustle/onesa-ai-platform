@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+- Route hosted sign-in, account creation and recovery through Company Portal.
+  An unavailable issuer keeps hosted credential entry closed. Development and
+  test credentials remain scoped to loopback fixtures.
+
 - Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
   commissioned standalone AI API plan. Both the standalone and historical plan
   names are bound to their respective repositories. The configuration, rollback
