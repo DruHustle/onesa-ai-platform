@@ -902,8 +902,12 @@ def test_tls_fixture_credentials_are_confined_to_the_isolated_staging_origin(api
         ("staging", "https://platform.example.invalid", True, False),
         ("production", "https://localhost:3443", True, False),
     ]:
-        settings = config.model_copy(update={
-            "environment": environment, "public_origin": origin, "loopback_tls_acceptance": opt_in,
-        })
+        settings = config.model_copy(
+            update={
+                "environment": environment,
+                "public_origin": origin,
+                "loopback_tls_acceptance": opt_in,
+            }
+        )
         assert settings.local_credentials_allowed is expected
         assert not settings.model_copy(update={"identity_enabled": True}).local_credentials_allowed
