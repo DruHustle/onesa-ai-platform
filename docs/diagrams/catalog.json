@@ -1,7 +1,7 @@
 [
   {
     "id": "public-ecosystem",
-    "title": "Complete Onesa ecosystem",
+    "title": "Company Portal, AI Platform and Robot",
     "view": "logical",
     "status": "Company and product boundaries; application production acceptance remains separate",
     "source": "docs/diagrams/public-ecosystem.mmd",
