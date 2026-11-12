@@ -17,7 +17,13 @@ export async function proxy(request: Request): Promise<Response> {
     const loopback = (host: string) => ["localhost", "127.0.0.1", "[::1]"].includes(host);
     // The default local Compose frontend reaches its API by the internal service name.
     const localUpstream = loopback(base.hostname) || base.origin === "http://api:8000";
-    const hosted = process.env.VERCEL || !loopback(incoming.hostname) || !localUpstream;
+    // Next standalone can use its internal listener in Request.url. Only a configured
+    // loopback Compose origin with the exact incoming Host can identify a local browser.
+    const publicOrigin = process.env.ONESA_PUBLIC_ORIGIN ? new URL(process.env.ONESA_PUBLIC_ORIGIN) : null;
+    const localComposeRequest = base.origin === "http://api:8000" && publicOrigin &&
+      loopback(publicOrigin.hostname) && request.headers.get("host") === publicOrigin.host;
+    const hosted = process.env.VERCEL || (publicOrigin && !loopback(publicOrigin.hostname)) ||
+      (!loopback(incoming.hostname) && !localComposeRequest) || !localUpstream;
     const passwordEndpoint = /^\/api\/v1\/auth\/(login|register|recovery\/(request|complete))\/?$/;
     if (hosted && request.method === "POST" && passwordEndpoint.test(incoming.pathname)) {
       return Response.json({ error: { code: "shared_sign_in_required", message: "Continue with your Onesa account" } },
