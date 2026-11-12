@@ -83,6 +83,20 @@ class Settings(BaseSettings):
     digital_twins_persistent_mount: bool = False
     consumer_inference_enabled: bool = False
 
+    loopback_tls_acceptance: bool = False
+
+    @property
+    def local_credentials_allowed(self) -> bool:
+        if self.identity_enabled:
+            return False
+        if self.environment in {"development", "test"}:
+            return urlsplit(self.public_origin).hostname in {"localhost", "127.0.0.1", "::1"}
+        return (
+            self.environment == "staging"
+            and self.loopback_tls_acceptance
+            and self.public_origin == "https://localhost:3443"
+        )
+
     @field_validator("mail_from", "mail_reply_to")
     @classmethod
     def single_mail_address(cls, value: str) -> str:

@@ -71,7 +71,9 @@ async function identityMethodBootstrap() {
       assert.equal(options.redirect, 'manual');
       return Response.json(body, {status});
     };
-    assert.deepEqual(JSON.parse(JSON.stringify(await bootstrap.loadIdentityMethod())), expected);
+    assert.deepEqual(JSON.parse(JSON.stringify(await bootstrap.loadIdentityMethod(true))), expected);
+    const hosted = await bootstrap.loadIdentityMethod(false);
+    assert.equal(Boolean(hosted.unavailable), !expected.enabled);
   }
   context.fetch = async () => new Response('invalid synthetic JSON', {status:200});
   assert.equal((await bootstrap.loadIdentityMethod()).unavailable, true);
@@ -148,7 +150,6 @@ async function main() {
     assert.equal(upstream.headers.get('cookie'), cookie);
   }
   for (const [method, route] of [
-    ['POST', '/api/v1/auth/login'], ['POST', '/api/v1/auth/register'],
     ['POST', '/api/v1/auth/me'], ['HEAD', '/api/v1/auth/me'], ['OPTIONS', '/api/v1/auth/me'],
     ['GET', '/api/v1/auth/me/'], ['GET', '/api/v1/models'], ['GET', '/api/v1/knowledge/documents'],
     ['GET', '/health'], ['GET', '/ready'],
@@ -157,6 +158,36 @@ async function main() {
     await exported.proxy(new Request('https://preview.example.invalid' + route, {method}));
     assert.equal(fetches, count + 1, 'The fast path is confined to one exact GET');
   }
+  for (const route of ['login', 'register', 'recovery/request', 'recovery/complete']) {
+    const before = fetches;
+    const result = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/' + route, {method:'POST'}));
+    assert.equal(result.status, 403);
+    assert.equal((await result.json()).error.code, 'shared_sign_in_required');
+    assert.equal(fetches, before);
+  }
+  const configuredBase = context.process.env.ONESA_API_URL;
+  context.process.env.ONESA_API_URL = 'http://api:8000';
+  for (const [origin, hosted, expected] of [
+    ['http://localhost:3100', false, 200],
+    ['http://localhost:3100', true, 403],
+    ['https://preview.example.invalid', false, 403],
+  ]) {
+    if (hosted) context.process.env.VERCEL = '1';
+    else delete context.process.env.VERCEL;
+    const result = await exported.proxy(new Request(origin + '/api/v1/auth/register', {method:'POST'}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'http://localhost:3100';
+  const listener = 'http://0.0.0.0:3000/api/v1/auth/register';
+  for (const [host, expected] of [['localhost:3100', 200], ['public.example.invalid', 403], ['localhost:9999', 403]]) {
+    const result = await exported.proxy(new Request(listener, {method:'POST', headers:{host}}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'https://platform.example.invalid';
+  const hostedOrigin = await exported.proxy(new Request('http://localhost/api/v1/auth/register', {method:'POST', headers:{host:'localhost'}}));
+  assert.equal(hostedOrigin.status, 403);
+  delete context.process.env.ONESA_PUBLIC_ORIGIN;
+  context.process.env.ONESA_API_URL = configuredBase;
   for (const [variable, value] of [['ONESA_API_URL', 'https://invalid.example/private'], ['ONESA_PROXY_TIMEOUT_SECONDS', '0']]) {
     const prior = context.process.env[variable], count = fetches;
     context.process.env[variable] = value;
@@ -184,7 +215,7 @@ async function main() {
   context.fetch = async () => {fetches++; throw new Error('Synthetic sleeping backend unavailable');};
   assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}))).status, 503);
   assert.equal(fetches, count + 2);
-  console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 10 unchanged-route, configuration, sleeping-upstream and failed-session cases');
+  console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 8 unchanged-route, 4 hosted credential denials, configuration, sleeping-upstream and failed-session cases');
   await identityMethodBootstrap();
 }
 main().catch(error => {console.error(error);process.exitCode=1;});

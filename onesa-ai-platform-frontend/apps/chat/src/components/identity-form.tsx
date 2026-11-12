@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "./onesa-sign-in";
 import { call } from "../lib/api";
 
 export default function IdentityForm({ invitation = false }: { invitation?: boolean }) {
+  const method = useOnesaIdentity();
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,7 +45,7 @@ export default function IdentityForm({ invitation = false }: { invitation?: bool
   }, []);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (!method || method.pending || method.enabled || method.unavailable || pending.current) return;
     const request = new AbortController(), observed = revision.current, submittedToken = currentToken.current;
     pending.current = request; setBusy(true); setMessage("");
     const isCurrent = () => mounted.current && revision.current === observed && pending.current === request;
@@ -64,12 +66,18 @@ export default function IdentityForm({ invitation = false }: { invitation?: bool
     } catch (error) { if (isCurrent()) setMessage(error instanceof Error ? error.message : "Request failed"); }
     finally { if (isCurrent()) { pending.current = null; setBusy(false); } }
   }
+  if (!method || method.unavailable || method.enabled) return <main className="auth-shell"><section className="auth-card">
+    <h1>{invitation ? "Your Onesa account" : "Onesa account recovery"}</h1>
+    {method?.enabled && !method.unavailable
+      ? <><p>Use Company Portal to manage your account and recover access.</p><OnesaSignIn method={method} next="/settings" /></>
+      : <IdentityEntryStatus method={method}/>}
+  </section></main>;
   return <main className="auth-shell"><section className="auth-card"><h1>{invitation ? "Accept invitation" : "Account recovery"}</h1>
     {invitation && !token ? <p role="alert">Open your private invitation link. An invitation is required.</p> : <form onSubmit={submit}>
       {(invitation || !token) && <label>Email<input type="email" name="email" autoComplete="email" required /></label>}
       {invitation && <label>Display name<input name="name" maxLength={80} required /></label>}
       {(invitation || token) && <label>New password<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>}
-      <button disabled={busy}>{busy ? "Please wait…" : invitation ? "Create invited account" : token ? "Set new password" : "Request recovery"}</button>
+      <button disabled={busy || method.pending}>{busy ? "Please wait…" : invitation ? "Create invited account" : token ? "Set new password" : "Request recovery"}</button>
     </form>}
     <p role="status">{message}</p><Link href="/">Back to sign in</Link></section></main>;
 }
