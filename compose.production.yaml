@@ -17,6 +17,8 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
   chat:
+    environment:
+      ONESA_PUBLIC_ORIGIN: https://${ONESA_DOMAIN:?Configure the production domain}
     mem_limit: ${ONESA_FRONTEND_MEMORY_LIMIT:-512m}
     cpus: ${ONESA_FRONTEND_CPU_LIMIT:-1}
     pids_limit: 128

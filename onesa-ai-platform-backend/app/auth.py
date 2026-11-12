@@ -92,6 +92,8 @@ def authenticated(
         from app.shared_identity import authenticate_shared
 
         authenticate_shared(request, db, user, row)
+    elif not request.app.state.settings.local_credentials_allowed:
+        fail(503, "identity_unavailable", "Onesa sign-in is temporarily unavailable")
     elif (
         db.scalar(text("SELECT to_regclass('identity_sessions') IS NOT NULL"))
         and db.get(IdentitySession, row.id) is not None
@@ -233,7 +235,7 @@ def login(body: Credentials, request: Request, response: Response, db: DB) -> Us
 
 
 def local_credentials(request: Request) -> None:
-    if request.app.state.settings.identity_enabled:
+    if not request.app.state.settings.local_credentials_allowed:
         fail(403, "shared_sign_in_required", "Continue with your Onesa account")
 
 
