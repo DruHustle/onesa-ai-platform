@@ -132,7 +132,7 @@ All 9 selected contexts match observed successful PR jobs and resolve uniquely i
 | --- | --- | --- | --- | --- |
 | [onesa-company-portal](https://github.com/DruHustle/onesa-company-portal) | DruHustle (personal) | main | private | **BLOCKED — NOT ENFORCED** |
 | [onesa-ai-platform](https://github.com/DruHustle/onesa-ai-platform) | DruHustle (personal) | main | private | **BLOCKED — NOT ENFORCED** |
-| [onesa-ai-robot](https://github.com/DruHustle/onesa-ai-robot) | DruHustle (personal) | main | private | **BLOCKED — NOT ENFORCED** |
+| [Onesa Robot](https://github.com/DruHustle/onesa-robot) | DruHustle (personal) | main | private | **BLOCKED — NOT ENFORCED** |
 
 
 ## Sources
