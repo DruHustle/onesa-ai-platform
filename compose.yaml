@@ -60,6 +60,7 @@ services:
     restart: unless-stopped
   chat:
     environment:
+      ONESA_PUBLIC_ORIGIN: ${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}
       ONESA_PROXY_TIMEOUT_SECONDS: ${ONESA_PROXY_TIMEOUT_SECONDS:-135}
       ONESA_API_URL: ${ONESA_API_URL:-http://api:8000}
       ONESA_UI_LOCALE: ${ONESA_UI_LOCALE:-en}

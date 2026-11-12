@@ -241,6 +241,8 @@ def sign_out(request: Request, db: Session, session: AuthSession) -> bool:
 @router.get("/config", response_model=Method)
 def method(request: Request) -> Method:
     if not request.app.state.settings.identity_enabled:
+        if not request.app.state.settings.local_credentials_allowed:
+            fail(503, "identity_unavailable", "Onesa sign-in is temporarily unavailable")
         return Method(enabled=False)
     config = configuration(request)
     # The issuer is the existing Company Portal; this link is informational only.

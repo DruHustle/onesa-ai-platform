@@ -3,7 +3,7 @@ import { CompanyFooter } from "../components/company-footer";
 import type { Metadata } from "next";
 import {company} from "../lib/company";
 import "./globals.css";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { LocaleProvider, type Locale } from "../lib/i18n";
 import { OnesaIdentityProvider } from "../components/onesa-sign-in";
 import { loadIdentityMethod } from "../lib/server/identity-method";
@@ -28,7 +28,12 @@ export default async function Layout({
       "ONESA_UI_LOCALE must name an available interface catalog: en or de",
     );
   }
-  const [preferences, identityMethod] = await Promise.all([cookies(), loadIdentityMethod()]);
+  const [preferences, incoming] = await Promise.all([cookies(), headers()]);
+  const host = incoming.get("host") ?? "";
+  const publicPlatform = host === "platform.onesa.eu" || process.env.ONESA_PUBLIC_ORIGIN === "https://platform.onesa.eu";
+  const allowLocal = !publicPlatform && !process.env.VERCEL && /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(host);
+  const identityMethod = await loadIdentityMethod(allowLocal);
+  const accountHelp = identityMethod.account_url ?? (publicPlatform ? "https://portal.onesa.eu/account" : null);
   const preference = preferences.get("onesa_ui_locale")?.value;
   const locale: Locale =
     preference === "en" || preference === "de" ? preference : configured;
@@ -40,7 +45,7 @@ export default async function Layout({
           return environment ? <div className="environment-context" role="region" aria-label="Deployment context">{environment} · Onesa AI Platform</div> : null;
         })()}
         <LocaleProvider initialLocale={locale}>
-          <OnesaIdentityProvider initialMethod={identityMethod}>
+          <OnesaIdentityProvider initialMethod={identityMethod} allowLocal={allowLocal} accountHelp={accountHelp}>
             <DraftNavigationProvider>{children}</DraftNavigationProvider>
           </OnesaIdentityProvider>
           <CompanyFooter legalName={company.legalName} />
