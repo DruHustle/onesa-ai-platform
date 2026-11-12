@@ -165,6 +165,19 @@ async function main() {
     assert.equal((await result.json()).error.code, 'shared_sign_in_required');
     assert.equal(fetches, before);
   }
+  const configuredBase = context.process.env.ONESA_API_URL;
+  context.process.env.ONESA_API_URL = 'http://api:8000';
+  for (const [origin, hosted, expected] of [
+    ['http://localhost:3100', false, 200],
+    ['http://localhost:3100', true, 403],
+    ['https://preview.example.invalid', false, 403],
+  ]) {
+    if (hosted) context.process.env.VERCEL = '1';
+    else delete context.process.env.VERCEL;
+    const result = await exported.proxy(new Request(origin + '/api/v1/auth/register', {method:'POST'}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_API_URL = configuredBase;
   for (const [variable, value] of [['ONESA_API_URL', 'https://invalid.example/private'], ['ONESA_PROXY_TIMEOUT_SECONDS', '0']]) {
     const prior = context.process.env[variable], count = fetches;
     context.process.env[variable] = value;
