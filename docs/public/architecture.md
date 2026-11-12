@@ -15,7 +15,7 @@ moving the API host did not move all data or model serving onto that VM.
 The current AI configuration uses Cloudflare Workers AI for generation and semantic
 embeddings. Real inference and retrieval have source-bound release evidence; that is
 not proof of unrestricted availability, complete model-language quality or industrial
-connectivity. Robot currently provides protected one-joint software simulation, with
-no connected physical controller. Shared hosting has one failure domain and is not
+connectivity. The protected Robot console supports supervised simulation, stop and
+replay. Physical controller commissioning is a separate operator task. Shared hosting has one failure domain and is not
 high availability. Detailed configuration and incident/recovery records remain in
 protected engineering documentation.
