@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from cryptography.fernet import Fernet
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select, text, update
 from sqlalchemy.orm import Session
@@ -805,3 +805,73 @@ def test_reauthentication_locks_user_before_session_for_generation_commit_order(
             event.remove(api.app.state.engine, "after_cursor_execute", after)
             if transaction.is_active:
                 transaction.rollback()
+
+
+@pytest.mark.parametrize("rejection", ["revoked", "subject", "ciphertext", "mapping"])
+def test_rejected_shared_session_never_revives_after_authority_restoration(
+    api, pg, monkeypatch, rejection
+):
+    current = enable(api, monkeypatch)
+    assert finish(api, start(api)).status_code == 303
+    original = current["identity"]
+    with Session(pg) as db:
+        session_id = db.scalar(select(AuthSession.id))
+        user_id = db.scalar(select(User.id))
+        if rejection == "ciphertext":
+            db.execute(update(IdentitySession).values(encrypted_token="invalid-envelope"))
+        elif rejection == "mapping":
+            db.query(SharedIdentity).delete()
+        db.commit()
+    if rejection == "revoked":
+        current["active"] = False
+    elif rejection == "subject":
+        current["identity"] = replace(original, subject=str(uuid4()))
+    assert api.get("/api/v1/auth/me").status_code == 401
+    current["active"], current["identity"] = True, original
+    with Session(pg) as db:
+        assert db.get(AuthSession, session_id).revoked_at is not None
+        assert db.get(IdentitySession, session_id) is None
+        if rejection == "mapping":
+            db.add(
+                SharedIdentity(issuer=original.issuer, subject=original.subject, user_id=user_id)
+            )
+            db.commit()
+    assert api.get("/api/v1/auth/me").status_code == 401
+    assert finish(api, start(api)).status_code == 303
+    assert api.get("/api/v1/auth/me").json()["id"] == str(user_id)
+
+
+def test_temporary_issuer_outage_preserves_retryable_shared_session(api, pg, monkeypatch):
+    current = enable(api, monkeypatch)
+    assert finish(api, start(api)).status_code == 303
+    original_validate = shared_identity.validate_session
+
+    def unavailable(config, token):
+        raise IdentityError("identity_unavailable", "Try again later", 503)
+
+    monkeypatch.setattr(shared_identity, "validate_session", unavailable)
+    assert api.get("/api/v1/auth/me").status_code == 503
+    with Session(pg) as db:
+        assert db.scalar(select(AuthSession)).revoked_at is None
+        assert db.scalar(select(IdentitySession)) is not None
+    monkeypatch.setattr(shared_identity, "validate_session", original_validate)
+    assert api.get("/api/v1/auth/me").status_code == 200
+    assert current["active"]
+
+
+def test_rejection_revocation_discards_uncommitted_application_changes(api, pg, monkeypatch):
+    current = enable(api, monkeypatch)
+    assert finish(api, start(api)).status_code == 303
+    current["active"] = False
+    request = Request({"type": "http", "app": api.app})
+    with Session(pg) as db:
+        user = db.scalar(select(User))
+        session = db.scalar(select(AuthSession))
+        original_name = user.display_name
+        user.display_name = "Must not be committed by rejected authority"
+        with pytest.raises(HTTPException) as rejected:
+            shared_identity.authenticate_shared(request, db, user, session)
+        assert rejected.value.status_code == 401
+    with Session(pg) as db:
+        assert db.scalar(select(User.display_name)) == original_name
+        assert db.scalar(select(AuthSession)).revoked_at is not None

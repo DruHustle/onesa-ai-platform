@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from pydantic import Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -116,6 +116,31 @@ def live_identity(request: Request, token: str) -> Identity:
 
 
 def authenticate_shared(
+    request: Request, db: Session, user: User, session: AuthSession
+) -> Identity:
+    session_id = session.id
+    try:
+        return _authenticate_shared(request, db, user, session)
+    except HTTPException as error:
+        if error.status_code in {401, 403}:
+            # Explicitly rejected authority must never revive when access is
+            # later restored. Discard pending work before committing only the
+            # local revocation; generation checks also use this boundary.
+            db.rollback()
+            db.execute(
+                update(AuthSession)
+                .where(AuthSession.id == session_id, AuthSession.revoked_at.is_(None))
+                .values(revoked_at=now())
+            )
+            db.execute(delete(IdentitySession).where(IdentitySession.session_id == session_id))
+            db.commit()
+            request.state.onesa_identity = None
+            request.state.onesa_user_id = None
+        # Temporary issuer failures remain retryable on the same valid session.
+        raise
+
+
+def _authenticate_shared(
     request: Request, db: Session, user: User, session: AuthSession
 ) -> Identity:
     record = db.get(IdentitySession, session.id)
