@@ -1361,6 +1361,7 @@ def validate_plan(binding):
 
 
 GENERATION_TRANSITION = "cloudflare-qwen3-to-gemma4"
+STANDALONE_GENERATION_TRANSITION = "standalone-cloudflare-qwen3-to-gemma4"
 PREVIOUS_GENERATION = "@cf/qwen/qwen3-30b-a3b-fp8"
 CURRENT_GENERATION = "@cf/google/gemma-4-26b-a4b-it"
 PREVIOUS_GENERATION_RETIREMENT = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
@@ -1372,13 +1373,20 @@ def generation_transition(plan, current, prepared, environment):
     if transition is None:
         return False
     binding = plan["binding"]
+    # A reviewed plan binds the opt-in to its own repository and release policy.
+    # Older plans from either repository cannot transfer this operation.
+    scoped_transition = (
+        transition == GENERATION_TRANSITION and profiles.is_canonical(binding)
+    ) or (
+        transition == STANDALONE_GENERATION_TRANSITION
+        and binding.get("repository") == profiles.REPOSITORY
+    )
     require(
-        transition == GENERATION_TRANSITION
-        and profiles.is_canonical(binding)
+        scoped_transition
         and profiles.kind(binding) == "api"
         and plan["mode"] in {"foundation", "twins", "cybersecurity"}
         and environment in ENV,
-        "FIXED_CANONICAL_GENERATION_TRANSITION_REQUIRED",
+        "REPOSITORY_SCOPED_GENERATION_TRANSITION_REQUIRED",
     )
     require(
         current.get("ONESA_MODEL_BACKEND")
