@@ -177,6 +177,16 @@ async function main() {
     const result = await exported.proxy(new Request(origin + '/api/v1/auth/register', {method:'POST'}));
     assert.equal(result.status, expected);
   }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'http://localhost:3100';
+  const listener = 'http://0.0.0.0:3000/api/v1/auth/register';
+  for (const [host, expected] of [['localhost:3100', 200], ['public.example.invalid', 403], ['localhost:9999', 403]]) {
+    const result = await exported.proxy(new Request(listener, {method:'POST', headers:{host}}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'https://platform.example.invalid';
+  const hostedOrigin = await exported.proxy(new Request('http://localhost/api/v1/auth/register', {method:'POST', headers:{host:'localhost'}}));
+  assert.equal(hostedOrigin.status, 403);
+  delete context.process.env.ONESA_PUBLIC_ORIGIN;
   context.process.env.ONESA_API_URL = configuredBase;
   for (const [variable, value] of [['ONESA_API_URL', 'https://invalid.example/private'], ['ONESA_PROXY_TIMEOUT_SECONDS', '0']]) {
     const prior = context.process.env[variable], count = fetches;

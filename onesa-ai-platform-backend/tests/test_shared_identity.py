@@ -892,3 +892,18 @@ def test_hosted_missing_issuer_keeps_legacy_credentials_and_sessions_closed(api,
         response = api.post("/api/v1/auth" + path, json=body)
         assert response.status_code == 403
         assert response.json()["error"]["code"] == "shared_sign_in_required"
+
+
+def test_tls_fixture_credentials_are_confined_to_the_isolated_staging_origin(api):
+    config = api.app.state.settings
+    for environment, origin, opt_in, expected in [
+        ("staging", "https://localhost:3443", True, True),
+        ("staging", "https://localhost:3443", False, False),
+        ("staging", "https://platform.example.invalid", True, False),
+        ("production", "https://localhost:3443", True, False),
+    ]:
+        settings = config.model_copy(update={
+            "environment": environment, "public_origin": origin, "loopback_tls_acceptance": opt_in,
+        })
+        assert settings.local_credentials_allowed is expected
+        assert not settings.model_copy(update={"identity_enabled": True}).local_credentials_allowed
