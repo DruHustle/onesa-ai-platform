@@ -4,7 +4,7 @@ This is the New Engineer Onboarding Overview. Open the [interactive four-day lea
 
 ## How the Onesa system fits together
 
-Portal, AI Platform and Robot are three independent repositories and deployments. Frontends use Vercel and their own same-origin proxies; APIs use Render. Portal uses PostgreSQL, private object storage and an Oracle staging worker with ClamAV. AI uses independent PostgreSQL/pgvector and configurable generation/embedding adapters, including Workers AI. Robot is software simulation; physical actuation is disabled. The [visual index](../ecosystem/VISUAL_WORKFLOWS.md) links editable sources and current evidence limits.
+Portal, AI Platform and Robot are three independent repositories and deployments. Each Vercel frontend routes same-origin requests to its own API on Oracle Cloud Infrastructure. Portal uses PostgreSQL, private object storage and an Oracle worker with a private ClamAV scanner. AI uses independent PostgreSQL/pgvector and configurable generation/embedding adapters, including Workers AI. Onesa Robot runs in simulation with physical actuation disabled. The [visual index](../ecosystem/VISUAL_WORKFLOWS.md) links editable sources and current evidence limits.
 
 ## Four days
 

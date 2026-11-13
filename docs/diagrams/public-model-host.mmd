@@ -1,5 +1,5 @@
 flowchart TB
-API[Render AI API] --> Auth[Authenticated bounded HTTPS adapter]
+API[Oracle AI Platform API] --> Auth[Authenticated bounded HTTPS adapter]
 Auth --> CF[Cloudflare Workers AI - staging verified]
 CF --> Generate[Generation streaming and cancellation]
 CF --> Embed[Versioned semantic embeddings and dimensions]
