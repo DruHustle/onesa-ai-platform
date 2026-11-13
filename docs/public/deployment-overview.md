@@ -6,6 +6,8 @@ Onesa products and documentation are released independently. A documentation upd
 
 [Public developer documentation](https://docs.onesa.eu) contains explicitly approved guides, diagrams and manuals. Engineering implementation details, infrastructure configuration and privileged procedures belong to the protected engineering experience.
 
+Vercel serves the Company Portal, AI Platform and Onesa Robot websites and the public Docs site. Oracle Cloud Infrastructure hosts the three product APIs. The Portal worker and private scanner run separately from those APIs. The AI service uses its own database and calls its configured inference provider. The Robot service runs in simulation and depends on its remote journal. The engineering Docs site has its own access controls.
+
 ## Development and production
 
 Development uses isolated fixtures and clearly identified simulation or mock output. Staging validates candidate behavior with separate data and credentials. Temporary previews are not canonical production URLs and must not be treated as public publishing destinations.

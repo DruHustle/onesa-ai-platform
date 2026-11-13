@@ -2233,86 +2233,104 @@
   },
   {
     "id": "public-deployment",
-    "title": "Vercel Render Neon deployment",
+    "title": "Product API and documentation hosting",
     "view": "deployment",
-    "status": "Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+    "status": "Portal, AI Platform and Onesa Robot run independent APIs on Oracle. Each product and each Docs site has its own release.",
     "source": "docs/diagrams/public-deployment.mmd",
     "url": "/docs/public/deployment-overview",
     "nodes": [
       {
-        "id": "Browser",
-        "label": "HTTPS product frontend",
-        "responsibility": "HTTPS product frontend. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
-        "url": "/docs/public/deployment-overview"
-      },
-      {
         "id": "Vercel",
-        "label": "Vercel product frontend",
-        "responsibility": "Vercel product frontend. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Vercel product frontends",
+        "responsibility": "Each product frontend routes requests to its own API.",
         "url": "/docs/public/deployment-overview"
       },
       {
-        "id": "Render",
-        "label": "Render product API",
-        "responsibility": "Render product API. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "id": "Portal",
+        "label": "Oracle Portal API",
+        "responsibility": "Handles Company Portal requests.",
         "url": "/docs/public/deployment-overview"
       },
       {
-        "id": "Neon",
-        "label": "Independent product PostgreSQL and vector storage",
-        "responsibility": "Independent product PostgreSQL and vector storage. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "id": "PortalDB",
+        "label": "Portal PostgreSQL",
+        "responsibility": "Stores Portal records and the worker queue.",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Storage",
-        "label": "Private object storage",
-        "responsibility": "Private object storage. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Private Portal files",
+        "responsibility": "Stores files used by the Portal API and its worker.",
         "url": "/docs/public/deployment-overview"
       },
       {
-        "id": "Oracle",
-        "label": "Oracle background worker - staging verified",
-        "responsibility": "Oracle background worker - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "id": "Worker",
+        "label": "Oracle Portal worker",
+        "responsibility": "Processes queued Portal files.",
         "url": "/docs/public/deployment-overview"
       },
       {
-        "id": "ClamAV",
-        "label": "Private scanner - staging verified",
-        "responsibility": "Private scanner - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "id": "Scanner",
+        "label": "Private ClamAV scanner",
+        "responsibility": "Scans files for the Portal worker.",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "AI",
+        "label": "Oracle AI Platform API",
+        "responsibility": "Handles AI Platform requests.",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "AIDB",
+        "label": "AI PostgreSQL and pgvector",
+        "responsibility": "Stores AI application records and vectors.",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Model",
-        "label": "Workers AI inference and embeddings - staging verified",
-        "responsibility": "Workers AI inference and embeddings - staging verified. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Cloudflare Workers AI",
+        "responsibility": "Provider for configured generation and embedding requests.",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Robot",
+        "label": "Oracle Robot simulation API",
+        "responsibility": "Handles Onesa Robot simulation requests.",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Journal",
+        "label": "Turso simulation journal",
+        "responsibility": "An exclusive lease protects journal writes.",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Docs",
-        "label": "Separate Vercel public docs",
-        "responsibility": "Separate Vercel public docs. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Public Docs on Vercel",
+        "responsibility": "Publishes approved public guides and downloads.",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Public",
-        "label": "Allowlisted public output",
-        "responsibility": "Allowlisted public output. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
-        "url": "/docs/public/deployment-overview"
-      },
-      {
-        "id": "Internal",
-        "label": "Separate engineering Pages build",
-        "responsibility": "Separate engineering Pages build. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Public guides and manuals",
+        "responsibility": "Approved documentation is available without signing in.",
         "url": "/docs/public/deployment-overview"
       },
       {
         "id": "Access",
-        "label": "Cloudflare Access and fail-closed origin verifier",
-        "responsibility": "Cloudflare Access and fail-closed origin verifier. Actual Vercel Render Oracle Cloudflare roles; separate product and documentation qualification",
+        "label": "Cloudflare Access",
+        "responsibility": "Checks access to the engineering site.",
+        "url": "/docs/public/deployment-overview"
+      },
+      {
+        "id": "Internal",
+        "label": "Engineering Docs",
+        "responsibility": "The protected site has a separate build.",
         "url": "/docs/public/deployment-overview"
       }
     ],
-    "reviewed_at": "2026-10-13"
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "public-model-host",
@@ -2324,8 +2342,8 @@
     "nodes": [
       {
         "id": "API",
-        "label": "Render AI API",
-        "responsibility": "Render AI API. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
+        "label": "Oracle AI Platform API",
+        "responsibility": "Oracle AI Platform API. Cloudflare generation and embeddings verified in staging; proposed GPU deployment remains unqualified",
         "url": "/docs/public/ai-platform"
       },
       {
@@ -2371,7 +2389,7 @@
         "url": "/docs/public/ai-platform"
       }
     ],
-    "reviewed_at": "2026-10-13"
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "public-release",
@@ -2566,151 +2584,151 @@
     "id": "ecosystem-current",
     "title": "Complete Onesa Ecosystem Architecture",
     "view": "logical",
-    "status": "Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+    "status": "Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
     "source": "docs/diagrams/ecosystem-current.mmd",
     "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
     "nodes": [
       {
         "id": "Company",
         "label": "Onesa UG",
-        "responsibility": "Onesa UG. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Onesa UG. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Portal",
         "label": "Company Portal",
-        "responsibility": "Company Portal. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Company Portal. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/PORTAL_DESIGN"
       },
       {
         "id": "AI",
         "label": "AI Platform",
-        "responsibility": "AI Platform. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "AI Platform. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/architecture/SYSTEM_ARCHITECTURE"
       },
       {
         "id": "Robot",
         "label": "Onesa Robot software and simulation",
-        "responsibility": "Onesa Robot software and simulation. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Onesa Robot software and simulation. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/ROBOT_DESIGN"
       },
       {
         "id": "Public",
         "label": "Public docs on Vercel",
-        "responsibility": "Public docs on Vercel. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Public docs on Vercel. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Internal",
         "label": "Engineering docs separate Pages build",
-        "responsibility": "Engineering docs separate Pages build. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Engineering docs separate Pages build. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/engineering/DOCUMENTATION_HOSTING"
       },
       {
         "id": "PF",
         "label": "Vercel frontend",
-        "responsibility": "Vercel frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Vercel frontend. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PA",
-        "label": "Render Fastify API",
-        "responsibility": "Render Fastify API. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "label": "Oracle Portal API",
+        "responsibility": "Oracle Portal API. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PDB",
         "label": "Neon Portal PostgreSQL",
-        "responsibility": "Neon Portal PostgreSQL. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Neon Portal PostgreSQL. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/PORTAL_DATABASE"
       },
       {
         "id": "PS",
         "label": "Private S3-compatible bucket",
-        "responsibility": "Private S3-compatible bucket. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Private S3-compatible bucket. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Oracle",
         "label": "Oracle ARM64 worker - staging verified",
-        "responsibility": "Oracle ARM64 worker - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Oracle ARM64 worker - staging verified. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/PORTAL_DESIGN"
       },
       {
         "id": "Scan",
         "label": "ClamAV private Unix socket - staging verified",
-        "responsibility": "ClamAV private Unix socket - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "ClamAV private Unix socket - staging verified. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/PORTAL_DESIGN"
       },
       {
         "id": "AF",
         "label": "Vercel Next.js frontend",
-        "responsibility": "Vercel Next.js frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Vercel Next.js frontend. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "AA",
-        "label": "Render FastAPI backend",
-        "responsibility": "Render FastAPI backend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "label": "Oracle AI Platform API",
+        "responsibility": "Oracle AI Platform API. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "ADB",
         "label": "Neon AI PostgreSQL and pgvector",
-        "responsibility": "Neon AI PostgreSQL and pgvector. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Neon AI PostgreSQL and pgvector. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/database"
       },
       {
         "id": "CF",
         "label": "Workers AI generation and embeddings - staging verified",
-        "responsibility": "Workers AI generation and embeddings - staging verified. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Workers AI generation and embeddings - staging verified. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/architecture/MODEL_SERVING"
       },
       {
         "id": "RF",
         "label": "Vercel operator frontend",
-        "responsibility": "Vercel operator frontend. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Vercel operator frontend. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "RA",
-        "label": "Render simulation API",
-        "responsibility": "Render simulation API. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "label": "Oracle Robot simulation API",
+        "responsibility": "Oracle Robot simulation API. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Turso",
-        "label": "Turso journal - staging only",
-        "responsibility": "Turso journal - staging only. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "label": "Turso simulation journal",
+        "responsibility": "Turso simulation journal. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/ROBOT_DATABASE"
       },
       {
         "id": "Edge",
         "label": "Local ROS 2 interfaces - preparatory",
-        "responsibility": "Local ROS 2 interfaces - preparatory. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Local ROS 2 interfaces - preparatory. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/ROBOT_DESIGN"
       },
       {
         "id": "GitHub",
         "label": "Three independent GitHub repos",
-        "responsibility": "Three independent GitHub repos. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Three independent GitHub repos. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Actions",
         "label": "GitHub-hosted CI and qualification",
-        "responsibility": "GitHub-hosted CI and qualification. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "GitHub-hosted CI and qualification. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/engineering/DEPLOYMENT"
       },
       {
         "id": "Access",
         "label": "Cloudflare Access identity and MFA",
-        "responsibility": "Cloudflare Access identity and MFA. Source implemented; Oracle and Workers AI verified in staging; production acceptance pending",
+        "responsibility": "Cloudflare Access identity and MFA. Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks.",
         "url": "/docs/engineering/DOCUMENTATION_HOSTING"
       }
     ],
-    "explanation": "Source implemented; Oracle and Workers AI verified in staging; production acceptance pending. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "explanation": "Vercel serves the three product frontends. Oracle hosts their independent APIs. Provider readiness and hosted identity require separate checks. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "infrastructure-current",
@@ -2823,8 +2841,8 @@
         "url": "/docs/engineering/ORACLE_VM_OPERATIONS"
       }
     ],
-    "explanation": "Vercel proxies use exact environment-specific Cloudflare tunnels into independent loopback API containers on the existing Oracle VM. Tailscale is administration only. External data, shared private scanning and owner-controlled releases retain separate boundaries.",
-    "reviewed_at": "2026-10-16"
+    "explanation": "On 13 November 2026 the Oracle guest reported two CPUs and 11.6 GiB of memory. Vercel proxies use environment-specific Cloudflare tunnels to independent loopback API containers. Tailscale is administration only. External data, shared private scanning and owner-controlled releases retain separate boundaries.",
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "delivery-current",
@@ -3327,121 +3345,121 @@
     "id": "robot-current",
     "title": "Robot cloud simulation and local edge boundary",
     "view": "logical",
-    "status": "Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+    "status": "Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
     "source": "docs/diagrams/robot-current.mmd",
     "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
     "nodes": [
       {
         "id": "Operator",
         "label": "Operator",
-        "responsibility": "Operator. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Operator. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Web",
         "label": "Vercel static interface",
-        "responsibility": "Vercel static interface. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Vercel static interface. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Proxy",
         "label": "Node same-origin proxy",
-        "responsibility": "Node same-origin proxy. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Node same-origin proxy. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "API",
-        "label": "Render FastAPI operator session and CSRF",
-        "responsibility": "Render FastAPI operator session and CSRF. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "label": "Oracle FastAPI operator session and CSRF",
+        "responsibility": "Oracle FastAPI operator session and CSRF. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Propose",
         "label": "Bounded motion proposal",
-        "responsibility": "Bounded motion proposal. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Bounded motion proposal. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Approve",
         "label": "Separate approval within deadline",
-        "responsibility": "Separate approval within deadline. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Separate approval within deadline. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Safety",
         "label": "Independent SafetyGate freshness limits and stopped state",
-        "responsibility": "Independent SafetyGate freshness limits and stopped state. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Independent SafetyGate freshness limits and stopped state. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Sim",
         "label": "Synthetic joint simulation",
-        "responsibility": "Synthetic joint simulation. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Synthetic joint simulation. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Journal",
-        "label": "Turso staging journal and exclusive owner lease",
-        "responsibility": "Turso staging journal and exclusive owner lease. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "label": "Turso simulation journal and exclusive owner lease",
+        "responsibility": "Turso simulation journal and exclusive owner lease. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Telemetry",
         "label": "Software telemetry to interface",
-        "responsibility": "Software telemetry to interface. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Software telemetry to interface. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Watchdog",
         "label": "Heartbeat loss revocation or emergency stop",
-        "responsibility": "Heartbeat loss revocation or emergency stop. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Heartbeat loss revocation or emergency stop. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Stop",
         "label": "Revoke authority and stop",
-        "responsibility": "Revoke authority and stop. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Revoke authority and stop. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Restart",
         "label": "Restart",
-        "responsibility": "Restart. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Restart. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Stopped",
         "label": "Clear sessions cancel unfinished tasks start stopped",
-        "responsibility": "Clear sessions cancel unfinished tasks start stopped. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Clear sessions cancel unfinished tasks start stopped. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Edge",
         "label": "LOCAL EDGE - preparatory only",
-        "responsibility": "LOCAL EDGE - preparatory only. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "LOCAL EDGE - preparatory only. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "ROS",
         "label": "ROS 2 SimulationTelemetry and SimulationProposal messages",
-        "responsibility": "ROS 2 SimulationTelemetry and SimulationProposal messages. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "ROS 2 SimulationTelemetry and SimulationProposal messages. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Sensors",
         "label": "Vision audio VLA sensor controller interfaces - planned",
-        "responsibility": "Vision audio VLA sensor controller interfaces - planned. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Vision audio VLA sensor controller interfaces - planned. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Actuator",
         "label": "Physical drivers and actuation - unavailable and forbidden",
-        "responsibility": "Physical drivers and actuation - unavailable and forbidden. Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled",
+        "responsibility": "Physical drivers and actuation - unavailable and forbidden. Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       }
     ],
-    "explanation": "Simulation implemented; Turso staging journal rolling handoff fix awaits hosted verification; physical actuation disabled. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "explanation": "Oracle hosts the simulation API. An exclusive journal lease is required for readiness. Physical motion remains disabled. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "identity-current",
@@ -3645,127 +3663,127 @@
     "id": "data-current",
     "title": "Data lifecycle and environment separation",
     "view": "logical",
-    "status": "Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+    "status": "Staging and production have independent data stores. The production Robot journal requires owner recovery.",
     "source": "docs/diagrams/data-current.mmd",
     "url": "/docs/ecosystem/VISUAL_WORKFLOWS",
     "nodes": [
       {
         "id": "Stage",
         "label": "STAGING - approved synthetic fixtures only",
-        "responsibility": "STAGING - approved synthetic fixtures only. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "STAGING - approved synthetic fixtures only. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "P",
         "label": "Portal API",
-        "responsibility": "Portal API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Portal API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PDB",
         "label": "Portal staging PostgreSQL metadata and queue",
-        "responsibility": "Portal staging PostgreSQL metadata and queue. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Portal staging PostgreSQL metadata and queue. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PB",
         "label": "Private staging bucket quarantine and clean files",
-        "responsibility": "Private staging bucket quarantine and clean files. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Private staging bucket quarantine and clean files. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "W",
         "label": "Oracle staging worker",
-        "responsibility": "Oracle staging worker. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Oracle staging worker. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "A",
         "label": "AI API",
-        "responsibility": "AI API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "AI API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "ADB",
         "label": "Separate AI staging PostgreSQL documents chunks vectors",
-        "responsibility": "Separate AI staging PostgreSQL documents chunks vectors. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Separate AI staging PostgreSQL documents chunks vectors. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "R",
         "label": "Robot simulation API",
-        "responsibility": "Robot simulation API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Robot simulation API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "RDB",
         "label": "Separate Turso staging tasks sessions stop journal",
-        "responsibility": "Separate Turso staging tasks sessions stop journal. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Separate Turso staging tasks sessions stop journal. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Prod",
         "label": "PRODUCTION - existing independent bindings",
-        "responsibility": "PRODUCTION - existing independent bindings. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "PRODUCTION - existing independent bindings. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PP",
         "label": "Portal production API",
-        "responsibility": "Portal production API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Portal production API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "PPDB",
         "label": "Production Neon and private bucket",
-        "responsibility": "Production Neon and private bucket. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Production Neon and private bucket. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "AP",
         "label": "AI production API",
-        "responsibility": "AI production API. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "AI production API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "APDB",
         "label": "Production Neon",
-        "responsibility": "Production Neon. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Production Neon. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "RP",
-        "label": "Robot production durability unresolved",
-        "responsibility": "Robot production durability unresolved. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "label": "Oracle Robot simulation API",
+        "responsibility": "Oracle Robot simulation API. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Block",
-        "label": "No ephemeral persistence acceptance",
-        "responsibility": "No ephemeral persistence acceptance. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "label": "Turso journal - recovery required",
+        "responsibility": "Turso journal - recovery required. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Logs",
         "label": "Provider logs and restricted source-bound receipts",
-        "responsibility": "Provider logs and restricted source-bound receipts. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Provider logs and restricted source-bound receipts. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "Retention",
         "label": "Approved deletion and retention jobs",
-        "responsibility": "Approved deletion and retention jobs. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "Approved deletion and retention jobs. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
         "id": "NoCopy",
         "label": "No staging-to-production records or credentials copied",
-        "responsibility": "No staging-to-production records or credentials copied. Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced",
+        "responsibility": "No staging-to-production records or credentials copied. Staging and production have independent data stores. The production Robot journal requires owner recovery.",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       }
     ],
-    "explanation": "Distinct corrected staging targets configured; synthetic-only staging and production acceptance enforced. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "explanation": "Staging and production have independent data stores. The production Robot journal requires owner recovery. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "operations-current",
@@ -3801,8 +3819,8 @@
       },
       {
         "id": "Providers",
-        "label": "Vercel Render Cloudflare deployment identity",
-        "responsibility": "Vercel Render Cloudflare deployment identity. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
+        "label": "Vercel Oracle and Cloudflare deployment identity",
+        "responsibility": "Vercel Oracle and Cloudflare deployment identity. Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence",
         "url": "/docs/ecosystem/VISUAL_WORKFLOWS"
       },
       {
@@ -3855,7 +3873,7 @@
       }
     ],
     "explanation": "Heartbeat and scanner health verified in staging; delivered alerts and production operations still need evidence. Solid arrows represent implemented source paths; dashed paths identify optional or unqualified boundaries.",
-    "reviewed_at": "2026-10-13"
+    "reviewed_at": "2026-11-13"
   },
   {
     "id": "recovery-current",
