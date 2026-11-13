@@ -30,6 +30,7 @@ test("actual synthetic JSON import, read-only grant, abstention, draft, reopen a
     await page.getByRole("button", {name: "Create internal draft", exact: true}).click();
     await page.getByLabel("Draft text", {exact: true}).fill("Synthetic draft with 300 seconds known downtime. Independent domain review is pending.");
     await page.getByRole("button", {name: "Save internal draft", exact: true}).click();
+    await expect(page.getByRole("status").filter({hasText: "Internal draft saved. Nothing was dispatched."})).toBeVisible();
     await page.reload();
     await page.getByRole("button", {name: /synthetic-separator-17.*completed/}).click();
     await expect(page.getByLabel("Draft text", {exact: true})).toHaveValue(/Independent domain review is pending/);
