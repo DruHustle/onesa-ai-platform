@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Correct the public deployment and model-hosting drawings, engineering diagrams and onboarding guide to show the Oracle-hosted product APIs. Record the capacity reported by the Oracle guest in the engineering infrastructure drawing.
+
 - Route hosted sign-in, account creation and recovery through Company Portal.
   An unavailable issuer keeps hosted credential entry closed. Development and
   test credentials remain scoped to loopback fixtures.
