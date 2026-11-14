@@ -1,7 +1,0 @@
-flowchart TB
-API[Oracle AI Platform API] --> Auth[Authenticated bounded HTTPS adapter]
-Auth --> CF[Cloudflare Workers AI - staging verified]
-CF --> Generate[Generation streaming and cancellation]
-CF --> Embed[Versioned semantic embeddings and dimensions]
-Local[Developer machine] --> Ollama[Native loopback Ollama]
-API -. separately qualified GPU host .-> VLLM[vLLM future target - unqualified]
