@@ -3735,6 +3735,11 @@ export interface components {
              * @default false
              */
             reauthenticate: boolean;
+            /**
+             * Mobile
+             * @default false
+             */
+            mobile: boolean;
         };
         /** AssetCreate */
         app__twin_schemas__AssetCreate: {

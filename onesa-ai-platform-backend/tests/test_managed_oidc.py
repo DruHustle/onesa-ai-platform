@@ -106,7 +106,10 @@ def test_mismatch_or_privilege_denied(signed, changes, profile):
         validate(config, json.dumps(pair(changes, profile)))
 
 
-def test_managed_callback_preserves_legacy_ai_owner_and_conversation(api, pg, monkeypatch, signed):
+@pytest.mark.parametrize("mobile", [False, True])
+def test_managed_callback_preserves_legacy_ai_owner_and_conversation(
+    api, pg, monkeypatch, signed, mobile
+):
     from uuid import UUID
 
     from cryptography.fernet import Fernet
@@ -141,7 +144,7 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(api, pg, mo
     )
     assert api.get("/api/v1/auth/onesa/config").json()["account_url"] == cfg.account_url
     next_path = "/?conversation=" + conversation.json()["id"]
-    start = api.post("/api/v1/auth/onesa/start", json={"next": next_path})
+    start = api.post("/api/v1/auth/onesa/start", json={"next": next_path, "mobile": mobile})
     assert start.status_code == 200
     q = parse_qs(urlsplit(start.json()["authorize_url"]).query)
     assert q["audience"] == [cfg.audience]
@@ -154,7 +157,27 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(api, pg, mo
         params={"code": "fixture", "state": q["state"][0]},
         follow_redirects=False,
     )
-    assert end.status_code == 303 and end.headers["location"] == next_path
+    assert end.status_code == 303
+    if mobile:
+        returned = urlsplit(end.headers["location"])
+        assert returned.scheme == "onesaai" and returned.netloc == "account"
+        assert returned.path == "/callback" and "set-cookie" not in end.headers
+        data = {key: values[0] for key, values in parse_qs(returned.query).items()}
+        assert data == {"state": q["state"][0], "code": "fixture"}
+        endpoint = "/api/v1/auth/onesa/mobile/exchange"
+        device_cookie = api.cookies.get("onesa_identity_flow")
+        api.cookies.clear()
+        assert api.post(endpoint, json=data).status_code == 400
+        api.cookies.set("onesa_identity_flow", device_cookie)
+        accepted = api.post(endpoint, json=data)
+        assert accepted.status_code == 200
+        api.headers["X-CSRF-Token"] = accepted.json()["csrf"]
+        assert api.post(endpoint, json=data).status_code == 400
+        assert (
+            api.post("/api/v1/conversations", json={"title": "Native follow-up"}).status_code == 201
+        )
+    else:
+        assert end.headers["location"] == next_path
     user = api.get("/api/v1/auth/me")
     assert user.status_code == 200 and user.json()["id"] == local["id"]
     assert not user.json()["global_admin"]
