@@ -3,44 +3,7 @@ name: Free release qualification
   workflow_dispatch:
     inputs:
       staging_run:
-        description: Full/public staging run; internal metadata uses no application staging run
-        type: string
-        required: false
-      delivery_scope:
-        description: Explicit independent component authority; full retains all application gates
-        type: choice
-        options:
-        - full
-        - docs-public
-        - docs-internal
-        default: full
-        required: true
-      native_custody_mode:
-        description: Explicit scoped native metadata custody; never a hosted PASS or production grant
-        type: choice
-        options:
-        - none
-        - actions-native
-        default: none
-        required: true
-      native_metadata:
-        description: Count/hash-only scoped native metadata JSON; maximum 32 KiB; validated as data
-        type: string
-        required: false
-      metadata_release_id:
-        description: Conditional Docs only; owner draft release immutable ID
-        type: string
-        required: false
-      metadata_asset_id:
-        description: Conditional Docs only; owner-uploaded sanitized JSON immutable asset ID
-        type: string
-        required: false
-      metadata_asset_digest:
-        description: Conditional Docs only; exact sha256 digest of sanitized metadata asset
-        type: string
-        required: false
-      metadata_producer_sha256:
-        description: Conditional custody proposal; external verifier must independently pin producer
+        description: AI Platform staging run
         type: string
         required: false
   workflow_run:
@@ -70,28 +33,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
-        DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
-        NATIVE_CUSTODY_MODE: ${{ inputs.native_custody_mode || 'none' }}
-        METADATA_RELEASE_ID: ${{ inputs.metadata_release_id }}
-        METADATA_ASSET_ID: ${{ inputs.metadata_asset_id }}
-        METADATA_ASSET_DIGEST: ${{ inputs.metadata_asset_digest }}
-        METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
-      run: |
-        if [ "$NATIVE_CUSTODY_MODE" = actions-native ]; then
-          case "$DELIVERY_SCOPE" in docs-public|docs-internal) ;; *) exit 1 ;; esac
-          test -z "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST"
-          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" \
-            --native-metadata-event "$GITHUB_EVENT_PATH" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
-            --output "$RUNNER_TEMP/free-release/record.json"
-        elif [ "$DELIVERY_SCOPE" = docs-internal ] || { [ "$DELIVERY_SCOPE" = docs-public ] && [ -n "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST$METADATA_PRODUCER_SHA256" ]; }; then
-          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" \
-            --native-metadata-event "$GITHUB_EVENT_PATH" --metadata-release-id "$METADATA_RELEASE_ID" --metadata-asset-id "$METADATA_ASSET_ID" \
-            --metadata-asset-digest "$METADATA_ASSET_DIGEST" --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" \
-            --output "$RUNNER_TEMP/free-release/record.json"
-        else
-          test -z "$METADATA_RELEASE_ID$METADATA_ASSET_ID$METADATA_ASSET_DIGEST$METADATA_PRODUCER_SHA256"
-          python3 scripts/release/free_gate.py qualify --delivery-scope "$DELIVERY_SCOPE" --native-metadata-event "$GITHUB_EVENT_PATH" --output "$RUNNER_TEMP/free-release/record.json"
-        fi
+      run: python3 scripts/release/free_gate.py qualify --delivery-scope full --output "$RUNNER_TEMP/free-release/record.json"
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-release-qualification

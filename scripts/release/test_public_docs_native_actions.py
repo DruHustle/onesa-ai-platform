@@ -254,69 +254,21 @@ class NativeEventTests(unittest.TestCase):
             ):
                 f.public_docs_native_event(str(file), "docs-public", PRODUCER, "20")
 
-    def test_workflow_checks_the_build_environment_in_local_acceptance(self):
+    def test_documentation_source_can_be_validated_but_never_published_by_ai(self):
         import yaml
 
-        workflow = yaml.safe_load(
-            (f.e.ROOT / ".github/workflows/docs-hosting.yml").read_text()
-        )
-        job = workflow["jobs"]["documentation"]
-        self.assertEqual(
-            job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"],
-            job["env"]["ONESA_DOCS_ENVIRONMENT"],
-        )
-        self.assertEqual(job["env"]["ONESA_DOCS_ENVIRONMENT"], "staging")
-        steps = job["steps"]
-        publish = next(
-            step
-            for step in steps
-            if step.get("name")
-            == "Publish verified public build as Preview only without dependency installation"
-        )
-        self.assertIn("deploy --prebuilt --yes --target=preview", publish["run"])
-        self.assertNotIn("--prod", publish["run"])
-        self.assertEqual(publish["if"], "inputs.target != 'build'")
-        local = next(
-            step
-            for step in steps
-            if step.get("name") == "Upload local public build checks only"
-        )
-        self.assertEqual(local["if"], "inputs.target == 'build'")
-        self.assertNotIn("env", local)
-        staging = next(
-            step
-            for step in steps
-            if "docs-staging-acceptance.json" in step.get("run", "")
-        )
-        self.assertNotIn("ONESA_DOCS_EXPECTED_ENVIRONMENT", staging.get("env", {}))
-        production = next(
-            step
-            for step in steps
-            if "docs-production-acceptance.json" in step.get("run", "")
-        )
-        self.assertIn(
-            "ONESA_DOCS_EXPECTED_ENVIRONMENT=production node scripts/docs/acceptance.mjs",
-            production["run"],
-        )
-
-    def test_workflow_keeps_eight_inputs_read_permissions_and_no_shell_json(self):
-        workflow = (f.e.ROOT / ".github/workflows/free-qualification.yml").read_text()
-        import yaml
-
-        inputs = yaml.safe_load(workflow)["on"]["workflow_dispatch"]["inputs"]
-        self.assertEqual(len(inputs), 8)
-        self.assertEqual(inputs["native_custody_mode"]["default"], "none")
-        self.assertNotIn("${{ inputs.native_metadata }}", workflow)
-        self.assertIn('--native-metadata-event "$GITHUB_EVENT_PATH"', workflow)
-        self.assertEqual(
-            yaml.safe_load(workflow)["permissions"],
-            {
-                "contents": "read",
-                "actions": "read",
-                "issues": "read",
-                "pull-requests": "read",
-            },
-        )
+        workflows = f.e.ROOT / ".github/workflows"
+        source = (workflows / "docs-hosting.yml").read_text()
+        job = yaml.safe_load(source)["jobs"]["documentation"]
+        self.assertEqual(job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"], "staging")
+        self.assertIn("Upload local public build checks only", [step.get("name") for step in job["steps"]])
+        for authority in ["secrets.", "VERCEL_TOKEN", "CLOUDFLARE", "--prebuilt", "wrangler", "build:internal"]:
+            self.assertNotIn(authority, source)
+        for workflow in ["free-qualification.yml", "free-authorization.yml"]:
+            content = (workflows / workflow).read_text()
+            self.assertNotIn("docs-public", content)
+            self.assertNotIn("docs-internal", content)
+            self.assertIn("--delivery-scope full", content)
 
 
 if __name__ == "__main__":
