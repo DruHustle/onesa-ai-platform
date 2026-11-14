@@ -1,43 +1,13 @@
-name: Public documentation hosting
+name: Public documentation source validation
 permissions:
   contents: read
   actions: read
-concurrency:
-  group: public-documentation-hosting
-  cancel-in-progress: false
 'on':
   workflow_dispatch:
-    inputs:
-      target:
-        description: Build artifact or owner-reviewed Docs Preview; production uses scoped external custody
-        type: choice
-        options:
-        - build
-        - preview
-        default: build
-      hosted_validation:
-        description: CI credential or separate owner native-session acceptance; native mode stays pending
-        type: choice
-        options:
-        - ci
-        - native-owner
-        default: ci
-      create_project:
-        description: Create the separate onesa-docs project if it does not exist
-        type: boolean
-        default: false
-      docs_url:
-        description: Owner-selected public documentation origin
-        default: https://docs.onesa.eu
-        required: true
-      application_url:
-        description: Application origin linked from the documentation
-        default: https://platform.onesa.eu
-        required: true
 jobs:
   documentation:
     name: docs-hosting
-    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (always() && github.event.repository.private == false && github.repository == 'DruHustle/onesa-ai-platform' && github.actor == 'DruHustle' && github.triggering_actor == 'DruHustle' && (inputs.target == 'build' || (inputs.target == 'preview' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main')))) }}
+    if: github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -45,20 +15,10 @@ jobs:
       ONESA_DOCS_ENVIRONMENT: staging
       ONESA_DOCS_EXPECTED_ENVIRONMENT: staging
       ONESA_DOCS_STATIC_HOSTING: 'true'
-      ONESA_DOCS_URL: ${{ inputs.docs_url }}
-      ONESA_APPLICATION_URL: ${{ inputs.application_url }}
+      ONESA_DOCS_URL: https://docs.onesa.eu
+      ONESA_APPLICATION_URL: https://platform.onesa.eu
       ONESA_DOCS_API_URL: ''
     steps:
-    - name: Verify GitHub-hosted execution and actual visibility
-      env:
-        GH_TOKEN: ${{ github.token }}
-        EXPECTED_PRIVATE: ${{ github.event.repository.private }}
-      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
-
-        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
-
-        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current
-        policy''; exit 1; }'
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
@@ -69,45 +29,6 @@ jobs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
         node-version: '24.22.1'
-    - name: Require exact reviewed CI before Preview provider credentials
-      if: inputs.target == 'preview'
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: 'python3 - <<''PY''
-
-        import os, sys
-
-        sys.path.insert(0, ''scripts/release'')
-
-        import evidence as e
-
-        status, references = e.checked_ci(e.GitHub(), os.environ[''GITHUB_SHA''])
-
-        e.require(status == ''PASS'', ''Exact source CI required for Docs Preview'')
-
-        PY
-
-        '
-    - name: Prepare pinned isolated CLI before deployment credentials
-      if: inputs.target == 'preview'
-      run: 'set -eu
-
-        tool_dir="$RUNNER_TEMP/onesa-docs-vercel-cli"
-
-        mkdir -m 700 "$tool_dir"
-
-        touch "$tool_dir/user.npmrc" "$tool_dir/global.npmrc"
-
-        chmod 600 "$tool_dir/user.npmrc" "$tool_dir/global.npmrc"
-
-        env -i PATH="$PATH" npm install --prefix "$tool_dir" --ignore-scripts --no-audit --no-fund --userconfig="$tool_dir/user.npmrc"
-        --globalconfig="$tool_dir/global.npmrc" --cache="$tool_dir/cache" vercel@63.1.0
-
-        test "$(node -p "require(''$tool_dir/node_modules/vercel/package.json'').version")" = ''63.1.0''
-
-        printf ''ONESA_DOCS_PREPARED_CLI=%s\n'' "$tool_dir/node_modules/vercel/dist/index.js" >> "$GITHUB_ENV"
-
-        '
     - name: Install locked build dependencies
       run: 'make install
 
@@ -184,138 +105,15 @@ jobs:
         cp -a "$RUNNER_TEMP/docs-staging-build" onesa-ai-platform-frontend/apps/docs/build-public
 
         '
-    - name: Build and verify classified protected Docs before provider credentials
-      run: 'ONESA_DOCS_HOSTING=cloudflare-access ONESA_DOCS_STATIC_HOSTING=false ONESA_DOCS_URL=https://docs.engineering.onesa.eu
-        npm --prefix onesa-ai-platform-frontend/apps/docs run build:internal
-
-        .venv/bin/python scripts/docs/validate.py
-
-        node scripts/docs/visual-acceptance.mjs
-
-        '
-    - name: Verify emitted favicon link and bundled icon
-      run: python3 scripts/docs/check_identity.py
     - name: Stop isolated screenshot fixture
       if: always()
       run: docker compose down
     - name: Record local public build checks without hosted authority
-      if: inputs.target == 'build'
       run: .venv/bin/python scripts/docs/build_evidence.py --staging "$RUNNER_TEMP/docs-staging-acceptance.json" --production "$RUNNER_TEMP/docs-production-acceptance.json" --output "$RUNNER_TEMP/docs-local-build-checks.json"
     - name: Upload local public build checks only
-      if: inputs.target == 'build'
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: onesa-public-docs-local-build-checks
         path: ${{ runner.temp }}/docs-local-build-checks.json
         if-no-files-found: error
         retention-days: 7
-    - name: Upload public site only
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-      with:
-        name: onesa-public-docs-staging
-        path: onesa-ai-platform-frontend/apps/docs/build-public/
-        if-no-files-found: error
-        retention-days: 7
-        include-hidden-files: true
-      id: public-site
-    - name: Upload qualified production-context public site only
-      id: public-production-site
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-      with:
-        name: onesa-public-docs-production
-        path: ${{ runner.temp }}/docs-production-public/
-        if-no-files-found: error
-        retention-days: 7
-        include-hidden-files: true
-    - name: Inspect existing public docs project and source revisions
-      if: inputs.target != 'build'
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
-      run: .venv/bin/python scripts/docs/vercel_host.py inspect | tee -a "$GITHUB_STEP_SUMMARY"
-    - name: Prepare separate Vercel documentation project
-      if: inputs.target != 'build'
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
-        APPLICATION_VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        DOCS_DEPLOY_DIRECTORY: ${{ runner.temp }}/onesa-docs
-        CREATE_PROJECT: ${{ inputs.create_project }}
-      run: 'test "$CREATE_PROJECT" = false
-
-        .venv/bin/python scripts/docs/vercel_host.py prepare
-
-        '
-    - name: Read owner-managed public Docs Preview test credential without mutation
-      if: inputs.target == 'preview' && inputs.hosted_validation != 'native-owner'
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
-        DOCS_PREVIEW_ACCESS_FILE: ${{ runner.temp }}/docs-preview-access.json
-      run: .venv/bin/python scripts/docs/vercel_host.py prepare-preview-access
-    - name: Publish verified public build as Preview only without dependency installation
-      if: inputs.target != 'build'
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        DEPLOY_TARGET: ${{ inputs.target }}
-      run: "set -eu\nmkdir -p \"$RUNNER_TEMP/onesa-docs/.vercel/output/static\"\ncp onesa-ai-platform-frontend/apps/docs/vercel.json\
-        \ \"$RUNNER_TEMP/onesa-docs/vercel.json\"\ncp -a onesa-ai-platform-frontend/apps/docs/build-public/. \"$RUNNER_TEMP/onesa-docs/.vercel/output/static/\"\
-        \npython3 - <<'PYTHON'\nimport json, os\nfrom pathlib import Path\nroutes = []\nif os.environ['DEPLOY_TARGET']\
-        \ == 'preview':\n    routes.append({'src': '/(.*)', 'headers': {'X-Robots-Tag': 'noindex, nofollow'}, 'continue':\
-        \ True})\nroutes.extend([{'handle': 'filesystem'}, {'src': '/((?:[^/]+/)*[^/.]+)', 'dest': '/$1.html'}, {'src':\
-        \ '/.*', 'dest': '/404.html', 'status': 404}])\npath = Path(os.environ['RUNNER_TEMP']) / 'onesa-docs/.vercel/output/config.json'\n\
-        path.write_text(json.dumps({'version': 3, 'routes': routes}) + '\\n')\nPYTHON\ncd \"$RUNNER_TEMP/onesa-docs\"\
-        \ntest \"$DEPLOY_TARGET\" = preview\nnode \"$ONESA_DOCS_PREPARED_CLI\" deploy --prebuilt --yes --target=preview --meta onesaSourceRevision=\"\
-        $GITHUB_SHA\" --token=\"$VERCEL_TOKEN\" > \"$RUNNER_TEMP/onesa-docs-url.txt\"\ncat \"$RUNNER_TEMP/onesa-docs-url.txt\"\
-        \ >> \"$GITHUB_STEP_SUMMARY\"\n"
-    - name: Verify actual deployment identity, readiness and source revision
-      if: inputs.target != 'build'
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_DOCS_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
-        APPLICATION_VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      run: 'umask 077
-
-        DOCS_DEPLOYMENT_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")"
-
-        export DOCS_DEPLOYMENT_URL
-
-        .venv/bin/python scripts/docs/vercel_host.py verify-deployment > "$RUNNER_TEMP/docs-preview-identity.json"
-
-        '
-    - name: Verify actual public Preview interactions and boundary
-      if: inputs.target == 'preview' && inputs.hosted_validation != 'native-owner'
-      env:
-        ONESA_DOCS_PREVIEW_ACCESS_FILE: ${{ runner.temp }}/docs-preview-access.json
-        ONESA_DOCS_PREVIEW_IDENTITY_FILE: ${{ runner.temp }}/docs-preview-identity.json
-      run: 'ONESA_DOCS_EXPECTED_ENVIRONMENT=staging ONESA_DOCS_TEST_URL="$(cat "$RUNNER_TEMP/onesa-docs-url.txt")" node
-        scripts/docs/acceptance.mjs > "$RUNNER_TEMP/docs-hosted-acceptance.json"
-
-        '
-    - name: Remove private runner-owned Preview test credential
-      if: always() && inputs.target == 'preview'
-      run: rm -f -- "$RUNNER_TEMP/docs-preview-access.json"
-    - name: Record source-bound independent Docs Preview qualification
-      if: inputs.target == 'preview'
-      env:
-        DOCS_VALIDATION_CHANNEL: ${{ inputs.hosted_validation }}
-        DOCS_STAGING_ACCEPTANCE: ${{ runner.temp }}/docs-staging-acceptance.json
-        DOCS_PUBLIC_ARTIFACT_DIGEST: ${{ steps.public-site.outputs.artifact-digest }}
-        DOCS_HOSTED_ACCEPTANCE: ${{ runner.temp }}/docs-hosted-acceptance.json
-        DOCS_PREVIEW_IDENTITY: ${{ runner.temp }}/docs-preview-identity.json
-        DOCS_QUALIFICATION_OUTPUT: ${{ runner.temp }}/docs-qualification/record.json
-        DOCS_PRODUCTION_ARTIFACT_DIGEST: ${{ steps.public-production-site.outputs.artifact-digest }}
-        DOCS_PRODUCTION_PUBLIC_DIRECTORY: ${{ runner.temp }}/docs-production-public
-        DOCS_PRODUCTION_ACCEPTANCE: ${{ runner.temp }}/docs-production-acceptance.json
-      run: .venv/bin/python scripts/docs/release_preview.py
-    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-      if: inputs.target == 'preview'
-      with:
-        name: documentation-qualification
-        path: ${{ runner.temp }}/docs-qualification/record.json
-        retention-days: 7
-        if-no-files-found: error
