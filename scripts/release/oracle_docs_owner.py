@@ -165,8 +165,14 @@ def main():
     parser.add_argument("--registration")
     parser.add_argument("--run-id", type=int)
     args = parser.parse_args()
-    if args.action not in {"inspect-preview", "inspect-publications", "inspect-conditional"}:
-        parser.error("Documentation release authority moved to DruHustle/onesa-documents")
+    if args.action not in {
+        "inspect-preview",
+        "inspect-publications",
+        "inspect-conditional",
+    }:
+        parser.error(
+            "Documentation release authority moved to DruHustle/onesa-documents"
+        )
     owner.require(
         os.geteuid() == 0
         and os.getenv("SUDO_USER") == "ubuntu"
