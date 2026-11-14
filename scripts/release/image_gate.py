@@ -18,5 +18,17 @@ for path in args.reports:
     )
     secret_count = sum(len(r.get("Secrets", [])) for r in report["Results"])
     print(path.name, json.dumps(dict(counts)), "secret_findings=" + str(secret_count))
+    # Only print public advisory metadata. Secret findings and raw scan remain private.
+    for result in report["Results"]:
+        for finding in result.get("Vulnerabilities", []):
+            if finding["Severity"] in {"CRITICAL", "HIGH"}:
+                print(
+                    finding["Severity"],
+                    finding["VulnerabilityID"],
+                    finding["PkgName"],
+                    finding.get("InstalledVersion", ""),
+                    "fixed:",
+                    finding.get("FixedVersion") or "unavailable",
+                )
     failed |= bool(counts["HIGH"] or counts["CRITICAL"] or secret_count)
 raise SystemExit(1 if failed else 0)
