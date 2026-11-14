@@ -139,7 +139,7 @@ def test_retrieval_permission_at_api_not_ui_and_injection_cannot_cross_scope(api
     assert allowed.status_code == 200 and all(
         s["classification"] == "internal" for s in allowed.json()["sources"]
     )
-    # In managed mode even an AI administrator/previous reader cannot query the old whole-corpus index.
+    # Managed mode retires the old internal index, even for previously approved AI readers.
     config.identity_audience = "https://api.ai.onesa.eu"
     assert api.get("/api/v1/documentation/access").json() == {
         "engineering": False,
