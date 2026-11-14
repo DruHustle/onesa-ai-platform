@@ -78,8 +78,13 @@ export async function proxy(request: Request): Promise<Response> {
     const location = responseHeaders.get('location');
     if (location) {
       const redirect = new URL(location, base);
-      if (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol)) throw new Error("Invalid upstream redirect");
-      responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
+      const mobileCallback = incoming.pathname === '/api/v1/auth/onesa/callback' &&
+        request.method === 'GET' && upstream.status === 303 &&
+        redirect.protocol === 'onesaai:' && redirect.host === 'account' && redirect.pathname === '/callback' &&
+        !redirect.username && !redirect.password && !redirect.hash &&
+        redirect.searchParams.getAll('state').length === 1 && /^native_[a-zA-Z0-9_-]{43}$/.test(redirect.searchParams.get('state') || '');
+      if (!mobileCallback && (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol))) throw new Error("Invalid upstream redirect");
+      if (!mobileCallback) responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
     }
     responseHeaders.delete('set-cookie');
     for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append('set-cookie', cookie);

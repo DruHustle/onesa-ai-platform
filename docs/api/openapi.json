@@ -11927,6 +11927,11 @@
             "type": "boolean",
             "title": "Reauthenticate",
             "default": false
+          },
+          "mobile": {
+            "type": "boolean",
+            "title": "Mobile",
+            "default": false
           }
         },
         "additionalProperties": false,
