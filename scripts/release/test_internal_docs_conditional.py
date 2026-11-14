@@ -378,7 +378,9 @@ class InternalDocsConditionalTests(unittest.TestCase):
             self.assertNotIn("secrets.", value)
             self.assertIn("runs-on: ubuntu-latest", value)
             self.assertIn("persist-credentials: false", value)
-            self.assertIn("default: full", value)
+            self.assertIn("--delivery-scope full", value)
+            self.assertNotIn("docs-internal", value)
+            self.assertNotIn("docs-public", value)
             self.assertIn("github.ref == 'refs/heads/main'", value)
 
 
