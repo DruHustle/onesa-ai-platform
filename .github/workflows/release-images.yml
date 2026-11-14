@@ -1,0 +1,81 @@
+name: Independent release candidate image
+'on':
+  workflow_dispatch:
+    inputs:
+      application:
+        description: Application to package for reviewed deployment
+        type: choice
+        options:
+        - frontend
+        - backend
+        required: true
+permissions:
+  contents: read
+  checks: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Verify GitHub-hosted execution and actual visibility
+      env:
+        GH_TOKEN: ${{ github.token }}
+        EXPECTED_PRIVATE: ${{ github.event.repository.private }}
+      run: 'test "$RUNNER_ENVIRONMENT" = github-hosted
+
+        actual=$(gh api "repos/$GITHUB_REPOSITORY" --jq ''.private'')
+
+        test "$actual" = "$EXPECTED_PRIVATE" || { echo ''Visibility changed; dispatch fresh validation under the current policy'';
+        exit 1; }'
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        ref: ${{ github.sha }}
+    - name: Require successful checks on this exact revision
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+      with:
+        script: "const runs = await github.paginate(github.rest.checks.listForRef, {\n  ...context.repo, ref: context.sha,\
+          \ per_page: 100\n});\nfor (const name of ['backend', 'frontend', 'browser', 'documentation', 'containers', 'tls-acceptance',\
+          \ 'publication-hygiene']) {\n  const run = runs.filter(item => item.name === name).sort((a, b) => b.id - a.id)[0];\n\
+          \  if (!run || run.conclusion !== 'success') core.setFailed(`Required successful check missing: ${name}`);\n}\n"
+    - name: Build selected application
+      env:
+        APPLICATION: ${{ inputs.application }}
+      run: docker build -t "onesa-${APPLICATION}:${GITHUB_SHA}" "onesa-ai-platform-${APPLICATION}"
+    - name: Export candidate
+      env:
+        APPLICATION: ${{ inputs.application }}
+      run: docker save "onesa-${APPLICATION}:${GITHUB_SHA}" -o candidate.tar
+    - name: Record candidate identity
+      env:
+        APPLICATION: ${{ inputs.application }}
+      run: 'python3 - <<''PYTHON''
+
+        import json, os, subprocess
+
+        from pathlib import Path
+
+        app, revision = os.environ[''APPLICATION''], os.environ[''GITHUB_SHA'']
+
+        image = subprocess.check_output([''docker'', ''image'', ''inspect'', ''--format'', ''{{.Id}}'', f''onesa-{app}:{revision}''],
+        text=True).strip()
+
+        Path(''candidate.json'').write_text(json.dumps({''application'': app, ''source_revision'': revision, ''image_id'':
+        image, ''publication_authorized'': False}, indent=2) + ''\n'')
+
+        PYTHON
+
+        '
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: onesa-${{ inputs.application }}-${{ github.sha }}
+        path: 'candidate.tar
+
+          candidate.json
+
+          '
+        retention-days: 3
+    if: ${{ always() && (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (always() && true) }}
+    timeout-minutes: 45

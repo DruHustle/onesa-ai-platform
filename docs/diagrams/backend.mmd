@@ -1,0 +1,8 @@
+flowchart TB
+Request[HTTP request] --> Limits[Body bounds and request ID]
+Limits --> Auth[Session / Origin / CSRF]
+Auth --> Router[Versioned routers]
+Router --> Domain[Domain modules]
+Domain --> DB[(SQLAlchemy / PostgreSQL)]
+Domain --> Adapter[Shared ModelClient]
+Domain --> Error[Sanitized failure envelope]

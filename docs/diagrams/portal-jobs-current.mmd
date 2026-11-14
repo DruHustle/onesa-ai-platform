@@ -1,0 +1,13 @@
+flowchart TB
+Accept[Persist business action] --> Queue[Transactional jobs or deletion outbox]
+Queue --> Claim[FOR UPDATE SKIP LOCKED bounded claim]
+Claim --> Execute[Attempt count increment and finite execution]
+Execute --> Success[Provider accepted or storage deleted]
+Execute --> Retry[Failure - delayed exponential retry]
+Retry --> Limit{Attempts below five?}
+Limit -->|yes| Queue
+Limit -->|no| Failed[Terminal failed state - investigate safely]
+Crash[Crash or shutdown] --> Lease[Stale running lease expires after five minutes]
+Lease --> Limit
+SIG[Graceful shutdown] --> Stop[Stop new claims and finish bounded work]
+Scan[Quarantined files scan separately] --> Keep[Error keeps quarantine and emits scan_failed]

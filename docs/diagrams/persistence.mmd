@@ -1,0 +1,10 @@
+flowchart TB
+  Request[Authenticated chat request] --> Owner[Owner and lease check]
+  Owner --> Commit[Commit user message and inference run]
+  Commit --> Stream[Bounded model stream]
+  Stream --> Complete[Complete assistant and sources]
+  Complete --> Release[Clear lease and finish run]
+  Stream --> Fail[Failure or disconnect]
+  Fail --> Cancel[Mark failed or cancelled / no partial assistant]
+  Cancel --> Release
+  Release --> History[Owned conversation history]

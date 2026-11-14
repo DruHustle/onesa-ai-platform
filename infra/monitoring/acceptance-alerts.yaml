@@ -1,0 +1,33 @@
+groups:
+  - name: onesa-acceptance
+    rules:
+      - alert: OnesaBackendDown
+        expr: up{job="onesa-api"} == 0
+        for: 15s
+        labels: {severity: critical}
+        annotations: {summary: "Backend unavailable; check readiness and private service logs"}
+      - alert: OnesaDependenciesUnavailable
+        expr: onesa_dependency_available == 0
+        for: 15s
+        labels: {severity: critical}
+        annotations: {summary: "Dependency unavailable; follow inference/database runbook"}
+      - alert: OnesaBackupFailed
+        expr: onesa_operations_backup_success == 0
+        for: 15s
+        labels: {severity: critical}
+        annotations: {summary: "Backup failed; check credentials/storage and make a verified snapshot"}
+      - alert: OnesaBackupStale
+        expr: time() - onesa_operations_backup_last_success_timestamp_seconds > 7200
+        for: 15s
+        labels: {severity: critical}
+        annotations: {summary: "Backup age exceeds twice the local hourly interval"}
+      - alert: OnesaApiErrors
+        expr: sum(rate(onesa_http_requests_total{status=~"5.."}[2m])) / clamp_min(sum(rate(onesa_http_requests_total[2m])), 0.001) > 0.05
+        for: 30s
+        labels: {severity: warning}
+        annotations: {summary: "API error rate exceeds five percent"}
+      - alert: OnesaStorageLow
+        expr: onesa_operations_storage_available_bytes / onesa_operations_storage_total_bytes < 0.1
+        for: 30s
+        labels: {severity: warning}
+        annotations: {summary: "Backup filesystem has less than ten percent free space"}

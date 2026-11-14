@@ -1,0 +1,52 @@
+%% Portal source schema SHA256: df7e3baafeaccdf70d1b409cf3788ba1cc777238c68e45f1679b8047decbaa93
+erDiagram
+  content {
+    uuid id PK "NOT NULL"
+    text kind "NOT NULL"
+    text slug "NOT NULL"
+    text locale "NOT NULL"
+    text title "NOT NULL"
+    text summary "NOT NULL"
+    text body "NOT NULL"
+    jsonb metadata "NOT NULL"
+    text state "NOT NULL"
+    timestamptz publish_at "nullable"
+    uuid author_id FK "nullable"
+    integer revision "NOT NULL"
+    timestamptz updated_at "NOT NULL"
+    jsonb published_snapshot "nullable"
+  }
+  facts {
+    text key PK "NOT NULL"
+    text value "nullable"
+    text status "NOT NULL"
+    text source "NOT NULL"
+    uuid verified_by FK "nullable"
+    timestamptz verified_at "nullable"
+  }
+  revisions {
+    bigint id PK "NOT NULL"
+    uuid content_id FK "nullable"
+    jsonb snapshot "NOT NULL"
+    uuid actor_id FK "nullable"
+    timestamptz created_at "NOT NULL"
+  }
+  settings {
+    text key PK "NOT NULL"
+    jsonb value "NOT NULL"
+  }
+  templates {
+    text key PK "NOT NULL"
+    text title "NOT NULL"
+    text locale "NOT NULL"
+    text body "NOT NULL"
+    text status "NOT NULL"
+    integer version "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  users o|--o{ content : "author_id to id / NO ACTION"
+  users o|--o{ facts : "verified_by to id / NO ACTION"
+  users o|--o{ revisions : "actor_id to id / NO ACTION"
+  content o|--o{ revisions : "content_id to id / CASCADE"

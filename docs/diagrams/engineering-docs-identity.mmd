@@ -1,0 +1,26 @@
+sequenceDiagram
+ participant E as Approved engineer
+ participant A as Engineering Docs Access
+ participant P as Onesa Portal sign-in
+ participant M as Existing mail worker
+ E->>A: Open protected documentation
+ A->>P: Fixed OIDC client, callback and PKCE
+ P->>P: Verify interaction cookie and explicit membership
+ alt Emailed sign-in link
+ P->>M: Enqueue encrypted one-use link
+ M-->>E: Email link with token fragment
+ E->>P: Open link in receiving browser
+ P->>P: Validate unused link and membership
+ P-->>E: Encrypted handoff and fixed Docs continuation
+ E->>A: Start receiving-browser authorization
+ A->>P: Fresh OIDC state, PKCE and interaction
+ P-->>E: Show verified email
+ E->>P: Explicit confirmation and one-use redemption
+ else Email and password
+ E->>P: Verify registered password
+ end
+ P-->>A: Short-lived single-use authorization code
+ A->>P: Confidential client and PKCE code exchange
+ P-->>A: Signed verified-email identity
+ A->>A: Enforce exact-email policy and session boundary
+ A-->>E: Protected documentation

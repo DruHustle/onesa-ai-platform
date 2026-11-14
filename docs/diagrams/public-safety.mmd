@@ -1,0 +1,10 @@
+flowchart TB
+Identity[Authorized operator and fresh proof] --> Proposal[Expiring proposal]
+Proposal --> Approval[Separate approval within deadline]
+Approval --> Gate[Independent position velocity acceleration freshness checks]
+Gate --> Step[Validated synthetic simulation step]
+Heartbeat[Heartbeat watchdog] --> Stop[Stop and cancel authority]
+Disconnect[Disconnect revocation or process restart] --> Stop
+Stop --> Step
+Model[Model output proposed] -. cannot bypass gate .-> Proposal
+Physical[Independent physical safety controls unavailable] -. separate certification needed .-> Gate

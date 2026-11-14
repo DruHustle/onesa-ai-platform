@@ -1,0 +1,7 @@
+flowchart TB
+API[API] --> Logs[Safe request logs / no content or tokens]
+API --> Generation[Bounded generation outcomes and timing]
+API --> Metrics[Bearer-protected metrics]
+API --> Health[Process health]
+API --> Ready[Model and migration readiness]
+Metrics -. deployment pending .-> Alerts[Scraping / retention / alerts]

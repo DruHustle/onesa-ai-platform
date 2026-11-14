@@ -1,0 +1,18 @@
+flowchart TB
+Visitor[Visitor] --> Site[Company frontend public paths]
+Staff[Staff] --> Portal[Authenticated Portal frontend]
+Site --> API[Fastify public API]
+Portal --> Auth[Session CSRF and role checks]
+Auth --> API
+API --> CMS[Content drafts facts revisions and publication]
+API --> HR[Recruitment applications and owned file metadata]
+API --> Enquiry[Persist enquiry before notification]
+CMS --> PG[Portal PostgreSQL]
+HR --> PG
+Enquiry --> PG
+HR --> Bucket[Private object storage]
+PG --> Worker[Oracle staging worker]
+Worker --> Scan[ClamAV Unix socket]
+Worker --> Mail[SMTP or Resend conditional adapter - delivery not qualified]
+Worker --> Deletion[Durable storage deletion outbox]
+API --> Audit[Audit events without document bodies]

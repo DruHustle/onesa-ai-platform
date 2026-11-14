@@ -1,0 +1,9 @@
+flowchart TD
+ A[Map processing and remote access locations] --> B{Potential third-country transfer?}
+ B -->|Unknown| C[Gather contractual and subprocessor evidence]
+ C --> A
+ B -->|Yes| D[Assess verified transfer mechanism and safeguards]
+ D --> E[Record residual questions and restrictions]
+ B -->|No verified transfer| E
+ E --> F[Owner reviews this transfer decision]
+ F --> G[Schedule review after provider or processing change]

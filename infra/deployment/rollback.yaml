@@ -1,0 +1,11 @@
+# Local split-baseline image rollback. Always pass --no-build; preserve volume and secrets.
+services:
+  migrate:
+    image: onesa-platform-api:pre-split-20261009
+    pull_policy: never
+  api:
+    image: onesa-platform-api:pre-split-20261009
+    pull_policy: never
+  chat:
+    image: onesa-platform-chat:pre-split-20261009
+    pull_policy: never

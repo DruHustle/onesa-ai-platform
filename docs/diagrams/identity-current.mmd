@@ -1,0 +1,15 @@
+flowchart TB
+Browser[User login] --> Portal[Portal credentials session CSRF]
+Browser --> AI[AI credentials invitation session CSRF]
+Browser --> Robot[Robot existing operator session CSRF]
+Portal --> Roles[Owner admin editor business HR viewer boundary checks]
+AI --> Owned[Enabled user and resource ownership]
+Robot --> RobotRole[Single configured operator and independent safety]
+Portal --> Sensitive[Fresh proof and configured MFA for sensitive account changes]
+Sessions[Expiry logout disabling revocation] --> Deny[Authorization removed server-side]
+Portal --> Sessions
+AI --> Sessions
+Robot --> Sessions
+Docs[Engineering reader] --> Access[Cloudflare Access approved identity and MFA - hosted acceptance pending]
+Access --> JWT[Server verifies signature audience issuer identity and approved host]
+JWT --> Assets[Every private page asset index and download]

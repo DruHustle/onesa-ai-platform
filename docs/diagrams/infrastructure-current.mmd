@@ -1,0 +1,31 @@
+flowchart TB
+Browser["Product browsers"] --> Vercel["Vercel product frontends"]
+Vercel --> Edge["Exact API hosts and existing protections"]
+PC["Approved owner PC"] --> Tail["Tailscale and pinned OpenSSH"]
+CI["Hosted CI and owner-controlled release"]
+subgraph VM["Onesa UG Backend - Oracle ARM64 - 2 visible CPUs and 11.6 GiB RAM"]
+  direction TB
+  subgraph Ingress["Outbound HTTPS connectors"]
+    TS["Staging tunnel"]
+    TP["Production tunnel"]
+  end
+  subgraph APIs["Independent loopback API containers"]
+    Stage["Staging: Portal / AI / Robot"]
+    Prod["Production: Portal / AI / Robot"]
+  end
+  subgraph Jobs["Private background processing"]
+    WS["Staging worker"] --> Scan["Shared ClamAV Unix socket"]
+    WP["Production worker"] --> Scan
+  end
+  Ops["Existing monitor and encrypted-backup timers"]
+  TS --> Stage
+  TP --> Prod
+  Ops -. observe and alert .-> APIs
+end
+Edge --> TS
+Edge --> TP
+Tail -. administration only .-> VM
+CI -. qualified immutable images .-> VM
+Stage --> SData["Separate staging databases and private objects"]
+Prod --> PData["Separate production databases and private objects"]
+APIs --> Providers["Configured external inference and mail"]

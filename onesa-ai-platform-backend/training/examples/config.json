@@ -1,0 +1,7 @@
+{
+  "model_name": "/models/pinned-local-base",
+  "model_revision": "operator-must-supply-immutable-revision",
+  "dataset_dir": "data/training-example",
+  "output_dir": "data/training-example-run",
+  "method": "lora"
+}

@@ -1,0 +1,39 @@
+# PROPOSAL ONLY: paid GPU host not approved under current free-only policy.
+# Standalone host serving; no app database/frontend resources. Private gateway required.
+services:
+  inference:
+    image: vllm/vllm-openai:v0.27.0@sha256:07ea4e292adf3a26b05ac97114b28849cf4551a26beb1fbe7decd3842d752ed7
+    command:
+      - --model
+      - Qwen/Qwen3-4B-Instruct-2507
+      - --revision
+      - cdbee75f17c01a7cc42f958dc650907174af0554
+      - --dtype
+      - bfloat16
+      - --max-model-len
+      - '8192'
+      - --max-num-seqs
+      - '2'
+      - --tensor-parallel-size
+      - '1'
+      - --gpu-memory-utilization
+      - '0.80'
+      - --api-key
+      - ${ONESA_MODEL_API_KEY:?Privately inject a new gateway/runtime key}
+    ports: ['127.0.0.1:18000:8000']
+    volumes: [model-cache:/root/.cache/huggingface]
+    shm_size: 2gb
+    stop_grace_period: 135s
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python3, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      start_period: 180s
+      interval: 15s
+      timeout: 6s
+      retries: 20
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+volumes:
+  model-cache:

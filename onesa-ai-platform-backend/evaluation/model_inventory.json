@@ -1,0 +1,58 @@
+{
+  "notes": "Comparison candidates only; actual installation/metrics are recorded in versioned reports. Upstream modalities are not app support or quality evidence.",
+  "models": [
+    {
+      "identifier": "qwen3:4b-instruct-2507-q4_K_M",
+      "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+      "quantization": "Q4_K_M",
+      "backend": "ollama",
+      "upstream_modalities": [
+        "text"
+      ],
+      "application_modalities": [
+        "text"
+      ],
+      "context_target": 8192,
+      "download_status": "candidate-only",
+      "evaluation_results": null,
+      "runtime_metrics": null,
+      "source": "https://ollama.com/library/qwen3:4b-instruct-2507-q4_K_M"
+    },
+    {
+      "identifier": "qwen3.5:4b-q4_K_M",
+      "base_model": "Qwen/Qwen3.5-4B",
+      "quantization": "Q4_K_M",
+      "backend": "ollama",
+      "upstream_modalities": [
+        "text",
+        "vision"
+      ],
+      "application_modalities": [
+        "text"
+      ],
+      "context_target": 8192,
+      "download_status": "candidate-only",
+      "evaluation_results": null,
+      "runtime_metrics": null,
+      "source": "https://ollama.com/library/qwen3.5:4b-q4_K_M"
+    },
+    {
+      "identifier": "qwen3.5:9b-q4_K_M",
+      "base_model": "Qwen/Qwen3.5-9B",
+      "quantization": "Q4_K_M",
+      "backend": "ollama",
+      "upstream_modalities": [
+        "text",
+        "vision"
+      ],
+      "application_modalities": [
+        "text"
+      ],
+      "context_target": 8192,
+      "download_status": "candidate-only",
+      "evaluation_results": null,
+      "runtime_metrics": null,
+      "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M"
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+"""Synthetic protocol tests; none constitutes hosted Cloudflare acceptance."""
+
+import asyncio
+import json
+import math
+import secrets
+
+import httpx
+import pytest
+from pydantic import ValidationError
+
+from app.cloudflare import embeddings
+from app.config import Settings
+from app.inference import (
+    CloudflareModelClient,
+    GenerationStats,
+    InferenceError,
+    ModelMessage,
+    build_model_client,
+    observe_generation,
+)
+from app.knowledge import version
+
+
+def settings(**changes):
+    values = dict(
+        model_backend="cloudflare",
+        model_name="@cf/google/gemma-4-26b-a4b-it",
+        model_base_url="https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/ai/v1",
+        model_api_key=secrets.token_hex(24),
+        embedding_backend="cloudflare",
+        embedding_name="@cf/qwen/qwen3-embedding-0.6b",
+        embedding_base_url="https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/ai",
+        embedding_api_key=secrets.token_hex(24),
+        embedding_revision="cf-qwen3-mrl256-v1",
+        embedding_query_instruction="Retrieve relevant document passages",
+    )
+    return Settings(**(values | changes))
+
+
+def test_cloudflare_selection_catalog_and_native_stream():
+    config = settings()
+    assert isinstance(build_model_client(config), CloudflareModelClient)
+
+    def handler(request):
+        assert request.headers["Authorization"] == "Bearer " + config.model_api_key
+        if request.method == "GET":
+            assert request.url.path.endswith("/ai/models/search")
+            return httpx.Response(
+                200, json={"success": True, "result": [{"name": config.model_name}]}
+            )
+        assert request.url.path.endswith("/ai/run/" + config.model_name)
+        assert not request.url.query
+        assert config.model_api_key not in str(request.url)
+        body = json.loads(request.content)
+        assert body["model"] == config.model_name and body["stream"] is True
+        assert body["max_tokens"] == 1024
+        return httpx.Response(
+            200,
+            text=(
+                'data: {"choices":[{"delta":{"content":"Synthetic protocol response"}}]}\n\n'
+                "data: [DONE]\n\n"
+            ),
+        )
+
+    async def run():
+        client = CloudflareModelClient(config, httpx.MockTransport(handler))
+        assert await client.healthy()
+        assert (
+            "".join([x async for x in client.stream([ModelMessage(role="user", content="Hi")])])
+            == "Synthetic protocol response"
+        )
+
+    asyncio.run(run())
+
+
+def test_native_text_choices_preserve_numeric_tokens_and_ignore_duplicate_response():
+    frames = [
+        {"response": "Reasoning is private", "choices": [{"delta": {"reasoning": "private"}}]},
+        {"response": "RELEASE-", "choices": [{"delta": {"content": "RELEASE-"}}]},
+        {"response": 123, "choices": [{"delta": {"content": "000123"}}]},
+        {"response": "a456", "choices": [{"delta": {"content": "a456"}}]},
+        {"choices": [], "usage": {"prompt_tokens": 82, "completion_tokens": 165}},
+    ]
+    wire = "".join("data: " + json.dumps(frame) + "\n\n" for frame in frames)
+
+    async def run():
+        client = CloudflareModelClient(
+            settings(),
+            httpx.MockTransport(
+                lambda request: httpx.Response(200, text=wire + "data: [DONE]\n\n")
+            ),
+        )
+        stats = GenerationStats()
+        with observe_generation(stats):
+            chunks = [x async for x in client.stream([ModelMessage(role="user", content="Recall")])]
+        assert chunks == ["RELEASE-", "000123", "a456"]
+        assert stats.input_tokens == 82 and stats.output_tokens == 165
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("content", [123, False, {"text": "000123"}, ["000123"]])
+def test_native_nontext_choice_still_fails_without_response_fallback(content):
+    frame = {"response": "000123", "choices": [{"delta": {"content": content}}]}
+
+    async def run():
+        client = CloudflareModelClient(
+            settings(),
+            httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200, text="data: " + json.dumps(frame) + "\n\ndata: [DONE]\n\n"
+                )
+            ),
+        )
+        with pytest.raises(InferenceError) as error:
+            _ = [x async for x in client.stream([ModelMessage(role="user", content="Recall")])]
+        assert error.value.reason == "invalid_stream_delta"
+
+    asyncio.run(run())
+
+
+def test_provider_quota_failure_is_not_retried_or_replaced_by_mock():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(
+            429, json={"error": {"message": "synthetic private provider diagnostic"}}
+        )
+
+    async def run():
+        client = CloudflareModelClient(settings(), httpx.MockTransport(handler))
+        with pytest.raises(InferenceError) as error:
+            async for _ in client.stream([ModelMessage(role="user", content="Hi")]):
+                pass
+        assert "private provider" not in str(error.value)
+
+    asyncio.run(run())
+    assert len(calls) == 1
+
+
+def test_native_synchronous_json_is_not_accepted_as_a_completed_stream():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        assert json.loads(request.content)["stream"] is True
+        return httpx.Response(
+            200,
+            json={
+                "choices": [{"message": {"content": "Synthetic answer"}, "finish_reason": "stop"}]
+            },
+        )
+
+    async def run():
+        client = CloudflareModelClient(settings(), httpx.MockTransport(handler))
+        chunks = []
+        with pytest.raises(InferenceError) as error:
+            async for chunk in client.stream([ModelMessage(role="user", content="Hi")]):
+                chunks.append(chunk)
+        assert error.value.reason == "stream_terminated_early"
+        assert chunks == []
+
+    asyncio.run(run())
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"model_base_url": "http://api.cloudflare.com/"},
+        {
+            "model_base_url": "https://api.cloudflare.com.evil.test/client/v4/accounts/"
+            + "a" * 32
+            + "/ai/v1"
+        },
+        {"model_name": "@cf/qwen/qwen3-30b-a3b-fp8"},
+        {"model_name": "@cf/qwen/qwen3.8-27b"},
+        {"model_name": "@cf/unreviewed/paid-model"},
+        {"model_api_key": ""},
+        {"embedding_base_url": "https://localhost/ai"},
+        {"embedding_api_key": ""},
+        {"embedding_name": "@cf/baai/bge-m3"},
+        {"embedding_revision": "unversioned"},
+    ],
+)
+def test_unconfigured_or_foreign_or_unreviewed_profiles_fail(changes):
+    with pytest.raises(ValidationError):
+        settings(**changes)
+
+
+def response_for(rows):
+    return {"success": True, "errors": [], "result": {"shape": [len(rows), 1024], "data": rows}}
+
+
+def test_explicit_mrl256_normalization_and_query_instruction_version():
+    config = settings()
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        assert request.url.path.endswith("/ai/run/@cf/qwen/qwen3-embedding-0.6b")
+        assert request.headers["Authorization"] == "Bearer " + config.embedding_api_key
+        return httpx.Response(200, json=response_for([[1.0] * 1024]))
+
+    for query in (False, True):
+        vectors = embeddings(
+            ["Synthetic staging document"],
+            config,
+            query=query,
+            transport=httpx.MockTransport(handler),
+        )
+        assert len(vectors[0]) == 256
+        assert math.isclose(sum(x * x for x in vectors[0]), 1.0)
+    assert requests[0] == {"documents": ["Synthetic staging document"]}
+    assert requests[1] == {
+        "queries": ["Synthetic staging document"],
+        "instruction": config.embedding_query_instruction,
+    }
+    assert version(config) == "cloudflare:@cf/qwen/qwen3-embedding-0.6b:cf-qwen3-mrl256-v1:256"
+
+
+@pytest.mark.parametrize("mode", ["shape", "nan", "zero", "boolean", "count", "error"])
+def test_incompatible_embeddings_fail_without_fallback(mode):
+    body = response_for([[1.0] * 1024])
+    if mode == "shape":
+        body["result"]["shape"] = [1, 384]
+    elif mode == "count":
+        body["result"]["data"] = []
+    elif mode == "error":
+        body["success"] = False
+    else:
+        body["result"]["data"][0] = [
+            float("nan") if mode == "nan" else False if mode == "boolean" else 0.0
+        ] * 1024
+    with pytest.raises(ValueError):
+        embeddings(
+            ["Synthetic input"],
+            settings(),
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(200, content=json.dumps(body))
+            ),
+        )
+
+
+def test_input_limits_reject_before_request():
+    def unexpected(request):
+        pytest.fail("Invalid batch must not reach provider")
+
+    for texts in ([], ["text"] * 17, ["x" * 4001]):
+        with pytest.raises(ValueError):
+            embeddings(texts, settings(), transport=httpx.MockTransport(unexpected))

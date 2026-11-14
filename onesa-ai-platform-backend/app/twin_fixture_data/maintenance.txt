@@ -1,0 +1,41 @@
+Onesa illustrative pump maintenance procedure — revision 2.1
+Self-authored synthetic demonstration; not an equipment manufacturer's instruction.
+
+Section 1 — Identification
+Confirm the installed pump serial number and selected component before inspection.
+Geometry is illustrative, right-handed Y-up, in meters. It is not calibrated CAD.
+
+Section 2 — Bearing vibration inspection
+A vibration threshold is a rule output, not a confirmed fault or prediction.
+Review the bearing observation timestamp, quality and operating mode. A stale or bad
+reading cannot establish current condition. Compare the event with bounded history.
+Inspect the bearing mounting and coupling alignment only under the equipment owner's
+approved isolation and safe maintenance procedure. This workspace issues no commands.
+
+Section 3 — Recovery
+Review the hysteresis recovery event and subsequent good-quality readings. A recovery
+event alone does not prove mechanical repair. Record the evidence and inspection outcome.
+
+Section 4 — Detailed illustrative assembly inspection
+This app-owned reference is an engineering-informed end-suction pump coupled to a
+TEFC squirrel-cage motor. It has no manufacturer identity, certified dimensions,
+validated maintenance sequence or calibrated physics. Explosion is a visualization.
+Select the pump, bearing or motor subassembly and use Explosion 0–100% to separate
+modeled parts. Reassemble restores the immutable assembled transforms. Guide lines
+are optional. Focus a bearing race, rolling-element set, cage, mechanical-seal ring,
+impeller, stator, copper winding assembly, rotor cage or fan to inspect its geometry.
+Section X crosses the shaft; Y and Z expose longitudinal internals. Reverse the cut
+and move the plane to inspect both sides. Solid cut faces apply only to validated
+closed surfaces; fluid cavities, shaft bores, bearing gaps and vents remain empty.
+The open-ended seal spring has no cut cap. Transparent housings have no solid cap;
+hide covers or isolate a part for an unobstructed view. Restore all returns every part.
+
+Section 5 — Reference BOM and provenance
+The assembly/BOM lists logical assemblies and separately selectable modeled parts.
+Rolling elements are selectable as one bearing set; winding conductor bundles,
+rotor lamination packs and fastener head/washer/shank assemblies are intentionally
+combined. Exact wire strands, thread helices and individual steel sheets are
+simplified, as stated in each component inventory note. Terminal electrical
+internals, wiring and hydraulic CFD are outside this mechanical reference scope.
+The parametric authoring source and topology audit are retained in this repository.
+No supplier CAD, third-party asset release or external viewer is required.

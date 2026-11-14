@@ -1,0 +1,5 @@
+flowchart TB
+Providers[Locate provider projects without displaying secrets] --> Health[Read scoped liveness readiness heartbeat and scanner health]
+Health --> Incident[Identify failed gate and containment runbook]
+Incident --> Restore[Review isolated backup restore procedure]
+Restore --> Check[Document missing evidence and escalation responsibility]

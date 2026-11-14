@@ -1,0 +1,8 @@
+flowchart TB
+Credentials[Credentials and configured Origin] --> Hash[Argon2id verification]
+Hash --> Session[Hashed opaque session]
+Session --> Cookie[HttpOnly cookie and CSRF cookie]
+Cookie --> Check[Session validity and owner checks]
+Check --> Mutation[Origin and CSRF validation]
+Check --> Docs[Engineering ID allowlist]
+Docs --> Internal[Protected internal pages and all assets]

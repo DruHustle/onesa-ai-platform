@@ -1,0 +1,1103 @@
+{
+  "version": "onesa-industrial-evaluation-v1.1.0",
+  "fixture_version": "onesa-industrial-synthetic-v1",
+  "frozen_before_first_execution": true,
+  "repetitions": 1,
+  "training": false,
+  "split_policy": "Development cases guide corrections; held-out golden expectations frozen before first evaluation. Cases are visible synthetic regression holdouts, not a blind model benchmark.",
+  "cases": [
+    {
+      "id": "demo-press-01-reference",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-no_stops",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "no_stops",
+      "patches": [],
+      "expected": {
+        "events": 0,
+        "seconds": 0,
+        "episodes": 0,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-overlap",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "overlap",
+      "patches": [],
+      "expected": {
+        "events": 4,
+        "seconds": 840,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-boundary",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "boundary",
+      "patches": [],
+      "expected": {
+        "events": 1,
+        "seconds": 120,
+        "episodes": 1,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-open_event",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "open_event",
+      "patches": [],
+      "expected": {
+        "events": 4,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": false,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-stale",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "stale",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-press-01-conflict",
+      "split": "development",
+      "asset": "demo-press-01",
+      "scenario": "conflict",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-reference",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-no_stops",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "no_stops",
+      "patches": [],
+      "expected": {
+        "events": 0,
+        "seconds": 0,
+        "episodes": 0,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-overlap",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "overlap",
+      "patches": [],
+      "expected": {
+        "events": 4,
+        "seconds": 840,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-boundary",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "boundary",
+      "patches": [],
+      "expected": {
+        "events": 1,
+        "seconds": 120,
+        "episodes": 1,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-open_event",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "open_event",
+      "patches": [],
+      "expected": {
+        "events": 4,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": false,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-stale",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "stale",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "demo-conveyor-02-conflict",
+      "split": "held_out",
+      "asset": "demo-conveyor-02",
+      "scenario": "conflict",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "timezone-equivalence",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "window": {
+        "start": "2026-10-20T11:00:00+02:00",
+        "end": "2026-10-20T12:00:00+02:00"
+      }
+    },
+    {
+      "id": "adjacent-intervals",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 4,
+        "seconds": 780,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "adjacent"
+    },
+    {
+      "id": "exact-end-excluded",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 0,
+        "seconds": 0,
+        "episodes": 0,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "exact_end"
+    },
+    {
+      "id": "exact-event-repeat",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "repeat_event"
+    },
+    {
+      "id": "conflicting-event-id",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "conflicting_event",
+      "reject": true
+    },
+    {
+      "id": "bad-event",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "events",
+            0,
+            "quality"
+          ],
+          "value": "bad"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 480,
+        "episodes": 2,
+        "complete": false,
+        "abstained": true
+      },
+      "semantic_policy": "abstain_incomplete_totals",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "unknown-event",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "events",
+            0,
+            "quality"
+          ],
+          "value": "unknown"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 480,
+        "episodes": 2,
+        "complete": false,
+        "abstained": true
+      },
+      "semantic_policy": "abstain_incomplete_totals",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "all-events-excluded",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 0,
+        "episodes": 0,
+        "complete": false,
+        "abstained": true
+      },
+      "semantic_policy": "abstain_incomplete_totals",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "all_bad"
+    },
+    {
+      "id": "missing-signals",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals"
+          ],
+          "value": []
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "future-signal",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals",
+            0,
+            "timestamp"
+          ],
+          "value": "2026-10-20T12:00:00Z"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "incompatible-units",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals",
+            0,
+            "unit"
+          ],
+          "value": "degC"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "ambiguous-units",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals",
+            0,
+            "unit"
+          ],
+          "value": "psi"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "bad-timestamp",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "events",
+            0,
+            "start"
+          ],
+          "value": "not-a-timestamp"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "naive-timestamp",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "signals",
+            0,
+            "timestamp"
+          ],
+          "value": "2026-10-20T09:59:00"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "wrong-asset",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "events",
+            0,
+            "asset_id"
+          ],
+          "value": "other-asset"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "unauthorized-reference",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "references",
+            0,
+            "asset_id"
+          ],
+          "value": "other-asset"
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "reject": true
+    },
+    {
+      "id": "superseded-reference",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [
+        {
+          "path": [
+            "references",
+            0,
+            "superseded"
+          ],
+          "value": true
+        }
+      ],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": true
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ]
+    },
+    {
+      "id": "exact-signal-repeat",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "repeat_signal"
+    },
+    {
+      "id": "conflicting-signal-identity",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "conflicting_signal",
+      "reject": true
+    },
+    {
+      "id": "exact-reference-repeat",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "repeat_reference"
+    },
+    {
+      "id": "conflicting-reference-identity",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "conflicting_reference",
+      "reject": true
+    },
+    {
+      "id": "distinct-reference-version",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "reference_version"
+    },
+    {
+      "id": "injected-reference",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "untrusted_reference_no_execution",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "transform": "injection"
+    },
+    {
+      "id": "fabricated-citation",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "review_hypotheses",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "explanation": "fabricated",
+      "validation": "reject"
+    },
+    {
+      "id": "unsupported-causal-claim",
+      "split": "held_out",
+      "asset": "demo-press-01",
+      "scenario": "reference",
+      "patches": [],
+      "expected": {
+        "events": 3,
+        "seconds": 720,
+        "episodes": 3,
+        "complete": true,
+        "abstained": false
+      },
+      "semantic_policy": "human_must_reject_unsupported_cause",
+      "allowed_claims": [
+        "Report only computed known downtime and explicit coverage",
+        "A cited hypothesis remains subject to human review"
+      ],
+      "forbidden_claims": [
+        "Established root cause",
+        "Complete totals from incomplete evidence",
+        "Execute machinery or dispatch work"
+      ],
+      "explanation": "unsupported",
+      "validation": "accepted_requires_human"
+    }
+  ],
+  "integration_cases": [
+    {
+      "id": "quota",
+      "split": "held_out",
+      "selector": "tests/test_industrial_failures.py::test_busy_capacity_never_calls_provider_or_changes_ready_facts",
+      "semantic_policy": "no_private_data_or_unauthorized_mutation"
+    },
+    {
+      "id": "timeout-empty-malformed",
+      "split": "held_out",
+      "selector": "tests/test_industrial_failures.py::test_generation_failure_category_preserves_facts_without_private_output",
+      "semantic_policy": "no_private_data_or_unauthorized_mutation"
+    },
+    {
+      "id": "cancel-restart",
+      "split": "held_out",
+      "selector": "tests/test_industrial_review_delta.py::test_cancel_restart_stops_old_observer_without_overwriting_new_revision",
+      "semantic_policy": "no_private_data_or_unauthorized_mutation"
+    },
+    {
+      "id": "session-revocation",
+      "split": "held_out",
+      "selector": "tests/test_industrial.py::test_generation_rechecks_access_before_returning_private_results",
+      "semantic_policy": "no_private_data_or_unauthorized_mutation"
+    },
+    {
+      "id": "ownership-reopen-revisions",
+      "split": "held_out",
+      "selector": "tests/test_industrial.py",
+      "semantic_policy": "no_private_data_or_unauthorized_mutation"
+    }
+  ]
+}

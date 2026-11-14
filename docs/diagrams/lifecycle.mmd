@@ -1,0 +1,9 @@
+flowchart TB
+  Base[Open-weight base model] --> Baseline[Measured base evaluation]
+  Data[Approved extensible datasets] --> Prep[Validate / deduplicate / split]
+  Prep -. separately authorized .-> Train[LoRA or QLoRA training - not run]
+  Train -. candidate .-> Eval[Held-out and base regression evaluation]
+  Baseline --> Eval
+  Eval --> Registry[Immutable file-based candidate registry]
+  Registry -. human reviewed configuration .-> Deploy[Deployment behind stable default alias]
+  Deploy -. manual known-good selection .-> Rollback[Rollback to reviewed base or adapter]

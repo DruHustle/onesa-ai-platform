@@ -1,0 +1,25 @@
+# Explicit isolated development/CI overlay. Never apply to production Compose.
+services:
+  api:
+    environment:
+      ONESA_DIGITAL_TWINS_ENABLED: "true"
+      ONESA_DIGITAL_TWINS_DEMO_ENABLED: "true"
+      ONESA_DIGITAL_TWINS_STORAGE_DIRECTORY: /var/lib/onesa/twins
+    volumes:
+      - twin-files:/var/lib/onesa/twins
+  mqtt:
+    image: eclipse-mosquitto:2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
+    # Public, disposable test credentials. No customer/provider credentials are used.
+    entrypoint: [sh, -ec]
+    command:
+      - mosquitto_passwd -b -c /tmp/onesa-mqtt-passwords onesa-demo mqtt-fixture-only && chmod 644 /tmp/onesa-mqtt-passwords && exec mosquitto -c /mosquitto/config/demo.conf
+    volumes:
+      - ./infra/twins/mosquitto-demo.conf:/mosquitto/config/demo.conf:ro
+    ports: ["127.0.0.1:${ONESA_TWIN_MQTT_PORT:-18883}:1883"]
+    healthcheck:
+      test: [CMD, mosquitto_pub, -h, localhost, -u, onesa-demo, -P, mqtt-fixture-only, -t, fixture/health, -m, ready]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  twin-files:

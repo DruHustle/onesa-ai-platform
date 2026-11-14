@@ -1,0 +1,8 @@
+flowchart TB
+Input[Destination dates duration budget] --> Validate[Validate supported planning inputs]
+Validate --> Owner[Authenticated trip ownership]
+Owner --> Save[Persist trip and edits]
+Save --> Model[Real generation dependency]
+Model --> Suggestions[Suggestions not bookings or live prices]
+Provider[External travel adapters unqualified] -. explicit verified provider needed .-> Suggestions
+Cancel[Cancellation and unavailable states] --> Model
