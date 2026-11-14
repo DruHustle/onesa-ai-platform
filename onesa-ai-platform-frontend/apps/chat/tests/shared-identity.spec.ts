@@ -119,12 +119,12 @@ test("a disconnected production sign-in page still opens Company Portal", async 
     await route.fulfill({ response: document });
   });
   await page.route("**/api/v1/auth/onesa/config", route => json(route, {}, 404));
-  await page.route("https://portal.onesa.eu/account", route => route.fulfill({ contentType: "text/html", body: "<h1>Company Portal fixture</h1>" }));
+  await page.route("https://portal.onesa.eu/admin", route => route.fulfill({ contentType: "text/html", body: "<h1>Company Portal fixture</h1>" }));
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Retry sign-in" })).toBeEnabled();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   const account = page.getByRole("link", { name: "Open Company Portal" });
-  await expect(account).toHaveAttribute("href", "https://portal.onesa.eu/account");
+  await expect(account).toHaveAttribute("href", "https://portal.onesa.eu/admin");
   await account.click();
   await expect(page.getByRole("heading", { name: "Company Portal fixture" })).toBeVisible();
 });
