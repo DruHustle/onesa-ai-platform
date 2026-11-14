@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
+    identity_audience: str = ""
+    identity_public_jwks: str = ""
+    identity_mapping_issuer: str = ""
+    identity_account_url: str = ""
     identity_issuer: str = ""
     identity_client_id: str = ""
     identity_client_secret: str = Field(default="", repr=False)
@@ -135,6 +139,10 @@ class Settings(BaseSettings):
                 self.identity_callback_url,
                 "ai",
                 self.environment in {"development", "test"},
+                self.identity_audience,
+                self.identity_public_jwks,
+                self.identity_mapping_issuer,
+                self.identity_account_url,
             )
             if self.identity_callback_url != self.public_origin + "/api/v1/auth/onesa/callback":
                 raise ValueError("Identity callback must belong to this exact application origin")

@@ -506,7 +506,6 @@ export default function Chat() {
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
-          {user.administrator && identityMethod?.account_url && <a href={identityMethod.account_url + "?tab=access"}>{locale === "de" ? "Anwendungen verwalten" : "Manage applications"}</a>}
           <DocumentationNav />
         </nav>
         <ApplicationsNav />
