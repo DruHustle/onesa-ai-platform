@@ -1,5 +1,15 @@
 # Onesa UG documentation hosting
 
+Publication now belongs to [Onesa Documents](https://github.com/DruHustle/onesa-documents).
+Use [external documents](https://docs.onesa.eu) for public material and
+[internal documents](https://docs.internal.onesa.eu) for permissioned material.
+
+## Historical AI documentation hosting
+
+The following sections preserve the retired AI publisher's procedures and
+observations. Current deployments use the Onesa Documents repository.
+
+
 Public Docs native preflight checks every bound asset and the complete interaction,
 layout and accessibility matrix before qualification is reserved. Readiness still
 grants no qualification or deployment authority; signed observations remain separate.
