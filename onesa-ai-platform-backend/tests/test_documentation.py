@@ -139,6 +139,23 @@ def test_retrieval_permission_at_api_not_ui_and_injection_cannot_cross_scope(api
     assert allowed.status_code == 200 and all(
         s["classification"] == "internal" for s in allowed.json()["sources"]
     )
+    # In managed mode even an AI administrator/previous reader cannot query the old whole-corpus index.
+    config.identity_audience = "https://api.ai.onesa.eu"
+    assert api.get("/api/v1/documentation/access").json() == {
+        "engineering": False,
+        "independent_documents": True,
+    }
+    migrated = api.post(
+        "/api/v1/documentation/answer", json={"query": "private", "scope": "internal"}
+    )
+    assert migrated.status_code == 410 and "INTERNAL_CANARY" not in migrated.text
+    assert (
+        api.post(
+            "/api/v1/documentation/answer", json={"query": "model", "scope": "public"}
+        ).status_code
+        == 200
+    )
+    config.identity_audience = ""
     # Revocation applies immediately to retrieval, not only to static delivery.
     config.documentation_engineering_user_ids = []
     assert (
