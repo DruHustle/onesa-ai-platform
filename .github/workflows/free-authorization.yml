@@ -15,26 +15,13 @@ name: Free release authorization
         type: string
         required: false
       decision:
-        description: Approve scoped owner handoff or revoke; conditional Docs requires external live validation
+        description: Approve or revoke AI Platform release
         type: choice
         options:
         - revoke
         - approve
         default: revoke
         required: true
-      delivery_scope:
-        description: Match qualification; native public and internal custody remain conditional; Docs never grants Chat or API
-        type: choice
-        options:
-        - full
-        - docs-public
-        - docs-internal
-        default: full
-        required: true
-      metadata_producer_sha256:
-        description: Public native conditional channel only; independently reviewed producer hash
-        type: string
-        required: false
 permissions:
   contents: read
   actions: read
@@ -60,16 +47,7 @@ jobs:
         EVIDENCE_DIGEST: ${{ inputs.evidence_digest }}
         REVIEW_ISSUE: ${{ inputs.review_issue }}
         REVIEW_DECISION: ${{ inputs.decision }}
-        DELIVERY_SCOPE: ${{ inputs.delivery_scope || 'full' }}
-        METADATA_PRODUCER_SHA256: ${{ inputs.metadata_producer_sha256 }}
-      run: |
-        if [ "$DELIVERY_SCOPE" = docs-public ] && [ -n "$METADATA_PRODUCER_SHA256" ]; then
-          python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" \
-            --metadata-producer-sha256 "$METADATA_PRODUCER_SHA256" --output "$RUNNER_TEMP/free-release/record.json"
-        else
-          test -z "$METADATA_PRODUCER_SHA256"
-          python3 scripts/release/free_gate.py authorize --delivery-scope "$DELIVERY_SCOPE" --output "$RUNNER_TEMP/free-release/record.json"
-        fi
+      run: python3 scripts/release/free_gate.py authorize --delivery-scope full --output "$RUNNER_TEMP/free-release/record.json"
     - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
         name: free-production-authorization
