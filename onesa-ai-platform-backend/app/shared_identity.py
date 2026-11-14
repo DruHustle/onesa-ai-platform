@@ -71,6 +71,10 @@ def configuration(request: Request) -> IdentityConfig:
         config.identity_callback_url,
         "ai",
         config.environment in {"development", "test"},
+        config.identity_audience,
+        config.identity_public_jwks,
+        config.identity_mapping_issuer,
+        config.identity_account_url,
     )
 
 
@@ -170,7 +174,7 @@ def _authenticate_shared(
         fail(401, "unauthorized", "Sign in to continue")
     mapping = db.scalar(
         select(SharedIdentity).where(
-            SharedIdentity.issuer == identity.issuer,
+            SharedIdentity.issuer == (configuration(request).mapping_issuer or identity.issuer),
             SharedIdentity.subject == identity.subject,
             SharedIdentity.user_id == user.id,
         )
@@ -245,7 +249,9 @@ def method(request: Request) -> Method:
             fail(503, "identity_unavailable", "Onesa sign-in is temporarily unavailable")
         return Method(enabled=False)
     config = configuration(request)
-    # The issuer is the existing Company Portal; this link is informational only.
+    if config.audience:
+        return Method(enabled=True, account_url=config.account_url)
+    # Legacy account URL remains available while migration is disabled.
     return Method(
         enabled=True, account_url=config.issuer.removesuffix("/api/v1/identity") + "/account"
     )
@@ -357,7 +363,13 @@ def callback(
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
-        token = exchange_code(configuration(request), code, payload["verifier"])
+        config = configuration(request)
+        if config.audience:
+            from app.managed_oidc import exchange
+
+            token = exchange(config, code, payload["verifier"], payload["nonce"])
+        else:
+            token = exchange_code(config, code, payload["verifier"])
     except IdentityError:
         response = RedirectResponse("/?identity=unavailable", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
@@ -409,7 +421,8 @@ def callback(
             )
     mapping = db.scalar(
         select(SharedIdentity).where(
-            SharedIdentity.issuer == identity.issuer, SharedIdentity.subject == identity.subject
+            SharedIdentity.issuer == (configuration(request).mapping_issuer or identity.issuer),
+            SharedIdentity.subject == identity.subject,
         )
     )
     user = (
@@ -454,7 +467,11 @@ def callback(
         try:
             db.flush()
             db.add(
-                SharedIdentity(issuer=identity.issuer, subject=identity.subject, user_id=user.id)
+                SharedIdentity(
+                    issuer=configuration(request).mapping_issuer or identity.issuer,
+                    subject=identity.subject,
+                    user_id=user.id,
+                )
             )
             db.flush()
         except IntegrityError:
@@ -503,7 +520,13 @@ def link(body: Link, request: Request, response: Response, db: DB) -> dict[str, 
         )
     if db.scalar(select(SharedIdentity.id).where(SharedIdentity.user_id == user.id)):
         fail(409, "identity_link_conflict", "This application account is already connected")
-    db.add(SharedIdentity(issuer=identity.issuer, subject=identity.subject, user_id=user.id))
+    db.add(
+        SharedIdentity(
+            issuer=configuration(request).mapping_issuer or identity.issuer,
+            subject=identity.subject,
+            user_id=user.id,
+        )
+    )
     try:
         db.flush()
     except IntegrityError:
