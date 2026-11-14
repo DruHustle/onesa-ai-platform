@@ -1,9 +1,10 @@
 """Shared Onesa sign-in adapter for native AI ownership and host-only sessions."""
 
 import json
+import re
 import secrets
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 from uuid import UUID
 
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -45,6 +46,12 @@ FLOW_COOKIE = "onesa_identity_flow"
 class Start(Strict):
     next: str = Field(default="/", max_length=1000)
     reauthenticate: bool = False
+    mobile: bool = False
+
+
+class MobileExchange(Strict):
+    state: str = Field(pattern=r"^native_[A-Za-z0-9_-]{43}$")
+    code: str = Field(min_length=1, max_length=4096)
 
 
 class Authorization(Strict):
@@ -276,6 +283,10 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
             "issuer": identity.issuer,
         }
     state, nonce, verifier = new_transaction()
+    if body.mobile:
+        if body.reauthenticate:
+            fail(422, "invalid_flow", "Start a new mobile sign-in")
+        state = "native_" + state
     browser = secrets.token_urlsafe(32)
     db.execute(delete(IdentityTransaction).where(IdentityTransaction.expires_at <= now()))
     db.add(
@@ -316,7 +327,11 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
 
 def transaction(request: Request, db: Session, state: str | None = None) -> IdentityTransaction:
     pieces = request.cookies.get(FLOW_COOKIE, "").split(".")
-    if len(pieces) != 2 or any(len(piece) != 43 for piece in pieces):
+    if (
+        len(pieces) != 2
+        or not re.fullmatch(r"(?:native_)?[A-Za-z0-9_-]{43}", pieces[0])
+        or not re.fullmatch(r"[A-Za-z0-9_-]{43}", pieces[1])
+    ):
         fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     if state is not None and not secrets.compare_digest(pieces[0], state):
         fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
@@ -336,22 +351,54 @@ def transaction(request: Request, db: Session, state: str | None = None) -> Iden
 
 def issue_shared(
     request: Request, response: Response, db: Session, user: User, identity: Identity, token: str
-) -> None:
+) -> str:
     from app.auth import issue
 
     if user.status != "active":
         fail(403, "account_disabled", "This application account is disabled")
     request.state.onesa_identity = identity
     request.state.onesa_user_id = str(user.id)
-    issue(request, response, db, user, shared=(identity, token))
+    csrf = issue(request, response, db, user, shared=(identity, token))
     response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
+    return csrf
 
 
 @router.get("/callback", include_in_schema=False)
 def callback(
     request: Request, db: DB, state: str = "", code: str = "", error: str = ""
 ) -> Response:
-    configuration(request)
+    config = configuration(request)
+    if re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state):
+        pairs = request.query_params
+        row = db.get(IdentityTransaction, digest(state))
+        if (
+            not row
+            or row.consumed_at
+            or row.expires_at <= now()
+            or any(len(pairs.getlist(key)) != 1 for key in pairs)
+            or pairs.get("iss", config.issuer) != config.issuer
+            or set(pairs) - {"state", "code", "error", "error_description", "iss"}
+        ):
+            fail(400, "identity_callback_invalid", "Start sign-in again")
+        params = {"state": state}
+        if error or not code or len(code) > 4096:
+            params["error"] = "cancelled"
+        else:
+            params["code"] = code
+        return RedirectResponse("onesaai://account/callback?" + urlencode(params), status_code=303)
+    return finish_sign_in(request, db, state, code, error)
+
+
+@router.post("/mobile/exchange", include_in_schema=False)
+def mobile_exchange(body: MobileExchange, request: Request, db: DB) -> Response:
+    origin(request)
+    response = finish_sign_in(request, db, body.state, body.code, "")
+    if response.status_code != 200:
+        fail(403, "mobile_sign_in_unavailable", "Sign-in requires account support or a new attempt")
+    return response
+
+
+def finish_sign_in(request: Request, db: Session, state: str, code: str, error: str) -> Response:
     row = transaction(request, db, state)
     if row.consumed_at is not None:
         fail(400, "identity_callback_invalid", "Sign-in has already been used. Please start again")
@@ -359,7 +406,7 @@ def callback(
     row.consumed_at = now()
     db.commit()  # Code exchange is never retried after an ambiguous network result.
     if error or not code:
-        response = RedirectResponse("/?identity=cancelled", status_code=303)
+        response: Response = RedirectResponse("/?identity=cancelled", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
@@ -482,6 +529,15 @@ def callback(
         db.add(IdentityAudit(actor_id=user.id, event="identity.created", record_id=user.id))
     if user is None:
         fail(401, "identity_rejected", "The application account is unavailable")
+    if state.startswith("native_"):
+        # The CSRF value travels in a cookie as it does on the web. Returning it
+        # here lets the native client retain the header value in its OS keychain.
+        response = Response(headers={"cache-control": "no-store"}, media_type="application/json")
+        db.delete(row)
+        csrf = issue_shared(request, response, db, user, identity, token)
+        response.body = json.dumps({"csrf": csrf}).encode()
+        response.headers["content-length"] = str(len(response.body))
+        return response
     response = RedirectResponse(safe_next(payload["next"]), status_code=303)
     db.delete(row)
     issue_shared(request, response, db, user, identity, token)

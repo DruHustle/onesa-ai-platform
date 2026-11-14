@@ -137,7 +137,7 @@ def issue(
     user: User,
     *,
     shared: tuple[Identity, str] | None = None,
-) -> None:
+) -> str:
     eligible(request, db, user)
     config = request.app.state.settings
     old_token = request.cookies.get("onesa_session")
@@ -184,6 +184,7 @@ def issue(
         max_age=cookie_seconds,
         path="/",
     )
+    return csrf
 
 
 @router.post("/register", status_code=201, response_model=SafeUser)
