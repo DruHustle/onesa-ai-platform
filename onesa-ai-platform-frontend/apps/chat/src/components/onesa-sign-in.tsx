@@ -20,7 +20,7 @@ export function OnesaIdentityProvider({ initialMethod, allowLocal, accountHelp, 
         if (!controller.signal.aborted) setMethod(verified);
       }).catch(reason => {
         if (controller.signal.aborted) return;
-        // Older local fixtures may omit the capability endpoint. Hosted clients require Portal.
+        // Older local fixtures may omit the capability endpoint. Hosted clients require a configured identity provider.
         setMethod({ enabled: false, account_url: null, unavailable: !(allowLocal && reason instanceof ApiError && reason.status === 404) });
       });
     return () => controller.abort();
@@ -38,7 +38,7 @@ export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) 
   return method?.unavailable ? <div>
     <p role="alert">{de ? "Die Anmeldemethode konnte nicht geladen werden. Bitte versuche es erneut." : "We could not load the sign-in method. Please try again."}</p>
     <button type="button" onClick={() => window.location.reload()}>{de ? "Erneut versuchen" : "Retry sign-in"}</button>
-    {method.account_url && <p><a href={method.account_url}>{de ? "Company Portal öffnen" : "Open Company Portal"}</a></p>}
+    {method.account_url && <p><a href={method.account_url}>{de ? "Onesa-Konto öffnen" : "Open your Onesa account"}</a></p>}
   </div> : <p role="status">{de ? "Anmeldung wird vorbereitet…" : "Preparing sign-in…"}</p>;
 }
 
@@ -124,7 +124,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
   }
 
   return <div className="onesa-shared-signin">
-    <p>{de ? "Melde dich im Company Portal an oder erstelle dort dein Onesa-Konto." : "Sign in or create your Onesa account in Company Portal."}</p>
+    <p>{de ? "Melde dich mit deinem Onesa-Konto an oder erstelle ein Konto." : "Sign in with your Onesa account or register for one."}</p>
     {linking ? <form onSubmit={link}>
       <h2>{de ? "Bisheriges AI-Konto verbinden" : "Connect your existing AI account"}</h2>
       <p>{de ? "Bestätige dein bisheriges AI-Passwort einmalig. Deine Gespräche und Dateien bleiben deinem Konto zugeordnet." : "Confirm your existing AI password once. Your conversations and files stay with your account."}</p>

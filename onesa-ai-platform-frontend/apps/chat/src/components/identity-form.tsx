@@ -69,7 +69,7 @@ export default function IdentityForm({ invitation = false }: { invitation?: bool
   if (!method || method.unavailable || method.enabled) return <main className="auth-shell"><section className="auth-card">
     <h1>{invitation ? "Your Onesa account" : "Onesa account recovery"}</h1>
     {method?.enabled && !method.unavailable
-      ? <><p>Use Company Portal to manage your account and recover access.</p><OnesaSignIn method={method} next="/settings" /></>
+      ? <><p>Use your Onesa account to manage your credentials and recover access.</p><OnesaSignIn method={method} next="/settings" /></>
       : <IdentityEntryStatus method={method}/>}
   </section></main>;
   return <main className="auth-shell"><section className="auth-card"><h1>{invitation ? "Accept invitation" : "Account recovery"}</h1>
