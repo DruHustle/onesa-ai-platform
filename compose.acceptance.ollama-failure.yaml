@@ -1,5 +1,0 @@
-# Fault injection only into the isolated acceptance API; native daemon remains running.
-services:
-  api:
-    environment:
-      ONESA_MODEL_BASE_URL: http://host.docker.internal:9/v1
