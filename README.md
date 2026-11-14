@@ -5,16 +5,11 @@ Run product commands from this repository root. The latest application changes
 from the former consolidated checkout are retained here with independent CI,
 release authority and runtime boundaries. See [standalone source](docs/engineering/standalone-source.md).
 
-The protected Docs source candidate supports its own canonical repository binding
-and manual count/hash metadata custody. It retains the existing private project,
-approved document provenance, independent native observer and original release
-journals. Unresolved original outcomes still block publication. The new metadata
-workflow carries no private document bytes or deployment authority; commissioning,
-hosted qualification and a controller cutover remain separate requirements. See
-[standalone source](docs/engineering/standalone-source.md) for the source boundary.
-The consolidated metadata workflow is preserved as a nonexecuting
-[source reference](docs/engineering/consolidated-source-reference/README.md).
-The active standalone Docs workflow is `.github/workflows/docs-hosting.yml`.
+[Onesa Documents](https://github.com/DruHustle/onesa-documents) owns publication
+for [external documents](https://docs.onesa.eu) and [internal documents](https://docs.internal.onesa.eu).
+Internal documents require Onesa Identity and document access. This AI repository
+retains source validation and historical release evidence. Its documentation
+workflow has no production publishing authority.
 
 The shared-account source candidate adds **Continue with Onesa**, one central
 account/access hub, explicit existing-account linking and MFA-protected cross-product
@@ -71,7 +66,7 @@ credential and record-identifier preservation checks passed. Canonical readiness
 private-access denials pass. This parser patch introduced no production model request,
 new account or Industrial feature. The frontend and both Docs retain independent identities.
 Protected Engineering Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`
-is independently accepted at `docs.engineering.onesa.eu`, Pages
+was accepted at the former engineering hostname on Pages deployment
 `2d937ff1-391f-4156-8df6-75d2d14aaa5e` (2026-10-22), with DOMPurify 3.4.17
 and factual isolated-demo documentation. All 751 private assets and anonymous denials,
 18 production responsive/accessibility views, 18 architecture topics, 17 chapters,
