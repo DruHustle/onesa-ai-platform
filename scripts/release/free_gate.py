@@ -2230,6 +2230,8 @@ def main():
     parser.add_argument("--metadata-producer-sha256")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
+    if args.mode != "verify" and args.delivery_scope != "full":
+        parser.error("Documentation release authority moved to DruHustle/onesa-documents")
     metadata_custody = None
     if args.native_metadata_event:
         e.require(args.mode == "qualify", "Native metadata is qualification-only")
