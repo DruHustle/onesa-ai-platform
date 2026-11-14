@@ -406,7 +406,7 @@ def finish_sign_in(request: Request, db: Session, state: str, code: str, error: 
     row.consumed_at = now()
     db.commit()  # Code exchange is never retried after an ambiguous network result.
     if error or not code:
-        response = RedirectResponse("/?identity=cancelled", status_code=303)
+        response: Response = RedirectResponse("/?identity=cancelled", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
