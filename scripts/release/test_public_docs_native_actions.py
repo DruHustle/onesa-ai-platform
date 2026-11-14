@@ -261,8 +261,18 @@ class NativeEventTests(unittest.TestCase):
         source = (workflows / "docs-hosting.yml").read_text()
         job = yaml.safe_load(source)["jobs"]["documentation"]
         self.assertEqual(job["env"]["ONESA_DOCS_EXPECTED_ENVIRONMENT"], "staging")
-        self.assertIn("Upload local public build checks only", [step.get("name") for step in job["steps"]])
-        for authority in ["secrets.", "VERCEL_TOKEN", "CLOUDFLARE", "--prebuilt", "wrangler", "build:internal"]:
+        self.assertIn(
+            "Upload local public build checks only",
+            [step.get("name") for step in job["steps"]],
+        )
+        for authority in [
+            "secrets.",
+            "VERCEL_TOKEN",
+            "CLOUDFLARE",
+            "--prebuilt",
+            "wrangler",
+            "build:internal",
+        ]:
             self.assertNotIn(authority, source)
         for workflow in ["free-qualification.yml", "free-authorization.yml"]:
             content = (workflows / workflow).read_text()
