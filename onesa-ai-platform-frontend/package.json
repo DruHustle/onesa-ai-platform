@@ -1,0 +1,17 @@
+{
+  "name": "onesa-ai-platform-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "ci": "npm --prefix apps/chat ci",
+    "dev": "npm --prefix apps/chat run dev -- --port 3100",
+    "build": "npm --prefix apps/chat run build",
+    "lint": "npm --prefix apps/chat run lint",
+    "typecheck": "npm --prefix apps/chat run typecheck",
+    "test:e2e": "npm --prefix apps/chat run test:e2e",
+    "docs:ci": "npm --prefix apps/docs ci",
+    "docs:public": "npm --prefix apps/docs run build:public",
+    "docs:internal": "npm --prefix apps/docs run build:internal"
+  }
+}

@@ -1,0 +1,7 @@
+# Explicit isolated opt-in. No peer, feed, model, collector or broker is required.
+services:
+  api:
+    environment:
+      ONESA_CYBERSECURITY_ENABLED: "true"
+      ONESA_CYBERSECURITY_DEMO_ENABLED: "true"
+      ONESA_CYBERSECURITY_AI_ENABLED: "false"

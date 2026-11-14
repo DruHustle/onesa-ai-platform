@@ -1,0 +1,32 @@
+erDiagram
+  conversations {
+    UUID user_id FK
+    VARCHAR_200_ title
+    VARCHAR_80_ selected_model_id
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID active_run_id
+    TIMESTAMP_WITH_TIME_ZONE lease_until
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  messages {
+    UUID conversation_id FK
+    VARCHAR_20_ role
+    JSONB content
+    VARCHAR_20_ status
+    INTEGER sequence
+    VARCHAR_80_ model_id
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  users {
+    VARCHAR_254_ email UK
+    VARCHAR_256_ password_hash
+    VARCHAR_80_ display_name
+    VARCHAR_20_ status
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  users ||--o{ conversations : "user_id"
+  conversations ||--o{ messages : "conversation_id"

@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "source": "onesa-company-portal-frontend/public/brand/onesa-orbit.png",
+  "sourceSha256": "4dc5ada01211fe5127ab59f33a9e4b19482658ef9878300fa088de4b27e6d7e6",
+  "rights": "Owner-supplied Onesa artwork; technical product-icon derivatives authorized by master specification Section10.4. No new official or registered logo is asserted.",
+  "method": "Source-traced common O; distinct geometric frames and product accents; existing Chromium SVG export, no generative redraw or source-bitmap modification.",
+  "products": [
+    {
+      "id": "docs",
+      "title": "Onesa Developer Docs",
+      "accent": "#a1b0c6",
+      "files": [
+        {
+          "name": "onesa-docs.svg",
+          "sha256": "ff3c8248f627e16eaa1510bdda26957477a4eaceba1f1e1964b112894eb82a4f",
+          "bytes": 3352,
+          "width": 32,
+          "height": 32,
+          "mime": "image/svg+xml"
+        },
+        {
+          "name": "onesa-docs-16.png",
+          "sha256": "16ae649e68a531d4e3c8b50ebff2c8d022c1827feb6e4f2c39223ebee841b680",
+          "bytes": 538,
+          "width": 16,
+          "height": 16,
+          "mime": "image/png"
+        },
+        {
+          "name": "onesa-docs-32.png",
+          "sha256": "6a2115ee45fc3c1d41b63ec9ff063b86e8ec09aa620f4745f4d05c81a9f68e73",
+          "bytes": 1059,
+          "width": 32,
+          "height": 32,
+          "mime": "image/png"
+        },
+        {
+          "name": "onesa-docs-64.png",
+          "sha256": "b5df4e9807216f28843e25a9fec6265b5314986a7d52965d6b944650370927d4",
+          "bytes": 1850,
+          "width": 64,
+          "height": 64,
+          "mime": "image/png"
+        },
+        {
+          "name": "onesa-docs.ico",
+          "sha256": "53df3668bdf7451e2ffa46df5ec02af1baadf964818f567d77ffe3dad8d9daf9",
+          "bytes": 3501,
+          "width": null,
+          "height": null,
+          "mime": "image/vnd.microsoft.icon"
+        },
+        {
+          "name": "onesa-docs-180.png",
+          "sha256": "67875fd2aabc244173a3e4c3e00bcf15942fa2d8f5eef75b9a798a05a776aaed",
+          "bytes": 5215,
+          "width": 180,
+          "height": 180,
+          "mime": "image/png"
+        }
+      ]
+    }
+  ],
+  "sourceRepository": "DruHustle/onesa-company-portal",
+  "producer": "scripts/generate_identity_icons.mjs"
+}

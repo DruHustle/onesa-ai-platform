@@ -1,0 +1,27 @@
+services:
+  inference:
+    image: vllm/vllm-openai:v0.27.0@sha256:07ea4e292adf3a26b05ac97114b28849cf4551a26beb1fbe7decd3842d752ed7
+    profiles: [gpu]
+    command: ["--model", "${ONESA_MODEL_NAME:-Qwen/Qwen3-4B-Instruct-2507}", "--revision", "${ONESA_MODEL_REVISION:-cdbee75f17c01a7cc42f958dc650907174af0554}", "--max-model-len", "${ONESA_MODEL_CONTEXT_LENGTH:-4096}", "--gpu-memory-utilization", "${ONESA_GPU_MEMORY_UTILIZATION:-0.85}", "--tensor-parallel-size", "${ONESA_TENSOR_PARALLEL_SIZE:-1}", "--api-key", "${ONESA_MODEL_API_KEY:?Set a private inference API key}"]
+    volumes: [model-cache:/root/.cache/huggingface, "${ONESA_MODEL_ARTIFACT_DIR:-./data/models}:/models:ro"]
+    healthcheck:
+      test: [CMD, python3, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      start_period: 180s
+      retries: 20
+    stop_grace_period: 135s
+    shm_size: 2gb
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: "${ONESA_GPU_COUNT:-all}", capabilities: [gpu]}]
+    restart: unless-stopped
+  api:
+    environment:
+      ONESA_MODEL_BACKEND: vllm
+      ONESA_MODEL_CONTEXT_LENGTH: ${ONESA_MODEL_CONTEXT_LENGTH:-4096}
+    depends_on:
+      inference: {condition: service_healthy}
+volumes:
+  model-cache:

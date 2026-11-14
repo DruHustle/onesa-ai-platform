@@ -1,0 +1,8 @@
+# Optional docs-source mounts and engineering authorization; generated builds are delivered by gateways.
+services:
+  api:
+    environment:
+      ONESA_DOCUMENTATION_ENGINEERING_USER_IDS: ${ONESA_DOCUMENTATION_ENGINEERING_USER_IDS:-[]}
+    volumes:
+      - ./onesa-ai-platform-frontend/apps/docs/.generated/public/static/generated/retrieval.json:/app/docs-sources/public/retrieval.json:ro
+      - ./onesa-ai-platform-frontend/apps/docs/.generated/internal/static/generated/retrieval.json:/app/docs-sources/internal/retrieval.json:ro

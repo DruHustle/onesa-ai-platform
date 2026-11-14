@@ -1,0 +1,7 @@
+# Apply after compose.gpu.yaml, only for an evaluated local adapter.
+services:
+  inference:
+    command: ["--model", "${ONESA_BASE_MODEL_NAME:-Qwen/Qwen3-4B-Instruct-2507}", "--revision", "${ONESA_BASE_MODEL_REVISION:?Set the evaluated base revision}", "--max-model-len", "${ONESA_MODEL_CONTEXT_LENGTH:-4096}", "--gpu-memory-utilization", "${ONESA_GPU_MEMORY_UTILIZATION:-0.85}", "--tensor-parallel-size", "${ONESA_TENSOR_PARALLEL_SIZE:-1}", "--api-key", "${ONESA_MODEL_API_KEY:?Set a private inference key}", "--enable-lora", "--max-lora-rank", "${ONESA_ADAPTER_RANK:-16}", "--lora-modules", "${ONESA_ADAPTER_NAME:-onesa-v1}=/models/${ONESA_ADAPTER_DIRECTORY:?Set a validated adapter directory}"]
+  api:
+    environment:
+      ONESA_MODEL_NAME: ${ONESA_ADAPTER_NAME:-onesa-v1}

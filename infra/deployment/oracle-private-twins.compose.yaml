@@ -1,0 +1,17 @@
+# Explicit AI-only private persistence overlay. Does not enable the workspace.
+# Provision owner-private host paths with UID/GID10001 and mode0700 first.
+services:
+  staging:
+    volumes:
+      - type: bind
+        source: ${ORACLE_STAGING_TWINS_STORAGE:?Set the approved private AI staging path}
+        target: /var/lib/onesa/twins
+        bind:
+          create_host_path: false
+  production:
+    volumes:
+      - type: bind
+        source: ${ORACLE_PRODUCTION_TWINS_STORAGE:?Set the approved private AI production path}
+        target: /var/lib/onesa/twins
+        bind:
+          create_host_path: false

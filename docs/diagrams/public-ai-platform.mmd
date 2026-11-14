@@ -1,0 +1,13 @@
+flowchart TB
+Web[Next.js Chat Knowledge Agents Travel] --> Proxy[Same-origin server API boundary]
+Proxy --> API[FastAPI identity and ownership]
+API --> Chat[Persisted conversations]
+API --> RAG[Knowledge parsing and retrieval]
+API --> Agents[Registered permitted tools]
+API --> Travel[Owned saved itineraries]
+Chat --> DB[Separate AI PostgreSQL]
+RAG --> DB
+Agents --> DB
+Travel --> DB
+API --> Model[Configured generation adapter - Workers AI staging verified]
+RAG --> Embed[Configured embeddings - Workers AI staging verified]

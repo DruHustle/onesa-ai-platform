@@ -1,0 +1,14 @@
+flowchart TB
+Database[Product database] --> Backup[Authorized encrypted scoped backup]
+Backup --> Retain[Approved retention and private backup storage]
+Retain --> Isolated[Restore into isolated disposable target]
+Isolated --> Verify[Schema revision checksums counts ownership and app smoke]
+Files[Private object storage] --> Manifest[Object checksums and metadata consistency]
+Manifest --> Verify
+Robot[Robot journal] --> Safe[Consistent journal snapshot and stopped restored state]
+Safe --> Verify
+Verify --> Evidence[Private restore evidence]
+Deploy[Bad release] --> Stop[Contain writes and stop unsafe processing]
+Stop --> Rollback[Previous qualified artifacts with schema compatibility checks]
+Rollback --> Post[Hosted post-rollback tests]
+Gate[No destructive restore over production without separate approval] --> Isolated

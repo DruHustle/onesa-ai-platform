@@ -1,0 +1,471 @@
+erDiagram
+  access_grants {
+    UUID user_id PK
+    TIMESTAMP_WITH_TIME_ZONE granted_at
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+  }
+  agent_runs {
+    UUID user_id FK
+    VARCHAR goal
+    VARCHAR_20_ status
+    JSONB steps
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  auth_sessions {
+    UUID user_id FK
+    VARCHAR_64_ token_hash UK
+    VARCHAR_64_ csrf_hash
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  bounded_uploads {
+    UUID user_id FK
+    VARCHAR_200_ filename
+    VARCHAR_80_ media_type
+    INTEGER size
+    VARCHAR_64_ checksum
+    INTEGER received
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    JSONB result
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  conversations {
+    UUID user_id FK
+    VARCHAR_200_ title
+    VARCHAR_80_ selected_model_id
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID active_run_id
+    TIMESTAMP_WITH_TIME_ZONE lease_until
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_actions {
+    UUID investigation_id FK
+    VARCHAR_48_ kind
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_assets {
+    VARCHAR_120_ name
+    VARCHAR_128_ identity
+    VARCHAR_80_ zone
+    VARCHAR_16_ criticality
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_baselines {
+    UUID source_id FK
+    VARCHAR_128_ revision
+    JSONB config
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_events {
+    UUID source_id FK
+    VARCHAR_128_ source_event_id
+    UUID asset_id FK
+    UUID mapping_id FK
+    VARCHAR_64_ event_type
+    VARCHAR_16_ mode
+    VARCHAR_128_ run_id
+    TIMESTAMP_WITH_TIME_ZONE occurred_at
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    VARCHAR_64_ sha256
+    JSONB wire
+    JSONB provenance
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_findings {
+    UUID source_id FK
+    UUID asset_id FK
+    VARCHAR_64_ dedupe_key UK
+    VARCHAR_64_ rule
+    VARCHAR_32_ rule_version
+    VARCHAR_16_ mode
+    VARCHAR_128_ run_id
+    VARCHAR_16_ severity
+    VARCHAR_16_ confidence
+    INTEGER priority
+    TIMESTAMP_WITH_TIME_ZONE first_seen
+    TIMESTAMP_WITH_TIME_ZONE last_seen
+    INTEGER occurrences
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_investigations {
+    VARCHAR_160_ title
+    UUID finding_id FK
+    VARCHAR_24_ status
+    INTEGER priority
+    INTEGER revision
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    TIMESTAMP_WITH_TIME_ZONE acceptance_until
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_mappings {
+    UUID source_id FK
+    UUID asset_id FK
+    VARCHAR_128_ external_namespace
+    VARCHAR_128_ external_asset
+    VARCHAR_128_ external_component
+    JSONB review
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_policies {
+    UUID source_id FK
+    INTEGER version
+    JSONB config
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_reports {
+    UUID asset_id FK
+    VARCHAR_64_ sha256
+    VARCHAR_48_ profile
+    VARCHAR_160_ producer
+    JSONB details
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_results {
+    UUID finding_id FK
+    VARCHAR_64_ evidence_key
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_sources {
+    VARCHAR_120_ name
+    VARCHAR_64_ namespace
+    VARCHAR_64_ token_hash UK
+    VARCHAR_16_ scope
+    JSONB config
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    TIMESTAMP_WITH_TIME_ZONE last_seen_at
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  cyber_summaries {
+    UUID investigation_id FK
+    JSONB snapshot
+    VARCHAR_64_ sha256
+    JSONB result
+    UUID user_id FK
+    BOOLEAN sensitive
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  document_chunks {
+    UUID document_id FK
+    INTEGER position
+    VARCHAR text
+    VARCHAR_256_ embedding_version
+    VECTOR_256_ embedding
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  documents {
+    UUID user_id FK
+    VARCHAR_200_ title
+    VARCHAR_80_ media_type
+    VARCHAR text
+    VARCHAR_64_ checksum
+    VARCHAR_256_ embedding_version
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  identity_audit {
+    UUID actor_id FK
+    VARCHAR_40_ event
+    UUID record_id
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  identity_mail {
+    UUID token_id PK
+    VARCHAR_20_ state
+    INTEGER attempts
+    TIMESTAMP_WITH_TIME_ZONE next_attempt_at
+    TIMESTAMP_WITH_TIME_ZONE lease_until
+    UUID lease_id
+    VARCHAR_200_ provider_id
+  }
+  identity_sessions {
+    UUID session_id PK
+    VARCHAR_1000_ issuer
+    VARCHAR_36_ subject
+    VARCHAR_8192_ encrypted_token
+  }
+  identity_tokens {
+    VARCHAR_20_ purpose
+    VARCHAR_254_ email
+    UUID user_id FK
+    VARCHAR_64_ token_hash UK
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    TIMESTAMP_WITH_TIME_ZONE grant_expires_at
+    TIMESTAMP_WITH_TIME_ZONE consumed_at
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  identity_transactions {
+    VARCHAR_64_ state_hash PK
+    VARCHAR_64_ browser_hash
+    VARCHAR_16384_ payload
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    TIMESTAMP_WITH_TIME_ZONE consumed_at
+  }
+  industrial_investigations {
+    UUID user_id FK
+    INTEGER revision
+    VARCHAR_20_ status
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    JSONB payload
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  inference_runs {
+    UUID request_id
+    UUID user_id FK
+    UUID conversation_id FK
+    VARCHAR_80_ model_id
+    VARCHAR_20_ status
+    INTEGER latency_ms
+    INTEGER input_tokens
+    INTEGER output_tokens
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  messages {
+    UUID conversation_id FK
+    VARCHAR_20_ role
+    JSONB content
+    VARCHAR_20_ status
+    INTEGER sequence
+    VARCHAR_80_ model_id
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  model_leases {
+    UUID user_id FK
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  rate_buckets {
+    VARCHAR_64_ key PK
+    INTEGER count
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+  }
+  shared_identities {
+    VARCHAR_1000_ issuer
+    VARCHAR_36_ subject
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  trips {
+    UUID user_id FK
+    VARCHAR_200_ destination
+    INTEGER duration
+    FLOAT budget
+    VARCHAR_3_ currency
+    VARCHAR preferences
+    INTEGER revision
+    JSONB itinerary
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_assets {
+    UUID template_id FK
+    VARCHAR_120_ name
+    VARCHAR_120_ serial
+    JSONB definition
+    UUID active_model_id
+    INTEGER revision
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_events {
+    UUID asset_id FK
+    UUID source_id FK
+    UUID component_id
+    UUID reading_id FK
+    JSONB details
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_files {
+    VARCHAR_200_ filename
+    VARCHAR_64_ sha256
+    INTEGER size
+    JSONB details
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_models {
+    UUID template_id FK
+    UUID file_id FK
+    JSONB definition
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_notes {
+    UUID asset_id FK
+    UUID component_id
+    VARCHAR_20_ kind
+    JSONB payload
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_readings {
+    UUID source_id FK
+    UUID asset_id FK
+    UUID component_id
+    VARCHAR_160_ message_id
+    VARCHAR_80_ tag
+    VARCHAR_16_ mode
+    VARCHAR_24_ unit
+    FLOAT value
+    VARCHAR_16_ quality
+    TIMESTAMP_WITH_TIME_ZONE observed_at
+    JSONB provenance
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_sources {
+    UUID asset_id FK
+    VARCHAR_120_ name
+    VARCHAR_64_ token_hash UK
+    JSONB definition
+    TIMESTAMP_WITH_TIME_ZONE revoked_at
+    TIMESTAMP_WITH_TIME_ZONE last_seen_at
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  twin_templates {
+    VARCHAR_120_ name
+    VARCHAR_80_ kind
+    JSONB definition
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  upload_chunks {
+    UUID upload_id PK
+    INTEGER sequence PK
+    BYTEA data
+  }
+  users {
+    VARCHAR_254_ email UK
+    VARCHAR_256_ password_hash
+    VARCHAR_80_ display_name
+    VARCHAR_20_ status
+    TIMESTAMP_WITH_TIME_ZONE updated_at
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  users ||--o{ access_grants : "user_id"
+  users ||--o{ agent_runs : "user_id"
+  users ||--o{ auth_sessions : "user_id"
+  users ||--o{ bounded_uploads : "user_id"
+  users ||--o{ conversations : "user_id"
+  cyber_investigations ||--o{ cyber_actions : "investigation_id"
+  users ||--o{ cyber_actions : "user_id"
+  users ||--o{ cyber_assets : "user_id"
+  cyber_sources ||--o{ cyber_baselines : "source_id"
+  users ||--o{ cyber_baselines : "user_id"
+  cyber_sources ||--o{ cyber_events : "source_id"
+  cyber_assets ||--o{ cyber_events : "asset_id"
+  cyber_mappings ||--o{ cyber_events : "mapping_id"
+  users ||--o{ cyber_events : "user_id"
+  cyber_sources ||--o{ cyber_findings : "source_id"
+  cyber_assets ||--o{ cyber_findings : "asset_id"
+  users ||--o{ cyber_findings : "user_id"
+  cyber_findings ||--o{ cyber_investigations : "finding_id"
+  users ||--o{ cyber_investigations : "user_id"
+  cyber_sources ||--o{ cyber_mappings : "source_id"
+  cyber_assets ||--o{ cyber_mappings : "asset_id"
+  users ||--o{ cyber_mappings : "user_id"
+  cyber_sources ||--o{ cyber_policies : "source_id"
+  users ||--o{ cyber_policies : "user_id"
+  cyber_assets ||--o{ cyber_reports : "asset_id"
+  users ||--o{ cyber_reports : "user_id"
+  cyber_findings ||--o{ cyber_results : "finding_id"
+  users ||--o{ cyber_results : "user_id"
+  users ||--o{ cyber_sources : "user_id"
+  cyber_investigations ||--o{ cyber_summaries : "investigation_id"
+  users ||--o{ cyber_summaries : "user_id"
+  documents ||--o{ document_chunks : "document_id"
+  users ||--o{ documents : "user_id"
+  users ||--o{ identity_audit : "actor_id"
+  identity_tokens ||--o{ identity_mail : "token_id"
+  auth_sessions ||--o{ identity_sessions : "session_id"
+  users ||--o{ identity_tokens : "user_id"
+  users ||--o{ industrial_investigations : "user_id"
+  users ||--o{ inference_runs : "user_id"
+  conversations ||--o{ inference_runs : "conversation_id"
+  conversations ||--o{ messages : "conversation_id"
+  users ||--o{ model_leases : "user_id"
+  users ||--o{ shared_identities : "user_id"
+  users ||--o{ trips : "user_id"
+  twin_templates ||--o{ twin_assets : "template_id"
+  users ||--o{ twin_assets : "user_id"
+  twin_assets ||--o{ twin_events : "asset_id"
+  twin_sources ||--o{ twin_events : "source_id"
+  twin_readings ||--o{ twin_events : "reading_id"
+  users ||--o{ twin_files : "user_id"
+  twin_templates ||--o{ twin_models : "template_id"
+  twin_files ||--o{ twin_models : "file_id"
+  users ||--o{ twin_models : "user_id"
+  twin_assets ||--o{ twin_notes : "asset_id"
+  users ||--o{ twin_notes : "user_id"
+  twin_sources ||--o{ twin_readings : "source_id"
+  twin_assets ||--o{ twin_readings : "asset_id"
+  twin_assets ||--o{ twin_sources : "asset_id"
+  users ||--o{ twin_sources : "user_id"
+  users ||--o{ twin_templates : "user_id"
+  bounded_uploads ||--o{ upload_chunks : "upload_id"

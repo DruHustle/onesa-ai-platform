@@ -1,0 +1,6 @@
+flowchart LR
+ PC[Approved owner PC] -->|Encrypted Tailscale overlay| VM[Tagged Oracle worker VM]
+ VM -->|Scoped system SSH and SFTP| Admin[Authorized administrative operations]
+ Control[Tailscale coordination and identity metadata] -.-> PC
+ Control -.-> VM
+ VM --> Boundary[Existing worker, scanner and data authorization boundaries]

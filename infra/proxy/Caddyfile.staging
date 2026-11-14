@@ -1,0 +1,21 @@
+# Loopback-only deployment rehearsal; no public DNS/TLS claim.
+:8080 {
+    @backend path /api/v1/* /health /ready
+    handle @backend {
+        reverse_proxy api:8000 {
+            flush_interval -1
+        }
+    }
+    handle {
+        reverse_proxy chat:3000 {
+            flush_interval -1
+        }
+    }
+}
+
+# Second loopback ingress exercises the Next.js BFF instead of direct API routing.
+:8081 {
+    reverse_proxy chat:3000 {
+        flush_interval -1
+    }
+}

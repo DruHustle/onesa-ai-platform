@@ -1,0 +1,40 @@
+# Reference for the existing Free API. Reuse approved Neon and Cloudflare resources.
+# Never create a duplicate database, regenerate credentials or bypass release qualification.
+services:
+  - type: web
+    name: onesa-ai-platform-backend
+    runtime: docker
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: onesa-ai-platform-backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Dockerfile CMD is the authoritative API startup command.
+    healthCheckPath: /core-ready
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: ONESA_ENVIRONMENT
+        value: production
+      - key: ONESA_SECURE_COOKIES
+        value: 'true'
+      - key: ONESA_DATABASE_URL
+        sync: false
+      - key: ONESA_PUBLIC_ORIGIN
+        sync: false
+      - key: ONESA_METRICS_TOKEN
+        sync: false
+      - key: ONESA_MODEL_BACKEND
+        sync: false
+      - key: ONESA_MODEL_NAME
+        sync: false
+      - key: ONESA_MODEL_BASE_URL
+        sync: false
+      - key: ONESA_MODEL_API_KEY
+        sync: false
+      - key: ONESA_EMBEDDING_BACKEND
+        sync: false
+      - key: ONESA_AUTH_HASH_CONCURRENCY
+        value: '2'
+    buildFilter:
+      paths: [onesa-ai-platform-backend/**, render.yaml]

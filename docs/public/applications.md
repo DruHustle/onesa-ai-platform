@@ -1,0 +1,64 @@
+# Applications and capabilities
+
+## Application directions
+
+**Apps powered by the Onesa AI Platform** apply the same intelligence engine to
+different industries. Business and investment decision support and smart farming
+are planned applications; they do not yet have dedicated implemented workflows.
+
+- **Recommendations and decision support** — Travel planning, business feasibility
+  and investment research. Help users compare options, explore scenarios and assess
+  risks using relevant information, clearly stated assumptions and supporting sources.
+- **Smart farming** — Help farmers choose suitable crops and plan cultivation step
+  by step, from planting to harvest. Combine soil conditions, seasonal weather
+  forecasts, water availability, production costs and market demand to support
+  practical decisions.
+
+These planned experiences need suitable data integrations, source freshness,
+explicit assumptions and validated domain workflows. Weather and market data integrations are not currently qualified.
+The existing Travel experience is described below.
+
+## Chat
+Create, rename, reopen and delete owned conversations. Stream Markdown responses and stop generation. Completed messages persist; interrupted partial output does not become a successful saved answer. The badge shows the active backend; runtime model selection is configuration-driven.
+
+[Open Chat](https://platform.onesa.eu/).
+
+## Knowledge
+Upload bounded TXT/PDF documents, search owned sources and select documents for grounded Chat. Preview extracted text and rebuild a document’s search index using the configured
+embedding service. Reindex clears the displayed search results; it does not qualify
+a new model. Sources persist with answers. Local development defaults to an explicitly labelled lexical baseline. The hosted
+configuration reviewed on 20 October 2026 selects the versioned Cloudflare Qwen semantic
+embedding profile. A provider change requires compatible dimensions, versioned indexes
+and controlled reindexing; a local example is not evidence of production model quality.
+
+[Open Knowledge](https://platform.onesa.eu/knowledge).
+
+## Agents
+Grant registered arithmetic or text_stats tools explicitly. Planning may use mock or the configured model; proposals cannot authorize new tools. Local tools have bounded execution and no arbitrary shell/network effects.
+
+[Open Agents](https://platform.onesa.eu/agents).
+
+## Travel
+Generate, save and revise typed itineraries. External provider availability is explicit; no live prices, weather, bookings or maps are claimed.
+
+[Open Travel](https://platform.onesa.eu/travel).
+
+See [visual tutorials](/tutorials) and [API examples](examples.md).
+
+
+## Account settings
+
+Open **Account settings** from Chat or any workspace feature. Update your display
+name, change your password, review active sessions or sign out other sessions.
+Password changes sign out all previous sessions and rotate this browser’s session.
+Your interface language is a browser preference, independent of your profile.
+
+Download an account JSON export after confirming your password. It contains private
+content: store it securely. The export includes live profile, conversations, extracted
+documents, agent runs and trips; credentials and derived vectors are excluded.
+Large exports require support and are never silently truncated.
+
+Account deletion requires your password and typing `DELETE MY ACCOUNT`. Stop active
+chat/tool runs and export anything you need first. Deletion removes your live account,
+sessions and owned application data, including document search vectors. Backup copies
+require separate retention processing. This action cannot be undone through the app.

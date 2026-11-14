@@ -1,0 +1,641 @@
+# Changelog
+
+- Add branded invitation/recovery HTML behind versioned mail queue states and an
+  additive state-constraint migration. Existing attempted messages remain plain;
+  older workers cannot claim branded retries. This does not enable mail delivery.
+
+## Unreleased
+
+- Add an opt-in Auth0 OIDC client for AI web and the AI API, preserving stable application-user bindings, scoped permissions, short token expiry and offline public-key validation.
+
+- Correct the public deployment and model-hosting drawings, engineering diagrams and onboarding guide to show the Oracle-hosted product APIs. Record the capacity reported by the Oracle guest in the engineering infrastructure drawing.
+
+- Route hosted sign-in, account creation and recovery through Company Portal.
+  An unavailable issuer keeps hosted credential entry closed. Development and
+  test credentials remain scoped to loopback fixtures.
+
+- Use Onesa Robot in public and engineering documentation, architecture drawings
+  and the generated technical design manual.
+
+- Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
+  commissioned standalone AI API plan. Both the standalone and historical plan
+  names are bound to their respective repositories. The configuration, rollback
+  and hosted acceptance requirements apply to both.
+
+- Source candidate: add an independent canonical protected Docs consumer with
+  exact repository, main commit, root tree and Platform subtree binding. Preserve
+  the original approved document map, separate private builds, provider project,
+  native commissioning, shared journal and one-use release authority. Read original
+  signed history through its retained installation and key without executing an
+  old issuer. Unknown, unaccepted or revoked outcomes keep their holds. A manual
+  read-only workflow retains sanitized qualification/decision metadata only;
+  private hosted acceptance, controller migration and deployment remain unclaimed.
+
+- Source correction: keep MCP stdio input responsive during API calls, honor
+  request-scoped cancellation, and close the owned HTTP response without replay.
+  Bound outstanding work and whole-request duration; preserve initialization,
+  unrelated requests and completed results when a cancellation is invalid or stale.
+
+- Source candidate: add explicitly scoped MCP model/Knowledge resources and a
+  bounded text-summary prompt, with fresh identity/ownership checks on discovery
+  and reads. Preserve empty defaults, exact document scopes, embedding metadata,
+  cancellation and redacted failures. No hosted activation, new provider processing,
+  service-identity commissioning or completed external-client acceptance is implied.
+
+- Source correction: reject unsupported Onesa model IDs and invalid header/cookie
+  credentials before consumer transmission. Preserve supplied backend and request
+  provenance, and reject contradictory mock/real metadata. The independently
+  vendored Drone client retains the same bounded text contract; wider consumer and
+  external MCP qualification remain separate acceptance requirements.
+
+- Source correction: use `notifications-ai@onesa.eu` in mail configuration
+  examples and missing-default preparation, preserving explicit runtime settings.
+  Validate a single sender/reply address without control characters and exclude
+  mail credentials from configuration representations. Domain/key verification,
+  pending-delivery reconciliation and an actual worker rollout remain separate.
+
+- Source candidate: add separately scoped identity API/frontend release profiles
+  and real owner-probe PKCE/MFA sign-in, retaining the native API, interface,
+  feature, persistence and rollback checks. Preserve existing synthetic account
+  IDs, credentials, grants and data; retire only observed new probe sessions.
+  Signed operations can renew only the bounded credential time envelope under
+  unchanged payload pins. Commissioning and live qualification remain required.
+
+- Source candidate: central Onesa sign-in and account/access management across AI,
+  Drone and Robot, using the existing Portal issuer. Preserve AI ownership through
+  explicit password-proved linking, encrypt server-side tokens and PKCE material,
+  validate current entitlement/revocation on every request, bind sensitive
+  reauthentication to the same session/account, and distinguish local from global
+  sign-out. Global/product administration requires MFA; existing explicit native
+  engineering/cyber grants remain scoped to verified linked users and fresh MFA.
+  Localized sign-in and draft-preserving recovery are included. The additive
+  migration and feature remain subject to owner-controlled staging qualification.
+
+- Source correction: bind protected asset observations to percent-encoded HTTP
+  paths while preserving original archive names, exact byte digests and all access
+  checks. Space and Unicode filenames require fresh hosted qualification.
+- Add an owner-only continuation command for an original intent proven to have
+  issued no provider request. Separate exact-intent commissioning, fresh existing
+  authorization and an atomic one-use claim remain mandatory; it cannot renew
+  contexts or repeat a provider request.
+
+- Source correction: serve authenticated generated Mermaid source as UTF-8 plain
+  text instead of Pages' karaoke MIME type. Preserve exact bytes, private headers,
+  anonymous denial and all existing Access checks; fresh hosted acceptance is required.
+
+- Source correction: prevent owner staging qualification from waiting for its own
+  active probe to exit before acknowledging the required replacement. Only the
+  exact privately identified and fully inspected probe is excluded from those two
+  snapshots. Other workloads retain the existing preservation checks. Interrupted
+  clients receive one verified normal stop, run owned-fixture cleanup and retain
+  private inputs when exit cannot be confirmed. Hosted acceptance remains separate.
+
+- Source candidate: retain typed local public Docs checks as a separate genuine
+  build artifact for the external owner reader; legacy archive inspection cannot
+  substitute for the new required-check mode or native hosted acceptance.
+  The retained optional Docs Preview command also explicitly selects Preview.
+
+- Source correction: explicitly select Preview for owner-run frontend staging,
+  independent of CLI defaults; retain exact target readback and one-create custody.
+- Source candidate: verify credential-free Docs build/run/archive/context evidence
+  while retaining blocked hosted acceptance and owner authorization. Build-only
+  staging archives carry the staging label; old development archives are not relabelled.
+
+- Source correction: bind interface qualification to newly observed GET requests.
+  A previous page's delayed authentication response cannot reject or qualify a new
+  visit. Current failed responses, incomplete bodies and absent data still fail.
+
+- Source candidate: use the base image's existing BusyBox HTTP client for container
+  health checks, avoiding a fresh Python import tree every 15 seconds. Readiness,
+  staging liveness, intervals, deadlines and retries remain unchanged. Final-image
+  tests cover failure, custom ports, proxy isolation and timeout; rollout is separate.
+
+- Source candidate: use database-free Oracle staging liveness while retaining real database,
+  schema and model readiness in release qualification. The full middleware regression
+  proves no database checkout even with a configured failing engine. Deployment and
+  CU-hour savings remain separately unverified.
+
+## 2026-10-31 — Independent API foundation accepted
+
+- The API foundation at `0487419` passed exact-source hosted staging and production
+  verification. Existing authentication, persistence, independent components and
+  rollback were preserved; Twins and Cybersecurity activation remain separate.
+- Production acceptance triggered scoped unused-image cleanup. Frontend and Docs
+  release work continues independently; no physical operation was enabled.
+
+## 2026-10-23 — V1.1 application and isolated demo components accepted
+
+- Normal AI frontend `69b7a21ec3d5a6cd477170473e8538ba6894c0d4`, Vercel
+  `dpl_G6QBtLwvZHELx43VLASEaDZHUMYZ`, is live on `platform.onesa.eu` after full
+  exact-main native CI. Eight canonical Chromium/WebKit light/dark mobile/desktop
+  views pass with synthetic intercepted authentication/submissions and no inference.
+  API `7079a66` is retained; normal-production Industrial remains disabled.
+- The isolated demo frontend and API are accepted at source `b81945414faa5ee07782b2a0a916626c7d76a67d`,
+  Vercel `dpl_Ds2HmjJWEEsCqL3M6z3DndXZgSqp`, at the stable protected demo address.
+  Exact-main application equivalence is verified. Actual existing synthetic-owner
+  login, two-asset access, navigation, accessibility, logout and private denial pass.
+  Database, owner credentials/grant and other services are preserved. The update
+  makes no model call, migration, new identity or business-record write.
+- Retain the earlier six-case model acceptance: two accepted source-cited responses,
+  four pre-inference abstentions, one original rejected generation, three total
+  provider attempts and no automatic retry. Human ratings/comparison are NOT RUN;
+  useful-task cost is unobserved. Archived qualification records are not live owner
+  records. No live factory connector, customer data or physical operation is claimed.
+- Full source CI corrected a real fresh-status GET writer-lock defect and a separate
+  numeric-substring false positive in the private-error regression. Original failed
+  runs remain recorded; the exact structured error assertion is stricter. Locked
+  frozen product expectations and security gates remain unchanged.
+- Accepted Docs and Robot components keep their independent serving revisions.
+  Later README/CHANGELOG reconciliation commits require source checks but do not
+  redeploy these application components.
+
+- Check the complete private-investigation 404 response contract instead of
+  searching correlation IDs for a numeric fact. A deterministic valid UUID
+  reproduces the former false positive; extra fields or detailed error messages
+  still fail the stricter response assertion. Application behavior is unchanged.
+
+- Keep fresh Industrial investigation status reads free of writer locks. Stale
+  recovery still locks and rechecks before changing a record. A held-writer
+  regression reproduces the former blocked read without inference; existing
+  concurrent generation, revocation and cancellation checks remain required.
+
+- Reject malformed Industrial asset catalogs before placing them in workspace
+  state. Keep the editor/error message available and source-review actions disabled;
+  invalid catalogs cannot grant navigation. Retain the failing Firefox CI evidence.
+
+- Incorporate reviewer correction `b3cb8e7` once and apply locked formatting.
+  Evaluation rejects downstream failures and malformed/empty/skipped database
+  receipts; scoring controls remain separate from the frozen 43 product cases.
+  This tooling change does not itself release an application component.
+- Match Industrial navigation to the current API/account's successful access
+  response. Mark the translated Industrial region with its selected language,
+  retaining English for untranslated workspaces and generated/source text.
+  Backend authorization and ordinary-production feature settings remain enforced.
+
+- Keep Chat's inference-status row mounted while optional model metadata loads.
+  A retained WebKit trace and controlled pointer-down/metadata/pointer-up regression
+  reproduce a Send-button layout shift that swallowed the first click. Reserve the
+  existing row without blocking input or waiting for the optional request. The
+  correction is now in the independently accepted normal and isolated demo
+  frontends, with their original failure evidence retained.
+
+- Clarify the Industrial model contract by naming the qualitative-only statement
+  and human-review fields separately from exact citation identifiers and verbatim
+  quotes. Retain strict numeric, citation and quotation rejection, immutable facts
+  and single-attempt behavior. The first V1.1 hosted scenario was rejected for
+  numeric narrative; its failure is preserved. The retained corrected hosted
+  context accepted two source-cited responses; the original failure remains recorded, with no new generation during this release.
+
+- Preserve the reviewer’s three Industrial source-identity commits exactly once;
+  qualify them under the locked Python 3.11 project environment. Contradictory
+  signal IDs and reference identity keys fail validation; exact repeats and distinct
+  reference versions/anchors remain supported. This is contract hardening, not a
+  claim of an exploited public arbitrary-evidence endpoint.
+- Load the asset catalog and saved investigations independently so a catalog outage
+  does not hide existing records; merge late initial list results without replacing
+  newly accepted entries.
+- Separate disabled-demo, unavailable/missing record, list loading, load failure and
+  confirmed-empty UI states. Fence old generation observers by their claimed revision
+  after cancel/restart. Abstain before retrieval/inference for incomplete downtime
+  caused by excluded bad/unknown-quality events; retain the known lower bound.
+- Expand the existing evaluator to frozen `onesa-industrial-evaluation-v1.1.1`:
+  43 synthetic cases (7 development / 36 visible held-out regressions), plus isolated
+  API/lifecycle checks. Structural citation validation deliberately does not prove
+  semantic support. Add explicit engineering-review criteria and an owned, allowlisted
+  synthetic evidence download using the existing browser download pattern.
+- Prepare the five-minute demonstration, human worksheet, discovery guide and bounded
+  pilot template. Human ratings, comparative benefit and actual cost remain
+  unobserved. The accepted six-scenario context is retained separately from the newer serving
+  components; accepted Docs/Robot remain independent.
+
+## 2026-10-22 — Public/protected Docs sanitizer and isolated demo frontend accepted
+
+- Public Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`, Vercel
+  `dpl_4h1tQYKcCssNgrsEwPUL2DnjKFEi`, is accepted at `docs.onesa.eu` with DOMPurify 3.4.17.
+  Full native CI and the source-bound owner Preview pass: 279 artifact file hashes,
+  124 responsive/accessibility views, 20 additional layout checks, 21 diagram journeys,
+  11 PDFs and private-publication boundaries. Canonical production verifies all 279
+  file hashes, 16 responsive/accessibility views, six private-path denials, navigation,
+  search, favicon and indexing configuration. SSO, domains and bypass inventory are
+  preserved; no new automation token or paid service was created.
+- Protected Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`, Pages
+  `2d937ff1-391f-4156-8df6-75d2d14aaa5e`, is accepted on its canonical hostname.
+  It includes DOMPurify 3.4.17 for GHSA-cg2g-xh64-v4q7,
+  GHSA-mrv2-3pqr-j5jr and GHSA-c6gr-qvv4-5v3f, and the factual qualified-demo
+  Technical Overview.
+  All 751 private asset hashes and anonymous denials, 18 production views, 18 topics,
+  17 chapters, four onboarding days, 22 manuals and 87 diagrams pass. Only the
+  unfinished staging architecture/onboarding tail continued after its prior timeout;
+  completed file/access/UI evidence and the original stopped receipt are retained.
+- The real approved owner accessed current canonical/Preview Docs. Supported Access
+  logout then denied provenance, manuals and search at both hosts after propagation,
+  exercising the retained Preview cookie without exporting values. The original
+  email challenge remains owner-confirmed rather than independently witnessed.
+  Membership, passwords, MFA and provider policies remain unchanged. Private assets
+  stayed outside public Actions; only scoped count/hash qualification metadata entered it.
+- The isolated synthetic Industrial frontend is independently accepted at source
+  `373889b`, Vercel `dpl_AAX1uyYoBpcmZ1biJ6BmnJZvDLSQ`, with Next.js 16.4.2.
+  Sixty anonymous views and existing synthetic-owner login/assets/logout pass.
+  The original one-valid-response/58-view proof is reused only after unchanged
+  business/API checks; no additional model request is inferred. API3574f21/image
+  and database remain; one exact Preview-origin configuration recreation was needed.
+  Original grants, credentials, records and other ten service identities are preserved.
+- The public verifier's output-path guard and duplicate Playwright import stopped
+  before any application request. Offline controls reproduced the duplicate and
+  proved the single-frozen-checkout correction; acceptance assertions were unchanged.
+  These setup failures remain recorded. No full suite, security gate or failed
+  application acceptance was bypassed, and no backend production activation occurred.
+- These component releases are distinct from later README/CHANGELOG reconciliation
+  commits. Production AI frontend remains ac7f840/API7079a66; Industrial is isolated
+  staging, with no factory/customer connection, human domain approval or physical operation.
+
+## Accepted component — AI frontend security, 2026-10-22
+
+- Source `ac7f840` is accepted on the canonical AI host with Next.js 16.4.2 for
+  GHSA-2464-fhr4-w9xw and GHSA-p3m5-59mp-jv5r. Full native checks, 48 staged
+  and 16 canonical views, private denials/readiness and artifact-byte checks pass.
+  Retain the accepted API image/configuration and existing Node trust policy;
+  no Industrial production activation, model request, data or credential change.
+  This is an independent frontend component release, not deployment of mainline
+  Industrial features, public/protected Docs or the complete repository.
+
+## Unreleased
+
+- Reconcile the PRD and roadmap with the already accepted isolated synthetic
+  Industrial demonstration, preserving historical setup assumptions and the
+  existing no-factory/no-physical-operation boundaries. Distinguish automated
+  self-review from unperformed human/domain review and production activation.
+
+- Bound the read-only Compose configuration lookup to 30 seconds after a
+  hosted first invocation exceeded 15 seconds before any fixture image read.
+  Keep it single-attempt, report timeout without configuration contents, and
+  preserve the existing four-minute image-prefetch step (223-second inner
+  maximum), immutable digest checks and unchanged application tests.
+
+- Extend the existing immutable-image download helper to the pinned synthetic
+  database after a registry HTTP 500 stopped Docs setup before any build. Allow
+  one bounded recovery for recognized transport failures, verify the same digest,
+  and stop on authentication, manifest, unknown or identity errors. Application
+  builds, startup and tests remain single-attempt; no production service changes.
+
+- Register the existing 90-second account browser-test budget before fixture
+  setup. A retained WebKit trace stalled at blank-page creation before any
+  application request; the previous in-body setting left setup at 30 seconds.
+  Verify all three engines' registered limits without launching browsers. Keep
+  the account assertions and overall journey budget unchanged; no automatic retry.
+
+- Correct stalled Ubuntu metadata downloads in disposable hosted browser CI by
+  replacing direct Azure archive URIs and removing only its entry from the
+  referenced runner failover list, retaining canonical/security mirrors, suites,
+  components and signing keys. Bound APT reads and
+  fail on repository-update errors. Bound each browser dependency installation
+  to ten minutes after measured 119 MB package downloads exceeded five minutes
+  while still progressing; keep the documentation job at 30 minutes. Keep Chromium,
+  Firefox, WebKit and every security/release assertion mandatory; no automatic
+  workflow/test retry, paid infrastructure or application deployment is introduced.
+
+- Distinguish bounded Industrial retrieval, stream, JSON, schema, numeric-narrative,
+  citation, quotation and abstention failures without retaining model text in
+  errors. Retrieval outages now finish the saved investigation as failed rather
+  than leaving it running. Preserve facts, validation rules and admission limits;
+  the isolated synthetic staging demo is now qualified; production Industrial
+  activation remains separate.
+
+- Bound npm advisory requests and permit one transport-only audit retry after a
+  confirmed registry timeout/HTTP 503 blocked Docs and frontend CI. Preserve
+  Docs' low and Chat's high severity thresholds and fail closed for blocking
+  findings, invalid reports, input changes or
+  exhausted transport attempts; dependency installation and release tests are unchanged.
+
+- Recheck session/account/grant authorization before returning long-running
+  Industrial results. Preserve explicit failure/cancellation metadata and reject
+  whitespace-only output, drafts and review notes. Interrupted admission cannot
+  report success. Disable anonymous runtime schema/UI pages; offline contracts
+  remain available through classified documentation.
+- Lock investigation navigation during cancellation, reconcile completion races
+  without replaying writes, and refresh both saved state and the visible draft.
+  Protect unsaved text/review notes and bind review to the displayed saved revision.
+  Bound ordinary UI requests and explain uncertain outcomes without dropping input.
+  Identify a real model abstention explicitly instead of labeling it as hypotheses.
+  These corrections passed exact-source CI and isolated synthetic demo acceptance;
+  they are not an Industrial production release.
+
+- Keep Industrial evidence previews and saved calculations identical by excluding
+  creation-request identity and selection fields from the UTC window contract.
+  Verify separate investigation identifiers produce the same observed facts.
+
+- Hide closed source comments in generated PDF manuals and contents labels while
+  preserving code examples, escaped HTML and bounded handling of malformed input. Bind the comment renderer
+  dependency to each manual’s provenance; protected publication remains separate.
+
+- Retry a failed immutable TLS-proxy registry read once within bounded deadlines;
+  leave application startup, security assertions and qualification single-attempt.
+
+- Serialize Industrial investigation creation per user so parallel requests cannot
+  exceed the saved-investigation limit or race repeated identifiers.
+
+- Retain one-day synthetic browser failure evidence in hosted CI, with network
+  traces limited to CI loopback targets. Keep all assertions, deadlines and release
+  checks unchanged; the earlier isolated Firefox startup failure is not claimed fixed.
+
+- Implement protected Industrial Investigation V1 with versioned original synthetic
+  fixtures, deterministic interval calculations, bounded existing inference/retrieval,
+  citation/quote validation, explicit abstention, owned saved results and revisioned
+  internal drafts/self-review. Add an additive schema migration, generated contracts,
+  EN/DE critical controls and synthetic evaluations. Hosting and real-model acceptance
+  are not inferred from local tests; no factory writes or physical operation exists.
+
+- Align the protected Docs sign-in sequence with the separately accepted Portal
+  cross-browser implementation: encrypted handoff, fresh receiving-browser OIDC
+  state/PKCE and explicit verified-email confirmation before one-use redemption.
+  This source correction does not establish protected publication or an owner
+  sign-in, and changes no AI application, backend or public Docs component.
+
+- Replace detailed public operational runbooks with protected-reference pages after
+  preserving exact original source/hash provenance in restricted custody. Historical
+  Git copies remain public; this is active-source classification, not history removal.
+  Private Docs publication and approved-user acceptance are recorded separately.
+
+- Prepare the supported Markdown-it 15.0.3 Docs build-tool update for
+  GHSA-vfgh-jcmw-g37q, preserving unrelated locked packages and optional native
+  entries. Add bounded regressions for all four unterminated inline HTML cases.
+  The original exact-main audit failure remains recorded; no audit threshold,
+  required check or production release gate is bypassed. The protected edition is
+  accepted below; the public Docs release remains independent.
+
+- Align protected Engineering Docs homepage learning order, remove card numbers
+  and move secondary status guidance below the starting path. The classified protected
+  edition and approved-identity acceptance are recorded below. Public Docs retains
+  its own independent release.
+
+## 2026-10-22 — Protected Docs accepted; synthetic Industrial demo qualified
+
+- Protected Docs source `34e9ab83c412fc87183a1428537ae0547a22ed04` is accepted at
+  `docs.engineering.onesa.eu`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d`.
+  Staging and production each matched all 751 protected files, denied anonymous
+  requests to those paths, and passed 18 responsive/accessibility views. The edition
+  includes 22 manuals and 87 diagrams, the updated learning order and comment-safe
+  PDF rendering. Exact original private sources remain recoverable. The existing
+  approved owner identity and current Portal/Access policy were verified; no
+  credentials, membership or backend changed and no private assets entered Actions.
+- Industrial Investigation V1 passed its isolated synthetic hosted demonstration:
+  one validated model explanation, three stops / 720 seconds, one resolved source
+  citation, explicit draft save/reopen, 42 general UI views and 16 Industrial views.
+  Qualified source `34e9ab83c412fc87183a1428537ae0547a22ed04` preserves actual demo API `3574f21`
+  and frontend `c9f45fc` identities separately. Both run-owned users were removed;
+  prior failed attempts remain recorded. No customer/factory data, actual human
+  domain review, physical operation or Industrial production activation is claimed.
+- The existing production AI frontend/backend and public Docs remain on their
+  separately accepted revisions below. A repository metadata promotion does not
+  redeploy those components. Generated API documentation is restricted by a
+  separately verified narrow edge control; the existing API image is retained.
+
+## 2026-10-22 — AI backend parser security patch accepted
+
+- Backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048` is accepted independently
+  with installed `pypdf 6.21.2` verified in staging and production. Only the parser
+  manifest/lockfiles differ from the preceding backend; application code and schema
+  are unchanged. Exact-source native CI, image scanning and hosted readback passed.
+- Runtime configuration, persistent record identifiers/counts and user/grant/session
+  digests passed preservation checks; no migration, account creation or model request
+  was performed. Ten canonical HTTPS checks pass, and the frontend/Docs are retained.
+  Full business-payload comparison and a new authenticated production walkthrough
+  are not claimed. Industrial model qualification remains separate and pending.
+
+## 2026-10-21 — AI frontend TLS correction accepted
+
+- Frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` /
+  `dpl_3ExobTe8RY5QzpkhEpwN7vAnk8gW` is live on `platform.onesa.eu` after
+  normal promotion, full exact-main CI and affected staging gateway checks.
+- Initialize the reviewed Node trust policy before outbound clients. Exclude only
+  the affected emSign ECC G3 root; retain other authorities and TLS verification.
+  Isolated native-fetch/HTTPS and actual packaged-server checks pass.
+- Five canonical public/private checks pass. Retain Oracle API `776362dc` and both
+  independent Docs deployments. Unchanged UI/business evidence is reused with source
+  equivalence; no inference, production identity or application-data mutation.
+- A packaging observer initially missed Vercel's mapped dependencies. The policy
+  was present; the existing build was materialized standalone and verified without
+  rebuilding. The original failed observer and its correction remain in evidence.
+
+## 2026-10-21 — AI backend trust-store patch accepted
+
+- Oracle API source `776362dcbd994ecde3ca253cbc558faf2c279a56` is accepted after
+  normal promotion to qualified main `204e666c40943af2dc1f53359f360feaffbaa126`
+  and full exact-main CI `39510142001`. certifi 2026.10.19 is installed; actual
+  bundle digest and removal of the affected emSign root match the scanned image.
+- All 23 real staging workflow checks and 42 UI views pass with synthetic-identity
+  cleanup. The subsequent five-path Docs-only correction preserves backend, Chat
+  and release-verifier bytes; it does not relabel the actual image source or repeat
+  inference. Production passes six private-route denials and three readiness
+  samples. Credentials, data and the eight other service identities are preserved.
+- Retain frontend `3b38acd862f8db177035adec49c920470217894d` /
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, public Docs `4f30218d`, and the separate
+  protected Docs record. No migration, new production account or model call ran.
+  The original verifier's unavailable certificate-parser dependency is recorded;
+  its isolated standard-library correction passed before remaining read-only
+  acceptance. No additional deployment or failed-test override was used.
+
+## 2026-10-20 — Public Docs accepted; application and backend retained
+
+- Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a`, Vercel
+  `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2`, is accepted at `docs.onesa.eu`.
+  Publish the coherent learning path, current product/provider guides, readable
+  search previews and exports with one favicon and explicit production destinations.
+  Applications and planned Industrial AI remain separate from Robotics / Physical AI;
+  industrial milestones, evaluation and commercial hypotheses are proposals.
+- Exact-main native Preview acceptance passes 124 accessibility views, 20 layout
+  views, 21 diagrams, 11 PDFs and 1,860 links. Existing successful qualification
+  `39481475428` and owner authorization `39482253997` retain the original evidence
+  timestamp. Canonical production passes all 279 byte/MIME/hash checks, 16 views
+  and six private-path denials. Failed observations remain recorded; a confirmed
+  local path-order mismatch was corrected without changing the prepared digest,
+  uploading twice or repeating full native qualification.
+- Retain AI frontend `3b38acd862f8db177035adec49c920470217894d` /
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9` and Oracle API
+  `6011890047dc16267147241ea68b94f494c89827`. Protected Docs retains its separate
+  18 October record; newer private content and current approved-account acceptance
+  remain pending. This release claims no new inference, training or hardware result.
+- Main CI uses bounded dependency downloads/cache, one locked Chat install per job,
+  complete exact-source checks and fixed-category Docs diagnostics without relaxing
+  assertions or deadlines. Earlier architecture/custody failures remain failures;
+  targeted controls and subsequent qualified evidence have separate records.
+- Local-runner workflows, provisioning, hooks and consumers are removed; current
+  repository readback confirms no registered self-hosted runners. Standard hosted
+  validation and solo-owner-controlled release remain. Public protection is verified;
+  a later owner-managed private GitHub Free transition needs its documented feature/
+  allowance checks and procedural controls. No paid fallback or unavailable reviewer
+  is required. Repository visibility is unchanged.
+
+## 2026-10-19 — AI workflows and public Docs accepted
+
+- Require sign-in before Travel/Knowledge work, retain the requested task and protect
+  Travel drafts, selection and pending saves. Same-account session renewal preserves
+  in-memory work without replay; another account starts separately. The frontend also
+  retains recovery/invitation fragment handling, explicit submission and one-use
+  server validation.
+- Frontend source `3b38acd862f8db177035adec49c920470217894d`, Vercel deployment
+  `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, is accepted at `platform.onesa.eu`.
+  All 23 required staging checks, 42 views and the approved normal/slow-mobile timing
+  tail passed. Canonical acceptance passed 20 anonymous views, 12 private-route
+  denials and five readiness samples. Authenticated production editing is not claimed.
+- The API remains source `6011890047dc16267147241ea68b94f494c89827`, image
+  `sha256:b3599a8582b621a5b23d665e614255f92f51322695a0ded263b41c7ed3446d9b`.
+  Its exact live image, configuration and health were independently verified; no
+  backend restart occurred. Public and protected Docs retain separate release records.
+
+- Public Docs independently uses source `3b38acd862f8db177035adec49c920470217894d`, deployment
+  `dpl_94epioyn7QQv1BpL1qPNYdNqY3Eh`, at `docs.onesa.eu`. The homepage offers an
+  unnumbered starting path before secondary status guidance, aligned with the sidebar.
+  Native Preview acceptance passed 124 accessibility views, 20 layouts, navigation
+  and all 279 approved public files. Canonical acceptance verified all 279 files,
+  six private-path denials and 12 mobile/desktop views with search and navigation.
+  Protected Docs is a separate artifact and is not included in this release.
+
+## 2026-10-18 — AI application and public Docs accepted
+
+- AI frontend source `3ca4bc6556515debf4ce2ccfe90b3cbb8d327655`, Vercel
+  `dpl_EQiYQpsDdGdXMRhbcXtR2jZSS5Rf`, passed canonical acceptance. Sign-in and
+  first-use orientation, knowledge/documentation entry points and footer targets are
+  released. The retained API source is `6011890047dc16267147241ea68b94f494c89827`,
+  image `sha256:b3599a8582b621a5b23d665e614255f92f51322695a0ded263b41c7ed3446d9b`.
+  It rejects invalid tool permissions before model admission; no backend rebuild is
+  implied by the later frontend source identity. Production acceptance was anonymous;
+  authenticated workflow evidence belongs to staging.
+- Public Docs source `3ca4bc6556515debf4ce2ccfe90b3cbb8d327655`, deployment
+  `dpl_87x6fg7VVBZxDdrCq14TZVBCbYis`, is independently accepted at `docs.onesa.eu`.
+  The protected counterpart was uploaded as a Preview and was not published under
+  that source. Its last accepted production identity is recorded separately below.
+- Subsequent third-review changes have their own dated component acceptance records.
+
+## 2026-10-18 — Protected Engineering Docs production hostname verified
+
+- Engineering Docs is accepted at `https://docs.engineering.onesa.eu/`, source
+  `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages deployment
+  `2daea640-3c73-40da-8b01-397bec2ca3ea`. All 741 asset/hash checks, 741 anonymous
+  denials and 18 layout/accessibility views passed. The provider origin remains
+  protected; it was a production provider address, not a development environment.
+- Portal navigation source `40cbdcbb5460b2cea2078fe22005d8d6c60c6e6a`, Vercel
+  deployment `dpl_TZfvysWGbjASje3bcw2WCoostdLG`, redirects `/engineering` to that
+  exact protected hostname. Existing Onesa sign-in, audience and approved membership
+  boundaries are retained. Other application/backend identities were not relabelled.
+- The later second-review protected Docs artifact remains unpublished until its
+  own exact-source CI and private hosted acceptance; AI/public Docs releases above
+  have separate acceptance records.
+
+## 2026-10-18 — Verified public and protected documentation releases
+
+- Protected Engineering Docs source `0936f1867f934d7c740603be1ed78bd96c4f4d39`
+  is live at deployment `50d94448-d0fe-4d65-a3ac-31a87114ce62`: 741 asset checks,
+  741 anonymous denials and 18 layout/accessibility views passed. Onesa Portal
+  identity is active on the canonical and Preview Access applications.
+- Public Docs remains independently deployed from `78d2ad058e9aa762035a5f7cdf0b41977c434114`,
+  deployment `dpl_3JbqZNGVRrdGKm5u4hJQhLL2yb4Q`; current AI frontend/backend
+  `ee9c442`/`6a1cce4` were not redeployed by this Docs publication.
+- Preparation-stage pending/off language below is historical. Current activation
+  is recorded in DOCUMENTATION_HOSTING.md and restricted release receipts.
+
+- Record the verified production Onesa Portal sign-in connection for protected
+  Engineering Docs, preserve scoped Access membership and rollback, and refresh
+  the pinned email-only registration runbook. Keep schema-generation output free
+  of stale claims about deployed migrations.
+
+- Bind protected Docs release metadata to the reviewed diagram catalog, so newly
+  documented architecture is counted without accepting omitted or duplicate diagrams.
+
+- Reconcile protected recovery instructions with the activated hourly AI/Robot
+  off-instance backups, current timer readback and independent restores. Keep
+  retention, storage caps, live-restore authority and recovery objectives distinct.
+  Separate actual Portal migration/runtime activation from source-only diagrams.
+
+- Correct the Engineering Docs access diagram to distinguish historical email-code
+  protection from the now-activated Portal identity cutover. Retain bounded, sanitized
+  hydration-failure observations without changing acceptance assertions or deadlines.
+
+- Remove arrow-in-square link icons throughout public and engineering Docs while
+  retaining screen-reader notice for links that open another tab.
+
+- Refresh protected registration/approval and Portal sign-in references, with source-verified access-schema diagrams and preserved public/private publication boundaries.
+
+- Refresh committed cross-product schema/contracts and include the protected Portal
+  engineering identity runbook. Distinguish source-default Portal sign-in configuration and historical migration
+  snapshots from the separately verified production identity activation.
+  Verify all source-defined Portal tables (including migration tracking) against
+  an isolated catalog, split private schema diagrams by purpose and reject stale
+  schema fingerprints, omitted tables and invented entities in CI.
+
+- Correct the protected migration guide's virtual-environment path, document all six
+  revisions and the current head, and distinguish forward-only recovery from supported
+  downgrade tests. This documentation change performs no migration or application deployment.
+- Extend restored-copy lockdown with explicit isolated erasure replay, complete
+  event/hold categories, source-snapshot binding, atomic cascades and idempotency.
+  Live/networked targets and hold conflicts are rejected before mutation; replay
+  never grants activation or enables draft retention policies.
+
+## 2026-10-16 — Qualified AI and documentation releases live
+
+- Released frontend `ee9c442db4932b77ad3f4713631a2421c179c04f`, deployment
+  `dpl_28GCkGxzuzARBVz7WnDMCaJAFid2`, with qualified Oracle backend source
+  `6a1cce484be39d175b374f3ab571e6dcc154c930`. Full exact-main CI, all 23 real
+  workflow checks and 42 hosted UI views passed. Strict component-byte equivalence
+  preserves the actual backend identity rather than relabelling its source.
+- Production acceptance passed real streaming/context persistence, embeddings and
+  retrieval, protected routes, anonymous/CSRF denials and logout revocation. Both
+  owned synthetic fixtures were removed; accounts and credentials were preserved.
+- Published public and protected Engineering Docs from `6a1cce4`, including the
+  Oracle VM guide and email-code onboarding. Public and protected website builds
+  retain separate classification and access controls; repository visibility is separate.
+
+- Distinguish hosted request timeouts, transport failures and explicit/model tool
+  outcomes using fixed safe categories; retain the exact failing agent substep.
+  This improves diagnosis without relaxing any acceptance assertion or retry limit.
+- Record allowlisted hosted draft-check steps and failure categories without exception
+  messages, assertion values, cookies or fixture credentials; acceptance checks are unchanged.
+- Bind protected Docs metadata to a current authentication-policy check with schema 2;
+  metadata still grants no hosted acceptance or deployment authority.
+- Document owner-managed engineering Docs onboarding/offboarding for approved Onesa
+  email identities, synchronized across canonical/preview policies and both site bindings.
+- Document the selected email-code sign-in direction and the scope of its verified
+  provider-policy change; deployment evidence remains in the restricted audit store.
+- Keep the Agents input's explicit label stable after typing, including during
+  system appearance changes; retain drafts and focus without appearance requests.
+- Correct the protected Oracle guide's Portal health and readiness paths, preserve
+  table columns in exports, and use the current Oracle layout in its PDF.
+- Link engineering PDF references to the protected production documentation host.
+
+## 2026-10-16 — Protected Oracle VM operations documentation
+
+- Added the shared VM layout, exact API routes/loopback ports, environment isolation,
+  worker/scanner boundaries, Tailscale administration and resource limits.
+- Linked read-only troubleshooting, monitoring, backup and recovery procedures from
+  maintained deployment references; private runtime values and evidence remain excluded.
+- Documentation changes do not deploy, restart or qualify an application.
+- Horizontally overflowing reference tables now enter the keyboard focus order;
+  non-scrolling tables retain their usual behavior and native table semantics.
+
+## 2026-10-16 — AI Platform production API moved to Oracle
+
+- Moved the existing qualified backend to an immutable, scanned ARM64 image on
+  the existing Oracle Free VM, behind a dedicated HTTPS tunnel and loopback bind.
+- Republished the identical accepted frontend artifact with its server-side API
+  origin changed. Existing authenticated access, protected reads, logout/revocation
+  and anonymous denial pass through the production website.
+- Preserved accounts, credentials, external data and existing worker/scanner services.
+  No Render build, paid resource, schema migration or physical actuation occurred.
+- Prior full application qualification is reused for unchanged source; new target
+  checks establish access and readiness, not a new feature or inference release.
+  Staging Preview acceptance remains independently recorded in restricted evidence.
+
+The platform remains under development. These entries record verified hosting
+and pre-launch releases; broader launch qualification remains separate.
+
+Current qualification work defers Docs search-index loading until search is
+opened and qualifies public Docs independently with exact production-context
+artifacts. Docs authorization does not authorize the AI application or API.
+Maintained product copy uses count-neutral wording; protected public Docs Preview
+tests keep their credential within the verified deployment origin.
+Public Docs archive verification uses the producer's path ordering and retains
+the exact build and archive digest checks.
+Prepared protected Docs custody uses a conditional owner handoff with staging
+blocked and all deployment grants false until external live validation. Private
+site bytes stay outside GitHub artifacts; full and public release gates remain
+independent.

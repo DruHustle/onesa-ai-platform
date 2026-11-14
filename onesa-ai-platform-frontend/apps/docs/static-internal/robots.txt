@@ -1,0 +1,3 @@
+# Internal documentation still requires authentication for every asset.
+User-agent: *
+Disallow: /

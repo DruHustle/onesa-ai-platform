@@ -1,0 +1,33 @@
+{
+  "afterSecondsWithoutObservation": 15,
+  "expectedAfterDisconnect": "stale",
+  "high": 5,
+  "hysteresis": 1,
+  "metric": "vibration",
+  "mode": "simulated",
+  "observations": [
+    {
+      "expected": "normal",
+      "offsetSeconds": 0,
+      "value": 2
+    },
+    {
+      "expected": "rule_alarm",
+      "offsetSeconds": 1,
+      "value": 6
+    },
+    {
+      "expected": "rule_alarm",
+      "offsetSeconds": 2,
+      "value": 4.5
+    },
+    {
+      "expected": "normal",
+      "offsetSeconds": 3,
+      "value": 3
+    }
+  ],
+  "scenario": "pump-bearing-vibration-v1",
+  "schemaVersion": "1.0.0",
+  "unit": "mm/s"
+}

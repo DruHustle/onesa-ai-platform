@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-09",
+  "node": "24.21.0",
+  "docs_react": "18.3.1",
+  "security_tests": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "backports": {
+    "braces": "@onesa/braces@3.0.3-onesa.2",
+    "sprintf-js": "@onesa/sprintf-js@1.1.3-onesa.2"
+  },
+  "scope_builds": [
+    "public",
+    "internal"
+  ],
+  "public_asset_exposure": "clean baseline plus rejected internal canary",
+  "remote_ci": "not executed",
+  "remote_publication": "not performed"
+}

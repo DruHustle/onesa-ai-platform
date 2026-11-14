@@ -1,0 +1,13 @@
+route:
+  receiver: local-operations
+  group_by: [alertname]
+  group_wait: 5s
+  group_interval: 5s
+  repeat_interval: 1h
+receivers:
+  - name: local-operations
+    webhook_configs:
+      - url: http://operations:9000/alerts
+        send_resolved: true
+        http_config:
+          authorization: {type: Bearer, credentials_file: /run/secrets/operations_token}

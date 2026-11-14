@@ -1,0 +1,15 @@
+erDiagram
+  robot_simulation_lease_v1 {
+    INTEGER id PK
+    TEXT owner
+    INTEGER expires
+  }
+  robot_simulation_tasks_v1 {
+    TEXT id PK
+    TEXT owner
+    TEXT proposal
+    TEXT state
+    TEXT reason
+    REAL created
+    REAL position
+  }

@@ -1,0 +1,9 @@
+{
+  "name": "onesa-twin-solid-authoring",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "manifold-3d": "3.5.4"
+  }
+}

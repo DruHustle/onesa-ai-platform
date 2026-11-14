@@ -1,0 +1,44 @@
+%% Portal source schema SHA256: df7e3baafeaccdf70d1b409cf3788ba1cc777238c68e45f1679b8047decbaa93
+erDiagram
+  applications {
+    uuid id PK "NOT NULL"
+    uuid job_id FK "NOT NULL"
+    text name "NOT NULL"
+    text email "NOT NULL"
+    text message "NOT NULL"
+    uuid file_id FK "NOT NULL"
+    text status "NOT NULL"
+    text notes "NOT NULL"
+    timestamptz consent_at "NOT NULL"
+    timestamptz delete_after "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    timestamptz rejected_at "nullable"
+  }
+  content {
+    uuid id PK "NOT NULL"
+  }
+  enquiries {
+    uuid id PK "NOT NULL"
+    text category "NOT NULL"
+    text name "NOT NULL"
+    text email "NOT NULL"
+    text organization "NOT NULL"
+    text message "NOT NULL"
+    text locale "NOT NULL"
+    text status "NOT NULL"
+    uuid owner_id FK "nullable"
+    text notes "NOT NULL"
+    timestamptz follow_up_at "nullable"
+    timestamptz consent_at "NOT NULL"
+    timestamptz created_at "NOT NULL"
+    timestamptz closed_at "nullable"
+  }
+  files {
+    uuid id PK "NOT NULL"
+  }
+  users {
+    uuid id PK "NOT NULL"
+  }
+  files ||--o| applications : "file_id to id / NO ACTION"
+  content ||--o{ applications : "job_id to id / NO ACTION"
+  users o|--o{ enquiries : "owner_id to id / NO ACTION"

@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "classification": "synthetic, author-created evaluation only; these are not corporate policies or facts",
+  "acceptance": {
+    "top1_minimum": 0.85,
+    "recall3_minimum": 0.95,
+    "per_language_top1_minimum": 0.8,
+    "maximum_256_top1_drop": 0.05
+  },
+  "documents": [
+    {
+      "id": "remote-access",
+      "language": "de",
+      "text": "Für den Zugriff auf Firmensysteme von außerhalb des Büros sind ein persönliches Benutzerkonto und ein zweiter Anmeldefaktor erforderlich. Gemeinsame Zugangsdaten sind untersagt."
+    },
+    {
+      "id": "office-entry",
+      "language": "en",
+      "text": "Physical entry to the office requires a named access badge. Visitors check in at reception and are accompanied by their host. This badge does not provide access to software accounts."
+    },
+    {
+      "id": "offboarding",
+      "language": "en",
+      "text": "When an employee leaves, IT disables their login, revokes active sessions and removes access to shared files. The manager confirms equipment return before closing the departure checklist."
+    },
+    {
+      "id": "backup-restore",
+      "language": "de",
+      "text": "Datenbanksicherungen werden verschlüsselt und getrennt vom laufenden System gespeichert. Eine Wiederherstellung in einer isolierten Umgebung wird monatlich geprüft und die Datenintegrität dokumentiert."
+    },
+    {
+      "id": "password-change",
+      "language": "en",
+      "text": "A signed-in user can replace their password after confirming the current one. This revokes previous sessions. Changing the password does not disable multifactor authentication."
+    },
+    {
+      "id": "battery-heat",
+      "language": "de",
+      "text": "Wenn die Temperatur eines Akkupacks über den sicheren Betriebsbereich steigt, wird das Laden unterbrochen. Ein Techniker prüft Kühlung, Umgebungstemperatur und den Zustand der Zellen vor der Wiederaufnahme."
+    },
+    {
+      "id": "bearing-maintenance",
+      "language": "en",
+      "text": "Increasing vibration near a motor bearing can indicate wear. Maintenance compares sensor readings with the normal baseline, schedules inspection and replaces the bearing when measurements confirm damage."
+    },
+    {
+      "id": "document-export",
+      "language": "de",
+      "text": "Nutzer können ein persönliches Datenarchiv mit Profil, Gesprächsinhalten und extrahierten Dokumenttexten herunterladen. Zugangsschlüssel und Kennwort-Hashes gehören nicht in das Archiv. Große Archive erfordern einen sicheren separaten Export."
+    },
+    {
+      "id": "api-bursts",
+      "language": "en",
+      "text": "Public API traffic is bounded by rate limits. A client receiving HTTP 429 should wait and retry with backoff. Repeated immediate retries increase congestion and do not bypass the limit."
+    },
+    {
+      "id": "incident-response",
+      "language": "de",
+      "text": "Bei einem vermuteten Sicherheitsvorfall informiert die betroffene Person das zuständige Sicherheitsteam. Beweise werden geschützt aufbewahrt, Zugänge bei Bedarf gesperrt und die Wiederherstellung koordiniert."
+    },
+    {
+      "id": "upload-quarantine",
+      "language": "en",
+      "text": "Uploaded applicant PDFs remain in quarantine until malware scanning succeeds. Recruiters can only download clean files through authorized routes; uploading a document does not make it public."
+    },
+    {
+      "id": "content-review",
+      "language": "de",
+      "text": "Ein neuer Artikel beginnt als Entwurf. Ein berechtigter Redakteur prüft Inhalt und rechtliche Freigaben, bevor der Artikel veröffentlicht wird. Eine Änderung erzeugt eine nachvollziehbare neue Version."
+    },
+    {
+      "id": "travel-estimates",
+      "language": "en",
+      "text": "A model-generated itinerary suggests activities and explains assumptions. Without live provider connections it cannot verify current prices, flight availability or accommodation bookings."
+    },
+    {
+      "id": "meeting-timezones",
+      "language": "de",
+      "text": "Bei internationalen Besprechungen werden Zeitzonen und lokale Feiertage berücksichtigt. Die Einladung enthält den Zeitpunkt mit eindeutiger Zeitzone sowie eine Option für asynchrone Rückmeldung."
+    },
+    {
+      "id": "software-licenses",
+      "language": "en",
+      "text": "Before shipping a third-party dependency, engineering records its license, provenance and version. Restricted licenses require review. An open-source component does not automatically license the company product."
+    },
+    {
+      "id": "invoice-approval",
+      "language": "de",
+      "text": "Eine Lieferantenrechnung wird mit Bestellung und tatsächlicher Lieferung abgeglichen. Eine berechtigte Person genehmigt die Zahlung. Unbekannte Bankverbindungen werden unabhängig bestätigt."
+    },
+    {
+      "id": "sensor-calibration",
+      "language": "en",
+      "text": "Temperature sensors are calibrated against a reference instrument at scheduled intervals. Operators record measured deviation and replace sensors that exceed the allowed tolerance."
+    },
+    {
+      "id": "database-migrations",
+      "language": "de",
+      "text": "Schemaänderungen erfolgen über versionierte Migrationen. Vor der Ausführung werden Sicherung und Wiederherstellungsweg geprüft. Anwendungskonten besitzen keine Rechte zum Erstellen oder Löschen von Tabellen."
+    },
+    {
+      "id": "accessibility",
+      "language": "en",
+      "text": "Forms have explicit labels and usable keyboard focus. Errors explain how to correct the input. Layouts are checked at narrow widths, and information is not conveyed by color alone."
+    },
+    {
+      "id": "deletion-backups",
+      "language": "de",
+      "text": "Die Kontolöschung entfernt persönliche Datensätze und Suchvektoren aus der aktiven Datenbank. Historische Sicherungskopien benötigen einen separaten Aufbewahrungs- und Löschprozess."
+    },
+    {
+      "id": "network-outage",
+      "language": "en",
+      "text": "If the upstream service is unavailable, the application returns a safe error without exposing internal URLs or credentials. Operations checks connectivity and recovery; it must not fabricate a successful response."
+    },
+    {
+      "id": "dataset-consent",
+      "language": "de",
+      "text": "Trainingsdaten benötigen nachvollziehbare Herkunft, zulässige Nutzungsrechte und gegebenenfalls Einwilligung. Private Nutzergespräche werden nicht ohne gesonderte Freigabe zu Trainingsbeispielen."
+    },
+    {
+      "id": "release-rollback",
+      "language": "en",
+      "text": "A release rollback restores a previously qualified application artifact and compatible configuration. Operators check database compatibility and readiness before routing traffic back to the restored version."
+    },
+    {
+      "id": "knowledge-version",
+      "language": "de",
+      "text": "Dokumente tragen eine Version des verwendeten Embedding-Modells. Eine Suche vergleicht nur Vektoren derselben Version. Beim Neuaufbau werden neue Vektoren zuerst berechnet; ein Fehler lässt den alten Index unverändert."
+    }
+  ],
+  "queries": [
+    {
+      "id": "remote-access-en",
+      "language": "en",
+      "text": "What extra sign-in protection do I need when working away from the office?",
+      "relevant": [
+        "remote-access"
+      ]
+    },
+    {
+      "id": "remote-access-de",
+      "language": "de",
+      "text": "Welche zusätzliche Anmeldung brauche ich beim Arbeiten von zu Hause?",
+      "relevant": [
+        "remote-access"
+      ]
+    },
+    {
+      "id": "office-entry-en",
+      "language": "en",
+      "text": "How should a guest enter our workplace building?",
+      "relevant": [
+        "office-entry"
+      ]
+    },
+    {
+      "id": "office-entry-de",
+      "language": "de",
+      "text": "Wie kommt ein Besucher in das Bürogebäude?",
+      "relevant": [
+        "office-entry"
+      ]
+    },
+    {
+      "id": "offboarding-en",
+      "language": "en",
+      "text": "Someone is leaving the business. How should their digital access be ended?",
+      "relevant": [
+        "offboarding"
+      ]
+    },
+    {
+      "id": "offboarding-de",
+      "language": "de",
+      "text": "Wie wird der digitale Zugang ausgeschiedener Mitarbeiter beendet?",
+      "relevant": [
+        "offboarding"
+      ]
+    },
+    {
+      "id": "backup-restore-en",
+      "language": "en",
+      "text": "How do we prove saved database copies can be recovered correctly?",
+      "relevant": [
+        "backup-restore"
+      ]
+    },
+    {
+      "id": "backup-restore-de",
+      "language": "de",
+      "text": "Wie prüfen wir, ob Sicherungskopien tatsächlich wiederherstellbar sind?",
+      "relevant": [
+        "backup-restore"
+      ]
+    },
+    {
+      "id": "password-change-en",
+      "language": "en",
+      "text": "Does replacing my password turn off the second login factor?",
+      "relevant": [
+        "password-change"
+      ]
+    },
+    {
+      "id": "password-change-de",
+      "language": "de",
+      "text": "Wird die Zwei-Faktor-Anmeldung beim Ändern meines Kennworts ausgeschaltet?",
+      "relevant": [
+        "password-change"
+      ]
+    },
+    {
+      "id": "battery-heat-en",
+      "language": "en",
+      "text": "What should happen if a battery gets too hot while being charged?",
+      "relevant": [
+        "battery-heat"
+      ]
+    },
+    {
+      "id": "battery-heat-de",
+      "language": "de",
+      "text": "Was tun, wenn der Akku beim Aufladen zu heiß wird?",
+      "relevant": [
+        "battery-heat"
+      ]
+    },
+    {
+      "id": "bearing-maintenance-en",
+      "language": "en",
+      "text": "A rotating machine is shaking more than normal. What maintenance investigation is appropriate?",
+      "relevant": [
+        "bearing-maintenance"
+      ]
+    },
+    {
+      "id": "bearing-maintenance-de",
+      "language": "de",
+      "text": "Welche Untersuchung ist nötig, wenn eine Maschine ungewöhnlich stark schwingt?",
+      "relevant": [
+        "bearing-maintenance"
+      ]
+    },
+    {
+      "id": "document-export-en",
+      "language": "en",
+      "text": "What personal content belongs in a downloadable account archive, and what credentials must be left out?",
+      "relevant": [
+        "document-export"
+      ]
+    },
+    {
+      "id": "document-export-de",
+      "language": "de",
+      "text": "Welche Inhalte gehören in mein Datenarchiv und welche Anmeldedaten nicht?",
+      "relevant": [
+        "document-export"
+      ]
+    },
+    {
+      "id": "api-bursts-en",
+      "language": "en",
+      "text": "How should an application respond when too many API requests are rejected?",
+      "relevant": [
+        "api-bursts"
+      ]
+    },
+    {
+      "id": "api-bursts-de",
+      "language": "de",
+      "text": "Was soll ein Client nach zu vielen Anfragen und Status 429 tun?",
+      "relevant": [
+        "api-bursts"
+      ]
+    },
+    {
+      "id": "incident-response-en",
+      "language": "en",
+      "text": "Who should handle a suspected security breach and preserve the evidence?",
+      "relevant": [
+        "incident-response"
+      ]
+    },
+    {
+      "id": "incident-response-de",
+      "language": "de",
+      "text": "Wer kümmert sich bei einem Sicherheitsvorfall um Beweise und gesperrte Zugänge?",
+      "relevant": [
+        "incident-response"
+      ]
+    },
+    {
+      "id": "upload-quarantine-en",
+      "language": "en",
+      "text": "Can a recruiter open a newly uploaded CV before the malware check finishes?",
+      "relevant": [
+        "upload-quarantine"
+      ]
+    },
+    {
+      "id": "upload-quarantine-de",
+      "language": "de",
+      "text": "Darf ein Personalverantwortlicher einen neuen Lebenslauf vor Abschluss des Virenscans öffnen?",
+      "relevant": [
+        "upload-quarantine"
+      ]
+    },
+    {
+      "id": "content-review-en",
+      "language": "en",
+      "text": "What needs to happen before a draft article appears on the public website?",
+      "relevant": [
+        "content-review"
+      ]
+    },
+    {
+      "id": "content-review-de",
+      "language": "de",
+      "text": "Was muss vor der Veröffentlichung eines Entwurfs auf der Website passieren?",
+      "relevant": [
+        "content-review"
+      ]
+    },
+    {
+      "id": "travel-estimates-en",
+      "language": "en",
+      "text": "Can an AI travel suggestion guarantee current hotel rates without a live booking provider?",
+      "relevant": [
+        "travel-estimates"
+      ]
+    },
+    {
+      "id": "travel-estimates-de",
+      "language": "de",
+      "text": "Kann ein KI-Reiseplan ohne Live-Anbieter aktuelle Hotelpreise bestätigen?",
+      "relevant": [
+        "travel-estimates"
+      ]
+    },
+    {
+      "id": "meeting-timezones-en",
+      "language": "en",
+      "text": "How can international colleagues receive an unambiguous meeting time?",
+      "relevant": [
+        "meeting-timezones"
+      ]
+    },
+    {
+      "id": "meeting-timezones-de",
+      "language": "de",
+      "text": "Wie wird ein Termin für Kollegen in unterschiedlichen Zeitzonen eindeutig angegeben?",
+      "relevant": [
+        "meeting-timezones"
+      ]
+    },
+    {
+      "id": "software-licenses-en",
+      "language": "en",
+      "text": "What license checks are needed before distributing an external software library?",
+      "relevant": [
+        "software-licenses"
+      ]
+    },
+    {
+      "id": "software-licenses-de",
+      "language": "de",
+      "text": "Welche Lizenzprüfung ist vor dem Vertrieb einer Fremdbibliothek nötig?",
+      "relevant": [
+        "software-licenses"
+      ]
+    },
+    {
+      "id": "invoice-approval-en",
+      "language": "en",
+      "text": "How should a supplier bill and changed bank details be verified before payment?",
+      "relevant": [
+        "invoice-approval"
+      ]
+    },
+    {
+      "id": "invoice-approval-de",
+      "language": "de",
+      "text": "Wie werden eine Lieferantenrechnung und neue Bankdaten vor der Zahlung geprüft?",
+      "relevant": [
+        "invoice-approval"
+      ]
+    },
+    {
+      "id": "sensor-calibration-en",
+      "language": "en",
+      "text": "How do we check whether a thermometer sensor is measuring accurately?",
+      "relevant": [
+        "sensor-calibration"
+      ]
+    },
+    {
+      "id": "sensor-calibration-de",
+      "language": "de",
+      "text": "Wie wird die Genauigkeit eines Temperatursensors überprüft?",
+      "relevant": [
+        "sensor-calibration"
+      ]
+    },
+    {
+      "id": "database-migrations-en",
+      "language": "en",
+      "text": "Which database account should be allowed to modify table definitions during an upgrade?",
+      "relevant": [
+        "database-migrations"
+      ]
+    },
+    {
+      "id": "database-migrations-de",
+      "language": "de",
+      "text": "Darf das normale Anwendungskonto beim Update Tabellen verändern?",
+      "relevant": [
+        "database-migrations"
+      ]
+    },
+    {
+      "id": "accessibility-en",
+      "language": "en",
+      "text": "How should a form remain usable for keyboard and screen-reader users?",
+      "relevant": [
+        "accessibility"
+      ]
+    },
+    {
+      "id": "accessibility-de",
+      "language": "de",
+      "text": "Wie bleibt ein Formular mit Tastatur und Bildschirmleser bedienbar?",
+      "relevant": [
+        "accessibility"
+      ]
+    },
+    {
+      "id": "deletion-backups-en",
+      "language": "en",
+      "text": "Does removing an account from the live system immediately erase historical backup copies?",
+      "relevant": [
+        "deletion-backups"
+      ]
+    },
+    {
+      "id": "deletion-backups-de",
+      "language": "de",
+      "text": "Werden mit der Kontolöschung sofort alle historischen Sicherungen gelöscht?",
+      "relevant": [
+        "deletion-backups"
+      ]
+    },
+    {
+      "id": "network-outage-en",
+      "language": "en",
+      "text": "What should an application show when its private upstream server cannot be reached?",
+      "relevant": [
+        "network-outage"
+      ]
+    },
+    {
+      "id": "network-outage-de",
+      "language": "de",
+      "text": "Was zeigt die Anwendung, wenn ihr interner Dienst nicht erreichbar ist?",
+      "relevant": [
+        "network-outage"
+      ]
+    },
+    {
+      "id": "dataset-consent-en",
+      "language": "en",
+      "text": "Can private user chats automatically become training material?",
+      "relevant": [
+        "dataset-consent"
+      ]
+    },
+    {
+      "id": "dataset-consent-de",
+      "language": "de",
+      "text": "Dürfen private Nutzergespräche automatisch als Trainingsdaten verwendet werden?",
+      "relevant": [
+        "dataset-consent"
+      ]
+    },
+    {
+      "id": "release-rollback-en",
+      "language": "en",
+      "text": "How should operators safely return to a previous application release?",
+      "relevant": [
+        "release-rollback"
+      ]
+    },
+    {
+      "id": "release-rollback-de",
+      "language": "de",
+      "text": "Wie kehrt der Betrieb sicher zu einer vorherigen Anwendungsversion zurück?",
+      "relevant": [
+        "release-rollback"
+      ]
+    },
+    {
+      "id": "knowledge-version-en",
+      "language": "en",
+      "text": "What happens to the old search index if rebuilding document vectors fails?",
+      "relevant": [
+        "knowledge-version"
+      ]
+    },
+    {
+      "id": "knowledge-version-de",
+      "language": "de",
+      "text": "Was passiert mit dem alten Suchindex, wenn neue Embeddings nicht berechnet werden können?",
+      "relevant": [
+        "knowledge-version"
+      ]
+    }
+  ]
+}

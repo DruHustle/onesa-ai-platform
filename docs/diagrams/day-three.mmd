@@ -1,0 +1,6 @@
+flowchart TB
+Dev[Change on dev] --> Review[Automated review tests security and builds]
+Review --> Stage[PR to staging and protected hosted tests]
+Stage --> Evidence[Match source SHA artifact and deployment]
+Evidence --> Main[Owner-authorized qualified PR to main]
+Main --> Recovery[Verify live results and rehearse safe rollback]

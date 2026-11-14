@@ -1,0 +1,50 @@
+{
+  "name": "onesa-chat",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "node scripts/check_renderer_notice.mjs && next build --webpack",
+    "start": "next start --hostname 0.0.0.0",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.2",
+    "highlight.js": "11.12.0",
+    "next": "16.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-markdown": "10.1.0",
+    "rehype-highlight": "7.0.2",
+    "remark-gfm": "4.0.1",
+    "three": "0.186.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.9",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1"
+  },
+  "overrides": {
+    "eslint@10.12.0": {"minimatch": "11.0.1"},
+    "@eslint/config-array@0.23.5": {"minimatch": "11.0.1"},
+    "@typescript-eslint/typescript-estree@8.71.1": {"minimatch": "11.0.1"}
+  },
+  "engines": {
+    "node": ">=24.12.0 <25"
+  }
+}

@@ -1,0 +1,7 @@
+flowchart TB
+  Web[Next.js application host] -. private HTTP .-> API[FastAPI]
+  API --> PG[(PostgreSQL)]
+  API -. private OpenAI-compatible HTTP .-> VLLM[vLLM on Ubuntu NVIDIA host]
+  VLLM --> CUDA[Qualified driver and container toolkit]
+  VLLM --> Model[Revision-pinned Qwen foundation]
+  Model -. separately evaluated option .-> LoRA[Reviewed LoRA adapter]

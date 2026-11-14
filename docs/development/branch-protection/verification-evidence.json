@@ -1,0 +1,524 @@
+{
+  "inspected_at": "2026-10-10T21:30:44+02:00",
+  "repository": {
+    "exit_code": 0,
+    "data": {
+      "full_name": "DruHustle/onesa-ai-platform",
+      "html_url": "https://github.com/DruHustle/onesa-ai-platform",
+      "default_branch": "main",
+      "visibility": "private",
+      "owner": {
+        "login": "DruHustle",
+        "type": "User"
+      },
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      },
+      "archived": false
+    }
+  },
+  "collaborators": {
+    "exit_code": 0,
+    "data": [
+      {
+        "login": "DruHustle",
+        "role_name": "admin"
+      }
+    ]
+  },
+  "branches": {
+    "exit_code": 0,
+    "data": [
+      {
+        "name": "main",
+        "commit": {
+          "sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+          "url": "https://api.github.com/repos/DruHustle/onesa-ai-platform/commits/051d6dd80be6b745af6bd3e39451bdc2469f5952"
+        },
+        "protected": false
+      },
+      {
+        "name": "staging",
+        "commit": {
+          "sha": "0c41985adb0764ed2025996c47596b1cdf957c3e",
+          "url": "https://api.github.com/repos/DruHustle/onesa-ai-platform/commits/0c41985adb0764ed2025996c47596b1cdf957c3e"
+        },
+        "protected": false
+      },
+      {
+        "name": "vercel/vercel-web-analytics-integrati-u6xqz6",
+        "commit": {
+          "sha": "8bf11052aba0335e75ae0a2b7652fb7072ccae35",
+          "url": "https://api.github.com/repos/DruHustle/onesa-ai-platform/commits/8bf11052aba0335e75ae0a2b7652fb7072ccae35"
+        },
+        "protected": false
+      }
+    ]
+  },
+  "rulesets": {
+    "exit_code": 1,
+    "data": {
+      "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+      "documentation_url": "https://docs.github.com/rest/repos/rules#get-all-repository-rulesets",
+      "status": "403"
+    }
+  },
+  "effective_rules": {
+    "exit_code": 1,
+    "data": {
+      "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+      "documentation_url": "https://docs.github.com/rest/repos/rules#get-rules-for-a-branch",
+      "status": "403"
+    }
+  },
+  "branch_protection": {
+    "exit_code": 1,
+    "data": {
+      "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+      "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+      "status": "403"
+    }
+  },
+  "main_checks": {
+    "exit_code": 0,
+    "data": [
+      {
+        "id": 114256647764,
+        "name": "image-security (onesa-ai-platform-backend)",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647764",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647704,
+        "name": "browser",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647704",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647697,
+        "name": "backend",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647697",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647682,
+        "name": "containers",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647682",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647659,
+        "name": "documentation",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647659",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647651,
+        "name": "frontend",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647651",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647628,
+        "name": "image-security (onesa-ai-platform-frontend)",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647628",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647602,
+        "name": "tls-acceptance",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029263/job/114256647602",
+        "app": "github-actions",
+        "app_id": 15368
+      },
+      {
+        "id": 114256647296,
+        "name": "publication-hygiene",
+        "head_sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38067029239/job/114256647296",
+        "app": "github-actions",
+        "app_id": 15368
+      }
+    ]
+  },
+  "pull_request_runs": {
+    "exit_code": 0,
+    "data": [
+      {
+        "id": 38059188206,
+        "name": "Repository hygiene",
+        "head_sha": "8bf11052aba0335e75ae0a2b7652fb7072ccae35",
+        "event": "pull_request",
+        "head_branch": "vercel/vercel-web-analytics-integrati-u6xqz6",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188206",
+        "path": ".github/workflows/repository-hygiene.yml"
+      },
+      {
+        "id": 38059188217,
+        "name": "Platform checks",
+        "head_sha": "8bf11052aba0335e75ae0a2b7652fb7072ccae35",
+        "event": "pull_request",
+        "head_branch": "vercel/vercel-web-analytics-integrati-u6xqz6",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217",
+        "path": ".github/workflows/ci.yml"
+      }
+    ]
+  },
+  "environments": {
+    "exit_code": 0,
+    "data": {
+      "total_count": 2,
+      "environments": [
+        {
+          "id": 23911550446,
+          "node_id": "EN_kwDOVCu0zs8AAAAFkT1N7g",
+          "name": "Production",
+          "url": "https://api.github.com/repos/DruHustle/onesa-ai-platform/environments/Production",
+          "html_url": "https://github.com/DruHustle/onesa-ai-platform/deployments/activity_log?environments_filter=Production",
+          "created_at": "2026-10-09T20:05:08Z",
+          "updated_at": "2026-10-09T20:05:08Z",
+          "can_admins_bypass": true,
+          "protection_rules": [],
+          "deployment_branch_policy": null
+        },
+        {
+          "id": 23969026217,
+          "node_id": "EN_kwDOVCu0zs8AAAAFlKpQqQ",
+          "name": "Staging",
+          "url": "https://api.github.com/repos/DruHustle/onesa-ai-platform/environments/Staging",
+          "html_url": "https://github.com/DruHustle/onesa-ai-platform/deployments/activity_log?environments_filter=Staging",
+          "created_at": "2026-10-10T18:31:38Z",
+          "updated_at": "2026-10-10T18:31:38Z",
+          "can_admins_bypass": true,
+          "protection_rules": [
+            {
+              "id": 68367660,
+              "node_id": "GA_kwDOVCu0zs4EEzUs",
+              "type": "branch_policy"
+            }
+          ],
+          "deployment_branch_policy": {
+            "protected_branches": false,
+            "custom_branch_policies": true
+          }
+        }
+      ]
+    }
+  },
+  "hooks": {
+    "exit_code": 0,
+    "data": []
+  },
+  "deployments": {
+    "exit_code": 0,
+    "data": [
+      {
+        "id": 6969917417,
+        "sha": "6e98c6d4cb0738fe4bd51caa124205914657280e",
+        "ref": "6e98c6d4cb0738fe4bd51caa124205914657280e",
+        "environment": "Production",
+        "production_environment": false,
+        "transient_environment": false,
+        "creator": "vercel[bot]"
+      }
+    ]
+  },
+  "installation_inventory": {
+    "exit_code": 1,
+    "data": {
+      "message": "You must authenticate with an access token authorized to a GitHub App in order to list installations",
+      "documentation_url": "https://docs.github.com/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token",
+      "status": "403"
+    }
+  },
+  "application_and_readback": [
+    {
+      "method": "POST",
+      "endpoint": "repos/DruHustle/onesa-ai-platform/rulesets",
+      "exit_code": 1,
+      "data": {
+        "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+        "documentation_url": "https://docs.github.com/rest/repos/rules#create-a-repository-ruleset",
+        "status": "403"
+      }
+    },
+    {
+      "method": "PUT",
+      "endpoint": "repos/DruHustle/onesa-ai-platform/branches/main/protection",
+      "exit_code": 1,
+      "data": {
+        "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+        "documentation_url": "https://docs.github.com/rest/branches/branch-protection#update-branch-protection",
+        "status": "403"
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "repos/DruHustle/onesa-ai-platform/branches/main",
+      "exit_code": 0,
+      "data": {
+        "name": "main",
+        "sha": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "protected": false,
+        "protection": {
+          "enabled": false,
+          "required_status_checks": {
+            "enforcement_level": "off",
+            "contexts": [],
+            "checks": []
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "repos/DruHustle/onesa-ai-platform/rules/branches/main",
+      "exit_code": 1,
+      "data": {
+        "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+        "documentation_url": "https://docs.github.com/rest/repos/rules#get-rules-for-a-branch",
+        "status": "403"
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "repos/DruHustle/onesa-ai-platform/branches/main/protection",
+      "exit_code": 1,
+      "data": {
+        "message": "Upgrade to GitHub Pro or make this repository public to enable this feature.",
+        "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+        "status": "403"
+      }
+    }
+  ],
+  "pr_jobs_38059188206": {
+    "exit_code": 0,
+    "data": [
+      {
+        "id": 114233777921,
+        "name": "publication-hygiene",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188206/job/114233777921"
+      }
+    ]
+  },
+  "pr_jobs_38059188217": {
+    "exit_code": 0,
+    "data": [
+      {
+        "id": 114233778011,
+        "name": "browser",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778011"
+      },
+      {
+        "id": 114233778059,
+        "name": "documentation",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778059"
+      },
+      {
+        "id": 114233778103,
+        "name": "image-security (onesa-ai-platform-backend)",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778103"
+      },
+      {
+        "id": 114233778104,
+        "name": "tls-acceptance",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778104"
+      },
+      {
+        "id": 114233778144,
+        "name": "frontend",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778144"
+      },
+      {
+        "id": 114233778163,
+        "name": "image-security (onesa-ai-platform-frontend)",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778163"
+      },
+      {
+        "id": 114233778192,
+        "name": "containers",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778192"
+      },
+      {
+        "id": 114233778270,
+        "name": "backend",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38059188217/job/114233778270"
+      }
+    ]
+  },
+  "hosting_inspection": {
+    "source_run": "https://github.com/DruHustle/onesa-ai-platform/actions/runs/38076418043",
+    "exit_code": 0,
+    "report": {
+      "read_only": true,
+      "source_commit": "0c41985adb0764ed2025996c47596b1cdf957c3e",
+      "backend": {
+        "role": "backend",
+        "api_http": 200,
+        "service_type": "web_service",
+        "runtime": "docker",
+        "free_compute_plan": true,
+        "main_branch": true,
+        "native_auto_deploy_disabled": false,
+        "docker_context_matches": true,
+        "dockerfile_matches": true,
+        "logs_api_http": 200,
+        "recognized_log_error_categories": [
+          "environment_validation_failed"
+        ],
+        "root_directory_matches": false,
+        "docker_runtime": true,
+        "health_path_matches": false,
+        "environment_api_http": 200,
+        "required_environment_nonempty": {
+          "ONESA_DATABASE_URL": true,
+          "ONESA_ENVIRONMENT": false,
+          "ONESA_PUBLIC_ORIGIN": false,
+          "ONESA_MODEL_BACKEND": false,
+          "ONESA_MODEL_NAME": false,
+          "ONESA_MODEL_BASE_URL": false,
+          "ONESA_MODEL_API_KEY": false
+        },
+        "application_environment_nonempty": {
+          "ONESA_ACCESS_OPERATOR_USER_IDS": false,
+          "ONESA_AUTH_DELIVERY_KEY": false,
+          "ONESA_AUTH_HASH_CONCURRENCY": false,
+          "ONESA_AUTH_PEER_RATE_LIMIT": false,
+          "ONESA_AUTH_RATE_LIMIT": false,
+          "ONESA_DATABASE_URL": true,
+          "ONESA_DOCUMENTATION_ENGINEERING_USER_IDS": false,
+          "ONESA_DOCUMENTATION_SOURCES_DIRECTORY": false,
+          "ONESA_EMBEDDING_API_KEY": false,
+          "ONESA_EMBEDDING_BACKEND": false,
+          "ONESA_EMBEDDING_BASE_URL": false,
+          "ONESA_EMBEDDING_NAME": false,
+          "ONESA_EMBEDDING_QUERY_INSTRUCTION": false,
+          "ONESA_EMBEDDING_REVISION": false,
+          "ONESA_ENVIRONMENT": false,
+          "ONESA_GENERATION_TIMEOUT": false,
+          "ONESA_INVITATION_HOURS": false,
+          "ONESA_KNOWLEDGE_GLOBAL_TEXT_BYTES": false,
+          "ONESA_KNOWLEDGE_MAX_DOCUMENTS": false,
+          "ONESA_KNOWLEDGE_UPLOAD_CONCURRENCY": false,
+          "ONESA_KNOWLEDGE_USER_TEXT_BYTES": false,
+          "ONESA_MAIL_FROM": false,
+          "ONESA_MAIL_PROVIDER": false,
+          "ONESA_MAIL_REPLY_TO": false,
+          "ONESA_METRICS_TOKEN": false,
+          "ONESA_MODEL_API_KEY": false,
+          "ONESA_MODEL_BACKEND": false,
+          "ONESA_MODEL_BASE_URL": false,
+          "ONESA_MODEL_CONTEXT_LENGTH": false,
+          "ONESA_MODEL_GLOBAL_CONCURRENCY": false,
+          "ONESA_MODEL_GLOBAL_REQUESTS_PER_MINUTE": false,
+          "ONESA_MODEL_GLOBAL_RESERVED_TOKENS_PER_MINUTE": false,
+          "ONESA_MODEL_MAX_OUTPUT_TOKENS": false,
+          "ONESA_MODEL_MODALITIES": false,
+          "ONESA_MODEL_NAME": false,
+          "ONESA_MODEL_QUANTIZATION": false,
+          "ONESA_MODEL_REVISION": false,
+          "ONESA_MODEL_TEMPERATURE": false,
+          "ONESA_MODEL_USER_CONCURRENCY": false,
+          "ONESA_MODEL_USER_REQUESTS_PER_MINUTE": false,
+          "ONESA_MODEL_USER_RESERVED_TOKENS_PER_MINUTE": false,
+          "ONESA_PUBLIC_ORIGIN": false,
+          "ONESA_RECOVERY_MINUTES": false,
+          "ONESA_REGISTRATION_MODE": false,
+          "ONESA_RESEND_API_KEY": false,
+          "ONESA_SECURE_COOKIES": false,
+          "ONESA_SESSION_HOURS": false
+        },
+        "deployment_api_http": 200,
+        "latest_deployment_state": "update_failed",
+        "latest_deployment_commit": "051d6dd80be6b745af6bd3e39451bdc2469f5952",
+        "direct_health_http": 0
+      },
+      "frontend": {
+        "api_http": 200,
+        "root_directory_matches": true,
+        "nextjs_framework": true,
+        "environment_api_http": 200,
+        "required_production_environment_present": {
+          "ONESA_API_URL": false
+        },
+        "production_state": "READY",
+        "production_commit": "6e98c6d4cb0738fe4bd51caa124205914657280e"
+      },
+      "backend_region": "frankfurt",
+      "database_inventory_http": 200,
+      "ai_named_database_candidates": [],
+      "database_inventory_returned_count": 0,
+      "database_inventory_may_be_truncated": false
+    }
+  },
+  "local_validation": {
+    "required_contexts": 9,
+    "workflow_yaml_and_unique_pr_contexts": "passed",
+    "equivalent_payloads": "passed",
+    "executable_job_structure_preserved": "passed",
+    "relative_policy_links": "passed",
+    "git_diff_check": "passed",
+    "publication_hygiene_findings": 0,
+    "enforcement_test_pr": "not performed: GitHub plan blocks activation",
+    "application_tests": "not rerun: governance and job display names only"
+  }
+}

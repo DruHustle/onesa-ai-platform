@@ -1,0 +1,10 @@
+import { proxy } from "../../../lib/backend";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const maxDuration = 150;
+export const GET = proxy;
+export const POST = proxy;
+export const PATCH = proxy;
+export const DELETE = proxy;
+export const PUT = proxy;
+export const OPTIONS = proxy;

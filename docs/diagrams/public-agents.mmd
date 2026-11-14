@@ -1,0 +1,10 @@
+flowchart TB
+User[Authenticated user goal] --> Ownership[Run ownership check]
+Ownership --> Plan[Model planning when available]
+Plan --> Registry[Registered tool schemas]
+Registry --> Gate[Explicit allowed tools and permission gate]
+Gate --> Execute[Bounded tool execution]
+Execute --> Audit[Persisted owned audit history]
+Cancel[Cancellation timeout and retry limits] --> Execute
+Consequential[Consequential external action] -. separate approval required .-> Gate
+Injection[Untrusted model or document text] -. cannot grant permission .-> Gate

@@ -1,0 +1,9 @@
+flowchart TD
+ A[Classify data and processing purpose] --> B[Link approved effective retention rule]
+ B --> C[Track approved expiry trigger]
+ C --> D[Preview eligible records without deletion]
+ D --> E{Legal hold or statutory exception?}
+ E -->|Yes| F[Restrict processing and record the exception]
+ E -->|No| G[Verify cascade, backup and processor actions]
+ G --> H[Separately authorize deletion execution]
+ H --> I[Audit completion and restoration replay record]
