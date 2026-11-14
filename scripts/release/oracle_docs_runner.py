@@ -1360,6 +1360,8 @@ def create_preview(store, operation):
 
 
 def main():
+    if sys.argv[1:] and sys.argv[1] in {"deploy", "staging", "production", "operations"}:
+        raise SystemExit("Documentation release authority moved to DruHustle/onesa-documents")
     owner.require(
         os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS") and len(sys.argv) == 2,
         "COMMISSIONED_ROOT_RUNNER_ONLY",
