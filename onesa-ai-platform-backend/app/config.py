@@ -160,10 +160,10 @@ class Settings(BaseSettings):
                 self.identity_issuer,
                 self.identity_client_id,
                 self.identity_client_secret,
-                "onesaai://account/callback",
+                self.identity_callback_url,
                 "ai",
                 self.environment in {"development", "test"},
-                True,
+                allow_native_callback=True,
             )
 
         if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
