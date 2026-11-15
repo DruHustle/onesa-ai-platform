@@ -69,19 +69,22 @@ MAX_SSE_LINE_BYTES = 1024 * 1024
 async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
     """Decode SSE incrementally and reject an overlong line before buffering it."""
     pending = bytearray()
+    skip_lf = False
     async for chunk in response.aiter_bytes():
-        cursor = 0
+        cursor = 1 if skip_lf and chunk.startswith(b"\n") else 0
+        skip_lf = False
         while cursor < len(chunk):
-            newline = chunk.find(b"\n", cursor)
-            end = len(chunk) if newline < 0 else newline
+            lf = chunk.find(b"\n", cursor)
+            cr = chunk.find(b"\r", cursor)
+            delimiters = [position for position in (lf, cr) if position >= 0]
+            delimiter = min(delimiters) if delimiters else -1
+            end = len(chunk) if delimiter < 0 else delimiter
             part = chunk[cursor:end]
             if len(pending) + len(part) > MAX_SSE_LINE_BYTES:
                 raise InferenceError("invalid_inference_response")
             pending.extend(part)
-            if newline < 0:
+            if delimiter < 0:
                 break
-            if pending.endswith(b"\r"):
-                pending.pop()
             try:
                 line = pending.decode("utf-8")
             except UnicodeDecodeError as exc:
@@ -89,16 +92,21 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
                     "generation_failed", reason="invalid_stream_utf8"
                 ) from exc
             pending.clear()
+            if chunk[delimiter] == 13:
+                if delimiter + 1 < len(chunk) and chunk[delimiter + 1] == 10:
+                    cursor = delimiter + 2
+                else:
+                    cursor = delimiter + 1
+                    if cursor == len(chunk):
+                        skip_lf = True
+            else:
+                cursor = delimiter + 1
             yield line
-            cursor = newline + 1
     if pending:
-        if pending.endswith(b"\r"):
-            pending.pop()
         try:
             yield pending.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
-
 
 @contextmanager
 def observe_generation(stats: GenerationStats) -> Iterator[None]:
