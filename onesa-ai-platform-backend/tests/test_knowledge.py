@@ -78,3 +78,98 @@ def test_document_validation(api: TestClient) -> None:
             ).status_code
             == expected
         )
+
+
+def test_http_embedding_request_is_bounded_and_validates_numeric_vectors():
+    import json
+
+    import httpx
+
+    from app.config import Settings
+    from app.knowledge import embed
+
+    config = Settings(
+        embedding_backend="http",
+        embedding_name="test-embedding",
+        embedding_base_url="https://embeddings.example.test/v1",
+        embedding_api_key="x" * 40,
+        embedding_revision="test-v1",
+    )
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        assert request.url.path == "/v1/embeddings"
+        assert request.headers["Authorization"] == "Bearer " + config.embedding_api_key
+        assert request.headers["Accept-Encoding"] == "identity"
+        assert json.loads(request.content) == {
+            "model": "test-embedding",
+            "input": ["A bounded synthetic query"],
+            "dimensions": 256,
+        }
+        return httpx.Response(
+            200,
+            json={"data": [{"index": 0, "embedding": [1.0] * 256}]},
+        )
+
+    vectors = embed(
+        ["A bounded synthetic query"],
+        config,
+        query=True,
+        transport=httpx.MockTransport(handler),
+    )
+    assert len(requests) == 1
+    assert len(vectors) == 1 and len(vectors[0]) == 256
+    assert all(value == 1.0 for value in vectors[0])
+
+
+def test_http_embedding_rejects_boolean_vector_values():
+    import httpx
+    from fastapi import HTTPException
+
+    from app.config import Settings
+    from app.knowledge import embed
+
+    config = Settings(
+        embedding_backend="http",
+        embedding_name="test-embedding",
+        embedding_base_url="https://embeddings.example.test/v1",
+        embedding_api_key="x" * 40,
+    )
+    response = {"data": [{"index": 0, "embedding": [True] + [1.0] * 255}]}
+    with pytest.raises(HTTPException) as failure:
+        embed(
+            ["Synthetic input"],
+            config,
+            transport=httpx.MockTransport(lambda request: httpx.Response(200, json=response)),
+        )
+    assert failure.value.status_code == 503
+    assert failure.value.detail["code"] == "embedding_unavailable"
+
+
+def test_http_embedding_rejects_oversized_provider_response():
+    import httpx
+    from fastapi import HTTPException
+
+    from app.config import Settings
+    from app.knowledge import MAX_EMBEDDING_RESPONSE_BYTES, embed
+
+    config = Settings(
+        embedding_backend="http",
+        embedding_name="test-embedding",
+        embedding_base_url="https://embeddings.example.test/v1",
+        embedding_api_key="x" * 40,
+    )
+    response = httpx.Response(
+        200,
+        headers={"Content-Type": "application/json"},
+        content=b" " * (MAX_EMBEDDING_RESPONSE_BYTES + 1),
+    )
+    with pytest.raises(HTTPException) as failure:
+        embed(
+            ["Synthetic input"],
+            config,
+            transport=httpx.MockTransport(lambda request: response),
+        )
+    assert failure.value.status_code == 503
+    assert failure.value.detail["code"] == "embedding_unavailable"
