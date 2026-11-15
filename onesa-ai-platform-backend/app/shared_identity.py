@@ -381,8 +381,9 @@ def issue_shared(
 def callback(
     request: Request, db: DB, state: str = "", code: str = "", error: str = ""
 ) -> Response:
-    config = configuration(request)
-    if re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state):
+    native = re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state) is not None
+    config = configuration(request, native=native)
+    if native:
         pairs = request.query_params
         row = db.get(IdentityTransaction, digest(state))
         if (
@@ -406,17 +407,48 @@ def callback(
 @router.post("/mobile/exchange", include_in_schema=False)
 def mobile_exchange(body: MobileExchange, request: Request, db: DB) -> Response:
     origin(request)
-    response = finish_sign_in(request, db, body.state, body.code, "")
+    response = finish_sign_in(
+        request, db, body.state, body.code, "", native_verifier=body.code_verifier
+    )
     if response.status_code != 200:
         fail(403, "mobile_sign_in_unavailable", "Sign-in requires account support or a new attempt")
     return response
 
 
-def finish_sign_in(request: Request, db: Session, state: str, code: str, error: str) -> Response:
-    row = transaction(request, db, state)
+def finish_sign_in(
+    request: Request,
+    db: Session,
+    state: str,
+    code: str,
+    error: str,
+    *,
+    native_verifier: str | None = None,
+) -> Response:
+    if native_verifier is None:
+        row = transaction(request, db, state)
+    else:
+        configuration(request, native=True)
+        row = db.scalar(
+            select(IdentityTransaction)
+            .where(IdentityTransaction.state_hash == digest(state))
+            .with_for_update()
+        )
+        if row is None or row.expires_at <= now() or row.consumed_at is not None:
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
+        native_payload = json.loads(decrypt(request, row.payload))
+        challenge = native_payload.get("code_challenge")
+        if (
+            native_payload.get("native") is not True
+            or not isinstance(challenge, str)
+            or not secrets.compare_digest(row.browser_hash, digest("native:" + challenge))
+            or not secrets.compare_digest(pkce_challenge(native_verifier), challenge)
+        ):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     if row.consumed_at is not None:
         fail(400, "identity_callback_invalid", "Sign-in has already been used. Please start again")
     payload = json.loads(decrypt(request, row.payload))
+    if payload.get("native") is not state.startswith("native_"):
+        fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     row.consumed_at = now()
     db.commit()  # Code exchange is never retried after an ambiguous network result.
     if error or not code:
@@ -424,13 +456,14 @@ def finish_sign_in(request: Request, db: Session, state: str, code: str, error: 
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
-        config = configuration(request)
+        config = configuration(request, native=payload.get("native") is True)
+        verifier = native_verifier if payload.get("native") is True else payload["verifier"]
         if config.audience:
             from app.managed_oidc import exchange
 
-            token = exchange(config, code, payload["verifier"], payload["nonce"])
+            token = exchange(config, code, verifier, payload["nonce"])
         else:
-            token = exchange_code(config, code, payload["verifier"])
+            token = exchange_code(config, code, verifier)
     except IdentityError:
         response = RedirectResponse("/?identity=unavailable", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
