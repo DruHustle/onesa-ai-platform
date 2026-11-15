@@ -47,9 +47,9 @@ CONVERSATION_INSTRUCTION = (
 
 MAX_HISTORY_MESSAGES = 30
 TRUNCATED_CONVERSATION_NOTICE = (
-    "[Earlier conversation messages omitted from model context: only the most recent "
-    "30 saved messages are supplied. Do not infer their contents. If the user asks about "
-    "omitted history, explain that it is not available in this request.]"
+    f"[Earlier conversation messages omitted from model context: only the most recent "
+    f"{MAX_HISTORY_MESSAGES} saved messages are supplied. Do not infer their contents. "
+    "If the user asks about omitted history, explain that it is not available in this request.]"
 )
 
 
