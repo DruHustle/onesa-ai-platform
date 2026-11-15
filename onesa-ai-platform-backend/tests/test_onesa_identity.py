@@ -271,6 +271,9 @@ def test_invalid_config_fails_at_startup(issuer):
 
 
 def test_identity_provider_client_ignores_ambient_proxy_configuration(monkeypatch):
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:9")
+    monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:9")
+    monkeypatch.setenv("ALL_PROXY", "http://127.0.0.1:9")
     observed = {}
 
     class Probe(Exception):
