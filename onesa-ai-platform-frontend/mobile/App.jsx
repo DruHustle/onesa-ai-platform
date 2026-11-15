@@ -51,7 +51,7 @@ export default function App() {
         verifier,
         {encoding: Crypto.CryptoEncoding.BASE64},
       );
-      const challenge = digest.replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+      const challenge = digest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       return {verifier, challenge};
     }) : {};
     const user = await call('/auth/me');
