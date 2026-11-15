@@ -111,13 +111,17 @@ async function main() {
   assert.equal(upstream.headers.get('x-csrf-token'), 'synthetic-csrf');
   assert.equal(upstream.headers.get('origin'), 'https://preview.example.invalid');
 
-  context.fetch = async () => { fetches++; return new Response('synthetic cookie response', {status:200, headers:[
+  context.fetch = async (url, options) => {
+    fetches++;
+    upstream = {url, ...options};
+    return new Response('synthetic cookie response', {status:200, headers:[
     ['set-cookie', 'onesa_session=synthetic-session; Path=/; HttpOnly; Secure; SameSite=Lax'],
     ['set-cookie', 'onesa_csrf=synthetic-csrf; Path=/; Secure; SameSite=Lax'],
     ['set-cookie', 'onesa_identity_flow=synthetic-flow; Path=/; HttpOnly; Secure; SameSite=Lax'],
     ['set-cookie', '_vercel_sso_token=provider-cookie; Path=/; Secure'],
     ['set-cookie', 'unexpected=untrusted; Path=/'],
-  ]}); };
+    ]});
+  };
   const cookieResponse = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/onesa/exchange'));
   assert.deepEqual(cookieResponse.headers.getSetCookie().map(value => value.split(';', 1)[0]), [
     'onesa_session=synthetic-session',
