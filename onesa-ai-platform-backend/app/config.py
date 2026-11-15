@@ -153,22 +153,8 @@ class Settings(BaseSettings):
                     "Identity requires a private 32-byte Fernet encryption key"
                 ) from None
 
-        if self.identity_mobile_enabled:
-            if not self.identity_enabled:
-                raise ValueError("Native identity sign-in requires shared Onesa identity")
-            IdentityConfig(
-                self.identity_issuer,
-                self.identity_client_id,
-                self.identity_client_secret,
-                "onesaai://account/callback",
-                "ai",
-                self.environment in {"development", "test"},
-                self.identity_audience,
-                self.identity_public_jwks,
-                self.identity_mapping_issuer,
-                self.identity_account_url,
-                allow_native_callback=True,
-            )
+        if self.identity_mobile_enabled and not self.identity_enabled:
+            raise ValueError("Native identity sign-in requires shared Onesa identity")
 
         if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
             raise ValueError("Security operators require canonical configured user UUIDs")
