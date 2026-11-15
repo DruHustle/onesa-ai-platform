@@ -48,6 +48,7 @@ class IdentityConfig:
     public_jwks: str = ""
     mapping_issuer: str = ""
     account_url: str = ""
+    allow_native_callback: bool = False
 
     def __post_init__(self) -> None:
         for name, value in (("issuer", self.issuer), ("callback", self.redirect_uri)):
