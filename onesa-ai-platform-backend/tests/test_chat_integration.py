@@ -591,15 +591,15 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
         return [line async for line in bounded_sse_lines(response)]
 
     assert asyncio.run(
-        collect(Chunks(b'data: {"text":"caf', b"\\xc3", b"\\xa9"}\\r", b"\\n\\r\\n"))
-    ) == ['data: {"text":"caf\\xc3\\xa9"}', ""]
+        collect(Chunks(b'data: {"text":"caf', b"\xc3", b"\xa9"}\r", b"\n\r\n"))
+    ) == ['data: {"text":"caf\xc3\xa9"}', ""]
 
     oversized = Chunks(b"x" * MAX_SSE_LINE_BYTES, b"x")
     with pytest.raises(InferenceError) as failure:
         asyncio.run(collect(oversized))
     assert failure.value.code == "invalid_inference_response"
 
-    malformed = Chunks(b"data: \\xff\\n")
+    malformed = Chunks(b"data: \xff\n")
     with pytest.raises(InferenceError) as failure:
         asyncio.run(collect(malformed))
     assert failure.value.reason == "invalid_stream_utf8"
