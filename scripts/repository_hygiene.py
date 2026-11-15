@@ -22,6 +22,12 @@ PATTERNS = {
     "credential-assignment": rb"(?im)^\s*(?:export\s+)?(?:[A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|API_KEY|SESSION_KEY|PRIVATE_KEY))\s*=\s*[\"']?([A-Za-z0-9_+/=-]{20,})",
 }
 RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
+
+# One exact historical fixture was a fake test credential, not provider authority.
+# Keep the exception scoped to both its test path and exact synthetic value.
+SAFE_CREDENTIAL_FIXTURES = {
+    ("onesa-ai-platform-backend/tests/test_embedding_service.py", b"synthetic-embedding-key"),
+}
 DENIED_PARTS = {
     "data",
     "storage",
@@ -118,7 +124,8 @@ def secrets(data, name):
             matches = [
                 m
                 for m in matches
-                if not any(
+                if (name, m.group(1)) not in SAFE_CREDENTIAL_FIXTURES
+                and not any(
                     marker in m.group(1).lower()
                     for marker in (
                         b"placeholder",
