@@ -169,7 +169,7 @@ def test_provider_incomplete_finish_is_not_saved_and_can_retry(api, pg, reason, 
     def provider(request):
         assert request.url.path == "/v1/chat/completions"
         frame = {"choices": [{"delta": {"content": "partial"}, "finish_reason": reason}]}
-        return httpx.Response(200, text="data: " + json.dumps(frame) + "\\n\\ndata: [DONE]\\n\\n")
+        return httpx.Response(200, text="data: " + json.dumps(frame) + "\n\ndata: [DONE]\n\n")
 
     settings = Settings(model_backend="vllm", model_base_url="https://provider.example.test/v1")
     api.app.state.model_client = VLLMModelClient(settings, httpx.MockTransport(provider))
