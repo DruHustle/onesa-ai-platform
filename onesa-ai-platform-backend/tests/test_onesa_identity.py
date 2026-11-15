@@ -100,6 +100,23 @@ def test_code_exchange_never_uses_unvalidated_id_token():
         assert exchange_code(CONFIG, "one-use-code", verifier, client=client) == TOKEN
 
 
+def test_code_exchange_accepts_all_rfc7636_verifier_characters():
+    verifier = "v" * 41 + ".~"
+    requests = []
+
+    def handler(request):
+        params = parse_qs(request.content.decode())
+        requests.append(params)
+        return httpx.Response(
+            200,
+            json={"access_token": TOKEN, "token_type": "Bearer"},
+        )
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert exchange_code(CONFIG, "one-use-code", verifier, client=client) == TOKEN
+    assert requests[0]["code_verifier"] == [verifier]
+
+
 def test_oauth_client_basic_credentials_are_form_encoded_and_global_logout_is_explicit():
     config = replace(
         CONFIG, client_id="ai:+ %", client_secret="synthetic+:percent% space-" + "x" * 32
