@@ -22,9 +22,9 @@ from app.inference import (
     GenerationStats,
     InferenceError,
     ModelMessage,
+    MAX_MODEL_MESSAGE_CHARS,
     model_metadata,
     observe_generation,
-    MAX_MODEL_MESSAGE_CHARS,
 )
 from app.knowledge import Search, retrieve
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
