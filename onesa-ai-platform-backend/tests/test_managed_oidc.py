@@ -12,7 +12,13 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from app.managed_oidc import NS, exchange, validate
-from app.onesa_identity import IdentityConfig, IdentityError, authorization_url, new_transaction
+from app.onesa_identity import (
+    IdentityConfig,
+    IdentityError,
+    authorization_url,
+    new_transaction,
+    pkce_challenge,
+)
 
 
 @pytest.fixture
@@ -131,6 +137,7 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(
     api.app.state.settings = settings.model_copy(
         update={
             "identity_enabled": True,
+            "identity_mobile_enabled": mobile,
             "identity_issuer": cfg.issuer,
             "identity_client_id": cfg.client_id,
             "identity_client_secret": cfg.client_secret,
@@ -144,7 +151,11 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(
     )
     assert api.get("/api/v1/auth/onesa/config").json()["account_url"] == cfg.account_url
     next_path = "/?conversation=" + conversation.json()["id"]
-    start = api.post("/api/v1/auth/onesa/start", json={"next": next_path, "mobile": mobile})
+    verifier = "v" * 41 + ".~" if mobile else None
+    start_body = {"next": next_path, "mobile": mobile}
+    if verifier is not None:
+        start_body["code_challenge"] = pkce_challenge(verifier)
+    start = api.post("/api/v1/auth/onesa/start", json=start_body)
     assert start.status_code == 200
     q = parse_qs(urlsplit(start.json()["authorize_url"]).query)
     assert q["audience"] == [cfg.audience]
@@ -165,14 +176,13 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(
         data = {key: values[0] for key, values in parse_qs(returned.query).items()}
         assert data == {"state": q["state"][0], "code": "fixture"}
         endpoint = "/api/v1/auth/onesa/mobile/exchange"
-        device_cookie = api.cookies.get("onesa_identity_flow")
         api.cookies.clear()
-        assert api.post(endpoint, json=data).status_code == 400
-        api.cookies.set("onesa_identity_flow", device_cookie)
-        accepted = api.post(endpoint, json=data)
+        assert api.post(endpoint, json=data).status_code == 422
+        exchange_body = {**data, "code_verifier": verifier}
+        accepted = api.post(endpoint, json=exchange_body)
         assert accepted.status_code == 200
         api.headers["X-CSRF-Token"] = accepted.json()["csrf"]
-        assert api.post(endpoint, json=data).status_code == 400
+        assert api.post(endpoint, json=exchange_body).status_code == 400
         assert (
             api.post("/api/v1/conversations", json={"title": "Native follow-up"}).status_code == 201
         )
