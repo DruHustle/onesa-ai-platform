@@ -126,7 +126,8 @@ def new_transaction() -> tuple[str, str, str]:
 def pkce_challenge(verifier: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
         raise ValueError("Invalid PKCE verifier")
-    return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).decode().rstrip("=")
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
 
 
 def authorization_url(
