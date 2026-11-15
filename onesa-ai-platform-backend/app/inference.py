@@ -21,6 +21,7 @@ FAILURE_REASONS = frozenset(
         "invalid_stream_shape",
         "invalid_stream_delta",
         "stream_terminated_early",
+        "incomplete_response",
         "empty_model_response",
         "response_size_limit",
         "generation_lease_lost",

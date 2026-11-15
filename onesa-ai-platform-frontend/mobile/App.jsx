@@ -3,7 +3,7 @@ import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TextInput, View
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import * as Browser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
-import {call, signIn} from './session.mjs';
+import {call, signIn, signOut} from './session.mjs';
 
 export default function App() {
   const [account, setAccount] = useState(null);
@@ -59,9 +59,12 @@ export default function App() {
   }
   useEffect(() => {perform(() => connect(false));}, []);
   async function logout() {
-    await call('/auth/logout', {method:'POST',csrf});
-    await SecureStore.deleteItemAsync('csrf');
-    clear(); setDrafts(new Map()); target.current=null; previousAccount.current=null;
+    await signOut(csrf, () => SecureStore.deleteItemAsync('csrf'), () => {
+      clear();
+      setDrafts(new Map());
+      target.current = null;
+      previousAccount.current = null;
+    });
   }
 
   async function open(id) {
