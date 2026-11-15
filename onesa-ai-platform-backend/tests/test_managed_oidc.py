@@ -67,6 +67,18 @@ def signed():
     return config, uid, pair
 
 
+def test_singleton_audience_arrays_remain_compatible(signed):
+    config, uid, pair = signed
+    packed = json.dumps(
+        pair(
+            {"aud": [config.audience]},
+            {"aud": [config.client_id]},
+        )
+    )
+    identity = validate(config, packed)
+    assert identity.subject == uid and identity.applications == ("ai",)
+
+
 def test_provider_exchange_and_local_key_restart(signed):
     config, uid, pair = signed
     state, nonce, verifier = new_transaction()
@@ -96,6 +108,14 @@ def test_provider_exchange_and_local_key_restart(signed):
     ("changes", "profile"),
     [
         ({"aud": "other"}, {}),
+        (
+            {"aud": ["https://api.ai.example", "https://other.example"], "azp": "ai-web"},
+            {},
+        ),
+        (
+            {},
+            {"aud": ["ai-web", "https://other.example"], "azp": "ai-web"},
+        ),
         ({NS + "products": ["robot"]}, {}),
         ({NS + "user_id": "member@example.com"}, {}),
         ({NS + "roles": ["admin"]}, {}),
