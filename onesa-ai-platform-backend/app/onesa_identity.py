@@ -53,6 +53,11 @@ class IdentityConfig:
         for name, value in (("issuer", self.issuer), ("callback", self.redirect_uri)):
             parsed = urlsplit(value)
             local = self.allow_local_http and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+            native = (
+                name == "callback"
+                and self.allow_native_callback
+                and value == "onesaai://account/callback"
+            )
             if (
                 not value
                 or len(value) > 1000
@@ -61,7 +66,11 @@ class IdentityConfig:
                 or parsed.password
                 or parsed.query
                 or parsed.fragment
-                or (parsed.scheme != "https" and not (local and parsed.scheme == "http"))
+                or (
+                    parsed.scheme != "https"
+                    and not (local and parsed.scheme == "http")
+                    and not native
+                )
             ):
                 raise ValueError(f"Onesa identity {name} requires an exact trusted HTTPS URL")
         if self.audience:
@@ -120,12 +129,33 @@ def new_transaction() -> tuple[str, str, str]:
     return secrets.token_urlsafe(32), secrets.token_urlsafe(32), secrets.token_urlsafe(48)
 
 
+def pkce_challenge(verifier: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
+        raise ValueError("Invalid PKCE verifier")
+    return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).decode().rstrip("=")
+
+
 def authorization_url(
-    config: IdentityConfig, state: str, nonce: str, verifier: str, *, reauthenticate: bool = False
+    config: IdentityConfig,
+    state: str,
+    nonce: str,
+    verifier: str | None,
+    *,
+    reauthenticate: bool = False,
+    code_challenge: str | None = None,
 ) -> str:
-    if not all(re.fullmatch(r"[A-Za-z0-9_-]{40,128}", item) for item in (state, nonce, verifier)):
-        raise ValueError("Invalid server-generated identity transaction")
-    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest())
+    if not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", state) or not re.fullmatch(
+        r"[A-Za-z0-9_-]{40,128}", nonce
+    ):
+        raise ValueError("Invalid identity transaction")
+    if code_challenge is None:
+        if verifier is None:
+            raise ValueError("PKCE verifier or challenge is required")
+        challenge = pkce_challenge(verifier)
+    else:
+        if not re.fullmatch(r"[A-Za-z0-9_-]{43}", code_challenge):
+            raise ValueError("Invalid PKCE challenge")
+        challenge = code_challenge
     params = {
         "client_id": config.client_id,
         "redirect_uri": config.redirect_uri,
@@ -133,7 +163,7 @@ def authorization_url(
         "scope": "openid email profile onesa",
         "state": state,
         "nonce": nonce,
-        "code_challenge": challenge.decode().rstrip("="),
+        "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
     if reauthenticate:
