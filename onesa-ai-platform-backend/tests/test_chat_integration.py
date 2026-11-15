@@ -186,9 +186,7 @@ def test_provider_incomplete_finish_is_not_saved_and_can_retry(api, pg, reason, 
         assert response.status_code == 503
         assert response.json()["error"]["code"] == "generation_failed"
     with Session(pg) as db:
-        assert [m.role for m in db.scalars(select(Message).order_by(Message.sequence))] == [
-            "user"
-        ]
+        assert [m.role for m in db.scalars(select(Message).order_by(Message.sequence))] == ["user"]
         assert db.scalar(select(InferenceRun)).status == "failed"
         assert db.get(Conversation, UUID(identifier)).active_run_id is None
 
