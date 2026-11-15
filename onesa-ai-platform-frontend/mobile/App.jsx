@@ -4,6 +4,7 @@ import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import * as Browser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import {call, signIn, signOut} from './session.mjs';
+import {clearSubmittedDraft, draftFor, moveDraft, openConversation, withDraft} from './conversation-state.mjs';
 
 export default function App() {
   const [account, setAccount] = useState(null);
@@ -16,16 +17,11 @@ export default function App() {
   const active = useRef(false);
   const target = useRef(null);
   const previousAccount = useRef(null);
-  const draft = drafts.get(target.current) || '';
+  const draft = draftFor(drafts, target.current);
 
   function editDraft(text) {
     const id = target.current;
-    setDrafts(current => {
-      const next = new Map(current);
-      if (text) next.set(id, text);
-      else next.delete(id);
-      return next;
-    });
+    setDrafts(current => withDraft(current, id, text));
   }
 
   function clear() {
@@ -68,9 +64,14 @@ export default function App() {
   }
 
   async function open(id) {
-    const detail = await call('/conversations/' + id);
-    target.current = id;
-    setSelected(detail);
+    await openConversation(
+      id,
+      conversationId => call('/conversations/' + conversationId),
+      (conversationId, detail) => {
+        target.current = conversationId;
+        setSelected(detail);
+      },
+    );
   }
 
   async function send() {
@@ -84,22 +85,12 @@ export default function App() {
       id = conversation.id;
       target.current = id;
       setSelected({conversation, messages: []});
-      setDrafts(current => {
-        const next = new Map(current);
-        if (next.has(null)) next.set(id, next.get(null));
-        next.delete(null);
-        return next;
-      });
+      setDrafts(current => moveDraft(current, null, id));
     }
     await call('/chat/completions', {
       method: 'POST', csrf, body: {conversation_id: id, content, stream: false},
     });
-    setDrafts(current => {
-      if (current.get(id) !== draft) return current;
-      const next = new Map(current);
-      next.delete(id);
-      return next;
-    });
+    setDrafts(current => clearSubmittedDraft(current, id, draft));
     await refresh();
   }
 
