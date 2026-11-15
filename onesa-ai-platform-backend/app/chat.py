@@ -25,7 +25,7 @@ from app.inference import (
     observe_generation,
 )
 from app.knowledge import Search, retrieve
-from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
+from app.models import AuthSession, Conversation, InferenceRun, Message, now, User
 from app.responses import ModelList, ModelOut
 from app.schemas import ChatRequest
 
