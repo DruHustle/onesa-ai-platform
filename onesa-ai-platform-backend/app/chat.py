@@ -21,8 +21,8 @@ from app.errors import fail
 from app.inference import (
     GenerationStats,
     InferenceError,
-    ModelMessage,
     MAX_MODEL_MESSAGE_CHARS,
+    ModelMessage,
     model_metadata,
     observe_generation,
 )
