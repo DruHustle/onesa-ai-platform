@@ -299,7 +299,11 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
     db.add(
         IdentityTransaction(
             state_hash=digest(state),
-            browser_hash=digest("native:" + body.code_challenge) if body.mobile else digest(browser),
+            browser_hash=(
+                digest("native:" + body.code_challenge)
+                if body.mobile
+                else digest(browser)
+            ),
             payload=encrypt(
                 request,
                 json.dumps(
