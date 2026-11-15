@@ -46,7 +46,7 @@ docker compose up --wait --wait-timeout 120
 curl --fail "${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}/health"
 ```
 
-Use synthetic development details to register a local account. Fresh development
+Hosted AI Platform customers choose **Continue with Onesa** and sign in or create an account at Company Portal. The loopback quickstart below uses synthetic development details to register a local account. Fresh development
 settings permit registration, clearly label mock inference and use lexical retrieval.
 Open Chat and send a synthetic message. No provider account, paid service or model
 download is required. This does not prove real hosted inference or grant protected

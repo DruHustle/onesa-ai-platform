@@ -9,23 +9,24 @@ export type { OnesaMethod } from "../lib/identity-method";
 type Identity = { id: string; email: string; display_name: string };
 const IdentityMethodContext = createContext<OnesaMethod | null>(null);
 
-export function OnesaIdentityProvider({ initialMethod, children }:
-  { initialMethod: OnesaMethod; children: React.ReactNode }) {
+export function OnesaIdentityProvider({ initialMethod, allowLocal, accountHelp, children }:
+  { initialMethod: OnesaMethod; allowLocal: boolean; accountHelp: string | null; children: React.ReactNode }) {
   const [method, setMethod] = useState<OnesaMethod>({ ...initialMethod, pending: true });
   useEffect(() => {
     const controller = new AbortController();
     call("/auth/onesa/config", "GET", undefined, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]))
       .then(response => response.json()).then(value => {
-        const verified = parseIdentityMethod(value);
+        const verified = parseIdentityMethod(value, allowLocal);
         if (!controller.signal.aborted) setMethod(verified);
       }).catch(reason => {
         if (controller.signal.aborted) return;
-        // Only an older API's explicit missing route selects the native flow.
-        setMethod({ enabled: false, account_url: null, unavailable: !(reason instanceof ApiError && reason.status === 404) });
+        // Older local fixtures may omit the capability endpoint. Hosted clients require Portal.
+        setMethod({ enabled: false, account_url: null, unavailable: !(allowLocal && reason instanceof ApiError && reason.status === 404) });
       });
     return () => controller.abort();
-  }, []);
-  return <IdentityMethodContext.Provider value={method}>{children}</IdentityMethodContext.Provider>;
+  }, [allowLocal]);
+  const entry = method.unavailable ? { ...method, account_url: accountHelp } : method;
+  return <IdentityMethodContext.Provider value={entry}>{children}</IdentityMethodContext.Provider>;
 }
 
 export function useOnesaIdentity() {
@@ -37,6 +38,7 @@ export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) 
   return method?.unavailable ? <div>
     <p role="alert">{de ? "Die Anmeldemethode konnte nicht geladen werden. Bitte versuche es erneut." : "We could not load the sign-in method. Please try again."}</p>
     <button type="button" onClick={() => window.location.reload()}>{de ? "Erneut versuchen" : "Retry sign-in"}</button>
+    {method.account_url && <p><a href={method.account_url}>{de ? "Company Portal öffnen" : "Open Company Portal"}</a></p>}
   </div> : <p role="status">{de ? "Anmeldung wird vorbereitet…" : "Preparing sign-in…"}</p>;
 }
 
@@ -122,7 +124,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
   }
 
   return <div className="onesa-shared-signin">
-    <p>{de ? "Ein Onesa-Konto für AI Platform, Drone und Robot. Dein Administrator legt deinen Zugriff fest." : "One Onesa account for AI Platform, Drone and Robot. Your administrator manages which applications you can use."}</p>
+    <p>{de ? "Melde dich im Company Portal an oder erstelle dort dein Onesa-Konto." : "Sign in or create your Onesa account in Company Portal."}</p>
     {linking ? <form onSubmit={link}>
       <h2>{de ? "Bisheriges AI-Konto verbinden" : "Connect your existing AI account"}</h2>
       <p>{de ? "Bestätige dein bisheriges AI-Passwort einmalig. Deine Gespräche und Dateien bleiben deinem Konto zugeordnet." : "Confirm your existing AI password once. Your conversations and files stay with your account."}</p>
@@ -134,6 +136,6 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
     </button>}
     {busy && preserveDraft && <p role="status">{de ? "Schließe die Anmeldung im neuen Fenster ab. Dein Entwurf bleibt hier erhalten." : "Finish signing in in the new window. Your draft stays here."}</p>}
     {error && <p className="error" role="alert">{error}</p>}
-    {method.account_url && <p><a href={method.account_url + "/register"}>{de ? "Onesa-Konto erstellen" : "Create an Onesa account"}</a> · <a href={method.account_url}>{de ? "Konto und Zugriff" : "Account and access"}</a></p>}
+    {method.account_url && <p><a href={method.account_url}>{de ? "Konto und Zugriff" : "Account and access"}</a></p>}
   </div>;
 }

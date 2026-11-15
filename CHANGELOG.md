@@ -6,6 +6,20 @@
 
 ## Unreleased
 
+- Correct the public deployment and model-hosting drawings, engineering diagrams and onboarding guide to show the Oracle-hosted product APIs. Record the capacity reported by the Oracle guest in the engineering infrastructure drawing.
+
+- Route hosted sign-in, account creation and recovery through Company Portal.
+  An unavailable issuer keeps hosted credential entry closed. Development and
+  test credentials remain scoped to loopback fixtures.
+
+- Use Onesa Robot in public and engineering documentation, architecture drawings
+  and the generated technical design manual.
+
+- Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
+  commissioned standalone AI API plan. Both the standalone and historical plan
+  names are bound to their respective repositories. The configuration, rollback
+  and hosted acceptance requirements apply to both.
+
 - Source candidate: add an independent canonical protected Docs consumer with
   exact repository, main commit, root tree and Platform subtree binding. Preserve
   the original approved document map, separate private builds, provider project,

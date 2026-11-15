@@ -902,6 +902,64 @@ class GenerationTransitionTests(unittest.TestCase):
             {"twins", "cybersecurity"},
         )
 
+    def test_standalone_generation_plan_preserves_its_own_release_scope(self):
+        standalone = {"repository": profiles.REPOSITORY, "component": "twins-api"}
+        plan = {
+            **self.plan,
+            "binding": standalone,
+            "generation_transition": "standalone-cloudflare-qwen3-to-gemma4",
+        }
+        for environment in runner.ENV:
+            self.assertTrue(
+                runner.generation_transition(
+                    plan, self.original, self.prepared, environment
+                )
+            )
+        for binding, transition in (
+            (standalone, runner.GENERATION_TRANSITION),
+            (self.binding, plan["generation_transition"]),
+            ({"component": "twins-api"}, plan["generation_transition"]),
+            (
+                {**standalone, "repository": "other/onesa-ai-platform"},
+                plan["generation_transition"],
+            ),
+            (
+                {**standalone, "component": "twins-frontend"},
+                plan["generation_transition"],
+            ),
+        ):
+            with (
+                self.subTest(binding=binding, transition=transition),
+                self.assertRaises(runner.Refused),
+            ):
+                runner.generation_transition(
+                    {**plan, "binding": binding, "generation_transition": transition},
+                    self.original,
+                    self.prepared,
+                    "production",
+                )
+        with self.assertRaisesRegex(runner.Refused, "GENERATION_ONLY_CONFIGURATION"):
+            runner.generation_transition(
+                plan,
+                self.original,
+                {**self.prepared, "ONESA_EMBEDDING_NAME": "other"},
+                "production",
+            )
+        with self.assertRaisesRegex(
+            runner.Refused, "GENERATION_ACCEPTED_ROLLBACK_SOURCE"
+        ):
+            runner.generation_transition(
+                {
+                    **plan,
+                    "rollback": {
+                        "binding": {**self.binding, "target_environment": "production"}
+                    },
+                },
+                self.original,
+                self.prepared,
+                "production",
+            )
+
     def test_provider_credentials_embedding_features_and_unreviewed_models_cannot_piggyback(
         self,
     ):

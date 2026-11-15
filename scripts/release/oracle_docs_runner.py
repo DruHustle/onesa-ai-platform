@@ -1104,6 +1104,19 @@ def unpack_static(store, binding, spec, workspace):
                 "continue": True,
             }
         )
+    manual_path = "/generated/manuals/16 — Onesa Robot Technical Design.pdf"
+    if (static / manual_path.lstrip("/")).is_file():
+        for old_title in ("AI Robot", "Robot"):
+            previous = (
+                f"/generated/manuals/16 — Onesa — {old_title} Technical Design.pdf"
+            )
+            routes.append(
+                {
+                    "src": f"^(?:{re.escape(previous)}|{re.escape(urllib.parse.quote(previous))})$",
+                    "status": 308,
+                    "headers": {"Location": urllib.parse.quote(manual_path)},
+                }
+            )
     routes.extend(
         [
             {"handle": "filesystem"},
@@ -1347,6 +1360,15 @@ def create_preview(store, operation):
 
 
 def main():
+    if sys.argv[1:] and sys.argv[1] in {
+        "deploy",
+        "staging",
+        "production",
+        "operations",
+    }:
+        raise SystemExit(
+            "Documentation release authority moved to DruHustle/onesa-documents"
+        )
     owner.require(
         os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS") and len(sys.argv) == 2,
         "COMMISSIONED_ROOT_RUNNER_ONLY",
