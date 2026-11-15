@@ -106,11 +106,11 @@ def translate(config: MqttConfig, topic: str, payload: bytes) -> Batch:
 
 
 def retryable_platform_response(response: httpx.Response) -> bool:
-    """Fail closed on an unrecognizable 409; never acknowledge unverified telemetry."""
-    if response.status_code in {408, 425, 429} or response.status_code >= 500:
-        return True
+    """Retry every non-200 response except an explicitly documented permanent conflict."""
     if response.status_code != 409:
-        return False
+        # Authentication, authorization, missing-source, throttling and server errors
+        # may be resolved by operator or service recovery. Keep QoS evidence unacked.
+        return response.status_code != 200
     try:
         payload = response.json()
     except ValueError:
@@ -173,11 +173,9 @@ def serve(config: MqttConfig) -> None:
                     retry_requested = True
                     current.disconnect()
                 elif response.status_code < 500:
-                    # Invalid/revoked input must not hammer the API or be relabeled successful.
-                    print(
-                        "MQTT telemetry rejected by platform; check scoped configuration",
-                        flush=True,
-                    )
+                    # The only terminal response is a documented immutable identity/time
+                    # conflict. All other non-200 responses retain broker QoS evidence.
+                    print("MQTT telemetry conflicts with an existing immutable reading", flush=True)
                     current.ack(message.mid, message.qos)
                 else:
                     retry_requested = True
