@@ -34,6 +34,7 @@ from app.onesa_identity import (
     authorization_url,
     exchange_code,
     new_transaction,
+    pkce_challenge,
     revoke_session,
     validate_session,
 )
@@ -47,11 +48,13 @@ class Start(Strict):
     next: str = Field(default="/", max_length=1000)
     reauthenticate: bool = False
     mobile: bool = False
+    code_challenge: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{43}$")
 
 
 class MobileExchange(Strict):
     state: str = Field(pattern=r"^native_[A-Za-z0-9_-]{43}$")
     code: str = Field(min_length=1, max_length=4096)
+    code_verifier: str = Field(min_length=43, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
 
 
 class Authorization(Strict):
@@ -67,10 +70,12 @@ class Link(PasswordProof):
     email: str = Field(min_length=3, max_length=254)
 
 
-def configuration(request: Request) -> IdentityConfig:
+def configuration(request: Request, *, native: bool = False) -> IdentityConfig:
     config = request.app.state.settings
     if not config.identity_enabled:
         fail(404, "identity_disabled", "Shared Onesa sign-in is not enabled")
+    if native and not config.identity_mobile_enabled:
+        fail(404, "native_identity_disabled", "Native Onesa sign-in is not configured")
     return IdentityConfig(
         config.identity_issuer,
         config.identity_client_id,
