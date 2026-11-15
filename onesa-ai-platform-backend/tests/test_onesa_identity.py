@@ -12,9 +12,9 @@ import httpx
 import pytest
 
 from app.onesa_identity import (
-    _request,
     IdentityConfig,
     IdentityError,
+    _request,
     authorization_url,
     exchange_code,
     new_transaction,
