@@ -119,7 +119,7 @@ def test_http_embedding_rejects_oversized_provider_response():
             transport=httpx.MockTransport(provider),
         )
     assert error.value.status_code == 503
-    assert error.value.detail["error"]["code"] == "embedding_unavailable"
+    assert error.value.detail["code"] == "embedding_unavailable"
 
 
 def test_production_embedding_transport_rejects_development_endpoint() -> None:
