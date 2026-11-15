@@ -26,7 +26,10 @@ RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
 # One exact historical fixture was a fake test credential, not provider authority.
 # Keep the exception scoped to both its test path and exact synthetic value.
 SAFE_CREDENTIAL_FIXTURES = {
-    ("onesa-ai-platform-backend/tests/test_embedding_service.py", b"synthetic-embedding-key"),
+    (
+        "onesa-ai-platform-backend/tests/test_embedding_service.py",
+        b"synthetic-embedding-key",
+    ),
 }
 DENIED_PARTS = {
     "data",
@@ -126,7 +129,9 @@ def secrets(data, name):
                 m
                 for m in matches
                 if (name, m.group(1)) not in SAFE_CREDENTIAL_FIXTURES
-                and not m.group(1).lower().startswith(
+                and not m.group(1)
+                .lower()
+                .startswith(
                     (b"replace-with-", b"replace_with_", b"replace-if-", b"replace_if_")
                 )
             ]
