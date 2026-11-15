@@ -591,7 +591,7 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
         return [line async for line in bounded_sse_lines(response)]
 
     assert asyncio.run(
-        collect(Chunks(b'data: {"text":"caf', b"\xc3", b"\xa9"}\r", b"\n\r\n"))
+        collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))
     ) == ['data: {"text":"café"}', ""]
 
     oversized = Chunks(b"x" * MAX_SSE_LINE_BYTES, b"x")
