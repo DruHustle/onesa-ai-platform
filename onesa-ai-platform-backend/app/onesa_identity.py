@@ -48,17 +48,11 @@ class IdentityConfig:
     public_jwks: str = ""
     mapping_issuer: str = ""
     account_url: str = ""
-    allow_native_callback: bool = False
 
     def __post_init__(self) -> None:
         for name, value in (("issuer", self.issuer), ("callback", self.redirect_uri)):
             parsed = urlsplit(value)
             local = self.allow_local_http and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
-            native = (
-                name == "callback"
-                and self.allow_native_callback
-                and value == "onesaai://account/callback"
-            )
             if (
                 not value
                 or len(value) > 1000
@@ -70,7 +64,7 @@ class IdentityConfig:
                 or (
                     parsed.scheme != "https"
                     and not (local and parsed.scheme == "http")
-                    and not native
+                    and not (local and parsed.scheme == "http")
                 )
             ):
                 raise ValueError(f"Onesa identity {name} requires an exact trusted HTTPS URL")
