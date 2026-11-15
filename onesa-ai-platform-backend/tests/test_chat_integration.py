@@ -573,3 +573,33 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert len(history) == 5
     assert history[-1]["content"]["inference"]["model"]["model_identifier"] == "test-model"
+
+def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8():
+    import asyncio
+
+    from app.inference import MAX_SSE_LINE_BYTES, InferenceError, bounded_sse_lines
+
+    class Chunks:
+        def __init__(self, *values):
+            self.values = values
+
+        async def aiter_bytes(self):
+            for value in self.values:
+                yield value
+
+    async def collect(response):
+        return [line async for line in bounded_sse_lines(response)]
+
+    assert asyncio.run(
+        collect(Chunks(b'data: {"text":"caf', b"\\xc3", b"\\xa9"}\\r", b"\\n\\r\\n"))
+    ) == ['data: {"text":"caf\\xc3\\xa9"}', ""]
+
+    oversized = Chunks(b"x" * MAX_SSE_LINE_BYTES, b"x")
+    with pytest.raises(InferenceError) as failure:
+        asyncio.run(collect(oversized))
+    assert failure.value.code == "invalid_inference_response"
+
+    malformed = Chunks(b"data: \\xff\\n")
+    with pytest.raises(InferenceError) as failure:
+        asyncio.run(collect(malformed))
+    assert failure.value.reason == "invalid_stream_utf8"
