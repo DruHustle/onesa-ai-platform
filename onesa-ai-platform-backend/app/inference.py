@@ -189,6 +189,7 @@ class OpenAIModelClient:
                 ),
                 "Accept-Encoding": "identity",
             },
+            trust_env=False,
             transport=self.transport,
         )
 

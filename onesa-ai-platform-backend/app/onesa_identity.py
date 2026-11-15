@@ -178,7 +178,9 @@ def _request(
     client: httpx.Client | None = None,
 ) -> dict[str, Any]:
     own_client = client is None
-    connection = client or httpx.Client(timeout=httpx.Timeout(5.0), follow_redirects=False)
+    connection = client or httpx.Client(
+        timeout=httpx.Timeout(5.0), follow_redirects=False, trust_env=False
+    )
     try:
         with connection.stream(
             "POST",

@@ -19,6 +19,7 @@ from app.onesa_identity import (
     new_transaction,
     revoke_session,
     validate_session,
+    _request,
 )
 
 CONFIG = IdentityConfig(
@@ -267,3 +268,27 @@ def test_deep_nested_json_is_a_safe_error():
 def test_invalid_config_fails_at_startup(issuer):
     with pytest.raises(ValueError):
         replace(CONFIG, issuer=issuer)
+
+
+def test_identity_provider_client_ignores_ambient_proxy_configuration(monkeypatch):
+    observed = {}
+
+    class Probe(Exception):
+        pass
+
+    class Client:
+        def __init__(self, **kwargs):
+            observed.update(kwargs)
+
+        def stream(self, *args, **kwargs):
+            raise Probe()
+
+        def close(self):
+            observed["closed"] = True
+
+    monkeypatch.setattr(httpx, "Client", Client)
+    with pytest.raises(Probe):
+        _request(CONFIG, "/session", body={"token": TOKEN})
+    assert observed["trust_env"] is False
+    assert observed["follow_redirects"] is False
+    assert observed["closed"] is True
