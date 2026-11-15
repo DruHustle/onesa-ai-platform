@@ -71,6 +71,38 @@ def bridge(handler):
     )
 
 
+@pytest.mark.parametrize("synchronous", [False, True])
+def test_unexpected_handler_error_is_private_and_next_request_survives(synchronous):
+    async def scenario():
+        invoked = []
+
+        async def dispatch(value):
+            invoked.append(value["method"])
+            if value["method"] == "ping" and synchronous:
+                raise RuntimeError("private-session-id")
+            if value["method"] == "work" and not synchronous:
+                raise RuntimeError("private-session-id")
+            return {"jsonrpc": "2.0", "id": value["id"], "result": {}}
+
+        reader, output = asyncio.StreamReader(limit=mcp_transport.MAX_LINE), io.StringIO()
+        running = asyncio.create_task(mcp_transport.serve(dispatch, reader, output))
+        if synchronous:
+            reader.feed_data(packet("ping", "broken"))
+        else:
+            reader.feed_data(packet("work", "broken"))
+            await asyncio.sleep(0)
+        reader.feed_data(packet("health", "healthy"))
+        reader.feed_eof()
+        await asyncio.wait_for(running, 2)
+        found = {item["id"]: item for item in records(output)}
+        assert found["broken"]["error"] == {"code": -32603, "message": "Request failed"}
+        assert found["healthy"]["result"] == {}
+        assert "private-session-id" not in output.getvalue()
+        assert "health" in invoked
+
+    asyncio.run(scenario())
+
+
 def test_cancellation_closes_http_body_and_allows_next_call_without_replay():
     async def scenario():
         body, calls = HeldBody(), []

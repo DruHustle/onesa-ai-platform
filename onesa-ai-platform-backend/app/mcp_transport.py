@@ -54,6 +54,10 @@ async def serve(
                 response = await dispatch(value)
         except TimeoutError:
             response = error(value["id"], -32603, "Request deadline exceeded")
+        except Exception:
+            # A faulty tool/adapter must not terminate unrelated MCP requests.
+            # Never expose exception text, potentially containing private data.
+            response = error(value["id"], -32603, "Request failed")
         # CancelledError propagates: no response or remote replay follows cancellation.
         emit(response)
 
@@ -111,7 +115,16 @@ async def serve(
             ):
                 # Initialization is ordered and cannot be cancelled. Notifications
                 # never invoke remote work; ping remains responsive under load.
-                emit(await dispatch(value))
+                try:
+                    response = await dispatch(value)
+                except Exception:
+                    identifier = (
+                        value.get("id")
+                        if isinstance(value, dict) and type(value.get("id")) in {str, int}
+                        else None
+                    )
+                    response = error(identifier, -32603, "Request failed")
+                emit(response)
                 continue
             if len(active) >= MAX_IN_FLIGHT:
                 emit(error(value["id"], -32000, "Too many outstanding requests"))
