@@ -80,7 +80,11 @@ def embed(
                         "Accept": "application/json",
                         "Accept-Encoding": "identity",
                     },
-                    json={"model": config.embedding_name, "input": inputs, "dimensions": DIMENSIONS},
+                    json={
+                        "model": config.embedding_name,
+                        "input": inputs,
+                        "dimensions": DIMENSIONS,
+                    },
                 ) as response:
                     response.raise_for_status()
                     if (
@@ -89,7 +93,8 @@ def embed(
                         .strip()
                         .lower()
                         != "application/json"
-                        or response.headers.get("content-encoding", "identity").lower() != "identity"
+                        or response.headers.get("content-encoding", "identity").lower()
+                        != "identity"
                     ):
                         raise ValueError("Embedding response encoding or media type is invalid")
                     content = bytearray()
@@ -104,7 +109,9 @@ def embed(
             if (
                 not isinstance(rows, list)
                 or len(rows) != len(texts)
-                or any(not isinstance(row, dict) or type(row.get("index")) is not int for row in rows)
+                or any(
+                    not isinstance(row, dict) or type(row.get("index")) is not int for row in rows
+                )
             ):
                 raise ValueError("Embedding response rows are invalid")
             rows = sorted(rows, key=lambda row: row["index"])
