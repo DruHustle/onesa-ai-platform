@@ -1,6 +1,7 @@
 """Bounded text/PDF ingestion and owner-scoped versioned pgvector retrieval."""
 
 import hashlib
+import json
 import math
 import re
 import subprocess
