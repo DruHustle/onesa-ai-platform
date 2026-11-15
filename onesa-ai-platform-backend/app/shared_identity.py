@@ -271,9 +271,13 @@ def method(request: Request) -> Method:
 
 @router.post("/start", response_model=Authorization)
 def start(body: Start, request: Request, response: Response, db: DB) -> Authorization:
-    config = configuration(request)
+    config = configuration(request, native=body.mobile)
     origin(request)
     throttle(request, db, "shared-sign-in")
+    if body.mobile and (body.reauthenticate or body.code_challenge is None):
+        fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+    if not body.mobile and body.code_challenge is not None:
+        fail(422, "invalid_flow", "PKCE challenge is only valid for native sign-in")
     target = safe_next(body.next)
     binding = None
     if body.reauthenticate:
@@ -289,21 +293,21 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
         }
     state, nonce, verifier = new_transaction()
     if body.mobile:
-        if body.reauthenticate:
-            fail(422, "invalid_flow", "Start a new mobile sign-in")
         state = "native_" + state
-    browser = secrets.token_urlsafe(32)
+    browser = None if body.mobile else secrets.token_urlsafe(32)
     db.execute(delete(IdentityTransaction).where(IdentityTransaction.expires_at <= now()))
     db.add(
         IdentityTransaction(
             state_hash=digest(state),
-            browser_hash=digest(browser),
+            browser_hash=digest("native:" + body.code_challenge) if body.mobile else digest(browser),
             payload=encrypt(
                 request,
                 json.dumps(
                     {
                         "nonce": nonce,
-                        "verifier": verifier,
+                        "verifier": None if body.mobile else verifier,
+                        "code_challenge": body.code_challenge,
+                        "native": body.mobile,
                         "next": target,
                         "reauthenticate": body.reauthenticate,
                         "binding": binding,
@@ -314,21 +318,26 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
         )
     )
     db.commit()
-    response.set_cookie(
-        FLOW_COOKIE,
-        state + "." + browser,
-        httponly=True,
-        secure=request.app.state.settings.secure_cookies,
-        samesite="lax",
-        max_age=300,
-        path="/api/v1/auth/onesa",
-    )
+    if not body.mobile:
+        response.set_cookie(
+            FLOW_COOKIE,
+            state + "." + browser,
+            httponly=True,
+            secure=request.app.state.settings.secure_cookies,
+            samesite="lax",
+            max_age=300,
+            path="/api/v1/auth/onesa",
+        )
     return Authorization(
         authorize_url=authorization_url(
-            config, state, nonce, verifier, reauthenticate=body.reauthenticate
+            config,
+            state,
+            nonce,
+            None if body.mobile else verifier,
+            reauthenticate=body.reauthenticate,
+            code_challenge=body.code_challenge,
         )
     )
-
 
 def transaction(request: Request, db: Session, state: str | None = None) -> IdentityTransaction:
     pieces = request.cookies.get(FLOW_COOKIE, "").split(".")
