@@ -7,7 +7,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.chat import CONVERSATION_INSTRUCTION
+from app.chat import CONVERSATION_INSTRUCTION, TRUNCATED_CONVERSATION_NOTICE
 from app.inference import InferenceError, MockModelClient
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from tests.conftest import signup
@@ -242,12 +242,15 @@ def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
         event.remove(api.app.state.engine, "before_cursor_execute", observe)
     assert [message.content for message in context] == [
         CONVERSATION_INSTRUCTION,
+        TRUNCATED_CONVERSATION_NOTICE,
         *[f"turn-{sequence}" for sequence in range(46, 76)],
         "Next",
     ]
     assert context[0].role == "system"
     assert len(bounded_queries) == 1 and "LIMIT" in bounded_queries[0][0]
-    assert 30 in bounded_queries[0][1].values()
+    assert 31 in bounded_queries[0][1].values()
+    assert "Earlier user messages remain available" not in CONVERSATION_INSTRUCTION
+    assert "cannot see it in the available history" in CONVERSATION_INSTRUCTION
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert [item["sequence"] for item in history] == list(range(1, 78))
 
