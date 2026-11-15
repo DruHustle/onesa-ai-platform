@@ -577,7 +577,7 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
 def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8():
     import asyncio
 
-    from app.inference import MAX_SSE_LINE_BYTES, InferenceError, bounded_sse_lines
+    import app.inference as inference
 
     class Chunks:
         def __init__(self, *values):
@@ -588,7 +588,7 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
                 yield value
 
     async def collect(response):
-        return [line async for line in bounded_sse_lines(response)]
+        return [line async for line in inference.bounded_sse_lines(response)]
 
     assert asyncio.run(
         collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))
@@ -598,8 +598,8 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
         "data: second",
     ]
 
-    oversized = Chunks(b"x" * MAX_SSE_LINE_BYTES, b"x")
-    with pytest.raises(InferenceError) as failure:
+    oversized = Chunks(b"x" * inference.MAX_SSE_LINE_BYTES, b"x")
+    with pytest.raises(inference.InferenceError) as failure:
         asyncio.run(collect(oversized))
     assert failure.value.code == "invalid_inference_response"
 
