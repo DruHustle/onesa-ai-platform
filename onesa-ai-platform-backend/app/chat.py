@@ -314,6 +314,10 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             text = "".join(chunks)
             if not text:
                 raise InferenceError("generation_failed", reason="empty_model_response")
+            # Provider length, filtering and tool handoff can produce partial
+            # output. Do not persist it as a completed assistant response.
+            if stats.finish_reason not in {None, "stop"}:
+                raise InferenceError("generation_failed", reason="incomplete_response")
             stats.total_seconds = time.monotonic() - started
             telemetry.update(
                 {
