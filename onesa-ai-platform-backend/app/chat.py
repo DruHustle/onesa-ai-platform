@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.auth import Auth, DB, eligible
+from app.auth import DB, Auth, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
