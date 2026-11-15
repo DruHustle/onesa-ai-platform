@@ -49,7 +49,9 @@ TRUNCATED_HISTORY_PREFIX = "[Earlier part of this saved message omitted from mod
 
 
 def history_content(message: Message) -> str:
-    text = message.content["text"]
+    text = message.content.get("text")
+    if not isinstance(text, str):
+        raise ValueError("Stored message content must include text")
     if len(text) <= MAX_MODEL_MESSAGE_CHARS:
         return text
     suffix_length = MAX_MODEL_MESSAGE_CHARS - len(TRUNCATED_HISTORY_PREFIX)
