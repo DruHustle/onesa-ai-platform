@@ -8,15 +8,21 @@ class RepositoryHygieneTests(unittest.TestCase):
         fixture = b'embedding_api_key="synthetic-embedding-key"'
         self.assertNotIn(
             "credential-assignment",
-            secrets(fixture, "onesa-ai-platform-backend/tests/test_embedding_service.py"),
+            secrets(
+                fixture, "onesa-ai-platform-backend/tests/test_embedding_service.py"
+            ),
         )
         self.assertIn("credential-assignment", secrets(fixture, "app/config.py"))
 
     def test_other_long_credentials_remain_detected_in_test_paths(self):
-        credential = b'embedding_api_key="R4nd0mK9V7m2Q8p5L1x6C3z0B4n8S2w6Y9"'
+        credential = (
+            b'embedding_api_key="R4nd0mK9V7m2Q8p5L1x6C3z0B4n8S2w6Y9"'
+        )
         self.assertIn(
             "credential-assignment",
-            secrets(credential, "onesa-ai-platform-backend/tests/test_embedding_service.py"),
+            secrets(
+                credential, "onesa-ai-platform-backend/tests/test_embedding_service.py"
+            ),
         )
 
 
