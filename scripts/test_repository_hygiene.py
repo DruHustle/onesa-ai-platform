@@ -8,7 +8,9 @@ class RepositoryHygieneTests(unittest.TestCase):
         fixture = b'embedding_api_key="synthetic-embedding-key"'
         self.assertNotIn(
             "credential-assignment",
-            secrets(fixture, "onesa-ai-platform-backend/tests/test_embedding_service.py"),
+            secrets(
+                fixture, "onesa-ai-platform-backend/tests/test_embedding_service.py"
+            ),
         )
         self.assertIn("credential-assignment", secrets(fixture, "app/config.py"))
 
