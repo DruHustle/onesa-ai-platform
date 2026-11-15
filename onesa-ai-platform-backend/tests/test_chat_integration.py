@@ -152,6 +152,56 @@ def test_failed_chat_reports_safe_reason_and_releases_lease(api, pg, empty):
         assert db.get(Conversation, UUID(identifier)).active_run_id is None
 
 
+@pytest.mark.parametrize("reason", ["length", "content_filter", "tool_calls", "function_call"])
+@pytest.mark.parametrize("stream", [False, True])
+def test_provider_incomplete_finish_is_not_saved_and_can_retry(api, pg, reason, stream):
+    """A terminal SSE frame with incomplete finish must not commit partial history."""
+    import json
+
+    import httpx
+
+    from app.config import Settings
+    from app.inference import VLLMModelClient
+
+    signup(api)
+    identifier = new(api)
+
+    def provider(request):
+        assert request.url.path == "/v1/chat/completions"
+        frame = {"choices": [{"delta": {"content": "partial"}, "finish_reason": reason}]}
+        return httpx.Response(200, text="data: " + json.dumps(frame) + "\\n\\ndata: [DONE]\\n\\n")
+
+    settings = Settings(model_backend="vllm", model_base_url="https://provider.example.test/v1")
+    api.app.state.model_client = VLLMModelClient(settings, httpx.MockTransport(provider))
+    response = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Synthetic prompt", "stream": stream},
+    )
+    if stream:
+        assert response.status_code == 200
+        assert "event: error" in response.text
+        assert "event: message_end" not in response.text
+        assert "incomplete_response" in response.text
+    else:
+        assert response.status_code == 503
+        assert response.json()["error"]["code"] == "generation_failed"
+    with Session(pg) as db:
+        assert [m.role for m in db.scalars(select(Message).order_by(Message.sequence))] == [
+            "user"
+        ]
+        assert db.scalar(select(InferenceRun)).status == "failed"
+        assert db.get(Conversation, UUID(identifier)).active_run_id is None
+
+    api.app.state.model_client = MockModelClient()
+    retry = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Please retry", "stream": False},
+    )
+    assert retry.status_code == 200
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert [item["role"] for item in history] == ["user", "user", "assistant"]
+
+
 def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
     from sqlalchemy import event
 
