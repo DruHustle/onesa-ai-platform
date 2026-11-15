@@ -72,7 +72,7 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
     async for chunk in response.aiter_bytes():
         cursor = 0
         while cursor < len(chunk):
-            newline = chunk.find(b"\\n", cursor)
+            newline = chunk.find(b"\n", cursor)
             end = len(chunk) if newline < 0 else newline
             part = chunk[cursor:end]
             if len(pending) + len(part) > MAX_SSE_LINE_BYTES:
@@ -80,7 +80,7 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
             pending.extend(part)
             if newline < 0:
                 break
-            if pending.endswith(b"\\r"):
+            if pending.endswith(b"\r"):
                 pending.pop()
             try:
                 line = pending.decode("utf-8")
@@ -92,7 +92,7 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
             yield line
             cursor = newline + 1
     if pending:
-        if pending.endswith(b"\\r"):
+        if pending.endswith(b"\r"):
             pending.pop()
         try:
             yield pending.decode("utf-8")
