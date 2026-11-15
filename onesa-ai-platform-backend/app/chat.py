@@ -19,10 +19,10 @@ from app.auth import DB, Auth, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
+    MAX_MODEL_MESSAGE_CHARS,
     GenerationStats,
     InferenceError,
     ModelMessage,
-    MAX_MODEL_MESSAGE_CHARS,
     model_metadata,
     observe_generation,
 )
