@@ -593,6 +593,10 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
     assert asyncio.run(
         collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))
     ) == ['data: {"text":"café"}', ""]
+    assert asyncio.run(collect(Chunks(b"data: first\\rdata: second\\r"))) == [
+        "data: first",
+        "data: second",
+    ]
 
     oversized = Chunks(b"x" * MAX_SSE_LINE_BYTES, b"x")
     with pytest.raises(InferenceError) as failure:
