@@ -399,6 +399,7 @@ def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, p
     try:
         with httpx.Client(
             base_url=f"http://127.0.0.1:{port}",
+            trust_env=False,
             cookies=dict(api.cookies),
             headers={"Origin": "http://localhost:3000", "X-CSRF-Token": api.cookies["onesa_csrf"]},
         ) as client:
