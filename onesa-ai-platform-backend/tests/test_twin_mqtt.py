@@ -40,6 +40,9 @@ def test_source_quality_is_explicit_and_missing_quality_is_unknown(config, statu
     "update",
     [
         {"sensorStatus": "unverified"},
+        {"sensorStatus": []},
+        {"sensorStatus": {}},
+        {"sensorStatus": 0},
         {"deviceId": "another-device"},
         {"timestamp": True},
         {"vibration": True},
