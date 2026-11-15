@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 from app.onesa_identity import (
+    _request,
     IdentityConfig,
     IdentityError,
     authorization_url,
@@ -19,7 +20,6 @@ from app.onesa_identity import (
     new_transaction,
     revoke_session,
     validate_session,
-    _request,
 )
 
 CONFIG = IdentityConfig(
