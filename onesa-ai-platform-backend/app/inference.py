@@ -90,9 +90,12 @@ def read_usage(value: Any) -> None:
                 setattr(stats, attribute, count)
 
 
+MAX_MODEL_MESSAGE_CHARS = 32000
+
+
 class ModelMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
-    content: str = Field(min_length=1, max_length=32000)
+    content: str = Field(min_length=1, max_length=MAX_MODEL_MESSAGE_CHARS)
 
 
 class ModelClient(Protocol):

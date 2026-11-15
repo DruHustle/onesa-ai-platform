@@ -21,6 +21,7 @@ from app.errors import fail
 from app.inference import (
     GenerationStats,
     InferenceError,
+    MAX_MODEL_MESSAGE_CHARS,
     ModelMessage,
     model_metadata,
     observe_generation,
@@ -42,6 +43,17 @@ CONVERSATION_INSTRUCTION = (
     "conversations, private accounts, external systems or tool results only when their data "
     "has been explicitly supplied."
 )
+
+
+TRUNCATED_HISTORY_PREFIX = "[Earlier part of this saved message omitted from model context.]\n"
+
+
+def history_content(message: Message) -> str:
+    text = message.content["text"]
+    if len(text) <= MAX_MODEL_MESSAGE_CHARS:
+        return text
+    suffix_length = MAX_MODEL_MESSAGE_CHARS - len(TRUNCATED_HISTORY_PREFIX)
+    return TRUNCATED_HISTORY_PREFIX + text[-suffix_length:]
 
 
 def event(name: str, data: dict[str, Any]) -> str:
@@ -163,7 +175,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     # Bound context rather than growing requests without limit.
     messages = [
         ModelMessage(role="system", content=CONVERSATION_INSTRUCTION),
-        *[ModelMessage(role=m.role, content=m.content["text"]) for m in history[-30:]],
+        *[ModelMessage(role=m.role, content=history_content(m)) for m in history[-30:]],
     ]
     if sum(len(m.content) for m in messages) + len(body.content) > 96000:
         fail(422, "context_limit", "Start a new conversation to continue")

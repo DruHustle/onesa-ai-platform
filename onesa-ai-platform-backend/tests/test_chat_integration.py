@@ -252,6 +252,54 @@ def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
     assert [item["sequence"] for item in history] == list(range(1, 78))
 
 
+def test_long_saved_assistant_answer_can_be_followed_up_without_losing_history(api):
+    from app.inference import MAX_MODEL_MESSAGE_CHARS
+
+    signup(api)
+    identifier = new(api)
+    old_answer = "Initial answer: " + "x" * 40000 + " PRESERVED-TAIL"
+    with Session(api.app.state.engine) as db:
+        db.add_all(
+            [
+                Message(
+                    conversation_id=UUID(identifier),
+                    role="user",
+                    content={"text": "First"},
+                    sequence=1,
+                ),
+                Message(
+                    conversation_id=UUID(identifier),
+                    role="assistant",
+                    content={"text": old_answer},
+                    sequence=2,
+                ),
+            ]
+        )
+        db.commit()
+
+    captured = []
+
+    class Capture(MockModelClient):
+        async def stream(self, messages):
+            captured.extend(messages)
+            yield "A follow-up answer"
+
+    api.app.state.model_client = Capture()
+    response = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Please continue", "stream": False},
+    )
+    assert response.status_code == 200
+    assert [message.role for message in captured] == ["system", "user", "assistant", "user"]
+    prior = captured[2].content
+    assert len(prior) == MAX_MODEL_MESSAGE_CHARS
+    assert prior.startswith("[Earlier part of this saved message omitted from model context.]")
+    assert prior.endswith(" PRESERVED-TAIL")
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert history[1]["content"]["text"] == old_answer
+    assert history[-1]["content"]["text"] == "A follow-up answer"
+
+
 def test_each_turn_receives_supplied_context_without_persisting_system_instruction(api):
     signup(api)
     identifier = new(api)
