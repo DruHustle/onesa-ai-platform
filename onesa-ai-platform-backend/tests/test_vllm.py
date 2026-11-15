@@ -38,6 +38,24 @@ def test_unconfigured_endpoint_fails_without_transport_request() -> None:
     asyncio.run(check())
 
 
+def test_model_catalogue_health_response_is_bounded():
+    client = VLLMModelClient(
+        Settings(model_backend="vllm", model_name="local-model"),
+        httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                headers={"content-type": "application/json"},
+                content=b" " * (1024 * 1024 + 1),
+                request=request,
+            )
+        ),
+    )
+
+    with pytest.raises(InferenceError) as error:
+        asyncio.run(client.healthy())
+    assert error.value.code == "invalid_inference_response"
+
+
 def test_vllm_health_and_stream_contract() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["Authorization"] == "Bearer test-key"
