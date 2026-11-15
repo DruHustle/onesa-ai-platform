@@ -5,6 +5,7 @@ name: Repository hygiene
     - main
     - staging
     - dev
+    - fix/native-conversation-drafts-20261115
   pull_request:
     branches:
     - main
