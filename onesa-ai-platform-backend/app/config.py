@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
+    identity_mobile_enabled: bool = False
     identity_audience: str = ""
     identity_public_jwks: str = ""
     identity_mapping_issuer: str = ""
