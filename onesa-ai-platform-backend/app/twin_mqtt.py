@@ -120,7 +120,9 @@ def retryable_platform_response(response: httpx.Response) -> bool:
     error = payload.get("error")
     if not isinstance(error, dict):
         return True
-    return error.get("code") == "reading_capacity"
+    # Only these documented identity/time conflicts are permanent. An unknown
+    # conflict (including new server error codes) must not drop QoS evidence.
+    return error.get("code") not in {"sample_identity_conflict", "sample_time_conflict"}
 
 
 def serve(config: MqttConfig) -> None:
