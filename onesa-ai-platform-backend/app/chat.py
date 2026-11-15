@@ -19,15 +19,15 @@ from app.auth import Auth, DB, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
+    MAX_MODEL_MESSAGE_CHARS,
     GenerationStats,
     InferenceError,
-    MAX_MODEL_MESSAGE_CHARS,
     ModelMessage,
     model_metadata,
     observe_generation,
 )
 from app.knowledge import Search, retrieve
-from app.models import AuthSession, Conversation, InferenceRun, Message, now, User
+from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from app.responses import ModelList, ModelOut
 from app.schemas import ChatRequest
 
