@@ -15,13 +15,13 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.auth import Auth, DB, eligible
+from app.auth import DB, Auth, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
+    MAX_MODEL_MESSAGE_CHARS,
     GenerationStats,
     InferenceError,
-    MAX_MODEL_MESSAGE_CHARS,
     ModelMessage,
     model_metadata,
     observe_generation,
@@ -49,7 +49,9 @@ TRUNCATED_HISTORY_PREFIX = "[Earlier part of this saved message omitted from mod
 
 
 def history_content(message: Message) -> str:
-    text = message.content["text"]
+    text = message.content.get("text")
+    if not isinstance(text, str):
+        raise ValueError("Stored message content must include text")
     if len(text) <= MAX_MODEL_MESSAGE_CHARS:
         return text
     suffix_length = MAX_MODEL_MESSAGE_CHARS - len(TRUNCATED_HISTORY_PREFIX)
