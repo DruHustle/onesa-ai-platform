@@ -21,10 +21,10 @@ from app.errors import fail
 from app.inference import (
     GenerationStats,
     InferenceError,
-    MAX_MODEL_MESSAGE_CHARS,
     ModelMessage,
     model_metadata,
     observe_generation,
+    MAX_MODEL_MESSAGE_CHARS,
 )
 from app.knowledge import Search, retrieve
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
