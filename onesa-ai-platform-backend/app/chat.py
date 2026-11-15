@@ -1,9 +1,9 @@
 import asyncio
 import json
+import time
 from collections.abc import AsyncGenerator
 from contextlib import aclosing, suppress
 from datetime import timedelta
-from time import monotonic
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -195,12 +195,12 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
         )
     )
     db.commit()
-    started = monotonic()
+    started = time.monotonic()
 
     stats = GenerationStats()
     metadata = model_metadata(request.app.state.settings)
     telemetry: dict[str, Any] = {}
-    last_identity_check = monotonic()
+    last_identity_check = time.monotonic()
 
     def still_active(force_identity: bool = False) -> bool:
         nonlocal last_identity_check
@@ -221,12 +221,12 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 raise InferenceError("session_expired")
             try:
                 if request.app.state.settings.identity_enabled and (
-                    force_identity or monotonic() - last_identity_check >= 5
+                    force_identity or time.monotonic() - last_identity_check >= 5
                 ):
                     from app.shared_identity import authenticate_shared
 
                     authenticate_shared(request, check, user, session)
-                    last_identity_check = monotonic()
+                    last_identity_check = time.monotonic()
                 eligible(request, check, user)
             except HTTPException as failure:
                 raise InferenceError(
@@ -302,7 +302,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                     async with aclosing(guarded_chunks()) as responses:
                         async for chunk in responses:
                             if chunk and stats.first_token_seconds is None:
-                                stats.first_token_seconds = monotonic() - started
+                                stats.first_token_seconds = time.monotonic() - started
                             size += len(chunk)
                             if size > 128000:
                                 raise InferenceError(
@@ -317,7 +317,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             # output. Do not persist it as a completed assistant response.
             if stats.finish_reason not in {None, "stop"}:
                 raise InferenceError("generation_failed", reason="incomplete_response")
-            stats.total_seconds = monotonic() - started
+            stats.total_seconds = time.monotonic() - started
             telemetry.update(
                 {
                     "input_tokens": stats.input_tokens,
@@ -339,7 +339,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 row.id,
                 run_id,
                 "completed",
-                int((monotonic() - started) * 1000),
+                int((time.monotonic() - started) * 1000),
                 text,
                 sources,
                 stats,
@@ -383,7 +383,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             record_generation(
                 request.app.state.settings.model_backend,
                 status,
-                monotonic() - started,
+                time.monotonic() - started,
                 stats.first_token_seconds,
             )
             if status != "completed":
@@ -395,7 +395,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                         row.id,
                         run_id,
                         status,
-                        int((monotonic() - started) * 1000),
+                        int((time.monotonic() - started) * 1000),
                     )
 
     if body.stream:
