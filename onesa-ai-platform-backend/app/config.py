@@ -160,9 +160,13 @@ class Settings(BaseSettings):
                 self.identity_issuer,
                 self.identity_client_id,
                 self.identity_client_secret,
-                self.identity_callback_url,
+                "onesaai://account/callback",
                 "ai",
                 self.environment in {"development", "test"},
+                self.identity_audience,
+                self.identity_public_jwks,
+                self.identity_mapping_issuer,
+                self.identity_account_url,
                 allow_native_callback=True,
             )
 
