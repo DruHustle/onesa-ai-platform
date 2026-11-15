@@ -85,8 +85,6 @@ jobs:
 
         cd onesa-ai-platform-backend
 
-        ../.venv/bin/python -m ruff check --select I --diff app/chat.py || true
-
         python3 ../scripts/ci/analyze.py ruff -- ../.venv/bin/python -m ruff check . --output-format json
 
         ../.venv/bin/python -m ruff format --check .
