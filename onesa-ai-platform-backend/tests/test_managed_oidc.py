@@ -67,6 +67,7 @@ def signed():
     return config, uid, pair
 
 
+# OIDC permits a single-item aud array; extra recipients are not accepted for this client.
 def test_singleton_audience_arrays_remain_compatible(signed):
     config, uid, pair = signed
     packed = json.dumps(
