@@ -105,6 +105,24 @@ def translate(config: MqttConfig, topic: str, payload: bytes) -> Batch:
     return Batch.model_validate({"mode": config.mode, "samples": samples})
 
 
+def retryable_platform_response(response: httpx.Response) -> bool:
+    """Fail closed on an unrecognizable 409; never acknowledge unverified telemetry."""
+    if response.status_code in {408, 425, 429} or response.status_code >= 500:
+        return True
+    if response.status_code != 409:
+        return False
+    try:
+        payload = response.json()
+    except ValueError:
+        return True
+    if not isinstance(payload, dict):
+        return True
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return True
+    return error.get("code") == "reading_capacity"
+
+
 def serve(config: MqttConfig) -> None:
     token = os.environ.get(config.source_token_env, "")
     if len(token) < 40:
@@ -128,7 +146,7 @@ def serve(config: MqttConfig) -> None:
     client.reconnect_delay_set(min_delay=1, max_delay=30)
     stopped = Event()
     retry_requested = False
-    with httpx.Client(timeout=5, follow_redirects=False) as http:
+    with httpx.Client(timeout=5, follow_redirects=False, trust_env=False) as http:
 
         def connected(
             current: Any, _userdata: Any, _flags: Any, code: Any, _properties: Any
@@ -149,10 +167,7 @@ def serve(config: MqttConfig) -> None:
                 if response.status_code == 200:
                     current.ack(message.mid, message.qos)
                     print("MQTT telemetry accepted", flush=True)
-                elif response.status_code in {408, 425, 429} or (
-                    response.status_code == 409
-                    and response.json().get("error", {}).get("code") == "reading_capacity"
-                ):
+                elif retryable_platform_response(response):
                     retry_requested = True
                     current.disconnect()
                 elif response.status_code < 500:
