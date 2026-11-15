@@ -38,3 +38,13 @@ export async function signIn(openBrowser, api = call) {
       back.searchParams.has('error')) throw Error('Sign-in could not be confirmed. Start again.');
   return api(AUTH + '/mobile/exchange', {method:'POST',body:{state, code:back.searchParams.get('code')}});
 }
+
+// Local sign-out must clean cached authority even when remote SSO revocation
+// cannot be confirmed or the secure-store write fails.
+export async function signOut(csrf, eraseCredential, resetView, api = call) {
+  try { await api('/auth/logout', {method:'POST', csrf}); }
+  finally {
+    try { await eraseCredential(); }
+    finally { resetView(); }
+  }
+}
