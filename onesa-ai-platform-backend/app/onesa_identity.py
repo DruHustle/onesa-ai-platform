@@ -225,7 +225,7 @@ def _request(
 def exchange_code(
     config: IdentityConfig, code: str, verifier: str, *, client: httpx.Client | None = None
 ) -> str:
-    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", verifier):
+    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
         raise IdentityError("identity_callback_invalid", "Sign-in has expired. Please start again")
     result = _request(
         config,
