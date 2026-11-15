@@ -2,6 +2,7 @@ import React, {useEffect, useState, useRef} from 'react';
 import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import * as Browser from 'expo-web-browser';
+import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import {call, signIn, signOut} from './session.mjs';
 
@@ -35,7 +36,17 @@ export default function App() {
 
   }
   async function connect(interactive) {
-    const grant = interactive ? await signIn(Browser.openAuthSessionAsync) : {};
+    const grant = interactive ? await signIn(Browser.openAuthSessionAsync, call, async () => {
+      const bytes = await Crypto.getRandomBytesAsync(32);
+      const verifier = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      const digest = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        verifier,
+        {encoding: Crypto.CryptoEncoding.BASE64},
+      );
+      const challenge = digest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return {verifier, challenge};
+    }) : {};
     const user = await call('/auth/me');
     const key = user.id || user.name;
     if (previousAccount.current && previousAccount.current !== key) {setSelected(null);setItems([]);target.current=null; setDraft('');}
