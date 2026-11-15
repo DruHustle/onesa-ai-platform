@@ -26,6 +26,16 @@ def test_production_requires_https_secure_cookies_and_secrets() -> None:
     )
 
 
+def test_native_identity_flag_is_declared_opt_in_and_requires_shared_identity(monkeypatch):
+    monkeypatch.delenv("RENDER", raising=False)
+    monkeypatch.delenv("ONESA_IDENTITY_MOBILE_ENABLED", raising=False)
+    assert Settings().identity_mobile_enabled is False
+
+    monkeypatch.setenv("ONESA_IDENTITY_MOBILE_ENABLED", "true")
+    with pytest.raises(ValidationError, match="Native identity sign-in requires shared Onesa identity"):
+        Settings()
+
+
 def test_metrics_protected_and_request_size_limit() -> None:
     with TestClient(create_app(Settings(metrics_token="private-token"))) as api:
         assert api.get("/metrics").status_code == 403
