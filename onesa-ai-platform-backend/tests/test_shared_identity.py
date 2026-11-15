@@ -131,7 +131,11 @@ def test_native_pkce_exchange_is_bound_to_verifier_without_browser_cookie(api, m
     assert callback.status_code == 303
     returned = urlsplit(callback.headers["location"])
     returned_query = parse_qs(returned.query)
-    assert returned.scheme == "onesaai" and returned.netloc == "account" and returned.path == "/callback"
+    assert (
+        returned.scheme == "onesaai"
+        and returned.netloc == "account"
+        and returned.path == "/callback"
+    )
     assert returned_query == {"state": [state], "code": ["synthetic-code"]}
 
     original_exchange = shared_identity.exchange_code
