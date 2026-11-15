@@ -30,6 +30,7 @@ def test_native_identity_flag_is_declared_opt_in_and_requires_shared_identity(mo
     monkeypatch.delenv("RENDER", raising=False)
     monkeypatch.delenv("ONESA_IDENTITY_MOBILE_ENABLED", raising=False)
     assert Settings().identity_mobile_enabled is False
+    assert "identity_mobile_enabled" in Settings.model_fields
 
     monkeypatch.setenv("ONESA_IDENTITY_MOBILE_ENABLED", "true")
     with pytest.raises(ValidationError, match="Native identity sign-in requires shared Onesa identity"):
