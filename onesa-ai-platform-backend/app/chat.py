@@ -1,6 +1,5 @@
 import asyncio
 import json
-import time
 from collections.abc import AsyncGenerator
 from contextlib import aclosing, suppress
 from datetime import timedelta
@@ -15,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.auth import DB, Auth, eligible
+from app.auth import Auth, DB, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
@@ -196,7 +195,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
         )
     )
     db.commit()
-    started = time.monotonic()
+    started = monotonic()
 
     stats = GenerationStats()
     metadata = model_metadata(request.app.state.settings)
@@ -303,7 +302,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                     async with aclosing(guarded_chunks()) as responses:
                         async for chunk in responses:
                             if chunk and stats.first_token_seconds is None:
-                                stats.first_token_seconds = time.monotonic() - started
+                                stats.first_token_seconds = monotonic() - started
                             size += len(chunk)
                             if size > 128000:
                                 raise InferenceError(
@@ -318,7 +317,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             # output. Do not persist it as a completed assistant response.
             if stats.finish_reason not in {None, "stop"}:
                 raise InferenceError("generation_failed", reason="incomplete_response")
-            stats.total_seconds = time.monotonic() - started
+            stats.total_seconds = monotonic() - started
             telemetry.update(
                 {
                     "input_tokens": stats.input_tokens,
@@ -340,7 +339,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 row.id,
                 run_id,
                 "completed",
-                int((time.monotonic() - started) * 1000),
+                int((monotonic() - started) * 1000),
                 text,
                 sources,
                 stats,
@@ -384,7 +383,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             record_generation(
                 request.app.state.settings.model_backend,
                 status,
-                time.monotonic() - started,
+                monotonic() - started,
                 stats.first_token_seconds,
             )
             if status != "completed":
@@ -396,7 +395,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                         row.id,
                         run_id,
                         status,
-                        int((time.monotonic() - started) * 1000),
+                        int((monotonic() - started) * 1000),
                     )
 
     if body.stream:
