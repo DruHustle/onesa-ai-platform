@@ -399,9 +399,10 @@ def test_unhashable_or_non_string_method_is_rejected_without_crashing_bridge(met
         reader, output = asyncio.StreamReader(limit=mcp_transport.MAX_LINE), io.StringIO()
         running = asyncio.create_task(mcp_transport.serve(dispatch, reader, output))
         for index, invalid in enumerate([[], {}, None, 7, True]):
-            reader.feed_data(
-                (json.dumps({"jsonrpc": "2.0", "id": f"bad-{index}", "method": invalid}) + "\n").encode()
+            payload = json.dumps(
+                {"jsonrpc": "2.0", "id": f"bad-{index}", "method": invalid}
             )
+            reader.feed_data((payload + "\n").encode())
         reader.feed_data(packet("health", "healthy"))
         reader.feed_eof()
         await asyncio.wait_for(running, 2)
