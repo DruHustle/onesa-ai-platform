@@ -1,9 +1,12 @@
 """Private embedding boundaries and core provider protocol without model downloads."""
 
+import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import httpx
+import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.config import Settings
@@ -66,27 +69,57 @@ def test_bad_encoder_is_sanitized_and_busy_requests_are_rejected() -> None:
         assert "synthetic-private" not in response.text
 
 
-def test_query_instruction_applies_only_to_query_and_dimension_is_explicit(monkeypatch) -> None:
+def test_query_instruction_applies_only_to_query_and_dimension_is_explicit():
     requests = []
-
-    def provider(url, **kwargs):
-        requests.append(kwargs["json"])
-        return httpx.Response(
-            200,
-            json={"data": [{"index": 0, "embedding": [1.0] + [0.0] * 255}]},
-            request=httpx.Request("POST", url),
-        )
-
-    monkeypatch.setattr(httpx, "post", provider)
     config = Settings(
         embedding_backend="http",
         embedding_name=MODEL,
+        embedding_base_url="https://embeddings.example.invalid/v1",
+        embedding_api_key="synthetic-embedding-key",
         embedding_query_instruction="Retrieve relevant passages",
     )
-    embed(["Document passage"], config)
-    embed(["Search question"], config, query=True)
+
+    def provider(request):
+        requests.append(json.loads(request.content))
+        assert request.headers["authorization"] == "Bearer synthetic-embedding-key"
+        assert request.headers["accept-encoding"] == "identity"
+        return httpx.Response(
+            200,
+            json={"data": [{"index": 0, "embedding": [1.0] + [0.0] * 255}]},
+            request=request,
+        )
+
+    transport = httpx.MockTransport(provider)
+    embed(["Document passage"], config, transport=transport)
+    embed(["Search question"], config, query=True, transport=transport)
     assert requests[0] == {"model": MODEL, "input": ["Document passage"], "dimensions": 256}
-    assert requests[1]["input"] == ["Instruct: Retrieve relevant passages\nQuery:Search question"]
+    assert requests[1]["input"] == ["Instruct: Retrieve relevant passages\\nQuery:Search question"]
+
+
+def test_http_embedding_rejects_oversized_provider_response():
+    config = Settings(
+        embedding_backend="http",
+        embedding_name=MODEL,
+        embedding_base_url="https://embeddings.example.invalid/v1",
+        embedding_api_key="synthetic-embedding-key",
+    )
+
+    def provider(request):
+        return httpx.Response(
+            200,
+            headers={"content-type": "application/json"},
+            content=b" " * (1024 * 1024 + 1),
+            request=request,
+        )
+
+    with pytest.raises(HTTPException) as error:
+        embed(
+            ["Synthetic input"],
+            config,
+            transport=httpx.MockTransport(provider),
+        )
+    assert error.value.status_code == 503
+    assert error.value.detail["error"]["code"] == "embedding_unavailable"
 
 
 def test_production_embedding_transport_rejects_development_endpoint() -> None:
