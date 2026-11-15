@@ -155,7 +155,7 @@ def validate(config: IdentityConfig, packed: str, nonce: str | None = None) -> I
 def exchange(
     config: IdentityConfig, code: str, verifier: str, nonce: str, client: httpx.Client | None = None
 ) -> str:
-    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", verifier):
+    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
         raise rejected()
     data = _request(
         config,
