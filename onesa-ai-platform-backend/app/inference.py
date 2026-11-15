@@ -63,6 +63,32 @@ class GenerationStats:
 
 active_stats: ContextVar[GenerationStats | None] = ContextVar("generation_stats", default=None)
 
+MAX_PROVIDER_METADATA_BYTES = 1024 * 1024
+
+
+async def bounded_provider_json(response: httpx.Response) -> dict[str, Any]:
+    """Read a provider catalogue response with strict media, encoding and byte bounds."""
+    response.raise_for_status()
+    if (
+        response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        != "application/json"
+        or response.headers.get("content-encoding", "identity").lower() != "identity"
+    ):
+        raise InferenceError("invalid_inference_response")
+    content = bytearray()
+    async for part in response.aiter_bytes(chunk_size=64 * 1024):
+        if len(content) + len(part) > MAX_PROVIDER_METADATA_BYTES:
+            raise InferenceError("invalid_inference_response")
+        content.extend(part)
+    try:
+        payload = json.loads(content)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise InferenceError("invalid_inference_response") from exc
+    if not isinstance(payload, dict):
+        raise InferenceError("invalid_inference_response")
+    return payload
+
+
 MAX_SSE_LINE_BYTES = 1024 * 1024
 
 
@@ -195,9 +221,13 @@ class OpenAIModelClient:
 
     async def healthy(self) -> bool:
         async with self.connection() as client:
-            response = await client.get("models")
-            response.raise_for_status()
-            return any(row.get("id") == self.settings.model_name for row in response.json()["data"])
+            async with client.stream("GET", "models") as response:
+                payload = await bounded_provider_json(response)
+            rows = payload.get("data")
+            return isinstance(rows, list) and any(
+                isinstance(row, dict) and row.get("id") == self.settings.model_name
+                for row in rows
+            )
 
     def completion_url(self) -> str:
         return "chat/completions"
@@ -316,17 +346,16 @@ class CloudflareModelClient(OpenAIModelClient):
 
     async def healthy(self) -> bool:
         async with self.connection() as client:
-            response = await client.get(
+            async with client.stream(
+                "GET",
                 self.settings.model_base_url.rstrip("/").removesuffix("/v1") + "/models/search",
                 params={"search": self.settings.model_name, "per_page": 20},
-            )
-            response.raise_for_status()
-            if len(response.content) > 1024 * 1024:
-                return False
-            data = response.json()
-            return data.get("success") is True and any(
+            ) as response:
+                data = await bounded_provider_json(response)
+            rows = data.get("result")
+            return data.get("success") is True and isinstance(rows, list) and any(
                 isinstance(row, dict) and row.get("name") == self.settings.model_name
-                for row in data.get("result", [])
+                for row in rows
             )
 
 
