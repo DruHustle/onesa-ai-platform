@@ -124,7 +124,8 @@ def test_http_embedding_request_is_bounded_and_validates_numeric_vectors():
     assert all(value == 1.0 for value in vectors[0])
 
 
-def test_http_embedding_rejects_boolean_vector_values():
+@pytest.mark.parametrize("invalid_value", [True, "1"])
+def test_http_embedding_rejects_non_numeric_vector_values(invalid_value):
     import httpx
     from fastapi import HTTPException
 
@@ -137,7 +138,7 @@ def test_http_embedding_rejects_boolean_vector_values():
         embedding_base_url="https://embeddings.example.test/v1",
         embedding_api_key="x" * 40,
     )
-    response = {"data": [{"index": 0, "embedding": [True] + [1.0] * 255}]}
+    response = {"data": [{"index": 0, "embedding": [invalid_value] + [1.0] * 255}]}
     with pytest.raises(HTTPException) as failure:
         embed(
             ["Synthetic input"],
