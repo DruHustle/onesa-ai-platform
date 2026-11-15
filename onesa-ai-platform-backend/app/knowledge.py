@@ -41,10 +41,19 @@ def version(config: Settings) -> str:
     return f"{config.embedding_backend}:{config.embedding_name}:{config.embedding_revision}:256"
 
 
-def embed(texts: list[str], config: Settings, *, query: bool = False) -> list[list[float]]:
+MAX_EMBEDDING_RESPONSE_BYTES = 1024 * 1024
+
+
+def embed(
+    texts: list[str],
+    config: Settings,
+    *,
+    query: bool = False,
+    transport: httpx.BaseTransport | None = None,
+) -> list[list[float]]:
     if config.embedding_backend == "cloudflare":
         try:
-            return cloudflare_embeddings(texts, config, query=query)
+            return cloudflare_embeddings(texts, config, query=query, transport=transport)
         except Exception:
             fail(503, "embedding_unavailable", "Embedding service unavailable or incompatible")
     if config.embedding_backend == "http":
@@ -57,20 +66,63 @@ def embed(texts: list[str], config: Settings, *, query: bool = False) -> list[li
                 if query and config.embedding_query_instruction
                 else texts
             )
-            response = httpx.post(
-                config.embedding_base_url.rstrip("/") + "/embeddings",
-                headers={"Authorization": "Bearer " + config.embedding_api_key},
-                json={"model": config.embedding_name, "input": inputs, "dimensions": DIMENSIONS},
-                timeout=30,
-            )
-            response.raise_for_status()
-            rows = sorted(response.json()["data"], key=lambda r: r["index"])
-            if [r["index"] for r in rows] != list(range(len(texts))):
+            with httpx.Client(
+                timeout=httpx.Timeout(30, connect=3),
+                follow_redirects=False,
+                trust_env=False,
+                transport=transport,
+            ) as client:
+                with client.stream(
+                    "POST",
+                    config.embedding_base_url.rstrip("/") + "/embeddings",
+                    headers={
+                        "Authorization": "Bearer " + config.embedding_api_key,
+                        "Accept": "application/json",
+                        "Accept-Encoding": "identity",
+                    },
+                    json={"model": config.embedding_name, "input": inputs, "dimensions": DIMENSIONS},
+                ) as response:
+                    response.raise_for_status()
+                    if (
+                        response.headers.get("content-type", "")
+                        .split(";", 1)[0]
+                        .strip()
+                        .lower()
+                        != "application/json"
+                        or response.headers.get("content-encoding", "identity").lower() != "identity"
+                    ):
+                        raise ValueError("Embedding response encoding or media type is invalid")
+                    content = bytearray()
+                    for part in response.iter_bytes():
+                        content.extend(part)
+                        if len(content) > MAX_EMBEDDING_RESPONSE_BYTES:
+                            raise ValueError("Embedding response exceeds its byte limit")
+            payload = json.loads(content)
+            if not isinstance(payload, dict):
+                raise ValueError("Embedding response is not an object")
+            rows = payload.get("data")
+            if (
+                not isinstance(rows, list)
+                or len(rows) != len(texts)
+                or any(not isinstance(row, dict) or type(row.get("index")) is not int for row in rows)
+            ):
+                raise ValueError("Embedding response rows are invalid")
+            rows = sorted(rows, key=lambda row: row["index"])
+            if [row["index"] for row in rows] != list(range(len(texts))):
                 raise ValueError("Embedding indices do not match")
-            result = [[float(v) for v in row["embedding"]] for row in rows]
-            if any(len(v) != DIMENSIONS or not all(math.isfinite(x) for x in v) for v in result):
-                raise ValueError("Embedding dimensions/values are invalid")
-            if any(not any(v) for v in result):
+            for row in rows:
+                values = row.get("embedding")
+                if (
+                    not isinstance(values, list)
+                    or len(values) != DIMENSIONS
+                    or any(
+                        type(value) not in (int, float) or not math.isfinite(value)
+                        for value in values
+                    )
+                ):
+                    raise ValueError("Embedding dimensions/values are invalid")
+            result = [[float(value) for value in row["embedding"]] for row in rows]
+            if any(not any(vector) for vector in result):
                 raise ValueError("Zero embedding")
             return result
         except Exception:
