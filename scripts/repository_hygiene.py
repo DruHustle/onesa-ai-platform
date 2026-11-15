@@ -131,7 +131,6 @@ def secrets(data, name):
                         b"placeholder",
                         b"replace",
                         b"example",
-                        b"test",
                         b"change",
                         b"your_",
                     )
