@@ -38,6 +38,24 @@ def settings(**changes):
     return Settings(**(values | changes))
 
 
+def test_cloudflare_model_catalogue_health_response_is_bounded():
+    client = CloudflareModelClient(
+        settings(),
+        httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                headers={"content-type": "application/json"},
+                content=b" " * (1024 * 1024 + 1),
+                request=request,
+            )
+        ),
+    )
+
+    with pytest.raises(InferenceError) as error:
+        asyncio.run(client.healthy())
+    assert error.value.code == "invalid_inference_response"
+
+
 def test_cloudflare_selection_catalog_and_native_stream():
     config = settings()
     assert isinstance(build_model_client(config), CloudflareModelClient)
