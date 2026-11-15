@@ -22,13 +22,26 @@ export async function call(path, {method = 'GET', body, csrf} = {}) {
   return response.status === 204 ? null : response.json();
 }
 
-export async function signIn(openBrowser, api = call) {
-  const start = await api(AUTH + '/start', {method:'POST', body:{mobile:true}});
+export async function signIn(openBrowser, api = call, createPkce) {
+  if (typeof createPkce !== 'function') throw Error('Secure sign-in is unavailable.');
+  const pkce = await createPkce();
+  if (!pkce || !/^[A-Za-z0-9._~-]{43,128}$/.test(pkce.verifier || '') ||
+      !/^[A-Za-z0-9_-]{43}$/.test(pkce.challenge || '')) {
+    throw Error('Secure sign-in is unavailable.');
+  }
+  const start = await api(AUTH + '/start', {
+    method:'POST',
+    body:{mobile:true, code_challenge:pkce.challenge},
+  });
   const url = new URL(start.authorize_url || start.authorization_url);
   const state = url.searchParams.get('state');
   if (url.origin !== 'https://auth.onesa.eu' || url.pathname !== '/authorize' ||
       url.username || url.password || url.hash || !/^native_[A-Za-z0-9_-]{43}$/.test(state || '') ||
-      url.searchParams.get('code_challenge_method') !== 'S256') throw Error('The sign-in service is unavailable.');
+      url.searchParams.getAll('code_challenge').length !== 1 ||
+      url.searchParams.get('code_challenge') !== pkce.challenge ||
+      url.searchParams.get('code_challenge_method') !== 'S256') {
+    throw Error('The sign-in service is unavailable.');
+  }
   const result = await openBrowser(url.href, CALLBACK);
   if (result.type !== 'success') throw Error('Sign-in cancelled.');
   const back = new URL(result.url);
@@ -36,7 +49,10 @@ export async function signIn(openBrowser, api = call) {
       back.searchParams.getAll('state').length !== 1 || back.searchParams.get('state') !== state ||
       back.searchParams.getAll('code').length !== 1 || !back.searchParams.get('code') ||
       back.searchParams.has('error')) throw Error('Sign-in could not be confirmed. Start again.');
-  return api(AUTH + '/mobile/exchange', {method:'POST',body:{state, code:back.searchParams.get('code')}});
+  return api(AUTH + '/mobile/exchange', {
+    method:'POST',
+    body:{state, code:back.searchParams.get('code'), code_verifier:pkce.verifier},
+  });
 }
 
 // Local sign-out must clean cached authority even when remote SSO revocation
