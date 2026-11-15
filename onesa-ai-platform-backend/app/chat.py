@@ -4,6 +4,7 @@ import time
 from collections.abc import AsyncGenerator
 from contextlib import aclosing, suppress
 from datetime import timedelta
+from time import monotonic
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -212,7 +213,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     stats = GenerationStats()
     metadata = model_metadata(request.app.state.settings)
     telemetry: dict[str, Any] = {}
-    last_identity_check = time.monotonic()
+    last_identity_check = monotonic()
 
     def still_active(force_identity: bool = False) -> bool:
         nonlocal last_identity_check
@@ -233,7 +234,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 raise InferenceError("session_expired")
             try:
                 if request.app.state.settings.identity_enabled and (
-                    force_identity or time.monotonic() - last_identity_check >= 5
+                    force_identity or monotonic() - last_identity_check >= 5
                 ):
                     from app.shared_identity import authenticate_shared
 
