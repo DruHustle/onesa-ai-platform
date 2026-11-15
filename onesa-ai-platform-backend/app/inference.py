@@ -18,6 +18,7 @@ FAILURE_REASONS = frozenset(
     {
         "provider_stream_error",
         "invalid_stream_json",
+        "invalid_stream_utf8",
         "invalid_stream_shape",
         "invalid_stream_delta",
         "stream_terminated_early",
@@ -61,6 +62,42 @@ class GenerationStats:
 
 
 active_stats: ContextVar[GenerationStats | None] = ContextVar("generation_stats", default=None)
+
+MAX_SSE_LINE_BYTES = 1024 * 1024
+
+
+async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
+    """Decode SSE incrementally and reject an overlong line before buffering it."""
+    pending = bytearray()
+    async for chunk in response.aiter_bytes():
+        cursor = 0
+        while cursor < len(chunk):
+            newline = chunk.find(b"\\n", cursor)
+            end = len(chunk) if newline < 0 else newline
+            part = chunk[cursor:end]
+            if len(pending) + len(part) > MAX_SSE_LINE_BYTES:
+                raise InferenceError("invalid_inference_response")
+            pending.extend(part)
+            if newline < 0:
+                break
+            if pending.endswith(b"\\r"):
+                pending.pop()
+            try:
+                line = pending.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise InferenceError(
+                    "generation_failed", reason="invalid_stream_utf8"
+                ) from exc
+            pending.clear()
+            yield line
+            cursor = newline + 1
+    if pending:
+        if pending.endswith(b"\\r"):
+            pending.pop()
+        try:
+            yield pending.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
 
 
 @contextmanager
@@ -136,11 +173,14 @@ class OpenAIModelClient:
         return httpx.AsyncClient(
             base_url=self.settings.model_base_url.rstrip("/") + "/",
             timeout=httpx.Timeout(self.settings.generation_timeout, connect=3),
-            headers=(
-                {"Authorization": "Bearer " + self.settings.model_api_key}
-                if self.settings.model_api_key
-                else {}
-            ),
+            headers={
+                **(
+                    {"Authorization": "Bearer " + self.settings.model_api_key}
+                    if self.settings.model_api_key
+                    else {}
+                ),
+                "Accept-Encoding": "identity",
+            },
             transport=self.transport,
         )
 
@@ -173,9 +213,11 @@ class OpenAIModelClient:
                 if response.status_code == 404:
                     raise InferenceError("model_not_available")
                 response.raise_for_status()
+                if response.headers.get("content-encoding", "identity").lower() != "identity":
+                    raise InferenceError("invalid_inference_response")
                 ended = False
                 finished = False
-                async for line in response.aiter_lines():
+                async for line in bounded_sse_lines(response):
                     if not line.startswith("data:"):
                         continue
                     payload = line[5:].strip()
