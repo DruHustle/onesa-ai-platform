@@ -120,21 +120,16 @@ def secrets(data, name):
     for rule, pattern in RULES.items():
         matches = list(pattern.finditer(data))
         if rule == "credential-assignment":
-            # Documented non-credential examples/test fixtures still need review.
+            # Only exact, reviewed fixtures and explicit replacement prefixes
+            # are exempt. Substring markers can hide real credentials.
             matches = [
                 m
                 for m in matches
                 if (name, m.group(1)) not in SAFE_CREDENTIAL_FIXTURES
-                and not any(
-                    marker in m.group(1).lower()
-                    for marker in (
-                        b"placeholder",
-                        b"replace",
-                        b"example",
-                        b"test",
-                        b"change",
-                        b"your_",
-                    )
+                and not m.group(1)
+                .lower()
+                .startswith(
+                    (b"replace-with-", b"replace_with_", b"replace-if-", b"replace_if_")
                 )
             ]
         if matches:
