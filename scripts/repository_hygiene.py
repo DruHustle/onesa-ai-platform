@@ -26,7 +26,27 @@ RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
 # One exact historical fixture was a fake test credential, not provider authority.
 # Keep the exception scoped to both its test path and exact synthetic value.
 SAFE_CREDENTIAL_FIXTURES = {
-    ("onesa-ai-platform-backend/tests/test_embedding_service.py", b"synthetic-embedding-key"),
+    # Exact, reviewed synthetic values used only by isolated protocol/UI tests.
+    (
+        "onesa-ai-platform-backend/tests/test_embedding_service.py",
+        b"synthetic-embedding-key",
+    ),
+    (
+        "onesa-ai-platform-backend/tests/test_onesa_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-backend/tests/test_shared_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-frontend/apps/chat/tests/account.spec.ts",
+        b"browser-account-changed-456",
+    ),
+    (
+        "scripts/release/test_oracle_ai_identity_probe.py",
+        b"synthetic-test-ciphertext",
+    ),
 }
 DENIED_PARTS = {
     "data",
