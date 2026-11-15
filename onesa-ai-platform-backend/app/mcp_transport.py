@@ -108,10 +108,19 @@ async def serve(
             ):
                 emit(error(None, -32600, "Request identifier is already active"))
                 continue
+            identifier = value.get("id") if isinstance(value, dict) else None
+            method = value.get("method") if isinstance(value, dict) else None
+            if (
+                isinstance(value, dict)
+                and type(identifier) in {str, int}
+                and not isinstance(method, str)
+            ):
+                emit(error(identifier, -32600, "Invalid request"))
+                continue
             if (
                 not isinstance(value, dict)
-                or type(value.get("id")) not in {str, int}
-                or value.get("method") in {"initialize", "ping"}
+                or type(identifier) not in {str, int}
+                or method in {"initialize", "ping"}
             ):
                 # Initialization is ordered and cannot be cancelled. Notifications
                 # never invoke remote work; ping remains responsive under load.
