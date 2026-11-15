@@ -64,7 +64,6 @@ class IdentityConfig:
                 or (
                     parsed.scheme != "https"
                     and not (local and parsed.scheme == "http")
-                    and not (local and parsed.scheme == "http")
                 )
             ):
                 raise ValueError(f"Onesa identity {name} requires an exact trusted HTTPS URL")
