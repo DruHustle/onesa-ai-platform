@@ -79,7 +79,9 @@ def test_remote_plaintext_configuration_is_rejected(config):
         (409, b'{"error": null}', True),
         (409, b'{"error": []}', True),
         (409, b'{"error": {"code": "reading_capacity"}}', True),
-        (409, b'{"error": {"code": "source_revoked"}}', False),
+        (409, b'{"error": {"code": "unrecognized_conflict"}}', True),
+        (409, b'{"error": {"code": "sample_identity_conflict"}}', False),
+        (409, b'{"error": {"code": "sample_time_conflict"}}', False),
     ],
 )
 def test_unknown_platform_conflict_never_acks_mqtt_qos_evidence(status, body, retry):
