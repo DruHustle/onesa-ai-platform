@@ -384,3 +384,33 @@ asyncio.run(run(Server(connection, {'text_stats'}, transport), sys.stdin.buffer,
                 await child.wait()
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("method", [[], {}, None, 7, True])
+def test_unhashable_or_non_string_method_is_rejected_without_crashing_bridge(method):
+    async def scenario():
+        invoked = []
+
+        async def dispatch(value):
+            invoked.append(value["method"])
+            return {"jsonrpc": "2.0", "id": value["id"], "result": {}}
+
+        reader, output = asyncio.StreamReader(limit=mcp_transport.MAX_LINE), io.StringIO()
+        running = asyncio.create_task(mcp_transport.serve(dispatch, reader, output))
+        for index, invalid in enumerate([[], {}, None, 7, True]):
+            reader.feed_data(
+                (json.dumps({"jsonrpc": "2.0", "id": f"bad-{index}", "method": invalid}) + "\n").encode()
+            )
+        reader.feed_data(packet("health", "healthy"))
+        reader.feed_eof()
+        await asyncio.wait_for(running, 2)
+        found = {item["id"]: item for item in records(output)}
+        for index in range(5):
+            assert found[f"bad-{index}"]["error"] == {
+                "code": -32600,
+                "message": "Invalid request",
+            }
+        assert found["healthy"]["result"] == {}
+        assert invoked == ["health"]
+
+    asyncio.run(scenario())
