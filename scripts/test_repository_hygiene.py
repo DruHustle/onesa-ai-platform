@@ -19,6 +19,13 @@ class RepositoryHygieneTests(unittest.TestCase):
             secrets(credential, "onesa-ai-platform-backend/tests/test_embedding_service.py"),
         )
 
+    def test_test_word_inside_credential_does_not_make_it_a_placeholder(self):
+        credential = b'embedding_api_key="test-looking-value-that-is-not-a-placeholder"'
+        self.assertIn(
+            "credential-assignment",
+            secrets(credential, "onesa-ai-platform-backend/tests/test_embedding_service.py"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
