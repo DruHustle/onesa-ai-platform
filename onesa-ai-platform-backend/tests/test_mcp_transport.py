@@ -388,6 +388,7 @@ asyncio.run(run(Server(connection, {'text_stats'}, transport), sys.stdin.buffer,
 
 @pytest.mark.parametrize("method", [[], {}, None, 7, True])
 def test_unhashable_or_non_string_method_is_rejected_without_crashing_bridge(method):
+    """Malformed JSON-RPC method values must not terminate the stdio bridge."""
     async def scenario():
         invoked = []
 
