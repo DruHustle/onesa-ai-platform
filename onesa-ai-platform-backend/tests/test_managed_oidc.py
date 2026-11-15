@@ -183,3 +183,20 @@ def test_managed_callback_preserves_legacy_ai_owner_and_conversation(
     assert not user.json()["global_admin"]
     work = api.get("/api/v1/conversations")
     assert work.status_code == 200 and conversation.json()["id"] in work.text
+
+
+@pytest.mark.parametrize(
+    "audience",
+    [
+        ["https://api.ai.example"],
+        ["https://api.ai.example", "https://other-product.example"],
+    ],
+)
+def test_managed_access_token_rejects_array_audiences_even_when_expected_resource_is_present(
+    signed, audience
+):
+    config, _, pair = signed
+    # JWT audience validation accepts an array containing the expected API.
+    # The AI product contract is deliberately narrower: one exact resource.
+    with pytest.raises(IdentityError):
+        validate(config, json.dumps(pair({"aud": audience})))

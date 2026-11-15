@@ -87,6 +87,11 @@ def validate(config: IdentityConfig, packed: str, nonce: str | None = None) -> I
             raise rejected()
         if access["sub"] != profile["sub"] or profile.get("email_verified") is not True:
             raise rejected()
+        # This product client is provisioned for one API audience only. PyJWT
+        # accepts an audience array containing the expected value, so enforce
+        # the narrower resource-token contract before honoring any role claims.
+        if access.get("aud") != audience:
+            raise rejected()
         if "azp" in access and access["azp"] != config.client_id:
             raise rejected()
         if (
