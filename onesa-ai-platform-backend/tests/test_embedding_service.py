@@ -75,7 +75,7 @@ def test_query_instruction_applies_only_to_query_and_dimension_is_explicit():
         embedding_backend="http",
         embedding_name=MODEL,
         embedding_base_url="https://embeddings.example.invalid/v1",
-        embedding_api_key="synthetic-embedding-key",
+        embedding_api_key=KEY,
         embedding_query_instruction="Retrieve relevant passages",
     )
 
@@ -101,7 +101,7 @@ def test_http_embedding_rejects_oversized_provider_response():
         embedding_backend="http",
         embedding_name=MODEL,
         embedding_base_url="https://embeddings.example.invalid/v1",
-        embedding_api_key="synthetic-embedding-key",
+        embedding_api_key=KEY,
     )
 
     def provider(request):
