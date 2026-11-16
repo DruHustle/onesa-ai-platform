@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "owner": "DruHustle/onesa-company-portal",
+  "owner": "DruHustle/onesa-portal",
   "source": "onesa-company-portal-frontend/src/styles/onesa-foundation.css",
   "sha256": "903893a34aab19b3a46cb9543cd7d96d1dbc219c1a69b14678aeceb50eeff7a4",
   "local_artifacts": [
@@ -20,19 +20,19 @@
   "guide_status": "Internal Documents access and this guide require verification after deployment.",
   "identity_icons": {
     "version": "1.0.0",
-    "owner": "DruHustle/onesa-company-portal",
+    "owner": "DruHustle/onesa-portal",
     "source": "onesa-company-portal-frontend/public/brand/onesa-orbit.png",
     "source_sha256": "4dc5ada01211fe5127ab59f33a9e4b19482658ef9878300fa088de4b27e6d7e6",
     "local_artifacts": [
       {
         "product": "ai",
         "manifest": "onesa-ai-platform-frontend/apps/chat/public/brand/icons/v1/sources.json",
-        "sha256": "d3af5fbc43cf7a9906af4920acdc180ba3ee63a64a52e2e944efcb01380ef1d3"
+        "sha256": "b8b036ac8d4afeb82d757d3064563d5938934bc9dd345b06c473ec4ba3d99b7f"
       },
       {
         "product": "docs",
         "manifest": "onesa-ai-platform-frontend/apps/docs/static/brand/icons/v1/sources.json",
-        "sha256": "d8c37eeeaf83c491334dd57f11ee1943b25780c21abce30465cb2acfa7ff1b42"
+        "sha256": "43c2de8f8fe92a72ec91c6ce403d2a590f23bddaae4b32cee9aca4e533876cba"
       }
     ]
   }
