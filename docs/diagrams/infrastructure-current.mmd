@@ -3,7 +3,7 @@ Browser["Product browsers"] --> Vercel["Vercel product frontends"]
 Vercel --> Edge["Exact API hosts and existing protections"]
 PC["Approved owner PC"] --> Tail["Tailscale and pinned OpenSSH"]
 CI["Hosted CI and owner-controlled release"]
-subgraph VM["Onesa UG Backend - Oracle ARM64 - 1 OCPU - 6 GB RAM"]
+subgraph VM["Onesa UG Backend - Oracle ARM64 - 2 visible CPUs and 11.6 GiB RAM"]
   direction TB
   subgraph Ingress["Outbound HTTPS connectors"]
     TS["Staging tunnel"]

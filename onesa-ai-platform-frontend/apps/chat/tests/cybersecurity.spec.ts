@@ -356,7 +356,17 @@ test("actual setup import asset finding decisions and reload are independent of 
     requests.filter((url) => /\.glb(?:\?|$)|smart-factory|mqtt:\/\//.test(url)),
   ).toEqual([]);
   await page.getByLabel("Evidence mode").selectOption("live");
-  await nav.getByRole("button", { name: "Findings", exact: true }).click();
+  // A mode response replaces the scoped list and can clamp the page's scroll.
+  // Observe that rendered state before aiming another pointer action at a tab.
+  await expect(
+    page.getByText(
+      "Open a finding and create an investigation to preserve its evidence and decision history.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const findingsTab = nav.getByRole("button", { name: "Findings", exact: true });
+  await findingsTab.click();
+  await expect(findingsTab).toHaveAttribute("aria-current", "page");
   await expect(
     page.getByText("No findings in this mode.", { exact: false }),
   ).toBeVisible();

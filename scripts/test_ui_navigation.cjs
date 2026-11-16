@@ -72,3 +72,34 @@ test("failed navigation removes request observation", async () => {
   await assert.rejects(navigateInterface(page, origin, "/", { timeout: 20 }), /Navigation unavailable/);
   assert.equal(page.listenerCount("request"), 0);
 });
+
+test("shared sign-in observes the real account entry without requiring a native password field", async () => {
+  const page = new Page(async () => {});
+  page.getByLabel = () => assert.fail("Native credentials must not be required for shared entry");
+  page.getByRole = (role, options) => {
+    assert.equal(role, "button");
+    assert.equal(options.name, "Continue with Onesa");
+    return {waitFor: async () => {}};
+  };
+  assert.equal((await navigateInterface(page, origin, "/", {authentication: true, sharedIdentity: true})).status(), 200);
+});
+
+test("shared account settings retain both fresh authenticated data gates", async () => {
+  for (const status of [200, 503]) {
+    const page = new Page(async () => {});
+    page.goto = async () => {
+      page.receive(request("auth/me"));
+      page.receive(request("auth/sessions"), status);
+      return {status: () => 200, url: () => origin + "/settings"};
+    };
+    page.getByRole = (role, options) => {
+      assert.equal(role, "heading");
+      assert.equal(options.name, "Your Onesa account");
+      assert.equal(options.level, 2);
+      return {waitFor: async () => {}};
+    };
+    const observed = navigateInterface(page, origin, "/settings", {sharedIdentity: true, timeout: 20});
+    if (status === 200) assert.equal((await observed).status(), 200);
+    else await assert.rejects(observed, /Required interface data response failed/);
+  }
+});

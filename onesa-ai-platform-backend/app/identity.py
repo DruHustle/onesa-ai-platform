@@ -10,7 +10,7 @@ from pydantic import EmailStr, Field
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.auth import DB, Auth, digest, hasher, origin, prove_password, throttle
+from app.auth import DB, Auth, digest, hasher, local_credentials, origin, prove_password, throttle
 from app.config import Settings
 from app.errors import fail
 from app.models import (
@@ -123,6 +123,13 @@ def consume_invitation(
 def operator(
     request: Request, db: Session, auth: tuple[User, AuthSession], proof: PasswordProof
 ) -> None:
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import administrator, require_recent
+
+        if not administrator(request, auth[0].id):
+            fail(403, "operator_required", "Administrator permission is required")
+        require_recent(request, mfa=True)
+        return
     if str(auth[0].id) not in request.app.state.settings.access_operator_user_ids:
         fail(403, "operator_required", "Operator permission is required")
     prove_password(request, db, auth, proof)
@@ -130,6 +137,7 @@ def operator(
 
 @router.post("/admin/invitations", status_code=202, response_model=InvitationReceipt)
 def invite(body: Invite, request: Request, db: DB, auth: Auth) -> dict[str, object]:
+    local_credentials(request)
     operator(request, db, auth, body)
     mail_available(request)
     throttle(request, db, str(body.email))
@@ -143,6 +151,7 @@ def invite(body: Invite, request: Request, db: DB, auth: Auth) -> dict[str, obje
 def revoke_invite(
     identifier: UUID, body: PasswordProof, request: Request, db: DB, auth: Auth
 ) -> dict[str, object]:
+    local_credentials(request)
     operator(request, db, auth, body)
     row = db.scalar(
         select(IdentityToken)
@@ -161,6 +170,7 @@ def revoke_invite(
 def revoke_access(
     identifier: UUID, body: PasswordProof, request: Request, db: DB, auth: Auth
 ) -> Accepted:
+    local_credentials(request)
     operator(request, db, auth, body)
     if str(identifier) in request.app.state.settings.access_operator_user_ids:
         fail(409, "operator_protected", "Manage operator access through reviewed configuration")
@@ -182,6 +192,7 @@ def revoke_access(
 @router.post("/auth/recovery/request", status_code=202, response_model=Accepted)
 def recovery_request(body: RecoveryRequest, request: Request, db: DB) -> Accepted:
     origin(request)
+    local_credentials(request)
     throttle(request, db, str(body.email))
     mail_available(request)  # Same unavailable result for every account; never false success.
     user = db.scalar(select(User).where(User.email == str(body.email).casefold()).with_for_update())
@@ -205,6 +216,7 @@ def recovery_request(body: RecoveryRequest, request: Request, db: DB) -> Accepte
 @router.post("/auth/recovery/complete", response_model=Accepted)
 def recovery_complete(body: RecoveryComplete, request: Request, db: DB) -> Accepted:
     origin(request)
+    local_credentials(request)
     throttle(request, db, "recovery-redemption")
     row = db.scalar(
         select(IdentityToken).where(

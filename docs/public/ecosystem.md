@@ -1,12 +1,22 @@
 # Onesa ecosystem
 
-Onesa UG develops intelligent software, digital platforms and robotics. The Company website introduces the company and its products. Onesa AI Platform has Applications and Industrial AI tracks. Applications include the protected Chat, Knowledge, Agents and Travel workspace; Industrial Investigation is an isolated protected synthetic demonstration of evidence-backed investigation and human-reviewed drafts; live industrial integrations remain under development. Onesa Robotics / Physical AI is a separate development line, currently demonstrated through a protected one-joint software simulator.
+Onesa UG develops intelligent software, digital platforms and robotics. The Company website introduces the company and its products. Onesa AI Platform has Applications and Industrial AI tracks. Applications include the protected Chat, Knowledge, Agents and Travel workspace; Industrial Investigation is an isolated protected synthetic demonstration of evidence-backed investigation and human-reviewed drafts; live industrial integrations remain under development. Onesa Robot provides a protected operator console for supervised software simulation.
 
-## Familiar behavior, distinct purposes
+## Products and public entry points
 
-The products share Onesa's visual foundations and familiar navigation while providing interfaces for their different tasks. The Company website presents product information, news, research and contact enquiries. The AI Platform provides conversations, Knowledge, Agents and application workflows. Robot provides a protected development and simulation workspace.
+The logical diagram in [Architecture & Workflows](/architecture) covers Company Portal, AI Platform and Robot. The directory also includes the six products with separate customer or operator workflows.
 
-The same AI engine can support different industries. Recommendations and decision support include travel planning, business feasibility and investment research. Smart farming connects crop selection, cultivation planning, condition monitoring, adaptation and selling opportunities. These are application directions; a product description does not establish that every integration is available.
+| Product | Customer or operator workflow | Public site |
+| --- | --- | --- |
+| Company Portal | Company information, account access and administration | [Onesa UG](https://onesa.eu/) |
+| AI Platform | Protected conversations, knowledge and application tools | [AI workspace](https://platform.onesa.eu/) |
+| Robot | Operator supervision, stop and replay in simulation | [Robot console](https://robot.onesa.eu/console) |
+| Smart Farmer | Farm records, equipment, livestock and trading. The public site shows service availability | [Smart Farmer](https://farmer.onesa.eu/) |
+| Drone | Mission planning and simulation. Live flight requires separate hardware qualification | [Drone](https://drone.onesa.eu/) |
+| Smart Logistics | Shipments, warehouse events and delivery tracking | [Smart Logistics](https://logistics.onesa.eu/) |
+| Onesa Mobile | Customer onboarding and support for the proposed mobile service. Network activation depends on provider agreements | [Onesa Mobile](https://mobile.onesa.eu/) |
+| Smart Factory | Asset telemetry, incident review and factory operations | [Smart Factory](https://factory.onesa.eu/) |
+| PasoFi | An Onesa Mobile hotspot product. The bundle catalogue shows whether purchases and connections are available | [PasoFi](https://pasofi.mobile.onesa.eu/) |
 
 ## Access and data boundaries
 

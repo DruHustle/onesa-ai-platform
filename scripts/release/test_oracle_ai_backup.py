@@ -25,6 +25,8 @@ class BackupTests(unittest.TestCase):
             "20261021_industrial",
             "20261025_twins",
             "20261026_cybersecurity",
+            "20261102_shared_identity",
+            "20261104_email_presentation",
         ]:
             self.assertEqual(b.snapshot_revision(copy(revision)), revision)
         value = copy("20261026_cybersecurity")

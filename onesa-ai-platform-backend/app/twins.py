@@ -857,7 +857,11 @@ def ingest_readings(
     user = db.get(User, source.user_id) if source else None
     if source is None or user is None or user.status != "active":
         fail(401, "source_unauthorized", "A current scoped source credential is required")
-    eligible(request, db, user)
+    # Edge ingestion is a separate machine-to-machine capability: its
+    # source-scoped token is the authority, not a browser SSO session. The
+    # owner must still be active and the source must remain explicitly unrevoked.
+    if not request.app.state.settings.identity_enabled:
+        eligible(request, db, user)
     return ingest_batch(source, body, request, db)
 
 

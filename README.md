@@ -1,5 +1,23 @@
 # Onesa AI Platform
 
+Canonical source: [DruHustle/onesa-ai-platform](https://github.com/DruHustle/onesa-ai-platform).
+Run product commands from this repository root. The latest application changes
+from the former consolidated checkout are retained here with independent CI,
+release authority and runtime boundaries. See [standalone source](docs/engineering/standalone-source.md).
+
+[Onesa Documents](https://github.com/DruHustle/onesa-documents) owns publication
+for [external documents](https://docs.onesa.eu) and [internal documents](https://docs.internal.onesa.eu).
+Internal documents require Onesa Identity and document access. This AI repository
+retains source validation and historical release evidence. Its documentation
+workflow has no production publishing authority.
+
+The shared-account source candidate adds **Continue with Onesa**, one central
+account/access hub, explicit existing-account linking and MFA-protected cross-product
+administration. It remains disabled until the existing owner-controlled staging and
+release process qualifies the issuer, migration and private client configuration.
+See [shared identity](docs/engineering/SHARED_IDENTITY.md) for the permission boundary,
+account migration and activation requirements. Oracle hosting remains unchanged.
+
 The owner-run qualification candidate identifies its active probe from a private
 Docker CID and verifies its image, command, mounts and isolation before observing
 a controlled staging replacement. Other temporary clients still block the check.
@@ -48,7 +66,7 @@ credential and record-identifier preservation checks passed. Canonical readiness
 private-access denials pass. This parser patch introduced no production model request,
 new account or Industrial feature. The frontend and both Docs retain independent identities.
 Protected Engineering Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`
-is independently accepted at `docs.engineering.onesa.eu`, Pages
+was accepted at the former engineering hostname on Pages deployment
 `2d937ff1-391f-4156-8df6-75d2d14aaa5e` (2026-10-22), with DOMPurify 3.4.17
 and factual isolated-demo documentation. All 751 private assets and anonymous denials,
 18 production responsive/accessibility views, 18 architecture topics, 17 chapters,
@@ -163,7 +181,7 @@ are implemented; other workspace copy remains English and is not claimed fully t
 | `docs` | Classified engineering references and approved public sources |
 | `scripts`, `infra`, `.github/workflows` | Verified build, operations and delivery tooling |
 
-This is an independent Git repository in the `onesa-ug` workspace.
+This is the independent `DruHustle/onesa-ai-platform` Git repository.
 Frontend/backend builds use their own contexts; builds do not import sibling source.
 
 ## Local quickstart

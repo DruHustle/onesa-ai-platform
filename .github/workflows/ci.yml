@@ -66,6 +66,9 @@ jobs:
           onesa-ai-platform-backend/requirements-dev.lock
 
           onesa-ai-platform-backend/requirements.lock'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24.22.1'
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
     - run: make install
@@ -96,8 +99,14 @@ jobs:
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
     - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
+    - name: Verify installed contract matcher safety and header selection
+      run: node scripts/contract-tools/matcher-security.test.cjs
+    - name: Audit locked contract generator dependencies
+      run: python3 scripts/ci/npm_audit.py --prefix scripts/contract-tools
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
     - run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
+    - name: Audit locked backend development dependencies
+      run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements-dev.lock --disable-pip --no-deps
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.backend == 'true') }}
     timeout-minutes: 45
     permissions:
@@ -151,6 +160,7 @@ jobs:
       run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
     - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs scripts/test_ui_navigation.cjs scripts/test_private_probe_receipt.cjs
+    - run: node --test scripts/release/oracle_ai_identity_browser.test.mjs
     - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
     - name: Audit the isolated owner CLI dependency lock
       run: |
@@ -342,7 +352,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       if: github.event.repository.private == false
       with:
-        repository: DruHustle/onesa-ai-robot
+        repository: DruHustle/onesa-robot
         ref: ${{ steps.docs-sources.outputs.robot }}
         path: data/docs-sources/robot
         persist-credentials: false
@@ -414,6 +424,9 @@ jobs:
     - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config
         --quiet
     - run: docker compose build api chat
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f
         compose.staging.yaml up --wait --wait-timeout 180
     - run: curl --fail http://localhost:3120/ready
