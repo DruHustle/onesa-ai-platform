@@ -66,6 +66,36 @@ class AuditTests(unittest.TestCase):
                 self.assertEqual(run.call_count, 1)
                 sleep.assert_not_called()
 
+    def test_contract_cli_audits_development_dependencies_at_low_threshold(self):
+        prefix = self.prefix / "scripts" / "contract-tools"
+        prefix.mkdir(parents=True)
+        for name in ("package.json", "package-lock.json"):
+            (prefix / name).write_text("{}")
+        for severity, expected in ((None, 0), ("low", 1)):
+            with (
+                self.subTest(severity=severity),
+                patch.object(npm_audit, "ROOT", self.prefix),
+                patch(
+                    "sys.argv", ["npm_audit.py", "--prefix", "scripts/contract-tools"]
+                ),
+                patch.object(
+                    npm_audit.subprocess,
+                    "run",
+                    return_value=result(report(severity), expected),
+                ) as run,
+                patch.object(npm_audit.time, "sleep") as sleep,
+                contextlib.redirect_stdout(io.StringIO()),
+                self.assertRaises(SystemExit) as exit_status,
+            ):
+                npm_audit.main()
+            self.assertEqual(exit_status.exception.code, expected)
+            self.assertEqual(run.call_count, 1)
+            sleep.assert_not_called()
+            args = run.call_args.args[0]
+            self.assertEqual(args[:4], ["npm", "--prefix", str(prefix), "audit"])
+            self.assertIn("--audit-level=low", args)
+            self.assertFalse({"fix", "--force", "--omit=dev"} & set(args))
+
     def test_scope_thresholds_and_below_threshold_findings_are_preserved(self):
         self.assertEqual(
             npm_audit.POLICIES["onesa-ai-platform-frontend/apps/docs"], "low"

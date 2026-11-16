@@ -10,7 +10,7 @@ end
 subgraph Prod[PRODUCTION - existing independent bindings]
 PP[Portal production API] --> PPDB[Production Neon and private bucket]
 AP[AI production API] --> APDB[Production Neon]
-RP[Robot production durability unresolved] --> Block[No ephemeral persistence acceptance]
+RP[Oracle Robot simulation API] --> Block[Turso journal - recovery required]
 end
 P -. redacted events only .-> Logs[Provider logs and restricted source-bound receipts]
 A -. no prompt or credential bodies .-> Logs

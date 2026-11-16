@@ -7,6 +7,8 @@ import stat
 from pathlib import Path
 from uuid import UUID
 
+import oracle_release_profiles as profiles
+
 
 def private_json(path):
     path = Path(path)
@@ -23,9 +25,16 @@ def private_json(path):
 
 def load_context(path):
     value = private_json(path)
+    if value.get("repository") == profiles.CANONICAL_REPOSITORY:
+        source = profiles.source_binding(value.get("source_binding"))
+        if set(value["source_binding"]) != profiles.SOURCE_FIELDS or (
+            source["candidate_commit"] != value.get("candidate_commit")
+        ):
+            raise ValueError("Oracle canonical source context mismatch")
+    elif value.get("repository") != profiles.REPOSITORY or "source_binding" in value:
+        raise ValueError("Invalid Oracle source context")
     if (
         value.get("execution_context") != "owner-operated-oracle-staging"
-        or value.get("repository") != "DruHustle/onesa-ai-platform"
         or not re.fullmatch(r"[a-f0-9]{40}", value.get("candidate_commit", ""))
         or type(value.get("ci_run_id")) is not int
         or value["ci_run_id"] <= 0
@@ -40,6 +49,18 @@ def load_context(path):
         raise ValueError("Invalid Oracle qualification identity")
     fixture = private_json(value["fixture_file"])
     users = fixture.get("users", [])
+    shared = value.get("identity")
+    if shared is not None:
+        from oracle_ai_identity_probe import validate_fixture
+
+        validate_fixture(fixture, shared)
+        if (
+            shared["candidate_commit"] != value["candidate_commit"]
+            or shared["operation_id"] != value["qualification_id"]
+            or shared["origin"] != value["frontend_origin"]
+            or shared["environment"] != "staging"
+        ):
+            raise ValueError("Oracle shared identity source mismatch")
     if (
         fixture.get("candidate_commit") != value["candidate_commit"]
         or fixture.get("run_id") != str(value["ci_run_id"])
@@ -47,7 +68,8 @@ def load_context(path):
         or fixture.get("scope") != "approved-synthetic-staging"
         or len(users) != 2
         or len({user.get("id") for user in users}) != 2
-        or any(
+        or shared is None
+        and any(
             not re.fullmatch(
                 r"release-audit-"
                 + str(value["ci_run_id"])
@@ -71,6 +93,14 @@ def load_context(path):
 
 def record_identity(context):
     return {
+        **(
+            {
+                "repository": context["repository"],
+                "source_binding": context["source_binding"],
+            }
+            if context["repository"] == profiles.CANONICAL_REPOSITORY
+            else {}
+        ),
         "candidate_commit": context["candidate_commit"],
         "workflow_run_id": 0,
         "ci_run_id": context["ci_run_id"],

@@ -1,5 +1,139 @@
 # Separate application builds and tests
 
+## Shared Onesa identity source candidate
+
+Run `tests/test_onesa_identity.py` and `tests/test_shared_identity.py` through the
+normal Python 3.11 backend suite against a disposable PostgreSQL/pgvector database
+whose name ends in `_test`. The shared adapter tests cover explicit account proof,
+immutable ownership, encrypted token custody, state expiry/replay/races, issuer
+failure, live central revocation, concurrent local logout/disable, subject-bound
+fresh reauthentication, preserved explicit user-ID grants, shared-account switching,
+refresh metadata and truthful partial/global sign-out. Generation regressions cover
+midstream central/local revocation, expiry/disable, quiet-upstream cancellation,
+forced final validation, local commit races, explicit browser-disconnect polling,
+existing real socket-disconnect cleanup and compatible callback lock ordering.
+Protocol tests independently
+exercise bounded HTTP parsing, reserved Basic credentials, current product roles,
+product/global administrator MFA and explicit global-revocation confirmation.
+
+Explicitly rejected, substituted or unmapped shared sessions are permanently revoked locally before the request fails; restoring central access requires a fresh sign-in. Transient issuer 503 responses preserve the session for retry. Real PostgreSQL regressions also ensure this revocation discards unrelated uncommitted application changes and preserves the existing post-introspection logout/expiry fence.
+
+The ordinary full suite also validates the additive schema and its owner DML grant
+set. Run `python -m unittest discover -s scripts/release -p 'test_oracle_ai_*.py'`
+for the existing release observation, backup and owner-runner policy checks. These
+checks keep prior release profiles closed. Explicit `identity-api` and
+`identity-frontend` profiles add source-bound identity activation without changing
+the existing foundation, Twins or Cybersecurity scopes. The identity profile
+preserves every native feature flag and requires its normal workflow, persistence,
+restore and replacement checks as well as real PKCE/MFA and immutable local-account
+mapping. Existing synthetic accounts retain their passwords, ownership and grants;
+the probe retires only sessions it created. First-time linking uses the separate
+existing local-account password through the real application interface.
+
+Run `test_oracle_ai_identity_release.py`, `test_oracle_release_profiles.py`,
+`test_oracle_profile_ledger.py` and `test_oracle_install.py` with unittest discovery
+for source, exact policy, custody, preserved-configuration and adverse receipt
+regressions. The new migration response requires all 24 scoped table grants;
+runtime DDL and privileged roles remain refused. A newly commissioned profile
+must prove the retained image against the additive identity schema with the
+actual prior native feature flags; an older future-schema receipt does not cover
+this migration. These local checks do not establish a commissioned host, actual
+provider configuration or hosted acceptance. Regenerate OpenAPI, typed clients
+and database documentation using the existing generators after changing
+authentication contracts.
+
+An incompatible historical image needs an independently qualified compatible
+bridge before identity activation. Existing native profiles can qualify the new
+source with identity disabled and native features unchanged. The separate identity
+profile may then use the same source and image only with different, fully bound
+identity configurations and a real accepted native-profile record. Its fresh
+restore rehearsal still executes the retained image against the new additive
+schema for both environments. Sharing an image never transfers the native
+profile's deployment authority to the identity profile.
+
+The native bridge is qualified against its existing feature-compatible schema;
+it does not apply the shared-identity migration early. Current application
+readiness accepts the supported native revisions while identity is disabled and
+requires `20261102_shared_identity` when enabled. The migration runner continues
+to refuse a downgrade. The native frontend consumes its matching accepted native
+API plan and schema; identity API/frontend contexts remain independent.
+`test_native_bridge_runs_before_and_after_actual_identity_migration` creates fresh
+disposable `_test` databases at the real Capacity, Twins and Cybersecurity
+revisions. It runs native authentication, ownership and workflow checks before and
+after the actual additive upgrade for all four feature combinations, verifies
+preserved account IDs/password hashes and data, and checks that identity-enabled
+readiness refuses the old schema. It never rewrites the shared test database's
+revision label or presents current-source tests as retained-image acceptance.
+
+`test_oracle_identity_restore.py` covers exact existing fixture UUID/email and
+issuer/subject mappings, preserved native flags, old configuration hashes, an
+independently accepted retained image, failed restore manifests and unsafe cleanup.
+`tests/test_identity_rollback_workflows.py` runs the same application program used
+inside the isolated rollback images against real PostgreSQL for all four native
+feature combinations. It verifies password sign-in, persisted conversation and
+native asset ownership, CSRF refusal and logout with shared identity disabled.
+The owner rehearsal additionally generates the exact additive schema, dumps and
+restores only new synthetic databases, and executes both immutable image IDs.
+Its receipt is written only after successful isolated-container cleanup. Neither
+unit fixtures nor current-source PostgreSQL tests prove that a historical image
+can serve the future schema; the exact retained-image rehearsal remains required.
+
+The identity browser bridge completes the actual Portal password, MFA, S256
+authorization and application callback flow for both existing synthetic actors.
+It observes the original AI user IDs, current central subjects and host-only
+session/CSRF cookies. An initial link additionally proves the separate existing
+AI password. Protected Preview access uses isolated origin-specific cookie
+handshakes with redirects disabled; provider access headers never follow the
+identity navigation. The ordinary API suite, all 42 staging interface views and
+every enabled native feature journey remain required. Only sessions whose token
+and CSRF hashes this operation actually observed may be retired. An unmatched
+concurrent session, uncertain callback or changed existing data prevents a passing
+receipt and preserves the private diagnostic inputs.
+
+`test_oracle_ai_identity_probe.py` covers narrowed source/actor/expiry custody,
+fixture boundaries, host-only cookies, observed-session cleanup and native probe
+integration. Its isolated in-memory ORM cleanup tests do not establish PostgreSQL
+hashing or hosted acceptance. Run the browser boundary tests with
+`node --test scripts/release/oracle_ai_identity_browser.test.mjs` alongside the
+existing navigation and private-receipt tests. These tests exercise real parser,
+cookie-scope and callback checks without supplying a live identity or provider.
+The UI observer registers the successful main-frame start POST and actual issuer
+authorization GET before clicking. It validates client, callback, S256 challenge,
+nonce, state, scope and step-up fields on the actual browser request, then binds the
+callback to that transaction and requires the actual account, session and cookies.
+It reads no UI response body after document replacement and installs no additional
+request route. The backend still binds the callback to its stored state, browser
+cookie and PKCE verifier. API-only acceptance keeps its original request and parses
+the JSON before navigation. Deterministic regressions cover unavailable UI response
+bodies, request boundaries and API-only behavior before Portal credential entry;
+they do not establish hosted acceptance.
+
+The private credential payload pin covers all source, scope, environment, actor
+and secret fields. Only its `created_at` and `expires_at` envelope may change.
+After verifying an already reserved staging context or recorded deployment
+intent, the owner runner can issue one bounded lease for that operation, capped
+at one hour and the earliest expiry in the verified signed record chain. It writes
+a durable private intent before replacing the time envelope, rechecks the identical
+signed chain and custody bytes, and refuses an interrupted or repeated extension.
+This does not renew release authority or change provider/runtime configuration. Each probe still
+receives a separately byte-pinned, single-environment copy and checks expiry
+before using credentials. In-flight copies cannot extend their own lifetime.
+
+The Chat `tests/shared-identity.spec.ts` fixtures are loopback-only and use synthetic
+intercepted responses. They cover English/German mobile and keyboard entry, loading
+or unavailable sign-in configuration, central code-flow navigation, retry, explicit
+legacy account proof, the common administration/settings hub, draft recovery,
+verified completion and partial global logout. Run them in the existing Chromium,
+Firefox and WebKit matrix. A separately supplied Chromium 153 binary can provide
+supplemental feedback where the normal Playwright browser download is unavailable;
+record its identity and safe launch options separately. It does not substitute for
+the pinned native browser matrix, actual issuer integration, manual accessibility,
+or source-bound staging acceptance. No hosted identity or production release is
+inferred from these synthetic checks.
+
+See [shared identity](SHARED_IDENTITY.md) for dependency provenance, private
+configuration, account migration and owner-controlled activation prerequisites.
+
 ## NVIDIA visual reference library
 
 `tests/test_twin_references.py` validates the pinned catalog, exact GLB, thumbnail,
@@ -175,8 +309,9 @@ retaining the original consumed context and unissued intent. Current signed-chai
 and latest-decision reads occur under the same immediate SQLite write transaction
 as the single-use claim; source changes do not commission this optional extension.
 
-Consumer interoperability checks are in `tests/test_consumer.py` and
-`tests/test_mcp_stdio.py`. They cover unchanged consumer business code with Onesa
+Consumer interoperability checks are in `tests/test_consumer.py`,
+`tests/test_mcp_stdio.py`, `tests/test_mcp_context.py` and `tests/test_mcp_transport.py`.
+They cover unchanged consumer business code with Onesa
 and compatible provider transports, portable history/provenance, credential separation,
 strict completion/failure boundaries, response/input limits, cancellation and MCP
 discovery/explicit permissions. Route fixtures without PostgreSQL simulate admission
@@ -184,6 +319,18 @@ and identity; the separate database test verifies actual sessions, CSRF, shared 
 and absence of stored conversations/messages. Run both with the existing backend
 `pytest -q` command and the isolated `_test` database. A skipped database case is
 not an authenticated integration PASS. No live provider or physical tool is used.
+The context tests additionally use the actual API and PostgreSQL to prove enrolled
+document ownership, cross-user refusal, deletion and session revocation. Separate
+adverse transport tests cover URI/parameter refusal before transmission, immutable
+scope lists, redacted malformed responses, cancellation and prompt injection remaining
+untrusted data without tool or model invocation. These tests do not substitute for
+a commissioned service identity, an external MCP client or hosted acceptance.
+Transport tests additionally send real pipe messages to a separate bridge process
+while its synthetic HTTP response is pending. They require cancellation to close
+that response before stdin closes, preserve a later ping, and emit no cancelled
+response or credential. Other cases cover duplicate IDs, concurrent-work bounds,
+fragmented oversized lines, deadlines and session cleanup. The synthetic upstream
+in this subprocess test does not establish a live provider's cancellation behavior.
 
 Release-unit fixtures pin a disposable commissioning registry and keep its keys,
 policy and database inside their temporary directory. Root test execution uses a
@@ -337,6 +484,19 @@ an isolated loopback port, then run
 These fixture checks qualify prepared source behavior; they do not measure hosted
 startup latency or establish a production deployment. See
 [Performance checks](../testing/PERFORMANCE_TESTS.md) for the startup boundaries.
+
+`apps/chat/tests/workspace-navigation.spec.ts` covers long saved conversations,
+viewport-bound navigation/composer layout, reading-position and draft preservation,
+and the narrow-screen resource disclosure's keyboard behavior.
+`apps/chat/tests/knowledge-feedback.spec.ts` covers actual rendered upload/search
+feedback, unsuccessful requests, submitted-query identity, duplicate actions and
+late read responses invalidated by document changes. Both use explicit synthetic
+loopback API fixtures; they do not claim backend or real-model acceptance.
+With a fresh production frontend running on an isolated loopback port, run
+`ONESA_BROWSER_URL=http://127.0.0.1:<port> npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/workspace-navigation.spec.ts tests/knowledge-feedback.spec.ts`.
+Retain all three configured engines and existing deadlines. Run the existing
+system-appearance and record-navigation suites for shared shell or scrolling
+changes, then the normal complete native workflow before source promotion.
 
 The Chat image install uses a BuildKit npm download cache, locked integrity checks,
 and explicit bounded fetch retries/timeouts. It omits installation-time audit/funding
@@ -539,6 +699,27 @@ scopes. Each scope still permits only one qualification context for an exact
 source. Mode changes, path aliases, expanded attempt limits, foreign repositories,
 changed CI, revoked dependencies and context reuse are rejected. Temporary test
 keys and a disposable signed ledger are not external release authority.
+
+`test_oracle_canonical_application.py` adds the explicit canonical application
+installation boundary: exact root/product source identity, the two fixed archived
+CI manifests, literal profile sets, installed-archive rechecks, one-use signed
+contexts, original retained verifier/key/chain binding, and refusal of borrowed
+source-only authority. It also checks product-relative build metadata against the
+canonical provider root and the fixed generation-only configuration transition.
+The signed-chain fixtures use real Ed25519 signatures and disposable ledgers;
+their synthetic commissioning registry is not an installed owner trust anchor.
+Root custody, real Docker builds, actual provider/model availability and hosted
+application/recovery acceptance are separate mandatory boundaries.
+
+Run that module with the existing Oracle release suite, including
+`test_oracle_context.py`, `test_oracle_ai_frontend.py`,
+`test_oracle_retained_frontend.py` and `test_oracle_profile_ledger.py`.
+The Python and Node context readers must retain the same private-fixture,
+source/origin and nonauthorizing receipt rules. The existing real loopback
+`oracle_vercel_transport_guard.test.cjs` also verifies canonical source metadata
+before a create, refuses uninspected raw transports, and preserves the single
+create plus bounded definitive missing-file continuation contract. Credential-free
+local fixtures and generated CI artifacts still cannot authorize runtime work.
 
 Qualification derives required feature journeys from the actual runtime flags.
 If both optional features are enabled, both journeys must pass across the same

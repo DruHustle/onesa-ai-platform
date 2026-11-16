@@ -10,8 +10,11 @@ credentials, history and working functionality; stage only inspected paths.
 Onesa AI Platform is European-based, general-purpose and international; regional
 languages/domains are optional specializations. Preserve Chat/Knowledge/Agents/Travel,
 Next.js/TypeScript, FastAPI/Python, PostgreSQL/pgvector and provider interchangeability.
-Portal/Robot remain independent. No fourth repository, coupled releases, new license,
-paid resource, training or download authority is granted here.
+The canonical source is the standalone `DruHustle/onesa-ai-platform` repository.
+Commands, paths and references to the root mean this repository root. Its existing
+root workflows execute the product checks. Portal/Robot retain independent
+repositories, runtimes and release authority. No coupled releases, new license,
+paid resource, training, download or deployment authority is granted here.
 
 ## Non-negotiable security, privacy and safety
 
@@ -33,6 +36,16 @@ Deletion is not revocation. Preserve incident evidence; no history rewriting, fo
 unrelated credential rotation or production deletion without specific authority.
 
 ## Structure and configuration
+
+Keep extra worktrees in `local-tools/worktrees`, release/deployment evidence in
+`local-tools/deployment-evidence`, release verification in
+`local-tools/release-verification`, and local migration records in
+`local-tools/migrations`, all inside this repository and ignored by Git.
+Keep versioned schema migrations in their established application source paths.
+Do not create a shared verification directory above the nine product repositories.
+Read current remote refs and open PRs before editing; a checked-out branch,
+consolidated history and deployed source revision can differ. Preserve the exact
+source identity in each verification and deployment receipt.
 
 - `onesa-ai-platform-frontend/apps/chat`: one Chat/Knowledge/Agents/Travel application.
 - `onesa-ai-platform-frontend/apps/docs`: separate public/internal Docusaurus artifacts.

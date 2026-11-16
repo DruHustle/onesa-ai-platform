@@ -225,7 +225,9 @@ def test_reference_import_rechecks_revoked_session_before_persistence(references
             assert db.scalar(select(func.count()).select_from(cls)) == 0
 
 
-def test_import_requires_csrf_enabled_feature_and_durable_storage(references):
+def test_import_requires_csrf_enabled_feature_and_durable_storage(references, monkeypatch):
+    from tests.test_shared_identity import enable, finish, start
+
     token = references.headers.pop("X-CSRF-Token")
     assert import_model(references).status_code == 403
     references.headers["X-CSRF-Token"] = token
@@ -235,7 +237,13 @@ def test_import_requires_csrf_enabled_feature_and_durable_storage(references):
     assert import_model(references).status_code == 404
     config.digital_twins_enabled = True
     assert import_model(references, "not-reviewed").status_code == 404
+    references.cookies.clear()
+    references.headers.pop("X-CSRF-Token", None)
+    enable(references, monkeypatch)
+    assert finish(references, start(references)).status_code == 303
+    config = references.app.state.settings
     config.environment = "production"
+    config.identity_callback_url = "https://platform.example.test/api/v1/auth/onesa/callback"
     assert import_model(references).status_code == 503
     config.digital_twins_persistent_mount = True
     assert import_model(references).status_code == 201

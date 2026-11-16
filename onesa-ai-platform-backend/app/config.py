@@ -6,6 +6,7 @@ import re
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
+from email_validator import EmailNotValidError, validate_email
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -34,10 +35,21 @@ class Settings(BaseSettings):
     knowledge_upload_concurrency: int = Field(default=1, ge=1, le=4)
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
+    identity_enabled: bool = False
+    identity_mobile_enabled: bool = False
+    identity_audience: str = ""
+    identity_public_jwks: str = ""
+    identity_mapping_issuer: str = ""
+    identity_account_url: str = ""
+    identity_issuer: str = ""
+    identity_client_id: str = ""
+    identity_client_secret: str = Field(default="", repr=False)
+    identity_callback_url: str = ""
+    identity_encryption_key: str = Field(default="", repr=False)
     access_operator_user_ids: list[str] = Field(default_factory=list)
-    auth_delivery_key: str = ""
+    auth_delivery_key: str = Field(default="", repr=False)
     mail_provider: Literal["disabled", "resend"] = "disabled"
-    resend_api_key: str = ""
+    resend_api_key: str = Field(default="", repr=False)
     mail_from: str = ""
     mail_reply_to: str = ""
     invitation_hours: int = Field(default=48, ge=1, le=168)
@@ -76,6 +88,37 @@ class Settings(BaseSettings):
     digital_twins_persistent_mount: bool = False
     consumer_inference_enabled: bool = False
 
+    loopback_tls_acceptance: bool = False
+
+    @property
+    def local_credentials_allowed(self) -> bool:
+        if self.identity_enabled:
+            return False
+        if self.environment in {"development", "test"}:
+            return urlsplit(self.public_origin).hostname in {"localhost", "127.0.0.1", "::1"}
+        return (
+            self.environment == "staging"
+            and self.loopback_tls_acceptance
+            and self.public_origin == "https://localhost:3443"
+        )
+
+    @field_validator("mail_from", "mail_reply_to")
+    @classmethod
+    def single_mail_address(cls, value: str) -> str:
+        if not value:
+            return value
+        if len(value) > 320 or any(
+            ord(character) < 32 or ord(character) == 127 for character in value
+        ):
+            raise ValueError("Mail headers require one address without control characters")
+        try:
+            validate_email(value, allow_display_name=True, check_deliverability=False)
+        except EmailNotValidError:
+            raise ValueError("Mail headers require one valid email address") from None
+        # Keep explicitly configured values, including an existing verified domain.
+        # Normalizing a header here would change an idempotent retry's payload.
+        return value
+
     @field_validator("model_quantization", "model_revision", mode="before")
     @classmethod
     def optional_metadata(cls, value: str | None) -> str | None:
@@ -84,6 +127,35 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def production_defaults(self) -> Self:
         from uuid import UUID
+
+        if self.identity_enabled:
+            from cryptography.fernet import Fernet
+
+            from app.onesa_identity import IdentityConfig
+
+            IdentityConfig(
+                self.identity_issuer,
+                self.identity_client_id,
+                self.identity_client_secret,
+                self.identity_callback_url,
+                "ai",
+                self.environment in {"development", "test"},
+                self.identity_audience,
+                self.identity_public_jwks,
+                self.identity_mapping_issuer,
+                self.identity_account_url,
+            )
+            if self.identity_callback_url != self.public_origin + "/api/v1/auth/onesa/callback":
+                raise ValueError("Identity callback must belong to this exact application origin")
+            try:
+                Fernet(self.identity_encryption_key.encode("ascii"))
+            except (ValueError, TypeError, UnicodeError):
+                raise ValueError(
+                    "Identity requires a private 32-byte Fernet encryption key"
+                ) from None
+
+        if self.identity_mobile_enabled and not self.identity_enabled:
+            raise ValueError("Native identity sign-in requires shared Onesa identity")
 
         if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
             raise ValueError("Security operators require canonical configured user UUIDs")
@@ -122,7 +194,7 @@ class Settings(BaseSettings):
                     self.model_base_url,
                 )
                 or len(self.model_api_key) < 32
-                or self.model_name != "@cf/qwen/qwen3-30b-a3b-fp8"
+                or self.model_name != "@cf/google/gemma-4-26b-a4b-it"
             ):
                 raise ValueError(
                     "Cloudflare inference requires its account HTTPS endpoint, "

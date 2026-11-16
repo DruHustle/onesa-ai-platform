@@ -163,8 +163,8 @@ Use the diagram catalog and editable `docs/diagrams/*.mmd` definitions. Every bu
 After reviewing committed sibling changes, refresh cross-product references offline:
 
 ```sh
-.venv/bin/python scripts/docs/sync_ecosystem.py --portal ../onesa-company-portal --robot ../onesa-ai-robot
-.venv/bin/python scripts/docs/ecosystem.py --portal ../onesa-company-portal --robot ../onesa-ai-robot
+.venv/bin/python scripts/docs/sync_ecosystem.py --portal ../onesa-company-portal --robot ../onesa-robot
+.venv/bin/python scripts/docs/ecosystem.py --portal ../onesa-company-portal --robot ../onesa-robot
 make docs-assets docs-public docs-internal docs-validate
 ```
 

@@ -24,16 +24,34 @@ class Question(Strict):
 
 
 def engineering_access(request: Request, user_id: object) -> bool:
+    if request.app.state.settings.identity_audience:
+        return False
+    if request.app.state.settings.identity_enabled:
+        from app.shared_identity import administrator, current_identity
+
+        identity = current_identity(request, user_id)
+        return bool(
+            identity
+            and identity.fresh(mfa=True)
+            and (
+                administrator(request, user_id)
+                or str(user_id) in request.app.state.settings.documentation_engineering_user_ids
+            )
+        )
     return str(user_id) in request.app.state.settings.documentation_engineering_user_ids
 
 
 @router.get("/access")
 def access(request: Request, session: Auth) -> dict[str, bool]:
+    if request.app.state.settings.identity_audience:
+        return {"engineering": False, "independent_documents": True}
     return {"engineering": engineering_access(request, session[0].id)}
 
 
 @router.post("/answer")
 async def answer(body: Question, request: Request, session: Auth) -> dict[str, Any]:
+    if body.scope == "internal" and request.app.state.settings.identity_audience:
+        fail(410, "documentation_moved", "Open the document in Onesa Internal Documents.")
     if body.scope == "internal" and not engineering_access(request, session[0].id):
         fail(403, "documentation_forbidden", "Engineering access required")
     config = request.app.state.settings

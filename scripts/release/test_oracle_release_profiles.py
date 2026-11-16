@@ -7,14 +7,14 @@ from pathlib import Path
 import oracle_release_profiles as p
 
 
-def policy(components=p.SCOPED):
+def policy(components=p.EXPANDED):
     return {
         "components": {
             p.REPOSITORY + ":" + name: {
                 "qualification_attempt_limit": 1,
                 **(
                     {"release_mode": p.PROFILES[name][1]}
-                    if components == p.SCOPED
+                    if components != p.LEGACY
                     else {}
                 ),
             }
@@ -45,15 +45,28 @@ class ReleaseProfileTests(unittest.TestCase):
                     "/etc/onesa/oracle-ai-frontend-release.json",
                 )
             )
-            for wrong in {"foundation", "twins", "cybersecurity"} - {mode}:
+            for wrong in p.MODES - {mode}:
                 with (
                     self.subTest(name=name, wrong=wrong),
                     self.assertRaises(p.ProfileError),
                 ):
                     p.validate_mode(binding, wrong, scoped)
-        self.assertEqual(len(artifacts), 6)
-        self.assertEqual(len(configurations), 6)
-        self.assertEqual(len(plans), 6)
+        self.assertEqual(len(artifacts), 8)
+        self.assertEqual(len(configurations), 8)
+        self.assertEqual(len(plans), 8)
+
+    def test_existing_six_profile_policy_never_acquires_identity_authority(self):
+        self.assertEqual(p.policy_components(policy(p.SCOPED)), p.SCOPED)
+        for old in [p.LEGACY, p.SCOPED]:
+            for name in p.IDENTITY:
+                with (
+                    self.subTest(old=old, name=name),
+                    self.assertRaises(p.ProfileError),
+                ):
+                    p.validate_mode(self.binding(name), "identity", policy(old))
+        for name in p.SCOPED:
+            with self.subTest(name=name), self.assertRaises(p.ProfileError):
+                p.bound_mode(self.binding(name), "identity")
 
     def test_legacy_two_component_policy_preserves_supported_modes_and_paths(self):
         for name in p.LEGACY:
@@ -121,7 +134,7 @@ class ReleaseProfileTests(unittest.TestCase):
                 )
 
     def test_companions_keep_api_and_frontend_in_the_same_feature_scope(self):
-        for name in p.SCOPED:
+        for name in p.EXPANDED:
             binding = self.binding(name)
             for target in ["api", "frontend"]:
                 other = p.companion(binding, target)
@@ -149,6 +162,23 @@ class ReleaseProfileTests(unittest.TestCase):
                 self.assertRaises(p.ProfileError),
             ):
                 p.enabled_features(values, mode)
+
+    def test_identity_preserves_all_actual_native_feature_combinations(self):
+        for twins, cyber, expected in [
+            (False, False, "foundation"),
+            (True, False, "twins"),
+            (False, True, "cybersecurity"),
+            (True, True, "twins"),
+        ]:
+            flags = {
+                "ONESA_DIGITAL_TWINS_ENABLED": str(twins).lower(),
+                "ONESA_CYBERSECURITY_ENABLED": str(cyber).lower(),
+            }
+            features = p.enabled_features(flags, "identity")
+            self.assertEqual(p.workflow_mode("identity", features), expected)
+        for features in [None, [], {"unknown"}]:
+            with self.subTest(features=features), self.assertRaises(p.ProfileError):
+                p.workflow_mode("identity", features)
 
 
 if __name__ == "__main__":

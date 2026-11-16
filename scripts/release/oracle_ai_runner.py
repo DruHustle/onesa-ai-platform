@@ -20,6 +20,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib.parse
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID
@@ -39,6 +40,30 @@ ENV = {
     e: Path("/etc/onesa/backends/ai-" + e + ".env") for e in ["staging", "production"]
 }
 TARGET = {e: "onesa-ai-oracle-api-" + e + "-1" for e in ENV}
+IDENTITY_CREDENTIALS = Path("/run/onesa-release/ai-identity.json")
+IDENTITY_KEYS = frozenset(
+    {
+        "ONESA_IDENTITY_ENABLED",
+        "ONESA_IDENTITY_ISSUER",
+        "ONESA_IDENTITY_CLIENT_ID",
+        "ONESA_IDENTITY_CLIENT_SECRET",
+        "ONESA_IDENTITY_CALLBACK_URL",
+        "ONESA_IDENTITY_ENCRYPTION_KEY",
+    }
+)
+IDENTITY_SCHEMA = "20261102_shared_identity"
+MAIL_PRESENTATION_SCHEMA = "20261104_email_presentation"
+IDENTITY_SCHEMAS = frozenset({IDENTITY_SCHEMA, MAIL_PRESENTATION_SCHEMA})
+IDENTITY_CHECKS = frozenset(
+    {
+        "shared_identity_pkce",
+        "shared_identity_mfa",
+        "identity_cookie_isolation",
+        "identity_local_mapping",
+        "identity_fixture_preservation",
+        "identity_sessions_retired",
+    }
+)
 CHECKS = {
     "staging": {
         "source_build_image_identity",
@@ -130,6 +155,467 @@ def private(path, *, uid=0, directory=False):
 
 def read(path):
     return json.loads(private(path).read_bytes())
+
+
+def identity_profile(binding, plan):
+    """Validate nonsecret identity metadata from the installed, source-bound plan."""
+    require(
+        profiles.component(binding) in profiles.IDENTITY
+        and plan.get("mode") == "identity",
+        "EXPLICIT_SHARED_IDENTITY_PROFILE_REQUIRED",
+    )
+    identity = plan.get("identity")
+    require(
+        isinstance(identity, dict)
+        and set(identity)
+        == {
+            "profile",
+            "source_commit",
+            "source_tree",
+            "source_sha256",
+            "credentials_sha256",
+            "environments",
+        }
+        and identity["profile"] == "shared-identity-v1"
+        and all(
+            identity[key] == binding[field]
+            for key, field in [
+                ("source_commit", "candidate_commit"),
+                ("source_tree", "source_tree"),
+                ("source_sha256", "source_sha256"),
+            ]
+        )
+        and isinstance(identity["credentials_sha256"], str)
+        and re.fullmatch("[a-f0-9]{64}", identity["credentials_sha256"])
+        and isinstance(identity["environments"], dict)
+        and set(identity["environments"]) == set(ENV),
+        "SOURCE_BOUND_IDENTITY_PROFILE_REQUIRED",
+    )
+    for environment, value in identity["environments"].items():
+        require(
+            isinstance(value, dict)
+            and set(value)
+            == {
+                "issuer",
+                "client_id",
+                "client_secret_sha256",
+                "encryption_key_sha256",
+                "callback_url",
+                "portal_bypass_sha256",
+                "accounts",
+            }
+            and all(
+                isinstance(value[key], str) and re.fullmatch("[a-f0-9]{64}", value[key])
+                for key in [
+                    "client_secret_sha256",
+                    "encryption_key_sha256",
+                    "portal_bypass_sha256",
+                ]
+            )
+            and isinstance(value["client_id"], str)
+            and re.fullmatch("[A-Za-z0-9_-]{16,128}", value["client_id"]),
+            "BOUNDED_IDENTITY_ENVIRONMENT_PROFILE_REQUIRED",
+        )
+        issuer = urllib.parse.urlsplit(value["issuer"])
+        callback = urllib.parse.urlsplit(value["callback_url"])
+        require(
+            issuer.scheme == callback.scheme == "https"
+            and not any(
+                (
+                    issuer.username,
+                    issuer.password,
+                    issuer.query,
+                    issuer.fragment,
+                    callback.username,
+                    callback.password,
+                    callback.query,
+                    callback.fragment,
+                )
+            )
+            and issuer.port is None
+            and callback.port is None
+            and issuer.path == "/api/v1/identity"
+            and callback.path == "/api/v1/auth/onesa/callback"
+            and issuer.netloc == issuer.hostname
+            and callback.netloc == callback.hostname,
+            "FIXED_HTTPS_IDENTITY_ENDPOINTS_REQUIRED",
+        )
+        if environment == "production":
+            require(
+                issuer.hostname == "portal.onesa.eu"
+                and callback.hostname == "platform.onesa.eu"
+                and value["portal_bypass_sha256"] == hashlib.sha256(b"").hexdigest(),
+                "CANONICAL_PRODUCTION_IDENTITY_ENDPOINTS_REQUIRED",
+            )
+        else:
+            require(
+                (
+                    issuer.hostname == "portal-staging.onesa.eu"
+                    or re.fullmatch(
+                        r"onesa-company-portal-[a-z0-9-]+\.vercel\.app",
+                        issuer.hostname or "",
+                    )
+                )
+                and (
+                    callback.hostname == "platform-staging.onesa.eu"
+                    or re.fullmatch(
+                        r"onesa-ai-[a-z0-9-]+\.vercel\.app", callback.hostname or ""
+                    )
+                ),
+                "ISOLATED_STAGING_IDENTITY_ENDPOINTS_REQUIRED",
+            )
+        accounts = value["accounts"]
+        require(
+            isinstance(accounts, dict) and set(accounts) == {"primary", "foreign"},
+            "TWO_OWNED_IDENTITY_FIXTURES_REQUIRED",
+        )
+        for account in accounts.values():
+            require(
+                isinstance(account, dict)
+                and set(account) == {"subject", "email", "local_user_id"}
+                and all(isinstance(account[key], str) for key in account)
+                and str(UUID(account["subject"])) == account["subject"]
+                and str(UUID(account["local_user_id"])) == account["local_user_id"]
+                and len(account["email"]) <= 254
+                and re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", account["email"]),
+                "PINNED_SYNTHETIC_IDENTITY_METADATA_REQUIRED",
+            )
+        require(
+            all(
+                accounts["primary"][key] != accounts["foreign"][key]
+                for key in ["subject", "email", "local_user_id"]
+            ),
+            "INDEPENDENT_IDENTITY_FIXTURE_OWNERS_REQUIRED",
+        )
+    return identity
+
+
+def identity_runtime(binding, plan, environment, values, current):
+    identity = identity_profile(binding, plan)
+    expected = identity["environments"][environment]
+    require(
+        plan.get("migration_revision") == plan.get("expected_schema_revision")
+        and plan.get("migration_revision") in IDENTITY_SCHEMAS
+        and values.get("ONESA_IDENTITY_ENABLED") == "true"
+        and values.get("ONESA_IDENTITY_ISSUER") == expected["issuer"]
+        and values.get("ONESA_IDENTITY_CLIENT_ID") == expected["client_id"]
+        and values.get("ONESA_IDENTITY_CALLBACK_URL") == expected["callback_url"]
+        and expected["callback_url"]
+        == values.get("ONESA_PUBLIC_ORIGIN", "") + "/api/v1/auth/onesa/callback"
+        and isinstance(values.get("ONESA_IDENTITY_CLIENT_SECRET"), str)
+        and len(values["ONESA_IDENTITY_CLIENT_SECRET"]) >= 48
+        and hashlib.sha256(values["ONESA_IDENTITY_CLIENT_SECRET"].encode()).hexdigest()
+        == expected["client_secret_sha256"]
+        and isinstance(values.get("ONESA_IDENTITY_ENCRYPTION_KEY"), str)
+        and hashlib.sha256(values["ONESA_IDENTITY_ENCRYPTION_KEY"].encode()).hexdigest()
+        == expected["encryption_key_sha256"],
+        "PINNED_SHARED_IDENTITY_RUNTIME_REQUIRED",
+    )
+    key = values["ONESA_IDENTITY_ENCRYPTION_KEY"]
+    require(
+        re.fullmatch(r"[A-Za-z0-9_-]{43}=", key)
+        and len(base64.urlsafe_b64decode(key)) == 32,
+        "VALID_IDENTITY_TOKEN_ENCRYPTION_KEY_REQUIRED",
+    )
+    require(
+        current.get("ONESA_IDENTITY_ENABLED", "false") in {"false", "true"},
+        "EXPLICIT_BASELINE_IDENTITY_FLAG_REQUIRED",
+    )
+    if current.get("ONESA_IDENTITY_ENABLED") == "true":
+        require(
+            all(current.get(key) == values[key] for key in IDENTITY_KEYS),
+            "IDENTITY_PROFILE_CANNOT_ROTATE_EXISTING_CREDENTIALS",
+        )
+    allowed = IDENTITY_KEYS | (
+        {"ONESA_PUBLIC_ORIGIN"} if environment == "staging" else set()
+    )
+    require(
+        {key: value for key, value in current.items() if key not in allowed}
+        == {key: value for key, value in values.items() if key not in allowed},
+        "IDENTITY_PROFILE_MUST_PRESERVE_NATIVE_CONFIGURATION",
+    )
+    return expected
+
+
+def identity_credentials_digest(value):
+    """Pin every credential/scope byte; only the bounded time envelope may renew."""
+    require(isinstance(value, dict), "IDENTITY_CREDENTIAL_PAYLOAD_REQUIRED")
+    return hashlib.sha256(
+        canonical(
+            {
+                key: item
+                for key, item in value.items()
+                if key not in {"created_at", "expires_at"}
+            }
+        )
+    ).hexdigest()
+
+
+def identity_unique(pairs):
+    value = {}
+    for key, item in pairs:
+        require(key not in value, "IDENTITY_CREDENTIAL_DUPLICATE_FIELD")
+        value[key] = item
+    return value
+
+
+def identity_credentials(binding, plan, *, require_current=True):
+    """Verify exact source/actors/secret payload and its independently renewable lease."""
+    identity = identity_profile(binding, plan)
+    source = private(IDENTITY_CREDENTIALS)
+    raw = source.read_bytes()
+    require(0 < len(raw) <= 32768, "IDENTITY_CREDENTIAL_CUSTODY_BOUND")
+    value = json.loads(raw, object_pairs_hook=identity_unique)
+    require(
+        identity_credentials_digest(value) == identity["credentials_sha256"],
+        "SOURCE_BOUND_IDENTITY_CREDENTIAL_CUSTODY_REQUIRED",
+    )
+    require(
+        isinstance(value, dict)
+        and set(value)
+        == {
+            "schema_version",
+            "candidate_commit",
+            "created_at",
+            "expires_at",
+            "scope",
+            "environments",
+        }
+        and type(value["schema_version"]) is int
+        and value["schema_version"] == 1
+        and value["candidate_commit"] == binding["candidate_commit"]
+        and value["scope"] == "existing-owned-synthetic-identities"
+        and isinstance(value["environments"], dict)
+        and set(value["environments"]) == set(ENV),
+        "OWNED_SYNTHETIC_IDENTITY_CUSTODY_REQUIRED",
+    )
+    created, expires = (
+        dt.datetime.fromisoformat(value[key]) for key in ["created_at", "expires_at"]
+    )
+    require(
+        created.tzinfo is not None
+        and expires.tzinfo is not None
+        and dt.timedelta(0) < expires - created <= dt.timedelta(hours=1)
+        and created <= now()
+        and (not require_current or now() < expires),
+        "FRESH_BOUNDED_IDENTITY_CUSTODY_REQUIRED",
+    )
+    for environment, custody in value["environments"].items():
+        expected = identity["environments"][environment]
+        require(
+            isinstance(custody, dict)
+            and set(custody) == {"accounts", "portal_bypass"}
+            and isinstance(custody["portal_bypass"], str)
+            and len(custody["portal_bypass"]) <= 2048
+            and not any(ord(c) < 32 or ord(c) == 127 for c in custody["portal_bypass"])
+            and hashlib.sha256(custody["portal_bypass"].encode()).hexdigest()
+            == expected["portal_bypass_sha256"]
+            and isinstance(custody["accounts"], dict)
+            and set(custody["accounts"]) == {"primary", "foreign"},
+            "PINNED_IDENTITY_CREDENTIAL_ENVIRONMENT_REQUIRED",
+        )
+        for role, account in custody["accounts"].items():
+            require(
+                isinstance(account, dict)
+                and set(account)
+                == {
+                    "subject",
+                    "email",
+                    "local_user_id",
+                    "password",
+                    "local_password",
+                    "totp_secret",
+                }
+                and {key: account[key] for key in expected["accounts"][role]}
+                == expected["accounts"][role]
+                and isinstance(account["password"], str)
+                and 12 <= len(account["password"]) <= 256
+                and isinstance(account["local_password"], str)
+                and 12 <= len(account["local_password"]) <= 128
+                and isinstance(account["totp_secret"], str)
+                and re.fullmatch("[A-Z2-7]{16,128}", account["totp_secret"]),
+                "PINNED_SYNTHETIC_IDENTITY_CREDENTIALS_REQUIRED",
+            )
+    return source
+
+
+def renew_identity_credentials(binding, plan, context, phase):
+    """Issue a fresh short lease only inside an already reserved owner operation.
+
+    This does not issue authority, change a qualification, replace credentials,
+    retry a provider operation or mutate runtime configuration. The host keeps
+    the canonical payload pin; the probe receives a separately byte-pinned copy
+    containing only its environment. An in-flight probe's lease never extends.
+    """
+    require(
+        os.geteuid() == 0 and not os.getenv("GITHUB_ACTIONS"),
+        "OWNER_IDENTITY_RENEWAL_ONLY",
+    )
+    require(
+        phase in {"staging", "deploy"}, "IDENTITY_RENEWAL_MUTATING_OWNER_PHASE_REQUIRED"
+    )
+    records = verify_invocation(binding, context, phase, plan)
+    signed_chain = canonical(records)
+    chain_sha256 = hashlib.sha256(signed_chain).hexdigest()
+    operation = context["context_id"] if phase == "staging" else context["operation_id"]
+    require(
+        any(row["id"] == operation and row["binding"] == binding for row in records),
+        "IDENTITY_RENEWAL_SIGNED_CONTEXT_REQUIRED",
+    )
+    source = identity_credentials(binding, plan, require_current=False)
+    lock = source.with_name("ai-identity-renewal.lock")
+    if lock.exists():
+        private(lock)
+    descriptor = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        require(
+            os.fstat(descriptor).st_uid == 0
+            and os.fstat(descriptor).st_nlink == 1
+            and not os.fstat(descriptor).st_mode & 0o077,
+            "IDENTITY_RENEWAL_LOCK_CUSTODY",
+        )
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        source = identity_credentials(binding, plan, require_current=False)
+        raw = source.read_bytes()
+        original_hash = hashlib.sha256(raw).hexdigest()
+        value = json.loads(raw, object_pairs_hook=identity_unique)
+        if profiles.kind(binding) == "frontend":
+            import oracle_ai_frontend
+
+            artifact = oracle_ai_frontend.artifact_folder(binding)
+        else:
+            artifact = artifact_folder(binding)
+        folder = private(artifact, directory=True) / "identity-credential-leases"
+        folder.mkdir(mode=0o700, exist_ok=True)
+        private(folder, directory=True)
+        sync_directory(artifact)
+        receipt_path = folder / (operation + ".json")
+        if receipt_path.exists():
+            receipt = read(receipt_path)
+            require(
+                receipt["binding"] == binding
+                and receipt["operation_id"] == operation
+                and receipt["phase"] == phase
+                and receipt["signed_chain_sha256"] == chain_sha256
+                and receipt["payload_sha256"] == plan["identity"]["credentials_sha256"]
+                and receipt["envelope_sha256"] == original_hash,
+                "IDENTITY_RENEWAL_CONTEXT_ALREADY_USED",
+            )
+            return identity_credentials(binding, plan)
+        intent_path = folder / (operation + "-intent.json")
+        require(
+            not intent_path.exists(), "IDENTITY_RENEWAL_INCOMPLETE_NO_AUTOMATIC_RETRY"
+        )
+        current = now()
+        expires = min(
+            [
+                current + dt.timedelta(hours=1),
+                *[dt.datetime.fromisoformat(row["expires_at"]) for row in records],
+            ]
+        )
+        require(current < expires, "IDENTITY_RENEWAL_OWNER_CONTEXT_EXPIRED")
+        value.update(created_at=current.isoformat(), expires_at=expires.isoformat())
+        require(
+            identity_credentials_digest(value)
+            == plan["identity"]["credentials_sha256"],
+            "IDENTITY_RENEWAL_PAYLOAD_CHANGED",
+        )
+        encoded = canonical(value)
+        write(
+            intent_path,
+            {
+                "binding": binding,
+                "operation_id": operation,
+                "phase": phase,
+                "signed_chain_sha256": chain_sha256,
+                "payload_sha256": plan["identity"]["credentials_sha256"],
+                "previous_envelope_sha256": original_hash,
+                "intended_envelope_sha256": hashlib.sha256(encoded).hexdigest(),
+                "created_at": value["created_at"],
+                "expires_at": value["expires_at"],
+                "automatic_retry": False,
+                "provider_requests": 0,
+            },
+        )
+        file, temporary = tempfile.mkstemp(
+            prefix=".ai-identity-lease-", dir=source.parent
+        )
+        try:
+            with os.fdopen(file, "wb") as stream:
+                stream.write(encoded)
+                stream.flush()
+                os.fsync(stream.fileno())
+            require(
+                canonical(verify_invocation(binding, context, phase, plan))
+                == signed_chain,
+                "IDENTITY_RENEWAL_SIGNED_CHAIN_CHANGED",
+            )
+            private(source)
+            require(
+                sha(source) == original_hash, "IDENTITY_CUSTODY_CHANGED_DURING_RENEWAL"
+            )
+            os.replace(temporary, source)
+            sync_directory(source.parent)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+        write(
+            receipt_path,
+            {
+                "binding": binding,
+                "operation_id": operation,
+                "phase": phase,
+                "signed_chain_sha256": chain_sha256,
+                "payload_sha256": plan["identity"]["credentials_sha256"],
+                "previous_envelope_sha256": original_hash,
+                "envelope_sha256": hashlib.sha256(encoded).hexdigest(),
+                "created_at": value["created_at"],
+                "expires_at": value["expires_at"],
+                "records_issued": 0,
+                "provider_requests": 0,
+                "runtime_configuration_changed": False,
+            },
+        )
+        return identity_credentials(binding, plan)
+    finally:
+        os.close(descriptor)
+
+
+def fixture_cleanup_complete(binding, receipt):
+    if profiles.component(binding) in profiles.IDENTITY:
+        return (
+            receipt.get("fixture_identities_preserved") is True
+            and receipt.get("fixture_identities_disabled") is False
+            and receipt.get("identity_sessions_retired") is True
+            and receipt.get("existing_records_preserved") is True
+        )
+    return (
+        receipt.get("fixture_identities_disabled") is True
+        and receipt.get("existing_records_preserved") is True
+    )
+
+
+def runtime_target(row):
+    """Hash the exact inspected runtime using the cross-product receipt contract."""
+    labels = row["Config"].get("Labels") or {}
+    return {
+        "container_id": row["Id"],
+        "image_id": row["Image"],
+        "source_commit": labels.get("org.onesa.source-commit")
+        or labels.get("org.opencontainers.image.revision"),
+        "configuration_sha256": hashlib.sha256(
+            canonical(
+                {
+                    "Config": row["Config"],
+                    "HostConfig": row["HostConfig"],
+                    "Mounts": row["Mounts"],
+                    "Networks": {
+                        name: value["NetworkID"]
+                        for name, value in row["NetworkSettings"]["Networks"].items()
+                    },
+                }
+            )
+        ).hexdigest(),
+    }
 
 
 def pinned_public_file(path, expected):
@@ -410,14 +896,15 @@ def cleanup_probe_inputs(output, binding, operation, environment, exited):
             receipt.get("binding") == binding
             and receipt.get("operation_id") == operation
             and receipt.get("environment") == environment
-            and receipt.get("fixture_identities_disabled") is True
-            and receipt.get("existing_records_preserved") is True
+            and fixture_cleanup_complete(binding, receipt)
         )
     except (OSError, ValueError, KeyError, TypeError):
         pass  # Keep the private inputs for exact owner inspection/recovery.
     if clean:
         for name in ["private-runtime.env", "private-provider-observation.json"]:
             private(output / name).unlink()
+        if (output / "private-identity.json").exists():
+            private(output / "private-identity.json").unlink()
     write(
         output / "private-input-cleanup.json",
         {
@@ -557,9 +1044,29 @@ def trusted_toolchain(plan):
     )
     policy = read(store / "policy.json")
     selected = profiles.policy_components(policy)
-    if "mode" in plan or selected == profiles.SCOPED:
+    if "mode" in plan or selected != profiles.LEGACY:
         profiles.validate_mode(plan["binding"], plan.get("mode"), policy)
     tool = policy["toolchain"]
+    if profiles.is_canonical(plan.get("binding")):
+        binding = plan["binding"]
+        source = profiles.source_binding(binding)
+        installation = read(private(VERIFIER.parent / "installation.json"))
+        require(
+            policy.get("schema_version") == 2
+            and tool.get("source_binding") == source
+            and tool.get("source_commit") == binding["candidate_commit"]
+            and tool.get("source_tree") == binding["source_tree"]
+            and tool.get("source_sha256") == binding["source_sha256"]
+            and installation.get("source_binding") == source
+            and installation.get("state") == "INSTALLED_NOT_COMMISSIONED"
+            and installation.get("policy_sha256") == trust["policy_sha256"],
+            "CANONICAL_AI_SOURCE_NOT_COMMISSIONED",
+        )
+        for name, pin in installation["files"].items():
+            require(
+                sha(private(VERIFIER.parent / name)) == pin,
+                "INSTALLED_EXECUTABLE_CHANGED",
+            )
     require(
         plan["probe_image"] == tool["probe_image"],
         "CANDIDATE_CANNOT_SELECT_VERIFICATION_IMAGE",
@@ -658,7 +1165,8 @@ def image_security(scan, identity):
 
 def validate_plan(binding):
     require(
-        binding.get("repository") == "DruHustle/onesa-ai-platform"
+        binding.get("repository")
+        in {profiles.REPOSITORY, profiles.CANONICAL_REPOSITORY}
         and profiles.kind(binding) == "api"
         and binding.get("target_environment") == "production",
         "COMPONENT_SCOPE",
@@ -682,9 +1190,12 @@ def validate_plan(binding):
         sha(private(COMPOSE)) == plan["compose_sha256"], "COMPOSE_CONFIGURATION_CHANGED"
     )
     require(
-        plan.get("mode") in ["foundation", "twins", "cybersecurity"],
+        plan.get("mode") in profiles.MODES,
         "EXPLICIT_API_RELEASE_MODE",
     )
+    profiles.bound_mode(binding, plan["mode"])
+    if plan["mode"] == "identity":
+        identity_profile(binding, plan)
     for env, envpath in ENV.items():
         prepared = private(candidate_environment(binding, env))
         require(
@@ -708,6 +1219,13 @@ def validate_plan(binding):
             "ONESA_INDUSTRIAL_DEMO_ENABLED",
             "ONESA_CYBERSECURITY_ENABLED",
         }
+        if plan["mode"] == "identity":
+            allowed = set(IDENTITY_KEYS)
+        generation_change = generation_transition(plan, current, values, env)
+        if generation_change:
+            # This opt-in cannot also activate a feature, change a credential,
+            # migrate embeddings or select another model/provider.
+            allowed = {"ONESA_MODEL_NAME"}
         if env == "staging":
             allowed.add("ONESA_PUBLIC_ORIGIN")
         require(
@@ -721,7 +1239,9 @@ def validate_plan(binding):
             and values["ONESA_REGISTRATION_MODE"] == "invitation",
             "HOSTED_AUTHENTICATION_PROFILE",
         )
-        if plan["mode"] == "foundation":
+        if plan["mode"] == "identity":
+            identity_runtime(binding, plan, env, values, current)
+        elif plan["mode"] == "foundation":
             require(
                 values.get("ONESA_DIGITAL_TWINS_ENABLED", "false") == "false"
                 and values.get("ONESA_DIGITAL_TWINS_DEMO_ENABLED", "false") == "false"
@@ -740,7 +1260,11 @@ def validate_plan(binding):
                 and all(
                     values.get(k) == current.get(k)
                     for k in allowed
-                    if k not in {"ONESA_CYBERSECURITY_ENABLED", "ONESA_PUBLIC_ORIGIN"}
+                    if k
+                    not in (
+                        {"ONESA_CYBERSECURITY_ENABLED", "ONESA_PUBLIC_ORIGIN"}
+                        | ({"ONESA_MODEL_NAME"} if generation_change else set())
+                    )
                 ),
                 "CYBERSECURITY_INDEPENDENT_ACTIVATION_PROFILE",
             )
@@ -779,6 +1303,32 @@ def validate_plan(binding):
         ],
         "DATABASES_NOT_ISOLATED",
     )
+    if plan["mode"] == "identity":
+        urls = [
+            urllib.parse.urlsplit(
+                runtime_values(candidate_environment(binding, env))[
+                    "ONESA_DATABASE_URL"
+                ]
+            )
+            for env in ENV
+        ]
+        require(
+            (urls[0].hostname, urls[0].port or 5432, urls[0].path)
+            != (urls[1].hostname, urls[1].port or 5432, urls[1].path),
+            "IDENTITY_DATABASE_TARGETS_NOT_ISOLATED",
+        )
+        require(
+            all(
+                runtime_values(candidate_environment(binding, "staging"))[key]
+                != runtime_values(candidate_environment(binding, "production"))[key]
+                for key in [
+                    "ONESA_IDENTITY_CLIENT_ID",
+                    "ONESA_IDENTITY_CLIENT_SECRET",
+                    "ONESA_IDENTITY_ENCRYPTION_KEY",
+                ]
+            ),
+            "IDENTITY_ENVIRONMENT_CREDENTIALS_MUST_BE_DISTINCT",
+        )
     image = json.loads(docker("image", "inspect", binding["artifact_digest"]))[0]
     require(
         image["Id"] == binding["artifact_digest"]
@@ -810,7 +1360,139 @@ def validate_plan(binding):
     return folder, plan
 
 
-def verify_invocation(binding, context, phase, plan, *, dependency=False):
+GENERATION_TRANSITION = "cloudflare-qwen3-to-gemma4"
+STANDALONE_GENERATION_TRANSITION = "standalone-cloudflare-qwen3-to-gemma4"
+PREVIOUS_GENERATION = "@cf/qwen/qwen3-30b-a3b-fp8"
+CURRENT_GENERATION = "@cf/google/gemma-4-26b-a4b-it"
+PREVIOUS_GENERATION_RETIREMENT = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
+
+
+def generation_transition(plan, current, prepared, environment):
+    """A fixed source/config pair, never a general model or feature allowance."""
+    transition = plan.get("generation_transition")
+    if transition is None:
+        return False
+    binding = plan["binding"]
+    # A reviewed plan binds the opt-in to its own repository and release policy.
+    # Older plans from either repository cannot transfer this operation.
+    scoped_transition = (
+        transition == GENERATION_TRANSITION and profiles.is_canonical(binding)
+    ) or (
+        transition == STANDALONE_GENERATION_TRANSITION
+        and binding.get("repository") == profiles.REPOSITORY
+    )
+    require(
+        scoped_transition
+        and profiles.kind(binding) == "api"
+        and plan["mode"] in {"foundation", "twins", "cybersecurity"}
+        and environment in ENV,
+        "REPOSITORY_SCOPED_GENERATION_TRANSITION_REQUIRED",
+    )
+    require(
+        current.get("ONESA_MODEL_BACKEND")
+        == prepared.get("ONESA_MODEL_BACKEND")
+        == "cloudflare"
+        and current.get("ONESA_MODEL_NAME") in {PREVIOUS_GENERATION, CURRENT_GENERATION}
+        and prepared.get("ONESA_MODEL_NAME") == CURRENT_GENERATION,
+        "GENERATION_SOURCE_CONFIGURATION_PAIR_REQUIRED",
+    )
+    retained = plan["rollback"]["binding"]
+    require(
+        profiles.same_product(binding, retained)
+        and profiles.kind(retained) == "api"
+        and retained["target_environment"] == "production",
+        "GENERATION_ACCEPTED_ROLLBACK_SOURCE_REQUIRED",
+    )
+    original = private(candidate_environment(retained, environment))
+    require(
+        sha(original) == retained["configuration_sha256"][environment],
+        "GENERATION_ROLLBACK_CONFIGURATION_CHANGED",
+    )
+    rollback = runtime_values(original)
+    excluded = {"ONESA_MODEL_NAME"} | (
+        {"ONESA_PUBLIC_ORIGIN"} if environment == "staging" else set()
+    )
+    require(
+        {k: v for k, v in current.items() if k not in excluded}
+        == {k: v for k, v in prepared.items() if k not in excluded}
+        == {k: v for k, v in rollback.items() if k not in excluded}
+        and rollback.get("ONESA_MODEL_NAME")
+        in {PREVIOUS_GENERATION, CURRENT_GENERATION},
+        "GENERATION_ONLY_CONFIGURATION_AND_ROLLBACK_REQUIRED",
+    )
+    if rollback["ONESA_MODEL_NAME"] == PREVIOUS_GENERATION:
+        # Existing owner records have at most 24 hours of authority. Do not
+        # qualify a Qwen rollback whose remaining catalog lifetime is shorter.
+        # This deadline is not proof of current provider availability.
+        require(
+            now() + dt.timedelta(hours=24) <= PREVIOUS_GENERATION_RETIREMENT,
+            "SUPPORTED_ROLLBACK_REQUIRED_BEFORE_MODEL_RETIREMENT",
+        )
+    return True
+
+
+def verify_retained_dependency(consumer_binding, retained, plan):
+    """Read an original accepted chain; never invoke its controller or renew it."""
+    binding = retained["binding"]
+    require(
+        profiles.same_product(consumer_binding, binding)
+        and binding["target_environment"] == "production",
+        "RETAINED_AI_PRODUCT_SOURCE_REQUIRED",
+    )
+    verifier_path = retained.get("verifier_path")
+    if profiles.is_canonical(consumer_binding):
+        # The original root-owned file is pinned by its original commissioned
+        # anchor. A new source verifier must not impersonate that installation.
+        require(isinstance(verifier_path, str), "ORIGINAL_RETAINED_VERIFIER_REQUIRED")
+    else:
+        require(verifier_path is None, "LEGACY_INVOCATION_PIN_UNCHANGED")
+    return verify_invocation(
+        binding,
+        {"operation_id": retained["operation_id"], "read_only": True},
+        "production",
+        {
+            "verifier_store": (
+                retained["verifier_store"]
+                if "verifier_store" in retained
+                else plan["verifier_store"]
+            )
+        },
+        dependency=True,
+        **(
+            {"retained_verifier": verifier_path, "consumer_binding": consumer_binding}
+            if verifier_path is not None
+            else {}
+        ),
+    )
+
+
+def verify_invocation(
+    binding,
+    context,
+    phase,
+    plan,
+    *,
+    dependency=False,
+    retained_verifier=None,
+    consumer_binding=None,
+):
+    verifier = VERIFIER
+    if retained_verifier is not None or consumer_binding is not None:
+        require(
+            dependency
+            and phase == "production"
+            and profiles.is_canonical(consumer_binding)
+            and profiles.same_product(consumer_binding, binding)
+            and binding["target_environment"] == "production"
+            and context.get("read_only") is True
+            and isinstance(retained_verifier, str),
+            "RETAINED_VERIFIER_READ_ONLY_DEPENDENCY_REQUIRED",
+        )
+        verifier = private(Path(retained_verifier))
+        require(
+            0 < verifier.stat().st_size <= 2 * 1024 * 1024,
+            "RETAINED_VERIFIER_BYTE_BOUND",
+        )
     if phase == "staging":
         require(set(context) == {"context_id"}, "STAGING_SIGNED_CONTEXT_ONLY")
     elif phase == "deploy":
@@ -853,7 +1535,7 @@ def verify_invocation(binding, context, phase, plan, *, dependency=False):
     require(
         sha(store / "public.pem") == trust["key_id"]
         and sha(store / "policy.json") == trust["policy_sha256"]
-        and sha(VERIFIER) == trust["verifier_sha256"],
+        and sha(verifier) == trust["verifier_sha256"],
         "ISSUER_CUSTODY_PIN_CHANGED",
     )
     require(sha(OPENSSL) == trust["openssl_sha256"], "SIGNATURE_TOOL_CHANGED")
@@ -864,7 +1546,7 @@ def verify_invocation(binding, context, phase, plan, *, dependency=False):
     records = []
     visited = set()
 
-    def record(identifier, kind=None, historical=False):
+    def signed_record(identifier, kind=None, historical=False):
         require(
             identifier not in visited and len(visited) < 12,
             "SIGNED_RECORD_CHAIN_CYCLE_OR_BOUND",
@@ -886,7 +1568,7 @@ def verify_invocation(binding, context, phase, plan, *, dependency=False):
             "FOREIGN_RECORD_SIGNER",
         )
         with tempfile.TemporaryDirectory(
-            prefix=".runner-signature-", dir=store
+            prefix=".runner-signature-", dir=None if dependency else store
         ) as folder:
             p = Path(folder)
             (p / "record").write_bytes(canonical(r))
@@ -941,8 +1623,35 @@ def verify_invocation(binding, context, phase, plan, *, dependency=False):
             "SIGNED_RECORD_EXPIRED",
         )
         records.append(r)
-        if r["parent"]:
-            record(r["parent"], historical=historical)
+        return r
+
+    def record(identifier, kind=None, historical=False):
+        r = signed_record(identifier, kind, historical)
+        parent = record(r["parent"], historical=historical) if r["parent"] else None
+        if dependency and r["kind"] == "authorization":
+            details = r["details"]
+            require(
+                parent
+                and parent["kind"] == "qualification"
+                and isinstance(details, dict)
+                and details.get("decision") == "approve"
+                and details.get("physical_hardware_authorized") is False
+                and isinstance(details.get("attempt_id"), str),
+                "RETAINED_AUTHORIZATION_COMPANION_REQUIRED",
+            )
+            # The attempt is a signed sibling of this authorization, not an
+            # ancestor. Read it under the same original custody and revocation
+            # checks, then bind it to the already verified qualification. Do not
+            # traverse that shared parent again or execute the old issuer.
+            attempt = signed_record(
+                details["attempt_id"], "authorization-attempt", historical
+            )
+            require(
+                attempt["parent"] == parent["id"]
+                and isinstance(attempt["details"], dict)
+                and attempt["details"].get("decision") == "PENDING",
+                "RETAINED_AUTHORIZATION_COMPANION_MISMATCH",
+            )
         return r
 
     try:
@@ -1059,8 +1768,13 @@ def source_inventory(archive_path, binding):
             b"tree " + str(len(value)).encode() + b"\0" + value
         ).digest()
 
+    expected_tree = (
+        profiles.source_binding(binding)["product_source_tree"]
+        if profiles.is_canonical(binding)
+        else binding["source_tree"]
+    )
     require(
-        git_tree(tree).hex() == binding["source_tree"],
+        git_tree(tree).hex() == expected_tree,
         "ARCHIVE_DIFFERS_FROM_QUALIFIED_GIT_TREE",
     )
     require(
@@ -1142,6 +1856,18 @@ def verify_probe_bytes(folder, binding, plan):
     # independent of a later application candidate. Candidate scripts cannot
     # select a replacement verifier by changing their own source archive.
     expected = trusted_toolchain(plan)["probe_files"]
+    if plan.get("mode") == "identity":
+        require(
+            all(
+                "scripts/release/" + name in expected
+                for name in [
+                    "oracle_ai_identity_browser.mjs",
+                    "oracle_ai_identity_probe.py",
+                    "oracle_ai_identity_context.cjs",
+                ]
+            ),
+            "COMMISSIONED_IDENTITY_PROBE_CLOSURE_REQUIRED",
+        )
     resources = [
         "onesa-ai-platform-backend/alembic.ini",
         "onesa-ai-platform-frontend/apps/chat/package.json",
@@ -1198,7 +1924,12 @@ def migration_prerequisites(plan):
             "SEPARATE_MIGRATION_OWNER_REQUIRED",
         )
     require(
-        plan["migration_revision"] in ["20261025_twins", "20261026_cybersecurity"]
+        plan["migration_revision"]
+        in (
+            IDENTITY_SCHEMAS
+            if plan["mode"] == "identity"
+            else ["20261025_twins", "20261026_cybersecurity"]
+        )
         and plan["expected_schema_revision"] == plan["migration_revision"],
         "ADDITIVE_MIGRATION_SCOPE",
     )
@@ -1219,6 +1950,8 @@ def prepare_artifact_directories(folder):
 def preflight(binding):
     folder, plan = validate_plan(binding)
     migration_prerequisites(plan)
+    if plan["mode"] == "identity":
+        identity_credentials(binding, plan, require_current=False)
     cpus = probe_cpu_limit()
     network = probe_network()
     require(shutil.disk_usage("/").free > 12 * 1024**3, "DISK_BUDGET")
@@ -1253,21 +1986,72 @@ def accepted_rollback_proof(plan):
     old = plan["rollback"]
     binding = old["binding"]
     require(
-        binding["repository"] == plan["binding"]["repository"] == profiles.REPOSITORY
+        profiles.same_product(plan["binding"], binding)
         and binding["target_environment"] == "production"
         and profiles.kind(binding) == "api"
         and binding["artifact_digest"] == old["image"]
-        and binding["candidate_commit"] != plan["binding"]["candidate_commit"],
+        and (
+            binding["candidate_commit"] != plan["binding"]["candidate_commit"]
+            or (
+                plan["mode"] == "identity"
+                and profiles.component(binding) in profiles.SCOPED
+                and binding["artifact_digest"] == plan["binding"]["artifact_digest"]
+                and all(
+                    binding["configuration_sha256"][env]
+                    != plan["binding"]["configuration_sha256"][env]
+                    for env in ENV
+                )
+            )
+        ),
         "ROLLBACK_SOURCE_BINDING",
     )
-    chain = verify_invocation(
-        binding,
-        {"operation_id": old["operation_id"], "read_only": True},
-        "production",
-        {**plan, "verifier_store": old.get("verifier_store", plan["verifier_store"])},
-        dependency=True,
-    )
+    chain = verify_retained_dependency(plan["binding"], old, plan)
     context = next(record["id"] for record in chain if record["kind"] == "context")
+    if plan["mode"] == "identity":
+        output = (
+            Path(plan["artifact_folder"])
+            / "observations"
+            / plan["qualification_context_id"]
+        )
+        proof = read(output / "identity-rollback-receipt.json")
+        require(
+            proof.get("binding") == plan["binding"]
+            and proof.get("operation_id") == plan["qualification_context_id"]
+            and proof.get("candidate_image") == plan["binding"]["artifact_digest"]
+            and proof.get("rollback_image") == old["image"]
+            and proof.get("retained_source") == binding["candidate_commit"]
+            and proof.get("status") == "PASS"
+            and proof.get("schema_revision") == plan["expected_schema_revision"]
+            and plan["expected_schema_revision"] in IDENTITY_SCHEMAS
+            and proof.get("synthetic_database_restore") == "PASS"
+            and type(proof.get("production_writes")) is int
+            and proof["production_writes"] == 0
+            and isinstance(proof.get("environments"), dict)
+            and set(proof["environments"]) == set(ENV),
+            "FRESH_IDENTITY_SCHEMA_ROLLBACK_PROOF_REQUIRED",
+        )
+        for environment, value in proof["environments"].items():
+            enabled = profiles.enabled_features(
+                runtime_values(candidate_environment(plan["binding"], environment)),
+                "identity",
+            )
+            require(
+                isinstance(value, dict)
+                and value.get("enabled_features") == sorted(enabled)
+                and value.get("identity_enabled") is False
+                and isinstance(value.get("checks"), dict)
+                and all(
+                    value["checks"].get(key) == "PASS"
+                    for key in [
+                        "core_readiness",
+                        "local_authentication",
+                        "ordinary_workflows",
+                        "native_features",
+                    ]
+                ),
+                "IDENTITY_ROLLBACK_MUST_PRESERVE_NATIVE_FEATURES",
+            )
+        return sha(output / "identity-rollback-receipt.json")
     output = artifact_folder(binding) / "observations" / context
     proof = read(output / "forward-check-receipt.json")
     require(
@@ -1404,6 +2188,8 @@ def operational_observations(binding, plan):
         < dt.timedelta(hours=36),
         "DATABASE_BACKUP_STALE",
     )
+    if plan["mode"] == "identity":
+        return identity_operational_observations(binding, plan, metrics, backup)
     if plan["mode"] == "foundation":
         observed = inspect_database_backup(backup, plan)
         output = (
@@ -1444,6 +2230,11 @@ def operational_observations(binding, plan):
             and old["retain_additive_schema_and_files"] is True,
             "CURRENT_SCHEMA_ROLLBACK_ARTIFACT_MISSING",
         )
+        generation_rollback = (
+            accepted_rollback_proof(plan)
+            if plan.get("generation_transition") is not None
+            else None
+        )
         return {
             "checks": {k: "PASS" for k in CHECKS["operations"]},
             "mode": "foundation",
@@ -1452,6 +2243,11 @@ def operational_observations(binding, plan):
             "backup_readback": observed,
             "forward_rollback_receipt_sha256": sha(
                 output / "forward-check-receipt.json"
+            ),
+            **(
+                {"accepted_generation_rollback_sha256": generation_rollback}
+                if generation_rollback is not None
+                else {}
             ),
             "metrics_checked_at": metrics["checked_at"],
             "backup_verified_at": backup["verified_at"],
@@ -1558,6 +2354,108 @@ def operational_observations(binding, plan):
         "registration_sha256": sha(Path("/etc/onesa/ai-twin-backup-registration.json")),
         "coordinated_backup": coordinated,
         "accepted_rollback_proof_sha256": rollback_proof,
+        "legal_publication_controls_unchanged": True,
+        "physical_hardware_authorized": False,
+    }
+
+
+def identity_operational_observations(binding, plan, metrics, backup):
+    """Reuse native restore evidence and require fresh retained-image compatibility."""
+    enabled = profiles.enabled_features(
+        runtime_values(candidate_environment(binding, "staging")), "identity"
+    )
+    workflow = profiles.workflow_mode("identity", enabled)
+    output = (
+        Path(plan["artifact_folder"])
+        / "observations"
+        / plan["qualification_context_id"]
+    )
+    name = (
+        "forward-check-receipt.json"
+        if workflow == "foundation"
+        else "restore-receipt.json"
+    )
+    restored, replacement, hosted = (
+        read(output / name),
+        read(output / "replacement-ok.json"),
+        read(output / "receipt.json"),
+    )
+    require(
+        restored.get("binding") == binding
+        and restored.get("operation_id") == plan["qualification_context_id"]
+        and restored.get("status") == "PASS"
+        and restored.get("schema_revision") == plan["expected_schema_revision"]
+        and plan["expected_schema_revision"] in IDENTITY_SCHEMAS
+        and type(restored.get("production_writes")) is int
+        and restored["production_writes"] == 0,
+        "IDENTITY_NATIVE_RESTORE_BINDING_REQUIRED",
+    )
+    if workflow == "foundation":
+        require(
+            restored.get("candidate_image") == binding["artifact_digest"]
+            and restored.get("synthetic_database_restore") == "PASS"
+            and restored.get("twins_disabled") is True
+            and restored.get("cybersecurity_disabled") is True,
+            "IDENTITY_FOUNDATION_RESTORE_REQUIRED",
+        )
+    else:
+        require(
+            restored.get("profile") == workflow
+            and restored.get("database_manifest_matches") is True
+            and restored.get("encrypted_fixture_recovery") == "PASS"
+            and restored.get("fixture_owners") == 2
+            and (workflow != "twins" or restored.get("file_hashes_match") is True),
+            "IDENTITY_NATIVE_RESTORE_OR_FILE_PROOF_MISSING",
+        )
+    require(
+        replacement.get("restore_receipt_sha256") == sha(output / name)
+        and hosted.get("controlled_replacement") == replacement
+        and hosted.get("binding") == binding
+        and hosted.get("operation_id") == plan["qualification_context_id"]
+        and hosted.get("environment") == "staging"
+        and hosted.get("status") == "PASS"
+        and fixture_cleanup_complete(binding, hosted)
+        and hosted.get("enabled_features") == sorted(enabled)
+        and all(
+            hosted.get("checks", {}).get(key) == "PASS"
+            for key in require_probe_policy(binding, "staging", plan, enabled)
+        ),
+        "IDENTITY_HOSTED_NATIVE_RESTORE_CHAIN_REQUIRED",
+    )
+    old = plan["rollback"]
+    retained = json.loads(docker("image", "inspect", old["image"]))[0]
+    require(
+        retained["Id"] == old["image"]
+        and retained["Architecture"] == "arm64"
+        and retained["Config"]
+        .get("Labels", {})
+        .get("org.opencontainers.image.revision")
+        == old["binding"]["candidate_commit"]
+        and old["compatible_schema_revision"] == plan["expected_schema_revision"]
+        and old["retain_additive_schema_and_files"] is True,
+        "RETAINED_IDENTITY_ROLLBACK_IMAGE_REQUIRED",
+    )
+    rollback = accepted_rollback_proof(plan)
+    production_features = profiles.enabled_features(
+        runtime_values(candidate_environment(binding, "production")), "identity"
+    )
+    observed = inspect_database_backup(backup, plan)
+    coordinated = (
+        coordinated_backup_observation(binding, plan)
+        if "twins" in production_features
+        else None
+    )
+    return {
+        "checks": {key: "PASS" for key in CHECKS["operations"]},
+        "mode": "identity",
+        "native_workflow": workflow,
+        "enabled_features": sorted(production_features),
+        "backup_readback": observed,
+        "coordinated_backup": coordinated,
+        "restore_receipt_sha256": sha(output / name),
+        "accepted_rollback_proof_sha256": rollback,
+        "metrics_checked_at": metrics["checked_at"],
+        "backup_verified_at": backup["verified_at"],
         "legal_publication_controls_unchanged": True,
         "physical_hardware_authorized": False,
     }
@@ -1679,15 +2577,23 @@ from alembic import command
 from urllib.parse import urlsplit
 request=json.load(sys.stdin)
 target=request.get('target_revision','20261025_twins')
-assert target in ['20261025_twins','20261026_cybersecurity']
+identity_targets=['20261102_shared_identity','20261104_email_presentation']
+assert target in ['20261025_twins','20261026_cybersecurity']+identity_targets
 role=urlsplit(request['runtime']).username
 assert re.fullmatch('[a-z_][a-z0-9_]{0,62}',role)
 owner=make_url(request['owner']).set(drivername='postgresql+psycopg')
+runtime=make_url(request['runtime'])
+if target in identity_targets:
+ assert owner.username != runtime.username
+ assert (owner.host.replace('-pooler.','.'),owner.port or 5432,owner.database)==(runtime.host.replace('-pooler.','.'),runtime.port or 5432,runtime.database)
 engine=create_engine(owner,connect_args={'connect_timeout':10,'sslmode':'verify-full','sslrootcert':'/etc/ssl/cert.pem','channel_binding':'require'})
 with engine.begin() as connection:
+ if target in identity_targets:
+  connection.execute(text('SELECT pg_advisory_xact_lock(896075103)'))
+  assert connection.scalar(text('SELECT NOT (rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls) FROM pg_roles WHERE rolname=:role'),{'role':role}) is True
  revision=connection.scalar(text('SELECT version_num FROM alembic_version'))
- assert revision in ['20261010_capacity','20261021_industrial','20261025_twins','20261026_cybersecurity']
- assert revision!='20261026_cybersecurity' or target=='20261026_cybersecurity'
+ revisions=['20261010_capacity','20261021_industrial','20261025_twins','20261026_cybersecurity']+identity_targets
+ assert revision in revisions and revisions.index(target)>=revisions.index(revision)
  assert connection.scalar(text("SELECT has_schema_privilege(current_user,'public','CREATE') AND pg_has_role(current_user,c.relowner,'USAGE') FROM pg_class c WHERE c.oid='alembic_version'::regclass"))
  config=Config('alembic.ini');config.attributes['connection']=connection
  # env.py requires the URL even when the already verified connection is supplied.
@@ -1695,7 +2601,8 @@ with engine.begin() as connection:
  os.environ['ONESA_DATABASE_URL']=owner.render_as_string(hide_password=False)
  command.upgrade(config,target)
  tables=['industrial_investigations','twin_files','twin_templates','twin_assets','twin_models','twin_notes','twin_sources','twin_readings','twin_events']
- if target=='20261026_cybersecurity':tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
+ if target in ['20261026_cybersecurity']+identity_targets:tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
+ if target in identity_targets:tables+=['identity_sessions','identity_transactions','shared_identities']
  connection.execute(text('GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE '+','.join('public.'+table for table in tables)+' TO "'+role+'"'))
  assert not connection.scalar(text("SELECT has_schema_privilege(:role,'public','CREATE') OR has_table_privilege(:role,'alembic_version','INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')"),{'role':role})
  assert connection.scalar(text('SELECT version_num FROM alembic_version'))==target
@@ -1740,9 +2647,13 @@ def migrate(binding, env, operation, plan):
         == {
             "migration_revision": plan["migration_revision"],
             "runtime_DDL_granted": False,
-            "runtime_new_tables_DML_granted": 21
-            if plan["migration_revision"] == "20261026_cybersecurity"
-            else 9,
+            "runtime_new_tables_DML_granted": (
+                24
+                if plan["migration_revision"] in IDENTITY_SCHEMAS
+                else 21
+                if plan["migration_revision"] == "20261026_cybersecurity"
+                else 9
+            ),
         },
         "ADDITIVE_MIGRATION_OR_ROLE_SCOPE_FAILED",
     )
@@ -1984,9 +2895,13 @@ def extract_reference(folder, destination, binding):
 
 
 def required_probe_checks(binding, env, mode, enabled_features=None):
-    require(mode in {"foundation", "twins", "cybersecurity"}, "UNKNOWN_PROBE_MODE")
+    require(mode in profiles.MODES, "UNKNOWN_PROBE_MODE")
     profiles.bound_mode(binding, mode)
     require(env in {"staging", "production"}, "UNKNOWN_PROBE_ENVIRONMENT")
+    require(
+        mode != "identity" or enabled_features is not None,
+        "IDENTITY_ACTUAL_ENABLED_FEATURE_SCOPE_REQUIRED",
+    )
     features = (
         (frozenset() if mode == "foundation" else frozenset({mode}))
         if enabled_features is None
@@ -1994,7 +2909,10 @@ def required_probe_checks(binding, env, mode, enabled_features=None):
     )
     require(
         features <= {"twins", "cybersecurity"}
-        and (not features if mode == "foundation" else mode in features),
+        and (
+            mode == "identity"
+            or (not features if mode == "foundation" else mode in features)
+        ),
         "ACTUAL_ENABLED_FEATURE_SCOPE_REQUIRED",
     )
     mandatory = {
@@ -2029,9 +2947,10 @@ def required_probe_checks(binding, env, mode, enabled_features=None):
             or profiles.component(binding) not in profiles.LEGACY
         ):
             mandatory.add("cybersecurity_ui")
-    if mode == "foundation":
-        require(mode == "foundation", "UNKNOWN_PROBE_MODE")
+    if profiles.workflow_mode(mode, features) == "foundation":
         mandatory |= {"twins_disabled", "cybersecurity_disabled", "ordinary_workflows"}
+    if mode == "identity":
+        mandatory |= IDENTITY_CHECKS
     if "twins" in features and (
         (env == "staging" and profiles.kind(binding) == "frontend")
         or profiles.component(binding) not in profiles.LEGACY
@@ -2106,6 +3025,12 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         ),
         "PROBE_PLAN_FILE_BINDING",
     )
+    if plan["mode"] == "identity":
+        require(
+            installed_plan.get("identity") == plan.get("identity"),
+            "IDENTITY_PROBE_PLAN_CHANGED",
+        )
+        identity_custody = identity_credentials(binding, plan)
     name = TARGET[env]
     current = inventory()
     actual = current[name]
@@ -2119,6 +3044,7 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
     )
     values = running_configuration(runtime_binding, env, actual)
     enabled = profiles.enabled_features(values, plan["mode"])
+    workflow = profiles.workflow_mode(plan["mode"], enabled)
     required = require_probe_policy(binding, env, plan, enabled)
     if "twins" in enabled:
         mounts = actual.get("Mounts", [])
@@ -2134,6 +3060,18 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         )
     output = folder / "observations" / operation
     output.mkdir(mode=0o700, parents=False, exist_ok=False)
+    if plan["mode"] == "identity":
+        raw_custody = private(identity_custody).read_bytes()
+        custody = json.loads(raw_custody, object_pairs_hook=identity_unique)
+        require(
+            identity_credentials_digest(custody)
+            == plan["identity"]["credentials_sha256"],
+            "IDENTITY_CUSTODY_CHANGED_BEFORE_PROBE",
+        )
+        custody["environments"] = {env: custody["environments"][env]}
+        custody["source_custody_sha256"] = plan["identity"]["credentials_sha256"]
+        identity_custody = output / "private-identity.json"
+        write(identity_custody, custody)
     if "twins" in enabled:
         extract_reference(folder, output / "reference", binding)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -2167,6 +3105,14 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         )
         for key in ["ONESA_DIGITAL_TWINS_ENABLED", "ONESA_CYBERSECURITY_ENABLED"]:
             f.write(key + "=" + values.get(key, "false") + "\n")
+        if plan["mode"] == "identity":
+            for key in [
+                "ONESA_IDENTITY_ENABLED",
+                "ONESA_IDENTITY_ISSUER",
+                "ONESA_IDENTITY_CLIENT_ID",
+                "ONESA_IDENTITY_CALLBACK_URL",
+            ]:
+                f.write(key + "=" + values[key] + "\n")
     # This immutable, credential-free-built probe image contains the reviewed
     # existing hosted API/UI harnesses and the owned Twins journey. It observes the
     # actual provider and application; no caller PASS or stored Actions artifact is read.
@@ -2180,6 +3126,11 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         (narrowed, "/private/runtime.env", False),
         (output / "private-provider-observation.json", "/private/vercel.json", False),
         (Path(plan["preview_receipt_path"]), "/private/frontend-preview.json", False),
+        *(
+            [(identity_custody, "/private/identity.json", False)]
+            if plan["mode"] == "identity"
+            else []
+        ),
         *(
             [(output / "reference", "/private/reference", False)]
             if "twins" in enabled
@@ -2236,6 +3187,11 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
             "provider_observation_sha256": sha(
                 output / "private-provider-observation.json"
             ),
+            **(
+                {"identity_custody_sha256": sha(identity_custody)}
+                if plan["mode"] == "identity"
+                else {}
+            ),
         }
     )
     # The process output is private and bounded after completion. A durable marker
@@ -2276,8 +3232,8 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
                     sys.path.insert(0, str(Path(__file__).resolve().parent))
                     import oracle_twin_restore
 
-                    if plan["mode"] in ["twins", "cybersecurity"]:
-                        if plan["mode"] == "twins":
+                    if workflow in ["twins", "cybersecurity"]:
+                        if workflow == "twins":
                             oracle_twin_restore.capture_fixture_files(
                                 output, binding, operation, plan["storage"][env]
                             )
@@ -2339,7 +3295,7 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
                                 output
                                 / (
                                     "restore-receipt.json"
-                                    if plan["mode"] != "foundation"
+                                    if workflow != "foundation"
                                     else "forward-check-receipt.json"
                                 )
                             ),
@@ -2386,8 +3342,7 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
         "HOSTED_REQUIRED_CHECK_FAILED_SKIPPED_OR_MISSING",
     )
     require(
-        observed["fixture_identities_disabled"] is True
-        and observed["existing_records_preserved"] is True,
+        fixture_cleanup_complete(binding, observed),
         "FIXTURE_CLEANUP_OR_PRESERVATION_FAILED",
     )
     after_provider = oracle_ai_frontend.observe_provider(binding, env, plan, operation)
@@ -2405,7 +3360,12 @@ def probe(binding, env, operation, folder, plan, *, plan_file=None):
     )
     return {
         "runtime": summary(actual),
-        "deployment_id": actual["Id"],
+        "backend_runtime": runtime_target(actual),
+        "deployment_id": (
+            metadata["provider"]["deployment_id"]
+            if profiles.kind(binding) == "frontend"
+            else actual["Id"]
+        ),
         "hosted": observed,
         "receipt_sha256": sha(output / "receipt.json"),
     }
@@ -2450,8 +3410,7 @@ def observe_production(binding, operation, folder, plan):
         and observed["operation_id"] == operation
         and observed["status"] == "PASS"
         and observed["workflow_run_id"] == 0
-        and observed["fixture_identities_disabled"] is True
-        and observed["existing_records_preserved"] is True,
+        and fixture_cleanup_complete(binding, observed),
         "POST_DEPLOY_WORKFLOWS_NOT_VERIFIED",
     )
     enabled = profiles.enabled_features(
@@ -2477,6 +3436,7 @@ def observe_production(binding, operation, folder, plan):
     return {
         "deployment_id": actual["Id"],
         "runtime": summary(actual),
+        "backend_runtime": runtime_target(actual),
         "hosted_receipt_sha256": sha(output / "receipt.json"),
         "provider_receipt_sha256": sha(op / "provider-receipt.json"),
         "fresh_health_readback": True,
@@ -2490,7 +3450,8 @@ def record_runner_failure(phase, request, error):
         require(phase in {*CHECKS, "preflight"}, "PHASE_SCOPE")
         binding = request["binding"]
         require(
-            binding["repository"] == "DruHustle/onesa-ai-platform"
+            binding["repository"]
+            in {profiles.REPOSITORY, profiles.CANONICAL_REPOSITORY}
             and profiles.kind(binding) == "api"
             and re.fullmatch(r"[a-f0-9]{40}", binding["candidate_commit"]),
             "FAILURE_SOURCE_SCOPE",
@@ -2531,6 +3492,31 @@ def record_runner_failure(phase, request, error):
         pass
 
 
+def ci_reference(binding, ci):
+    workflow = (
+        ".github/workflows/verify.yml" if profiles.is_canonical(binding) else "ci.yml"
+    )
+    candidates = [
+        row
+        for row in ci
+        if row.get("workflow") == workflow
+        and type(row.get("run_id")) is int
+        and row["run_id"] > 0
+    ]
+    require(len(candidates) == 1, "SIGNED_GENUINE_CI_REFERENCE_MISSING")
+    if profiles.is_canonical(binding):
+        row = candidates[0]
+        require(
+            row.get("source") == profiles.source_binding(binding)
+            and row.get("verification_only") is True
+            and row.get("release_authorized") is False
+            and type(row.get("run_attempt")) is int
+            and row["run_attempt"] == 1,
+            "SIGNED_CANONICAL_SOURCE_REFERENCE_MISMATCH",
+        )
+    return candidates[0]["run_id"]
+
+
 def run_request(phase, request):
     binding = request["binding"]
     context = request["context"]
@@ -2548,16 +3534,8 @@ def run_request(phase, request):
         ),
         None,
     )
-    require(
-        ci
-        and any(
-            row.get("workflow") == "ci.yml"
-            and type(row.get("run_id")) is int
-            and row["run_id"] > 0
-            for row in ci
-        ),
-        "SIGNED_GENUINE_CI_REFERENCE_MISSING",
-    )
+    require(ci, "SIGNED_GENUINE_CI_REFERENCE_MISSING")
+    observed_ci_run_id = ci_reference(binding, ci)
     plan["qualification_context_id"] = next(
         record["id"] for record in signed_chain if record["kind"] == "context"
     )
@@ -2569,10 +3547,10 @@ def run_request(phase, request):
             binding, plan["qualification_context_id"]
         )
     )
-    plan["observed_ci_run_id"] = next(
-        row["run_id"] for row in ci if row.get("workflow") == "ci.yml"
-    )
+    plan["observed_ci_run_id"] = observed_ci_run_id
     migration_prerequisites(plan)
+    if plan["mode"] == "identity" and phase in {"staging", "deploy"}:
+        renew_identity_credentials(binding, plan, context, phase)
     if phase == "operations":
         details = operational_observations(binding, plan)
     elif phase == "staging":

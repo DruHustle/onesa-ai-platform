@@ -55,11 +55,13 @@ class Source:
 class InstallTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(
-            dir=Path.home()
-            if os.getuid() == 0
-            else "/private/tmp"
-            if Path("/private/tmp").exists()
-            else None
+            dir=(
+                Path.home()
+                if os.getuid() == 0
+                else "/private/tmp"
+                if Path("/private/tmp").exists()
+                else None
+            )
         )
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
@@ -365,6 +367,23 @@ class InstallTests(unittest.TestCase):
         result = self.validate()
         self.assertEqual(result[1].name, "ai-" + self.manifest["source_tree"])
         self.assertIn("runners/oracle_release_profiles.py", result[2])
+
+    def test_identity_requires_both_explicit_independent_profiles(self):
+        self.scoped_policy()
+        for kind in ["api", "frontend"]:
+            profile = copy.deepcopy(
+                self.policy["components"]["DruHustle/onesa-ai-platform:" + kind]
+            )
+            profile["release_mode"] = "identity"
+            self.policy["components"][
+                "DruHustle/onesa-ai-platform:identity-" + kind
+            ] = profile
+        self.seal()
+        self.validate()
+        del self.policy["components"]["DruHustle/onesa-ai-platform:identity-frontend"]
+        self.seal()
+        with self.assertRaises(ValueError):
+            self.validate()
 
     def test_scoped_mode_changes_missing_profiles_and_expanded_attempts_are_refused(
         self,

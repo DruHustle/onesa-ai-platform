@@ -1,6 +1,75 @@
 # Changelog
 
+- Add branded invitation/recovery HTML behind versioned mail queue states and an
+  additive state-constraint migration. Existing attempted messages remain plain;
+  older workers cannot claim branded retries. This does not enable mail delivery.
+
 ## Unreleased
+
+- Add an opt-in Auth0 OIDC client for AI web and the AI API, preserving stable application-user bindings, scoped permissions, short token expiry and offline public-key validation.
+
+- Correct the public deployment and model-hosting drawings, engineering diagrams and onboarding guide to show the Oracle-hosted product APIs. Record the capacity reported by the Oracle guest in the engineering infrastructure drawing.
+
+- Route hosted sign-in, account creation and recovery through Company Portal.
+  An unavailable issuer keeps hosted credential entry closed. Development and
+  test credentials remain scoped to loopback fixtures.
+
+- Use Onesa Robot in public and engineering documentation, architecture drawings
+  and the generated technical design manual.
+
+- Support the Cloudflare Qwen-to-Gemma generation change in an explicitly
+  commissioned standalone AI API plan. Both the standalone and historical plan
+  names are bound to their respective repositories. The configuration, rollback
+  and hosted acceptance requirements apply to both.
+
+- Source candidate: add an independent canonical protected Docs consumer with
+  exact repository, main commit, root tree and Platform subtree binding. Preserve
+  the original approved document map, separate private builds, provider project,
+  native commissioning, shared journal and one-use release authority. Read original
+  signed history through its retained installation and key without executing an
+  old issuer. Unknown, unaccepted or revoked outcomes keep their holds. A manual
+  read-only workflow retains sanitized qualification/decision metadata only;
+  private hosted acceptance, controller migration and deployment remain unclaimed.
+
+- Source correction: keep MCP stdio input responsive during API calls, honor
+  request-scoped cancellation, and close the owned HTTP response without replay.
+  Bound outstanding work and whole-request duration; preserve initialization,
+  unrelated requests and completed results when a cancellation is invalid or stale.
+
+- Source candidate: add explicitly scoped MCP model/Knowledge resources and a
+  bounded text-summary prompt, with fresh identity/ownership checks on discovery
+  and reads. Preserve empty defaults, exact document scopes, embedding metadata,
+  cancellation and redacted failures. No hosted activation, new provider processing,
+  service-identity commissioning or completed external-client acceptance is implied.
+
+- Source correction: reject unsupported Onesa model IDs and invalid header/cookie
+  credentials before consumer transmission. Preserve supplied backend and request
+  provenance, and reject contradictory mock/real metadata. The independently
+  vendored Drone client retains the same bounded text contract; wider consumer and
+  external MCP qualification remain separate acceptance requirements.
+
+- Source correction: use `notifications-ai@onesa.eu` in mail configuration
+  examples and missing-default preparation, preserving explicit runtime settings.
+  Validate a single sender/reply address without control characters and exclude
+  mail credentials from configuration representations. Domain/key verification,
+  pending-delivery reconciliation and an actual worker rollout remain separate.
+
+- Source candidate: add separately scoped identity API/frontend release profiles
+  and real owner-probe PKCE/MFA sign-in, retaining the native API, interface,
+  feature, persistence and rollback checks. Preserve existing synthetic account
+  IDs, credentials, grants and data; retire only observed new probe sessions.
+  Signed operations can renew only the bounded credential time envelope under
+  unchanged payload pins. Commissioning and live qualification remain required.
+
+- Source candidate: central Onesa sign-in and account/access management across AI,
+  Drone and Robot, using the existing Portal issuer. Preserve AI ownership through
+  explicit password-proved linking, encrypt server-side tokens and PKCE material,
+  validate current entitlement/revocation on every request, bind sensitive
+  reauthentication to the same session/account, and distinguish local from global
+  sign-out. Global/product administration requires MFA; existing explicit native
+  engineering/cyber grants remain scoped to verified linked users and fresh MFA.
+  Localized sign-in and draft-preserving recovery are included. The additive
+  migration and feature remain subject to owner-controlled staging qualification.
 
 - Source correction: bind protected asset observations to percent-encoded HTTP
   paths while preserving original archive names, exact byte digests and all access

@@ -18,9 +18,12 @@ for(const [name,identity] of Object.entries(packages)){
  manifest[name]={...identity,archive,archive_sha256:hash(await fs.readFile(path.join(root,archive))),npm_integrity:result.integrity,source_files,shipped_files};
  if(name==='minimatch-callable'){
   const ownerArchive='infra/oracle/vercel-tools/vendor/'+result.filename;
-  await fs.mkdir(path.dirname(path.join(root,ownerArchive)),{recursive:true});
-  await fs.copyFile(path.join(root,archive),path.join(root,ownerArchive));
-  manifest[name].additional_archives=[ownerArchive];
+  const contractArchive='scripts/contract-tools/vendor/'+result.filename;
+  for(const destination of [ownerArchive,contractArchive]){
+   await fs.mkdir(path.dirname(path.join(root,destination)),{recursive:true});
+   await fs.copyFile(path.join(root,archive),path.join(root,destination));
+  }
+  manifest[name].additional_archives=[ownerArchive,contractArchive];
  }
 }
 await fs.writeFile(path.join(root,'packages/security/provenance.json'),JSON.stringify(manifest,null,2)+'\n');

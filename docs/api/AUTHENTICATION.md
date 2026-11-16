@@ -1,5 +1,30 @@
 # Authentication
 
+## Optional shared Onesa identity
+
+The disabled-by-default `ONESA_IDENTITY_ENABLED` source candidate replaces native
+sign-in with the existing Portal account when activated through the reviewed
+release process. `GET /auth/onesa/config` selects the entry experience;
+`POST /auth/onesa/start` returns a browser authorization URL using S256 PKCE and
+one-use browser state. The callback exchanges a code server-side and checks the
+current central identity/entitlement assertion. `POST /auth/onesa/link` requires
+existing native password proof when an email collides; it never auto-links email.
+`GET /auth/me` adds `identity_mode`, `global_admin` and `administrator` without
+exposing central tokens. Every authenticated request revalidates central access.
+
+Shared-mode account controls send an empty `current_password` field and require
+fresh central authentication; native mode still verifies the existing password.
+Sensitive confirmation binds the existing session and central subject and requires
+fresh MFA. Account creation/profile/password/recovery belong to the central hub.
+AI workspace deletion preserves the central account and other applications.
+Logout clears local authority even during issuer outage; `identity_logout_incomplete`
+means local sign-out completed but global sign-out could not be confirmed.
+
+See [shared identity](../engineering/SHARED_IDENTITY.md) for the full protocol,
+current permissions, private configuration, source tests and controlled activation.
+
+## Native mode
+
 Register/login require exact Origin equal to ONESA_PUBLIC_ORIGIN. Passwords are 12–128
 characters and hashed with Argon2id; normalized email is unique. Login gives generic
 credential errors, including absent accounts. Authentication is throttled with an atomic
@@ -12,7 +37,9 @@ are stored, with expiry and revocation. Session cookie is HttpOnly, SameSite=Lax
 Secure is required in production. A separate same-site readable CSRF cookie supplies the
 X-CSRF-Token header; mutations check its hash against the authenticated session and Origin.
 Refresh rotates under a row lock; logout revokes and clears cookies. Disabled/expired/
-revoked users/sessions are rejected. No OAuth, SSO, email verification, MFA or email password-reset flow exists.
+revoked users/sessions are rejected. Native mode has no central OAuth or MFA.
+Invitation and recovery delivery use the separately configured native identity
+workflow; shared mode directs these controls to the central account.
 Signed-in users can change their password after confirming the current password.
 
 OpenAPI exposes the session cookie security scheme. GET me returns id/email/display_name,

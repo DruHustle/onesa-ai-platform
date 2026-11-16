@@ -14,6 +14,7 @@ POLICIES = {
     "infra/oracle/cloudflare-tools": "low",
     "onesa-ai-platform-frontend/apps/docs": "low",
     "onesa-ai-platform-frontend/apps/chat": "high",
+    "scripts/contract-tools": "low",
 }
 LEVELS = ("info", "low", "moderate", "high", "critical")
 HTTP_TIMEOUT_MS = 45000

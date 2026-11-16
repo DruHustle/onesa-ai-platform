@@ -38,6 +38,59 @@ const context = {
 };
 vm.runInNewContext(compiled, context, {filename: 'backend-proxy-regression.js'});
 
+async function identityMethodBootstrap() {
+  const compile = relative => ts.transpileModule(fs.readFileSync(path.join(chat, relative), 'utf8'), {
+    compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022},
+  }).outputText;
+  const methods = {}, bootstrap = {};
+  vm.runInNewContext(compile('src/lib/identity-method.ts'), {exports: methods, URL});
+  vm.runInNewContext(compile('src/lib/server/identity-method.ts'), {
+    exports: bootstrap, Request, AbortSignal,
+    require: name => {
+      if (name === 'server-only') return {};
+      if (name === '../backend') return exported;
+      assert.equal(name, '../identity-method');
+      return methods;
+    },
+  });
+  for (const [status, body, expected] of [
+    [200, {enabled:false, account_url:null}, {enabled:false, account_url:null}],
+    [200, {enabled:true, account_url:'https://account.example.test/account'}, {enabled:true, account_url:'https://account.example.test/account'}],
+    [404, {detail:'Not Found'}, {enabled:false, account_url:null}],
+    ...[401, 403, 503].map(status => [status, {error:{message:'synthetic'}}, {enabled:false, account_url:null, unavailable:true}]),
+    ...[{}, {enabled:'false', account_url:null}, {enabled:true, account_url:null},
+      {enabled:true, account_url:'javascript:synthetic'},
+      {enabled:true, account_url:'https://synthetic:password@account.example.test/account'},
+    ].map(body => [200, body, {enabled:false, account_url:null, unavailable:true}]),
+  ]) {
+    context.fetch = async (url, options) => {
+      assert.equal(url.pathname, '/api/v1/auth/onesa/config');
+      assert.equal(options.headers.get('cookie'), null);
+      assert.equal(options.headers.get('authorization'), null);
+      assert.equal(options.cache, 'no-store');
+      assert.equal(options.redirect, 'manual');
+      return Response.json(body, {status});
+    };
+    assert.deepEqual(JSON.parse(JSON.stringify(await bootstrap.loadIdentityMethod(true))), expected);
+    const hosted = await bootstrap.loadIdentityMethod(false);
+    assert.equal(Boolean(hosted.unavailable), !expected.enabled);
+  }
+  context.fetch = async () => new Response('invalid synthetic JSON', {status:200});
+  assert.equal((await bootstrap.loadIdentityMethod()).unavailable, true);
+  context.fetch = (_url, options) => new Promise((_, reject) => {
+    options.signal.addEventListener('abort', () => reject(options.signal.reason), {once:true});
+  });
+  let watchdog;
+  try {
+    const result = await Promise.race([
+      bootstrap.loadIdentityMethod(),
+      new Promise((_, reject) => {watchdog=setTimeout(() => reject(new Error('Sign-in bootstrap deadline exceeded')), 3000);}),
+    ]);
+    assert.equal(result.unavailable, true);
+  } finally {clearTimeout(watchdog);}
+  console.log('Identity method bootstrap: PASS; native/shared rendering capability, explicit legacy404, credential-free transport, malformed/unavailable responses and bounded timeout');
+}
+
 async function main() {
   const response = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {
     headers: {
@@ -57,6 +110,26 @@ async function main() {
   assert.equal(upstream.headers.get('cookie'), 'onesa_session=synthetic-session; onesa_csrf=synthetic-csrf');
   assert.equal(upstream.headers.get('x-csrf-token'), 'synthetic-csrf');
   assert.equal(upstream.headers.get('origin'), 'https://preview.example.invalid');
+
+  context.fetch = async (url, options) => {
+    fetches++;
+    upstream = {url, ...options};
+    return new Response('synthetic cookie response', {status:200, headers:[
+    ['set-cookie', 'onesa_session=synthetic-session; Path=/; HttpOnly; Secure; SameSite=Lax'],
+    ['set-cookie', 'onesa_csrf=synthetic-csrf; Path=/; Secure; SameSite=Lax'],
+    ['set-cookie', 'onesa_identity_flow=synthetic-flow; Path=/; HttpOnly; Secure; SameSite=Lax'],
+    ['set-cookie', '_vercel_sso_token=provider-cookie; Path=/; Secure'],
+    ['set-cookie', 'unexpected=untrusted; Path=/'],
+    ]});
+  };
+  const cookieResponse = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/onesa/exchange'));
+  assert.deepEqual(cookieResponse.headers.getSetCookie().map(value => value.split(';', 1)[0]), [
+    'onesa_session=synthetic-session',
+    'onesa_csrf=synthetic-csrf',
+    'onesa_identity_flow=synthetic-flow',
+  ], 'Only application-owned cookies may cross the BFF boundary');
+  assert.equal(cookieResponse.headers.get('cache-control'), 'no-store');
+
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
   const requestIds = new Set();
   for (const headers of [
@@ -97,7 +170,6 @@ async function main() {
     assert.equal(upstream.headers.get('cookie'), cookie);
   }
   for (const [method, route] of [
-    ['POST', '/api/v1/auth/login'], ['POST', '/api/v1/auth/register'],
     ['POST', '/api/v1/auth/me'], ['HEAD', '/api/v1/auth/me'], ['OPTIONS', '/api/v1/auth/me'],
     ['GET', '/api/v1/auth/me/'], ['GET', '/api/v1/models'], ['GET', '/api/v1/knowledge/documents'],
     ['GET', '/health'], ['GET', '/ready'],
@@ -106,6 +178,36 @@ async function main() {
     await exported.proxy(new Request('https://preview.example.invalid' + route, {method}));
     assert.equal(fetches, count + 1, 'The fast path is confined to one exact GET');
   }
+  for (const route of ['login', 'register', 'recovery/request', 'recovery/complete']) {
+    const before = fetches;
+    const result = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/' + route, {method:'POST'}));
+    assert.equal(result.status, 403);
+    assert.equal((await result.json()).error.code, 'shared_sign_in_required');
+    assert.equal(fetches, before);
+  }
+  const configuredBase = context.process.env.ONESA_API_URL;
+  context.process.env.ONESA_API_URL = 'http://api:8000';
+  for (const [origin, hosted, expected] of [
+    ['http://localhost:3100', false, 200],
+    ['http://localhost:3100', true, 403],
+    ['https://preview.example.invalid', false, 403],
+  ]) {
+    if (hosted) context.process.env.VERCEL = '1';
+    else delete context.process.env.VERCEL;
+    const result = await exported.proxy(new Request(origin + '/api/v1/auth/register', {method:'POST'}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'http://localhost:3100';
+  const listener = 'http://0.0.0.0:3000/api/v1/auth/register';
+  for (const [host, expected] of [['localhost:3100', 200], ['public.example.invalid', 403], ['localhost:9999', 403]]) {
+    const result = await exported.proxy(new Request(listener, {method:'POST', headers:{host}}));
+    assert.equal(result.status, expected);
+  }
+  context.process.env.ONESA_PUBLIC_ORIGIN = 'https://platform.example.invalid';
+  const hostedOrigin = await exported.proxy(new Request('http://localhost/api/v1/auth/register', {method:'POST', headers:{host:'localhost'}}));
+  assert.equal(hostedOrigin.status, 403);
+  delete context.process.env.ONESA_PUBLIC_ORIGIN;
+  context.process.env.ONESA_API_URL = configuredBase;
   for (const [variable, value] of [['ONESA_API_URL', 'https://invalid.example/private'], ['ONESA_PROXY_TIMEOUT_SECONDS', '0']]) {
     const prior = context.process.env[variable], count = fetches;
     context.process.env[variable] = value;
@@ -131,8 +233,12 @@ async function main() {
   assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=revoked'}}))).status, 401);
   assert.equal(fetches, count + 1);
   context.fetch = async () => {fetches++; throw new Error('Synthetic sleeping backend unavailable');};
-  assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}))).status, 503);
+  const unavailable = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}));
+  assert.equal(unavailable.status, 503);
+  assert.equal(unavailable.headers.get('cache-control'), 'no-store');
+  assert.equal(unavailable.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(fetches, count + 2);
-  console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 10 unchanged-route, configuration, sleeping-upstream and failed-session cases');
+  console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 8 unchanged-route, 4 hosted credential denials, configuration, sleeping-upstream and failed-session cases');
+  await identityMethodBootstrap();
 }
 main().catch(error => {console.error(error);process.exitCode=1;});

@@ -226,6 +226,12 @@ erDiagram
     UUID lease_id
     VARCHAR_200_ provider_id
   }
+  identity_sessions {
+    UUID session_id PK
+    VARCHAR_1000_ issuer
+    VARCHAR_36_ subject
+    VARCHAR_8192_ encrypted_token
+  }
   identity_tokens {
     VARCHAR_20_ purpose
     VARCHAR_254_ email
@@ -237,6 +243,13 @@ erDiagram
     TIMESTAMP_WITH_TIME_ZONE revoked_at
     UUID id PK
     TIMESTAMP_WITH_TIME_ZONE created_at
+  }
+  identity_transactions {
+    VARCHAR_64_ state_hash PK
+    VARCHAR_64_ browser_hash
+    VARCHAR_16384_ payload
+    TIMESTAMP_WITH_TIME_ZONE expires_at
+    TIMESTAMP_WITH_TIME_ZONE consumed_at
   }
   industrial_investigations {
     UUID user_id FK
@@ -279,6 +292,13 @@ erDiagram
     VARCHAR_64_ key PK
     INTEGER count
     TIMESTAMP_WITH_TIME_ZONE expires_at
+  }
+  shared_identities {
+    VARCHAR_1000_ issuer
+    VARCHAR_36_ subject
+    UUID user_id FK
+    UUID id PK
+    TIMESTAMP_WITH_TIME_ZONE created_at
   }
   trips {
     UUID user_id FK
@@ -423,12 +443,14 @@ erDiagram
   users ||--o{ documents : "user_id"
   users ||--o{ identity_audit : "actor_id"
   identity_tokens ||--o{ identity_mail : "token_id"
+  auth_sessions ||--o{ identity_sessions : "session_id"
   users ||--o{ identity_tokens : "user_id"
   users ||--o{ industrial_investigations : "user_id"
   users ||--o{ inference_runs : "user_id"
   conversations ||--o{ inference_runs : "conversation_id"
   conversations ||--o{ messages : "conversation_id"
   users ||--o{ model_leases : "user_id"
+  users ||--o{ shared_identities : "user_id"
   users ||--o{ trips : "user_id"
   twin_templates ||--o{ twin_assets : "template_id"
   users ||--o{ twin_assets : "user_id"
