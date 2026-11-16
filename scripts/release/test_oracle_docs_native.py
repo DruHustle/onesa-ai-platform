@@ -30,7 +30,7 @@ class NativeCustodyTests(unittest.TestCase):
     def setUp(self):
         OwnerStoreTests.setUp(self)
         self.store.db.close()
-        profile = self.policy["components"].pop("DruHustle/onesa-company-portal:api")
+        profile = self.policy["components"].pop("DruHustle/onesa-portal:api")
         profile["qualification_attempt_limit"] = 1
         self.binding.update(
             repository="DruHustle/onesa-ai-platform", component="docs-public"

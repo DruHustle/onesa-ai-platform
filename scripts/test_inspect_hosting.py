@@ -136,7 +136,7 @@ class HostingInspectionTests(unittest.TestCase):
             patch("repair_hosting.write_json") as write,
         ):
             result = repair_hosting.repair_render(
-                "DruHustle/onesa-company-portal", "srv-testonly", True
+                "DruHustle/onesa-portal", "srv-testonly", True
             )
             self.assertFalse(result["repository_matches"])
             write.assert_not_called()
