@@ -136,10 +136,64 @@ class HostingInspectionTests(unittest.TestCase):
             patch("repair_hosting.write_json") as write,
         ):
             result = repair_hosting.repair_render(
-                "DruHustle/onesa-company-portal", "srv-testonly", True
+                "DruHustle/onesa-portal", "srv-testonly", True
             )
             self.assertFalse(result["repository_matches"])
             write.assert_not_called()
+
+    def test_renamed_portal_inspection_selects_existing_component_layout(self):
+        with (
+            patch.dict(
+                os.environ, {"GITHUB_REPOSITORY": "DruHustle/onesa-portal"}, clear=True
+            ),
+            patch("inspect_hosting.render", return_value={}) as render,
+            patch("inspect_hosting.vercel", return_value={}) as vercel,
+            patch("inspect_hosting.get_json", return_value=([], 200)) as get,
+            patch("builtins.print"),
+        ):
+            inspect_hosting.main()
+        self.assertEqual(render.call_count, 2)
+        self.assertEqual(
+            render.call_args_list[0].args[3:],
+            ("onesa-company-portal-backend", "/api/v1/ready"),
+        )
+        self.assertEqual(render.call_args_list[1].args[0], "worker")
+        self.assertEqual(vercel.call_args.args[0], "onesa-company-portal-frontend")
+        self.assertEqual(
+            get.call_args.args[1], "services?type=background_worker&limit=100"
+        )
+
+    def test_renamed_portal_repair_keeps_main_gate_and_existing_components(self):
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    "GITHUB_REPOSITORY": "DruHustle/onesa-portal",
+                    "GITHUB_REF": "refs/heads/main",
+                },
+                clear=True,
+            ),
+            patch("repair_hosting.repair_render", return_value={}) as render,
+            patch("repair_hosting.repair_vercel", return_value={}) as vercel,
+            patch("builtins.print"),
+        ):
+            repair_hosting.main()
+            self.assertEqual(render.call_count, 2)
+            self.assertEqual(
+                render.call_args_list[0].args, ("DruHustle/onesa-portal", "", True)
+            )
+            self.assertEqual(
+                render.call_args_list[1].args,
+                ("DruHustle/onesa-portal", "", True, True),
+            )
+            vercel.assert_called_once_with("DruHustle/onesa-portal", True)
+            render.reset_mock()
+            with (
+                patch.dict(os.environ, {"GITHUB_REF": "refs/heads/dev"}),
+                self.assertRaises(SystemExit),
+            ):
+                repair_hosting.main()
+            render.assert_not_called()
 
     def test_commit_output_rejects_arbitrary_provider_text(self):
         self.assertIsNone(inspect_hosting.safe_commit("private-marker"))

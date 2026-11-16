@@ -248,7 +248,7 @@ def vercel(expected_root, required):
 
 
 def main():
-    portal = os.environ.get("GITHUB_REPOSITORY", "").endswith("/onesa-company-portal")
+    portal = os.environ.get("GITHUB_REPOSITORY", "").endswith("/onesa-portal")
     backend_root = (
         "onesa-company-portal-backend" if portal else "onesa-ai-platform-backend"
     )
