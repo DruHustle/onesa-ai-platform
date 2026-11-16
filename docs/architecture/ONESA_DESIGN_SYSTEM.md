@@ -1,6 +1,6 @@
 # Onesa Design System
 
-Purpose: maintain the shared interface contract and its independently adopted product variants. Audience: frontend engineers and authorized reviewers. Classification: INTERNAL. Owner: Onesa frontend maintainers; canonical token owner: `DruHustle/onesa-company-portal`. Contract version: 1.0.0. Source verification: 2026-10-14; hosted acceptance is recorded separately in the protected release evidence.
+Purpose: maintain the shared interface contract and its independently adopted product variants. Audience: frontend engineers and authorized reviewers. Classification: INTERNAL. Owner: Onesa frontend maintainers; canonical token owner: `DruHustle/onesa-portal`. Contract version: 1.0.0. Source verification: 2026-10-14; hosted acceptance is recorded separately in the protected release evidence.
 
 ## Foundation and ownership
 
