@@ -61,10 +61,7 @@ class IdentityConfig:
                 or parsed.password
                 or parsed.query
                 or parsed.fragment
-                or (
-                    parsed.scheme != "https"
-                    and not (local and parsed.scheme == "http")
-                )
+                or (parsed.scheme != "https" and not (local and parsed.scheme == "http"))
             ):
                 raise ValueError(f"Onesa identity {name} requires an exact trusted HTTPS URL")
         if self.audience:

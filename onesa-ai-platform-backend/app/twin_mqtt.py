@@ -75,9 +75,7 @@ def translate(config: MqttConfig, topic: str, payload: bytes) -> Batch:
         raise ValueError("Smart Factory timestamp must be epoch milliseconds")
     observed = datetime.fromtimestamp(timestamp / 1000, UTC)
     status = record.get("sensorStatus")
-    if status is not None and (
-        not isinstance(status, str) or status not in {"ok", "read_error"}
-    ):
+    if status is not None and (not isinstance(status, str) or status not in {"ok", "read_error"}):
         raise ValueError("Unsupported MQTT source quality")
     quality = {None: "unknown", "ok": "good", "read_error": "bad"}[status]
     samples = []

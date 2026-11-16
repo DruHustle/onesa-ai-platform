@@ -90,7 +90,7 @@ def validate(config: IdentityConfig, packed: str, nonce: str | None = None) -> I
         # PyJWT's audience check accepts a matching member of a larger aud list.
         # This application contract deliberately requires the single AI API audience
         # and the single registered client audience for the ID token.
-        if not exact_audience(access.get("aud"), config.audience) or not exact_audience(
+        if access.get("aud") != config.audience or not exact_audience(
             profile.get("aud"), config.client_id
         ):
             raise rejected()

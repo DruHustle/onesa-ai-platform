@@ -294,16 +294,18 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
     state, nonce, verifier = new_transaction()
     if body.mobile:
         state = "native_" + state
-    browser = None if body.mobile else secrets.token_urlsafe(32)
+    browser = secrets.token_urlsafe(32)
+    browser_hash = digest(browser)
+    if body.mobile:
+        challenge = body.code_challenge
+        if challenge is None:
+            fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+        browser_hash = digest("native:" + challenge)
     db.execute(delete(IdentityTransaction).where(IdentityTransaction.expires_at <= now()))
     db.add(
         IdentityTransaction(
             state_hash=digest(state),
-            browser_hash=(
-                digest("native:" + body.code_challenge)
-                if body.mobile
-                else digest(browser)
-            ),
+            browser_hash=browser_hash,
             payload=encrypt(
                 request,
                 json.dumps(
@@ -342,6 +344,7 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
             code_challenge=body.code_challenge,
         )
     )
+
 
 def transaction(request: Request, db: Session, state: str | None = None) -> IdentityTransaction:
     pieces = request.cookies.get(FLOW_COOKIE, "").split(".")
@@ -428,6 +431,7 @@ def finish_sign_in(
     *,
     native_verifier: str | None = None,
 ) -> Response:
+    row: IdentityTransaction | None
     if native_verifier is None:
         row = transaction(request, db, state)
     else:
@@ -462,6 +466,8 @@ def finish_sign_in(
     try:
         config = configuration(request, native=payload.get("native") is True)
         verifier = native_verifier if payload.get("native") is True else payload["verifier"]
+        if not isinstance(verifier, str):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
         if config.audience:
             from app.managed_oidc import exchange
 

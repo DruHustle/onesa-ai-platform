@@ -114,9 +114,7 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
             try:
                 line = pending.decode("utf-8")
             except UnicodeDecodeError as exc:
-                raise InferenceError(
-                    "generation_failed", reason="invalid_stream_utf8"
-                ) from exc
+                raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
             pending.clear()
             if chunk[delimiter] == 13:
                 if delimiter + 1 < len(chunk) and chunk[delimiter + 1] == 10:
@@ -133,6 +131,7 @@ async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
             yield pending.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
+
 
 @contextmanager
 def observe_generation(stats: GenerationStats) -> Iterator[None]:
@@ -225,8 +224,7 @@ class OpenAIModelClient:
                 payload = await bounded_provider_json(response)
             rows = payload.get("data")
             return isinstance(rows, list) and any(
-                isinstance(row, dict) and row.get("id") == self.settings.model_name
-                for row in rows
+                isinstance(row, dict) and row.get("id") == self.settings.model_name for row in rows
             )
 
     def completion_url(self) -> str:
@@ -353,9 +351,13 @@ class CloudflareModelClient(OpenAIModelClient):
             ) as response:
                 data = await bounded_provider_json(response)
             rows = data.get("result")
-            return data.get("success") is True and isinstance(rows, list) and any(
-                isinstance(row, dict) and row.get("name") == self.settings.model_name
-                for row in rows
+            return (
+                data.get("success") is True
+                and isinstance(rows, list)
+                and any(
+                    isinstance(row, dict) and row.get("name") == self.settings.model_name
+                    for row in rows
+                )
             )
 
 

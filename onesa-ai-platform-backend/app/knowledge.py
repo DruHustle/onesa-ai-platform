@@ -89,10 +89,7 @@ def embed(
                 ) as response:
                     response.raise_for_status()
                     if (
-                        response.headers.get("content-type", "")
-                        .split(";", 1)[0]
-                        .strip()
-                        .lower()
+                        response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
                         != "application/json"
                         or response.headers.get("content-encoding", "identity").lower()
                         != "identity"

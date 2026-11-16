@@ -81,7 +81,7 @@ def test_query_instruction_applies_only_to_query_and_dimension_is_explicit():
 
     def provider(request):
         requests.append(json.loads(request.content))
-        assert request.headers["authorization"] == "Bearer synthetic-embedding-key"
+        assert request.headers["authorization"] == "Bearer " + KEY
         assert request.headers["accept-encoding"] == "identity"
         return httpx.Response(
             200,
@@ -93,7 +93,7 @@ def test_query_instruction_applies_only_to_query_and_dimension_is_explicit():
     embed(["Document passage"], config, transport=transport)
     embed(["Search question"], config, query=True, transport=transport)
     assert requests[0] == {"model": MODEL, "input": ["Document passage"], "dimensions": 256}
-    assert requests[1]["input"] == ["Instruct: Retrieve relevant passages\\nQuery:Search question"]
+    assert requests[1]["input"] == ["Instruct: Retrieve relevant passages\nQuery:Search question"]
 
 
 def test_http_embedding_rejects_oversized_provider_response():
