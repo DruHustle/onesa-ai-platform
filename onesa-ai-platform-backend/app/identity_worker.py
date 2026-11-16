@@ -167,7 +167,7 @@ def main() -> None:
     engine = None
     try:
         engine = make_engine(settings.database_url)
-        with httpx.Client(follow_redirects=False) as client:
+        with httpx.Client(follow_redirects=False, trust_env=False) as client:
             run_worker(engine, settings, client, stop, 1 if args.once else args.max_jobs)
     finally:
         if engine is not None:

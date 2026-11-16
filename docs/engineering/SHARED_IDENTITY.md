@@ -6,6 +6,12 @@ existing owner-controlled dev → staging → main release, current deployment
 receipts and exact-source acceptance remain required. Oracle hosting stays in
 place; this change provisions no paid identity service or extra application.
 
+## Managed issuer pilot
+
+`ONESA_IDENTITY_AUDIENCE` opts the existing web entry and API into managed Auth0 code/PKCE. Configure the exact issuer including trailing slash, client ID and secret, registered callback, account UI URL, and verified current/next public JWKS under `ONESA_IDENTITY_PUBLIC_JWKS`. Configure `ONESA_IDENTITY_MAPPING_ISSUER` as the exact historical Portal issuer namespace already holding this installation’s UUID mappings. This field is for database lookups only. The cryptographic issuer remains the managed IdP. The old account map, user IDs, per-user data, disabled-account checks and local credential proof for existing unlinked accounts stay in force.
+
+APIs validate the RS256 resource token for the AI API plus a same-provider, same-subject signed confidential-client ID token. The browser flow verifies the stored nonce once. Emails and names come from the signed verified profile. The stable Onesa UUID, explicit `ai` access and scoped role come from the resource token. Administrator operations require provider MFA. Credentials and the code verifier stay server-side. API restarts can validate still-live sessions using the provisioned JWKS without contacting Identity, through the shorter of token and application expiry. Tokens longer than five minutes are rejected. Rotate JWKS to include both keys before switching the issuer's signing key. Removing the local host session does not assert global Auth0 logout. Provider tenant setup, actual client enrollment, and release evidence remain environment-specific.
+
 ## Account and administration experience
 
 When enabled, the AI entry point offers **Continue with Onesa**, account creation

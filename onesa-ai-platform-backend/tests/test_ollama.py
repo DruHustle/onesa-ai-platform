@@ -218,3 +218,18 @@ def test_native_ollama_without_key_omits_empty_authorization() -> None:
         )
 
     asyncio.run(check())
+
+
+def test_model_provider_client_ignores_ambient_proxy_configuration(monkeypatch):
+    observed = {}
+
+    class Client:
+        def __init__(self, **kwargs):
+            observed.update(kwargs)
+
+    monkeypatch.setattr("app.inference.httpx.AsyncClient", Client)
+    client = OllamaModelClient(
+        Settings(model_backend="ollama", model_base_url="http://127.0.0.1:11434/v1")
+    )
+    client.connection()
+    assert observed["trust_env"] is False

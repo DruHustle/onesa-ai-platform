@@ -38,6 +38,24 @@ def settings(**changes):
     return Settings(**(values | changes))
 
 
+def test_cloudflare_model_catalogue_health_response_is_bounded():
+    client = CloudflareModelClient(
+        settings(),
+        httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                headers={"content-type": "application/json"},
+                content=b" " * (1024 * 1024 + 1),
+                request=request,
+            )
+        ),
+    )
+
+    with pytest.raises(InferenceError) as error:
+        asyncio.run(client.healthy())
+    assert error.value.code == "invalid_inference_response"
+
+
 def test_cloudflare_selection_catalog_and_native_stream():
     config = settings()
     assert isinstance(build_model_client(config), CloudflareModelClient)
@@ -251,3 +269,23 @@ def test_input_limits_reject_before_request():
     for texts in ([], ["text"] * 17, ["x" * 4001]):
         with pytest.raises(ValueError):
             embeddings(texts, settings(), transport=httpx.MockTransport(unexpected))
+
+
+def test_embedding_provider_ignores_ambient_proxy_configuration(monkeypatch):
+    config = settings()
+    observed = {}
+    real_client = httpx.Client
+
+    def client_factory(*args, **kwargs):
+        observed.update(kwargs)
+        return real_client(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "Client", client_factory)
+    embeddings(
+        ["bounded synthetic input"],
+        config,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, json=response_for([[1.0] * 1024]))
+        ),
+    )
+    assert observed["trust_env"] is False

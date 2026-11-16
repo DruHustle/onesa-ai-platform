@@ -520,7 +520,7 @@ Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "Uniq
 | user_id | UUID | False | FK users.id / CASCADE |
 | destination | VARCHAR(200) | False |  |
 | duration | INTEGER | False |  |
-| budget | FLOAT | False |  |
+| budget | DOUBLE PRECISION | False |  |
 | currency | VARCHAR(3) | False |  |
 | preferences | VARCHAR | False |  |
 | revision | INTEGER | False | ORM default |

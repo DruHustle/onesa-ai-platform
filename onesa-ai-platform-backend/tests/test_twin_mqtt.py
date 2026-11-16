@@ -2,9 +2,10 @@
 
 import json
 
+import httpx
 import pytest
 
-from app.twin_mqtt import MqttConfig, translate
+from app.twin_mqtt import MqttConfig, retryable_platform_response, translate
 
 
 @pytest.fixture
@@ -40,6 +41,9 @@ def test_source_quality_is_explicit_and_missing_quality_is_unknown(config, statu
     "update",
     [
         {"sensorStatus": "unverified"},
+        {"sensorStatus": []},
+        {"sensorStatus": {}},
+        {"sensorStatus": 0},
         {"deviceId": "another-device"},
         {"timestamp": True},
         {"vibration": True},
@@ -59,3 +63,35 @@ def test_remote_plaintext_configuration_is_rejected(config):
         MqttConfig.model_validate({**config.model_dump(), "broker": "example.com"})
     with pytest.raises(ValueError):
         MqttConfig.model_validate({**config.model_dump(), "api_origin": "http://example.com"})
+
+
+@pytest.mark.parametrize(
+    ("status", "body", "retry"),
+    [
+        (200, b"", False),
+        (201, b"", True),
+        (302, b"", True),
+        (400, b"", True),
+        (401, b"", True),
+        (403, b"", True),
+        (404, b"", True),
+        (408, b"", True),
+        (422, b"", True),
+        (425, b"", True),
+        (429, b"", True),
+        (503, b"", True),
+        (409, b"not-json", True),
+        (409, b"[]", True),
+        (409, b'{"error": null}', True),
+        (409, b'{"error": []}', True),
+        (409, b'{"error": {"code": "reading_capacity"}}', True),
+        (409, b'{"error": {"code": "unrecognized_conflict"}}', True),
+        (409, b'{"error": {"code": "sample_identity_conflict"}}', False),
+        (409, b'{"error": {"code": "sample_time_conflict"}}', False),
+    ],
+)
+def test_unknown_platform_conflict_never_acks_mqtt_qos_evidence(status, body, retry):
+    # An invalid 409 body used to raise JSONDecodeError in the callback,
+    # which was treated as malformed source data and acknowledged (lost).
+    response = httpx.Response(status, content=body)
+    assert retryable_platform_response(response) is retry
