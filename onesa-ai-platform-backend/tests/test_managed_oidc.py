@@ -67,17 +67,24 @@ def signed():
     return config, uid, pair
 
 
-# OIDC permits a single-item aud array; extra recipients are not accepted for this client.
-def test_singleton_audience_arrays_remain_compatible(signed):
+# ID-token audiences permit the singleton OIDC representation.
+def test_singleton_id_token_audience_array_remains_compatible(signed):
     config, uid, pair = signed
     packed = json.dumps(
         pair(
-            {"aud": [config.audience]},
+            {"aud": config.audience},
             {"aud": [config.client_id]},
         )
     )
     identity = validate(config, packed)
     assert identity.subject == uid and identity.applications == ("ai",)
+
+
+@pytest.mark.parametrize("additional", [[], ["https://other-product.example"]])
+def test_resource_token_audience_must_be_one_exact_string(signed, additional):
+    config, _, pair = signed
+    with pytest.raises(IdentityError):
+        validate(config, json.dumps(pair({"aud": [config.audience, *additional]})))
 
 
 def test_provider_exchange_and_local_key_restart(signed):

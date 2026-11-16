@@ -449,11 +449,14 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     started = threading.Event()
+    release = threading.Event()
 
     class Slow(MockModelClient):
         async def stream(self, messages):
             started.set()
-            await asyncio.sleep(0.2)
+            assert await asyncio.to_thread(release.wait, 10), (
+                "Concurrent request did not release generation"
+            )
             yield "Complete response"
 
     signup(api)
@@ -462,9 +465,12 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     body = {"conversation_id": identifier, "content": "First", "stream": False}
     with ThreadPoolExecutor(max_workers=1) as pool:
         future = pool.submit(api.post, "/api/v1/chat/completions", json=body)
-        assert started.wait(timeout=2)
-        assert api.post("/api/v1/chat/completions", json=body).status_code == 409
-        assert future.result(timeout=3).status_code == 200
+        try:
+            assert started.wait(timeout=5)
+            assert api.post("/api/v1/chat/completions", json=body).status_code == 409
+        finally:
+            release.set()
+        assert future.result(timeout=5).status_code == 200
 
 
 def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, pg: Engine) -> None:
@@ -572,6 +578,7 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
     assert len(history) == 5
     assert history[-1]["content"]["inference"]["model"]["model_identifier"] == "test-model"
 
+
 def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8():
     import asyncio
 
@@ -588,9 +595,10 @@ def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8(
     async def collect(response):
         return [line async for line in inference.bounded_sse_lines(response)]
 
-    assert asyncio.run(
-        collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))
-    ) == ['data: {"text":"café"}', ""]
+    assert asyncio.run(collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))) == [
+        'data: {"text":"café"}',
+        "",
+    ]
     assert asyncio.run(collect(Chunks(b"data: first\rdata: second\r"))) == [
         "data: first",
         "data: second",
