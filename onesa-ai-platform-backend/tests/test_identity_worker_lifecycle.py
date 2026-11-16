@@ -40,7 +40,13 @@ def test_sigterm_finishes_current_claim_and_closes_resources(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["identity_worker"])
     monkeypatch.setattr(worker, "Settings", lambda: Settings(database_url="postgresql://fixture"))
     monkeypatch.setattr(worker, "make_engine", lambda _: engine)
-    monkeypatch.setattr(worker.httpx, "Client", lambda **_: client)
+    client_options = {}
+
+    def client_factory(**kwargs):
+        client_options.update(kwargs)
+        return client
+
+    monkeypatch.setattr(worker.httpx, "Client", client_factory)
     monkeypatch.setattr(worker, "maintenance", lambda _: None)
     previous = signal.getsignal(signal.SIGTERM)
 
@@ -55,6 +61,7 @@ def test_sigterm_finishes_current_claim_and_closes_resources(monkeypatch):
     assert process.call_count == 1
     engine.dispose.assert_called_once()
     client.__exit__.assert_called_once()
+    assert client_options["trust_env"] is False
     assert signal.getsignal(signal.SIGTERM) == previous
 
 

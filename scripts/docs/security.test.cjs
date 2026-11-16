@@ -6,12 +6,27 @@ const path=require('node:path');
 const os=require('node:os');
 const crypto=require('node:crypto');
 const {createRequire}=require('node:module');
+const http=require('node:http');
+const {callableConsumer,compatiblePatterns,boundedPattern}=require('../glob_security.cjs');
 const root=path.resolve(__dirname,'../..');
 const docsRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));
 const braces=docsRequire('braces');
 const {sprintf,vsprintf}=docsRequire('sprintf-js');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'packages/security/provenance.json'),'utf8'));
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+
+test('GHSA-6pq8-jhm2-2vcw: comma arrays tolerate non-callable own toString values',()=>{
+ const qs=docsRequire('qs');
+ for(const options of [{arrayFormat:'comma'},{arrayFormat:'comma',encodeValuesOnly:true}]){
+  for(const value of ['x',null,42,{}]){
+   let result;
+   assert.doesNotThrow(()=>{result=qs.stringify({a:[{toString:value}]},options);});
+   assert.equal(typeof result,'string');
+  }
+  assert.equal(qs.stringify({a:['first','second']},options),options.encodeValuesOnly?'a=first,second':'a=first%2Csecond');
+ }
+ assert.deepEqual(qs.parse('a%5B0%5D=first&a%5B1%5D=second'),{a:['first','second']});
+});
 
 function checkConsumer(parent,dependency,name){
  const consumer=createRequire(docsRequire.resolve(parent+'/package.json'));
@@ -26,6 +41,8 @@ function checkConsumer(parent,dependency,name){
 test('every affected transitive consumer uses the reviewed local fixes',()=>{
  checkConsumer('micromatch','braces','braces');
  checkConsumer('chokidar','braces','braces');
+ checkConsumer('@svgr/plugin-svgo','deepmerge','deepmerge');
+ checkConsumer('swagger-client','deepmerge','deepmerge');
  const remarkable=createRequire(docsRequire.resolve('remarkable/package.json'));
  const argparse=createRequire(remarkable.resolve('argparse/package.json'));
  const directory=path.dirname(argparse.resolve('sprintf-js/package.json'));
@@ -34,7 +51,102 @@ test('every affected transitive consumer uses the reviewed local fixes',()=>{
  for(const [name,record] of Object.entries(manifest)){
   for(const [file,digest] of Object.entries(record.source_files)) assert.equal(hash(fs.readFileSync(path.join(root,'packages/security',name,file))),digest);
   assert.equal(hash(fs.readFileSync(path.join(root,record.archive))),record.archive_sha256);
+  for(const archive of record.additional_archives||[]) assert.equal(hash(fs.readFileSync(path.join(root,archive))),record.archive_sha256);
  }
+});
+
+test('GHSA-g3hv-75wg-m249: installed Docs matchers bound amplification and preserve reviewed syntax',async()=>{
+ const legacy=callableConsumer(docsRequire,'serve-handler');
+ const swagger=createRequire(docsRequire.resolve('@swagger-api/apidom-reference'));
+ assert.equal(swagger('minimatch/package.json').version,'11.0.1');
+ for(const entry of [legacy,swagger.resolve('minimatch')]){
+  compatiblePatterns(entry);
+  await boundedPattern(entry);
+ }
+});
+
+test('actual serve-handler preserves glob headers, redirects, rewrites and missing-file refusal',async t=>{
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'onesa-serve-compat-'));
+ fs.mkdirSync(path.join(folder,'public'));
+ fs.writeFileSync(path.join(folder,'public','guide.txt'),'synthetic public guide');
+ const handler=docsRequire('serve-handler');
+ const server=http.createServer((request,response)=>handler(request,response,{
+  public:path.join(folder,'public'),cleanUrls:false,directoryListing:false,
+  headers:[{source:'**/*.txt',headers:[{key:'X-Onesa-Fixture',value:'matched'}]}],
+  redirects:[{source:'/legacy',destination:'/guide.txt',type:302}],
+  rewrites:[{source:'/help',destination:'/guide.txt'}],
+ }));
+ t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));fs.rmSync(folder,{recursive:true,force:true});});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const base=`http://127.0.0.1:${server.address().port}`;
+ for(const route of ['/guide.txt','/help']){
+  const response=await fetch(base+route);
+  assert.equal(response.status,200);assert.equal(await response.text(),'synthetic public guide');
+ }
+ assert.equal((await fetch(base+'/guide.txt')).headers.get('x-onesa-fixture'),'matched');
+ const redirected=await fetch(base+'/legacy',{redirect:'manual'});
+ assert.equal(redirected.status,302);assert.equal(redirected.headers.get('location'),'/guide.txt');
+ assert.equal((await fetch(base+'/missing.txt')).status,404);
+});
+
+test('actual Swagger file resolver preserves explicit allowlists and defaults to refusal',()=>{
+ const FileResolver=docsRequire('@swagger-api/apidom-reference/resolve/resolvers/file').default;
+ const resolver=new FileResolver({fileAllowList:['/owned/docs/**/*.yaml']});
+ assert.equal(resolver.canRead({uri:'/owned/docs/api/schema.yaml'}),true);
+ for(const uri of ['/owned/private/key.yaml','/owned/docs/schema.json','https://unowned.invalid/schema.yaml']) assert.equal(resolver.canRead({uri}),false);
+ assert.equal(new FileResolver().canRead({uri:'/owned/docs/schema.yaml'}),false);
+});
+
+for(const entry of ['deepmerge','deepmerge/dist/umd.js']){
+ const merge=docsRequire(entry);
+ test(`GHSA-gcqx-w48m-w2h4: ${entry} preserves prototypes for hostile source and target shapes`,()=>{
+  const payload=()=>JSON.parse('{"__proto__":{"onesaUnownedAdmin":true}}');
+  const nullTarget=Object.assign(Object.create(null),{debug:false});
+  const cases=[
+   [nullTarget,payload(),value=>value],
+   [payload(),{verbose:true},value=>value],
+   [{list:[]},{list:[payload()]},value=>value.list[0]],
+   ...[null,undefined,0,false,'placeholder'].map(session=>[{session},{session:payload()},value=>value.session]),
+  ];
+  for(const [target,source,select] of cases){
+   const result=merge(target,source);const observed=select(result);
+   assert.equal(Object.getPrototypeOf(observed),Object.prototype);
+   assert.equal(Object.hasOwn(observed,'__proto__'),false);
+   assert.equal(observed.onesaUnownedAdmin,undefined);
+   assert.equal(({}).onesaUnownedAdmin,undefined);
+  }
+  assert.equal(nullTarget.debug,false);
+  assert.equal(Object.getPrototypeOf(nullTarget),null);
+  assert.equal(merge(nullTarget,payload()).debug,false);
+ });
+ test(`${entry} rejects dangerous keys before reading their getters`,()=>{
+  let reads=0;const hostile={};
+  Object.defineProperty(hostile,'__proto__',{enumerable:true,get(){reads++;throw new Error('must never read this key');}});
+  assert.deepEqual(merge(hostile,{valid:true}),{valid:true});
+  assert.deepEqual(merge(Object.create(null),hostile),{});
+  assert.equal(reads,0);
+ });
+ test(`${entry} retains nested merges, symbols, arrays and custom merge compatibility`,()=>{
+  const symbol=Symbol('metadata');const target={nested:{a:1},list:[{id:1}],[symbol]:{a:1}};
+  const source={nested:{b:2},list:[{id:2}],[symbol]:{b:2}};const merged=merge(target,source);
+  assert.deepEqual(merged.nested,{a:1,b:2});assert.deepEqual(merged.list,[{id:1},{id:2}]);
+  assert.deepEqual(merged[symbol],{a:1,b:2});assert.notEqual(merged.list[0],target.list[0]);
+  assert.deepEqual(merge.all([{a:1},{b:2}]),{a:1,b:2});
+  assert.deepEqual(merge({list:[1]},{list:[2]},{arrayMerge:(_target,input)=>input}),{list:[2]});
+  assert.deepEqual(merge({label:{value:'a'}},{label:{value:'b'}},{customMerge:key=>key==='label'?(_a,b)=>({value:b.value.toUpperCase()}):undefined}),{label:{value:'B'}});
+  assert.deepEqual(target.nested,{a:1});
+ });
+}
+
+test('real Swagger resolution/request generation and SVGR transformation retain compatibility',async()=>{
+ const Swagger=docsRequire('swagger-client');
+ const spec={openapi:'3.0.3',info:{title:'Synthetic',version:'1.0'},servers:[{url:'https://synthetic.invalid'}],paths:{'/widgets/{id}':{get:{operationId:'getWidget',parameters:[{name:'id',in:'path',required:true,schema:{type:'string'}}],responses:{200:{description:'Owned fixture'}}}}}};
+ const resolved=await Swagger.resolve({spec});assert.deepEqual(resolved.errors,[]);
+ const request=Swagger.buildRequest({spec:resolved.spec,operationId:'getWidget',parameters:{id:'owned'}});
+ assert.equal(request.url,'https://synthetic.invalid/widgets/owned');assert.equal(request.method,'GET');
+ const transform=docsRequire('@svgr/plugin-svgo');
+ const svg=transform('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10H0z"/></svg>',{svgo:true},{componentName:'SyntheticIcon'});
+ assert.match(svg,/<svg/);assert.match(svg,/viewBox="0 0 10 10"/);
 });
 
 for(const method of ['parse','compile','expand','stringify']){

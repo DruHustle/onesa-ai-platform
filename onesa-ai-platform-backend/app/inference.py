@@ -18,9 +18,11 @@ FAILURE_REASONS = frozenset(
     {
         "provider_stream_error",
         "invalid_stream_json",
+        "invalid_stream_utf8",
         "invalid_stream_shape",
         "invalid_stream_delta",
         "stream_terminated_early",
+        "incomplete_response",
         "empty_model_response",
         "response_size_limit",
         "generation_lease_lost",
@@ -50,13 +52,85 @@ class InferenceError(ValueError):
 
 @dataclass
 class GenerationStats:
+    retrieval_latency_ms: int | None = None
+    generation_latency_ms: int | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
     total_seconds: float | None = None
     first_token_seconds: float | None = None
+    finish_reason: str | None = None
 
 
 active_stats: ContextVar[GenerationStats | None] = ContextVar("generation_stats", default=None)
+
+MAX_PROVIDER_METADATA_BYTES = 1024 * 1024
+
+
+async def bounded_provider_json(response: httpx.Response) -> dict[str, Any]:
+    """Read a provider catalogue response with strict media, encoding and byte bounds."""
+    response.raise_for_status()
+    if (
+        response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        != "application/json"
+        or response.headers.get("content-encoding", "identity").lower() != "identity"
+    ):
+        raise InferenceError("invalid_inference_response")
+    content = bytearray()
+    async for part in response.aiter_bytes(chunk_size=64 * 1024):
+        if len(content) + len(part) > MAX_PROVIDER_METADATA_BYTES:
+            raise InferenceError("invalid_inference_response")
+        content.extend(part)
+    try:
+        payload = json.loads(content)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise InferenceError("invalid_inference_response") from exc
+    if not isinstance(payload, dict):
+        raise InferenceError("invalid_inference_response")
+    return payload
+
+
+MAX_SSE_LINE_BYTES = 1024 * 1024
+
+
+async def bounded_sse_lines(response: httpx.Response) -> AsyncIterator[str]:
+    """Decode SSE incrementally and reject an overlong line before buffering it."""
+    pending = bytearray()
+    skip_lf = False
+    async for chunk in response.aiter_bytes():
+        cursor = 1 if skip_lf and chunk.startswith(b"\n") else 0
+        skip_lf = False
+        while cursor < len(chunk):
+            lf = chunk.find(b"\n", cursor)
+            cr = chunk.find(b"\r", cursor)
+            delimiters = [position for position in (lf, cr) if position >= 0]
+            delimiter = min(delimiters) if delimiters else -1
+            end = len(chunk) if delimiter < 0 else delimiter
+            part = chunk[cursor:end]
+            if len(pending) + len(part) > MAX_SSE_LINE_BYTES:
+                raise InferenceError("invalid_inference_response")
+            pending.extend(part)
+            if delimiter < 0:
+                break
+            try:
+                line = pending.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
+            pending.clear()
+            if chunk[delimiter] == 13:
+                if delimiter + 1 < len(chunk) and chunk[delimiter + 1] == 10:
+                    cursor = delimiter + 2
+                else:
+                    cursor = delimiter + 1
+                    if cursor == len(chunk):
+                        skip_lf = True
+            else:
+                cursor = delimiter + 1
+            yield line
+    if pending:
+        try:
+            yield pending.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise InferenceError("generation_failed", reason="invalid_stream_utf8") from exc
 
 
 @contextmanager
@@ -86,9 +160,12 @@ def read_usage(value: Any) -> None:
                 setattr(stats, attribute, count)
 
 
+MAX_MODEL_MESSAGE_CHARS = 32000
+
+
 class ModelMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
-    content: str = Field(min_length=1, max_length=32000)
+    content: str = Field(min_length=1, max_length=MAX_MODEL_MESSAGE_CHARS)
 
 
 class ModelClient(Protocol):
@@ -129,19 +206,26 @@ class OpenAIModelClient:
         return httpx.AsyncClient(
             base_url=self.settings.model_base_url.rstrip("/") + "/",
             timeout=httpx.Timeout(self.settings.generation_timeout, connect=3),
-            headers=(
-                {"Authorization": "Bearer " + self.settings.model_api_key}
-                if self.settings.model_api_key
-                else {}
-            ),
+            headers={
+                **(
+                    {"Authorization": "Bearer " + self.settings.model_api_key}
+                    if self.settings.model_api_key
+                    else {}
+                ),
+                "Accept-Encoding": "identity",
+            },
+            trust_env=False,
             transport=self.transport,
         )
 
     async def healthy(self) -> bool:
         async with self.connection() as client:
-            response = await client.get("models")
-            response.raise_for_status()
-            return any(row.get("id") == self.settings.model_name for row in response.json()["data"])
+            async with client.stream("GET", "models") as response:
+                payload = await bounded_provider_json(response)
+            rows = payload.get("data")
+            return isinstance(rows, list) and any(
+                isinstance(row, dict) and row.get("id") == self.settings.model_name for row in rows
+            )
 
     def completion_url(self) -> str:
         return "chat/completions"
@@ -166,8 +250,11 @@ class OpenAIModelClient:
                 if response.status_code == 404:
                     raise InferenceError("model_not_available")
                 response.raise_for_status()
+                if response.headers.get("content-encoding", "identity").lower() != "identity":
+                    raise InferenceError("invalid_inference_response")
                 ended = False
-                async for line in response.aiter_lines():
+                finished = False
+                async for line in bounded_sse_lines(response):
                     if not line.startswith("data:"):
                         continue
                     payload = line[5:].strip()
@@ -195,14 +282,33 @@ class OpenAIModelClient:
                             else None,
                         )
                     choices = data.get("choices", [])
-                    if not isinstance(choices, list):
+                    if not isinstance(choices, list) or len(choices) > 1:
                         raise InferenceError("generation_failed", reason="invalid_stream_shape")
                     for choice in choices:
+                        # A terminal choice is final. Later choices cannot
+                        # replace an incomplete reason with success or append
+                        # more text; a usage-only frame remains supported.
+                        if finished:
+                            raise InferenceError("generation_failed", reason="invalid_stream_shape")
                         if not isinstance(choice, dict) or not isinstance(
                             choice.get("delta", {}), dict
                         ):
                             raise InferenceError("generation_failed", reason="invalid_stream_shape")
                         content = choice.get("delta", {}).get("content")
+                        reason = choice.get("finish_reason")
+                        if reason is not None:
+                            if not isinstance(reason, str) or reason not in {
+                                "stop",
+                                "length",
+                                "content_filter",
+                                "tool_calls",
+                                "function_call",
+                            }:
+                                raise InferenceError("invalid_inference_response")
+                            stats = active_stats.get()
+                            if stats is not None:
+                                stats.finish_reason = reason
+                            finished = True
                         if content is not None:
                             if not isinstance(content, str):
                                 raise InferenceError(
@@ -225,10 +331,11 @@ class CloudflareModelClient(OpenAIModelClient):
     """Workers AI native endpoint with strict text choices; no response coercion."""
 
     def completion_url(self) -> str:
-        # The compatible endpoint has emitted numeric content deltas for this
-        # model. The native route preserves its text choices, including leading
-        # zeroes. Keep the shared strict parser; the duplicate `response` field
-        # is not a second output channel or a fallback.
+        # Earlier provider responses on the compatible endpoint emitted numeric
+        # content deltas. Retain the native route and strict text choices across
+        # reviewed model changes, including leading zeroes. A duplicate `response`
+        # field is not a second output channel or a fallback; each model still
+        # requires hosted streaming acceptance.
         return (
             self.settings.model_base_url.rstrip("/").removesuffix("/v1")
             + "/run/"
@@ -237,17 +344,20 @@ class CloudflareModelClient(OpenAIModelClient):
 
     async def healthy(self) -> bool:
         async with self.connection() as client:
-            response = await client.get(
+            async with client.stream(
+                "GET",
                 self.settings.model_base_url.rstrip("/").removesuffix("/v1") + "/models/search",
                 params={"search": self.settings.model_name, "per_page": 20},
-            )
-            response.raise_for_status()
-            if len(response.content) > 1024 * 1024:
-                return False
-            data = response.json()
-            return data.get("success") is True and any(
-                isinstance(row, dict) and row.get("name") == self.settings.model_name
-                for row in data.get("result", [])
+            ) as response:
+                data = await bounded_provider_json(response)
+            rows = data.get("result")
+            return (
+                data.get("success") is True
+                and isinstance(rows, list)
+                and any(
+                    isinstance(row, dict) and row.get("name") == self.settings.model_name
+                    for row in rows
+                )
             )
 
 

@@ -20,6 +20,28 @@ def test_liveness_without_database_is_not_application_readiness() -> None:
         assert api.get("/core-ready").status_code == 503
 
 
+def test_liveness_never_checks_out_configured_database(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sqlalchemy import create_engine, event
+
+    engine = create_engine("postgresql+psycopg://synthetic@127.0.0.1:1/synthetic_test")
+    attempts = []
+
+    @event.listens_for(engine, "do_connect")
+    def refuse_connection(*args: object) -> None:
+        attempts.append(True)
+        raise RuntimeError("Database intentionally unavailable")
+
+    monkeypatch.setattr("app.main.make_engine", lambda _: engine)
+    with TestClient(create_app(Settings(database_url="synthetic"))) as api:
+        for _ in range(20):
+            response = api.get("/health", cookies={"onesa_session": "synthetic"})
+            assert response.status_code == 200
+            assert response.headers["Cache-Control"] == "no-store"
+        assert attempts == []
+        assert api.get("/core-ready").status_code == 503
+        assert len(attempts) > 0
+
+
 @pytest.mark.parametrize("failure", [False, RuntimeError("internal secret")])
 def test_unavailable_backend_is_not_ready(failure: bool | Exception) -> None:
     class Unavailable(MockModelClient):

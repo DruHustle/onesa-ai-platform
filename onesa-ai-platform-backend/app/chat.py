@@ -1,21 +1,25 @@
 import asyncio
 import json
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
+from contextlib import aclosing, suppress
 from datetime import timedelta
+from time import monotonic
 from typing import Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Request
+from anyio import CancelScope
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.auth import DB, Auth
+from app.auth import DB, Auth, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
+    MAX_MODEL_MESSAGE_CHARS,
     GenerationStats,
     InferenceError,
     ModelMessage,
@@ -23,23 +27,51 @@ from app.inference import (
     observe_generation,
 )
 from app.knowledge import Search, retrieve
-from app.models import Conversation, InferenceRun, Message, now
+from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from app.responses import ModelList, ModelOut
 from app.schemas import ChatRequest
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 CONVERSATION_INSTRUCTION = (
-    "You are Onesa, a conversational AI assistant. Use the conversation messages supplied in "
-    "this request as your available context, including facts the user stated earlier. "
-    "When asked to recall a fact, answer from those messages; if the fact is absent, say so. "
-    "Do not claim that supplied earlier messages are inaccessible. Do not claim access to "
-    "other conversations, private accounts, external systems or tools that were not supplied."
+    "You are Onesa, a conversational AI assistant. The user and assistant messages following "
+    "this instruction are the available history of this conversation. Read that history "
+    "before answering a follow-up question. Only messages included in this request are available; "
+    "older messages or parts of long saved messages may be omitted to fit context limits. "
+    "If a requested fact is not present in the supplied context, say you cannot see it in the "
+    "available history; do not claim it was never stated. When recalling a name, code, identifier "
+    "or other stated value, copy it exactly from the user's message, preserving its spelling, "
+    "digits and punctuation. Refer to other conversations, private accounts, external systems "
+    "or tool results only when their data has been explicitly supplied."
 )
+
+MAX_HISTORY_MESSAGES = 30
+TRUNCATED_CONVERSATION_NOTICE = (
+    f"[Earlier conversation messages omitted from model context: only the most recent "
+    f"{MAX_HISTORY_MESSAGES} saved messages are supplied. Do not infer their contents. "
+    "If the user asks about omitted history, explain that it is not available in this request.]"
+)
+
+
+TRUNCATED_HISTORY_PREFIX = "[Earlier part of this saved message omitted from model context.]\n"
+
+
+def history_content(message: Message) -> str:
+    text = message.content.get("text")
+    if not isinstance(text, str):
+        raise ValueError("Stored message content must include text")
+    if len(text) <= MAX_MODEL_MESSAGE_CHARS:
+        return text
+    suffix_length = MAX_MODEL_MESSAGE_CHARS - len(TRUNCATED_HISTORY_PREFIX)
+    return TRUNCATED_HISTORY_PREFIX + text[-suffix_length:]
 
 
 def event(name: str, data: dict[str, Any]) -> str:
     return f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+class GenerationCancelled(Exception):
+    """The browser or conversation lease ended before provider completion."""
 
 
 def release(
@@ -52,8 +84,25 @@ def release(
     sources: list[dict[str, Any]] | None = None,
     stats: GenerationStats | None = None,
     inference: dict[str, Any] | None = None,
+    authorization: tuple[UUID, UUID] | None = None,
 ) -> UUID | None:
     with Session(request.app.state.engine) as db:
+        if authorization is not None:
+            # Match account mutation lock order. A local logout/disable after
+            # the final issuer call must not commit an assistant message.
+            owner = db.scalar(select(User).where(User.id == authorization[0]).with_for_update())
+            session = db.scalar(
+                select(AuthSession).where(AuthSession.id == authorization[1]).with_for_update()
+            )
+            if (
+                owner is None
+                or owner.status != "active"
+                or session is None
+                or session.user_id != authorization[0]
+                or session.revoked_at is not None
+                or session.expires_at <= now()
+            ):
+                status, text = "failed", None
         row = db.scalar(
             select(Conversation).where(Conversation.id == conversation_id).with_for_update()
         )
@@ -129,14 +178,23 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             select(Message)
             .where(Message.conversation_id == row.id)
             .order_by(Message.sequence.desc())
-            .limit(30)
+            .limit(MAX_HISTORY_MESSAGES + 1)
         )
     )
+    history_truncated = len(history) > MAX_HISTORY_MESSAGES
     history.reverse()
-    # Bound context rather than growing requests without limit.
+    if history_truncated:
+        history = history[-MAX_HISTORY_MESSAGES:]
+    # Bound context rather than growing requests without limit. Tell the model
+    # when older saved turns are outside this request; never imply full recall.
     messages = [
         ModelMessage(role="system", content=CONVERSATION_INSTRUCTION),
-        *[ModelMessage(role=m.role, content=m.content["text"]) for m in history[-30:]],
+        *(
+            [ModelMessage(role="system", content=TRUNCATED_CONVERSATION_NOTICE)]
+            if history_truncated
+            else []
+        ),
+        *[ModelMessage(role=m.role, content=history_content(m)) for m in history],
     ]
     if sum(len(m.content) for m in messages) + len(body.content) > 96000:
         fail(422, "context_limit", "Start a new conversation to continue")
@@ -174,13 +232,90 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
     stats = GenerationStats()
     metadata = model_metadata(request.app.state.settings)
     telemetry: dict[str, Any] = {}
+    last_identity_check = monotonic()
 
-    def still_active() -> bool:
+    def still_active(force_identity: bool = False) -> bool:
+        nonlocal last_identity_check
         with Session(request.app.state.engine) as check:
             current = check.get(Conversation, row.id)
-            return current is not None and current.active_run_id == run_id
+            if current is None or current.active_run_id != run_id:
+                return False
+            user = check.get(User, auth[0].id)
+            session = check.get(AuthSession, auth[1].id)
+            if (
+                user is None
+                or user.status != "active"
+                or session is None
+                or session.user_id != user.id
+                or session.revoked_at is not None
+                or session.expires_at <= now()
+            ):
+                raise InferenceError("session_expired")
+            try:
+                if request.app.state.settings.identity_enabled and (
+                    force_identity or monotonic() - last_identity_check >= 5
+                ):
+                    from app.shared_identity import authenticate_shared
 
-    async def generate() -> AsyncIterator[str]:
+                    authenticate_shared(request, check, user, session)
+                    last_identity_check = time.monotonic()
+                eligible(request, check, user)
+            except HTTPException as failure:
+                raise InferenceError(
+                    "identity_unavailable" if failure.status_code >= 500 else "session_expired"
+                ) from None
+            return True
+
+    async def guarded_chunks() -> AsyncGenerator[str, None]:
+        upstream = request.app.state.model_client.stream(messages)
+        queue: asyncio.Queue[str | Exception | None] = asyncio.Queue(maxsize=1)
+        consumed = asyncio.Event()
+
+        async def produce() -> None:
+            # Enter, consume and close the provider stream in the same task;
+            # network adapters may retain task-bound cancellation contexts.
+            try:
+                async for chunk in upstream:
+                    await queue.put(chunk)
+                    await consumed.wait()
+                    consumed.clear()
+            except Exception as failure:
+                await queue.put(failure)
+            else:
+                await queue.put(None)
+            finally:
+                with CancelScope(shield=True):
+                    close = getattr(upstream, "aclose", None)
+                    if close is not None:
+                        await close()
+
+        producer = asyncio.create_task(produce())
+        try:
+            while True:
+                try:
+                    item = await asyncio.wait_for(queue.get(), timeout=1)
+                except TimeoutError:
+                    # Continue checking while an upstream stream is quiet. All
+                    # database and issuer I/O stays outside the event loop.
+                    if await request.is_disconnected() or not await run_in_threadpool(still_active):
+                        raise GenerationCancelled from None
+                    continue
+                if await request.is_disconnected() or not await run_in_threadpool(still_active):
+                    raise GenerationCancelled
+                if item is None:
+                    return
+                if isinstance(item, Exception):
+                    raise item
+                yield item
+                consumed.set()
+        finally:
+            with CancelScope(shield=True):
+                if not producer.done():
+                    producer.cancel()
+                with suppress(asyncio.CancelledError, Exception):
+                    await producer
+
+    async def generate() -> AsyncGenerator[str, None]:
         status = "cancelled"
         try:
             yield event(
@@ -196,21 +331,24 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             size = 0
             with observe_generation(stats):
                 async with asyncio.timeout(request.app.state.settings.generation_timeout):
-                    async for chunk in request.app.state.model_client.stream(messages):
-                        if await request.is_disconnected() or not await run_in_threadpool(
-                            still_active
-                        ):
-                            return
-                        if chunk and stats.first_token_seconds is None:
-                            stats.first_token_seconds = time.monotonic() - started
-                        size += len(chunk)
-                        if size > 128000:
-                            raise InferenceError("generation_failed", reason="response_size_limit")
-                        chunks.append(chunk)
-                        yield event("content_delta", {"text": chunk})
+                    async with aclosing(guarded_chunks()) as responses:
+                        async for chunk in responses:
+                            if chunk and stats.first_token_seconds is None:
+                                stats.first_token_seconds = time.monotonic() - started
+                            size += len(chunk)
+                            if size > 128000:
+                                raise InferenceError(
+                                    "generation_failed", reason="response_size_limit"
+                                )
+                            chunks.append(chunk)
+                            yield event("content_delta", {"text": chunk})
             text = "".join(chunks)
             if not text:
                 raise InferenceError("generation_failed", reason="empty_model_response")
+            # Provider length, filtering and tool handoff can produce partial
+            # output. Do not persist it as a completed assistant response.
+            if stats.finish_reason not in {None, "stop"}:
+                raise InferenceError("generation_failed", reason="incomplete_response")
             stats.total_seconds = time.monotonic() - started
             telemetry.update(
                 {
@@ -225,7 +363,10 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                     else None,
                 }
             )
-            identifier = release(
+            if not await run_in_threadpool(still_active, True):
+                return
+            identifier = await run_in_threadpool(
+                release,
                 request,
                 row.id,
                 run_id,
@@ -235,6 +376,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 sources,
                 stats,
                 {"model": metadata, "metrics": telemetry},
+                (auth[0].id, auth[1].id),
             )
             if identifier is None:
                 raise InferenceError("generation_failed", reason="generation_lease_lost")
@@ -243,6 +385,8 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 "message_end",
                 {"message_id": str(identifier), "model": metadata, "metrics": telemetry},
             )
+        except GenerationCancelled:
+            return
         except Exception as exc:
             status = "failed"
             code = (
@@ -254,7 +398,9 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             )
             detail: dict[str, Any] = {
                 "code": code,
-                "message": "Response interrupted; retry",
+                "message": "Your session ended. Sign in to continue."
+                if code == "session_expired"
+                else "Response interrupted; retry",
                 "request_id": request.state.request_id,
             }
             if isinstance(exc, InferenceError):
@@ -273,7 +419,16 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                 stats.first_token_seconds,
             )
             if status != "completed":
-                release(request, row.id, run_id, status, int((time.monotonic() - started) * 1000))
+                # ASGI disconnect cancellation must not interrupt lease cleanup.
+                with CancelScope(shield=True):
+                    await run_in_threadpool(
+                        release,
+                        request,
+                        row.id,
+                        run_id,
+                        status,
+                        int((time.monotonic() - started) * 1000),
+                    )
 
     if body.stream:
         return StreamingResponse(
@@ -283,14 +438,21 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
         )
     text = ""
     message_id = None
-    async for frame in generate():
-        payload = json.loads(frame.split("data: ", 1)[1])
-        if frame.startswith("event: error"):
-            fail(503, payload["code"], "Response interrupted; retry")
-        if frame.startswith("event: content_delta"):
-            text += payload["text"]
-        if frame.startswith("event: message_end"):
-            message_id = payload["message_id"]
+    # An HTTP error raised while consuming an error frame must await generator
+    # cleanup before returning; garbage-collection finalization is too late.
+    async with aclosing(generate()) as frames:
+        async for frame in frames:
+            payload = json.loads(frame.split("data: ", 1)[1])
+            if frame.startswith("event: error"):
+                fail(
+                    401 if payload["code"] == "session_expired" else 503,
+                    payload["code"],
+                    payload["message"],
+                )
+            if frame.startswith("event: content_delta"):
+                text += payload["text"]
+            if frame.startswith("event: message_end"):
+                message_id = payload["message_id"]
     return {
         "message_id": message_id,
         "content": text,

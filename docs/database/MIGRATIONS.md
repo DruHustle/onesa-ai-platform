@@ -1,6 +1,6 @@
 # Migrations
 
-The current single migration head is `20261010_capacity`, matching
+The current single migration head is `20261025_twins`, matching
 `REQUIRED_SCHEMA_REVISION` in `app/database.py`. The ordered chain is:
 
 | Revision | Scope |
@@ -11,10 +11,16 @@ The current single migration head is `20261010_capacity`, matching
 | `20261010_identity` | Invitations, recovery, access grants and durable identity mail |
 | `20261010_uploads` | Bounded uploads and chunks |
 | `20261010_capacity` | Shared model-admission leases |
+| `20261021_industrial` | Owned industrial investigation evidence |
+| `20261025_twins` | Owned equipment, files/model revisions, sources, readings/events and notes |
 
 The knowledge migration creates the vector extension if needed; its downgrade leaves
 that extension for other consumers. The identity, upload and capacity migrations
 deliberately reject automatic downgrade: use a reviewed forward recovery plan.
+Industrial and Twin migrations also preserve evidence through forward recovery.
+The Twin schema is additive. Default-off applications retain their previous compatible
+readiness revisions; enabling Twins requires the new head and private persistent files.
+Back up and restore those files together with PostgreSQL before hosted activation.
 
 ```sh
 cd onesa-ai-platform-backend

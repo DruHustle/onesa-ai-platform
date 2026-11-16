@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import {useRecordPage, RecordPageControls, useRecordSelection} from "../../lib/record-page";
 import RequireSession from "../../components/require-session";
 import { useDraftNavigation } from "../../components/draft-navigation";
 import FeatureShell from "../../components/feature-shell";
@@ -26,16 +27,44 @@ export default function Travel() {
   );
 }
 function TravelWorkspace() {
-  const [trips, setTrips] = useState<Trip[]>([]),
+  const [selectedLocation, setSelectedLocation] = useRecordSelection("trip");
+  const loadedLocation = useRef<string | null>(null);
+  const [detailAttempt, setDetailAttempt] = useState(0);
+  const [detailError, setDetailError] = useState("");
+  const page = useRecordPage<Trip>("/travel/trips");
+  const {items: trips, setItems: setTrips} = page;
+  const
     [selected, setSelected] = useState<Trip | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<Draft>(() => fields(null));
   const [baseline, setBaseline] = useState<Draft>(() => fields(null));
   const pending = useRef(false);
+  const loadingTrip = Boolean(selectedLocation && selectedLocation !== selected?.id && !detailError);
+  useEffect(() => {
+    if (loadedLocation.current === selectedLocation) return;
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
+    const request = selectedLocation
+      ? api("GET /travel/trips/{identifier}", {params: {identifier: selectedLocation}, signal})
+      : Promise.resolve(null);
+    request
+      .then(trip => {
+        if (signal.aborted) return;
+        loadedLocation.current = trip?.id || null;
+        setSelected(trip);
+        setBaseline(fields(trip));
+        setDraft(fields(trip));
+        setDetailError("");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setDetailError("The saved trip is unavailable. Retry or choose another trip.");
+      });
+    return () => controller.abort();
+  }, [selectedLocation, detailAttempt]);
   const navigate = useDraftNavigation(
     JSON.stringify(draft) !== JSON.stringify(baseline),
-    busy,
+    busy || loadingTrip,
     () => setDraft({ ...baseline }),
   );
   function choose(trip: Trip | null) {
@@ -44,27 +73,18 @@ function TravelWorkspace() {
       setBaseline(next);
       setDraft(next);
       setSelected(trip);
+      loadedLocation.current = trip?.id || null;
+      setSelectedLocation(trip?.id || null);
+      setDetailError("");
       setError("");
     });
   }
   function change(name: keyof Draft, value: string) {
     setDraft((previous) => ({ ...previous, [name]: value }));
   }
-  useEffect(() => {
-    api("GET /travel/trips")
-      .then((r) =>
-        setTrips((previous) => [
-          ...previous,
-          ...r.items.filter(
-            (trip) => !previous.some((saved) => saved.id === trip.id),
-          ),
-        ]),
-      )
-      .catch((e) => setError(e.message));
-  }, []);
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || loadingTrip || detailError) return;
     pending.current = true;
     setBusy(true);
     setError("");
@@ -87,6 +107,8 @@ function TravelWorkspace() {
       setBaseline(saved);
       setDraft(saved);
       setSelected(r);
+      loadedLocation.current = r.id;
+      setSelectedLocation(r.id);
       setTrips((previous) => [
         r,
         ...previous.filter((trip) => trip.id !== r.id),
@@ -118,6 +140,8 @@ function TravelWorkspace() {
       setBaseline(next);
       setDraft(next);
       setSelected(null);
+      loadedLocation.current = null;
+      setSelectedLocation(null);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -136,14 +160,17 @@ function TravelWorkspace() {
           {error} Your entries are kept. Review the result before trying again.
         </div>
       )}
+      {loadingTrip && <p role="status">Loading saved trip…</p>}
+      {detailError && <p role="alert">{detailError} <button onClick={() => {setDetailError(""); setDetailAttempt(value => value + 1);}}>Retry saved trip</button></p>}
       <div className="travel-grid">
         <nav aria-label="Saved trips">
-          <button disabled={busy} onClick={() => choose(null)}>
+          <button disabled={busy || loadingTrip} onClick={() => choose(null)}>
             ＋ New trip
           </button>
-          {trips.map((t) => (
+          <RecordPageControls page={page} />
+      {trips.map((t) => (
             <button
-              disabled={busy}
+              disabled={busy || loadingTrip}
               className="trip-link"
               key={t.id}
               onClick={() => choose(t)}
@@ -154,7 +181,7 @@ function TravelWorkspace() {
         </nav>
         <div>
           <form className="feature-card" onSubmit={save} aria-busy={busy}>
-            <fieldset disabled={busy} className="travel-fields">
+            <fieldset disabled={busy || loadingTrip || Boolean(detailError)} className="travel-fields">
               <label>
                 Destination
                 <input
@@ -221,7 +248,7 @@ function TravelWorkspace() {
               </button>
             </fieldset>
           </form>
-          {selected && (
+          {selected && selected.id === selectedLocation && (
             <section>
               <div className="notice">
                 {selected.notice}{" "}

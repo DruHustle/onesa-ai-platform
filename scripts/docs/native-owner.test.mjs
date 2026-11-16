@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {gzipSync,brotliCompressSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
-import {nativeGet,exactPreviewOrigin,validateNativePublicPreview,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
+import {verifyNativePublicAssets,nativeGet,exactPreviewOrigin,exactNativeDocsOrigin,validateNativePublicPreview,validateNativePublicPreflight,ownedAuditPage,emulateOwnedViewport,guardOwnedHttp,cleanupOwnedTargets} from './native-owner.mjs';
 import {waitForInteractiveDocumentation,observeDocumentationFailure} from './acceptance.mjs';
 const require=createRequire(new URL('../../onesa-ai-platform-frontend/apps/docs/package.json',import.meta.url));
 const {chromium}=require('@playwright/test');
@@ -37,6 +38,14 @@ test('failed hydration observation preserves the original failure and rejects ar
 test('only exact public Preview origin is accepted',()=>{
  assert.equal(exactPreviewOrigin(PREVIEW+'/'),PREVIEW);
  for(const value of ['http://onesa-docs-synthetic-druhustles-projects.vercel.app/','https://other.vercel.app/','https://platform.onesa.eu/','https://onesa-engineering-docs.pages.dev/',PREVIEW+'/?token=value',PREVIEW+'/path','https://user@onesa-docs-synthetic-druhustles-projects.vercel.app/'])assert.throws(()=>exactPreviewOrigin(value));
+});
+
+test('production native observation accepts only the exact public canonical Docs origin',()=>{
+ assert.equal(exactNativeDocsOrigin('https://docs.onesa.eu/','production'),'https://docs.onesa.eu');
+ assert.equal(exactNativeDocsOrigin(PREVIEW+'/','staging'),PREVIEW);
+ for(const value of [PREVIEW+'/','https://docs.engineering.onesa.eu/','https://docs.onesa.eu/?token=synthetic','https://docs.onesa.eu/path','https://user@docs.onesa.eu/','http://docs.onesa.eu/'])assert.throws(()=>exactNativeDocsOrigin(value,'production'));
+ assert.throws(()=>exactNativeDocsOrigin('https://docs.onesa.eu/','staging'));
+ assert.throws(()=>exactNativeDocsOrigin('https://docs.onesa.eu/','development'));
 });
 
 test('native reader refuses external URLs before any browser evaluation',async()=>{
@@ -76,6 +85,64 @@ test('native validation requires a verifier function before creating a page',asy
  await assert.rejects(validateNativePublicPreview(context,{origin:PREVIEW,revision:'a'.repeat(40)}));assert.equal(created,0);
 });
 
+test('only a cancelled already-allowed GET avoids a false write-enforcement failure',async()=>{
+ for(const [method,url,message,expected] of [
+  ['GET',PREVIEW+'/asset.js','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',0],
+  ['GET',PREVIEW+'/asset.js','Protocol error (Fetch.continueRequest): Invalid InterceptionId.',0],
+  ['GET',PREVIEW+'/asset.js','Synthetic transport failure',1],
+  ['GET','https://foreign.invalid/','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',2],
+  ['POST',PREVIEW+'/api','cdpSession.send: Protocol error (Fetch.continueRequest): Invalid InterceptionId.',2],
+ ]){
+  let listener,violations=0;
+  const page={setExtraHTTPHeaders:async()=>{},isClosed:()=>false};
+  const session={on:(_name,fn)=>{listener=fn;},off:()=>{},detach:async()=>{},send:async command=>{if(command==='Fetch.continueRequest'||command==='Fetch.failRequest')throw Error(message);}};
+  const guard=await guardOwnedHttp({newCDPSession:async()=>session},page,PREVIEW,()=>violations++);
+  await listener({requestId:'synthetic',request:{method,url}});
+  assert.equal(violations,expected);await guard.dispose();
+ }
+});
+
+test('full preflight rejects production, missing byte verification and an unavailable owner session',async()=>{
+ let created=0,closed=0;
+ const original={},page={setExtraHTTPHeaders:async()=>{},goto:async()=>({status:()=>403}),url:()=>PREVIEW,isClosed:()=>false,close:async()=>closed++};
+ const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+ const context={pages:()=>[original],newPage:async()=>{created++;return page;},newCDPSession:async()=>session};
+ const options={origin:PREVIEW,revision:'a'.repeat(40),expectedEnvironment:'staging',verifyPublicAssets:async()=>({verified:1,expected:1})};
+ await assert.rejects(validateNativePublicPreflight(context,{...options,expectedEnvironment:'production'}),/NATIVE_STAGING_PREFLIGHT_REQUIRED/);
+ await assert.rejects(validateNativePublicPreflight(context,{...options,verifyPublicAssets:undefined}),/SOURCE_AND_TRUSTED_PUBLIC_ASSETS_REQUIRED/);
+ assert.equal(created,0);
+ await assert.rejects(validateNativePublicPreflight(context,options),/GENUINE_OWNER_PREVIEW_SESSION_REQUIRED/);
+ assert.equal(created,1);assert.equal(closed,1);assert.deepEqual(context.pages(),[original]);
+});
+
+test('a readable root is insufficient when preflight bytes or downstream UI checks fail',async()=>{
+ for(const bytes of [{verified:0,expected:1},{verified:1,expected:1}]){
+  let closed=0,verified=0;
+  const original={},page={setExtraHTTPHeaders:async()=>{},goto:async()=>({status:()=>200}),url:()=>PREVIEW,evaluate:async()=>false,isClosed:()=>false,close:async()=>closed++};
+  const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+  const context={pages:()=>[original],newPage:async()=>page,newCDPSession:async()=>session};
+  // The deliberately incomplete page cannot pass UI acceptance after valid bytes.
+  await assert.rejects(validateNativePublicPreflight(context,{origin:PREVIEW,revision:'a'.repeat(40),expectedEnvironment:'staging',verifyPublicAssets:async()=>{verified++;return bytes;}}));
+  assert.equal(verified,1);assert.equal(closed,1);assert.deepEqual(context.pages(),[original]);
+ }
+});
+
+test('a stalled native observation closes its owned target and preserves the owner tab',async()=>{
+ let closed=false;const original={};
+ const page={setExtraHTTPHeaders:async()=>{},goto:async()=>new Promise(()=>{}),isClosed:()=>closed,close:async()=>{closed=true;}};
+ const session={on:()=>{},off:()=>{},detach:async()=>{},send:async()=>{}};
+ const context={pages:()=>[original],newPage:async()=>page,newCDPSession:async()=>session};
+ await assert.rejects(validateNativePublicPreview(context,{origin:PREVIEW,revision:'a'.repeat(40),verifyPublicAssets:async()=>({verified:1,expected:1}),deadlineMs:30}),/OWNED_NATIVE_OBSERVATION_DEADLINE/);
+ assert.equal(closed,true);assert.deepEqual(context.pages(),[original]);
+});
+
+test('an expired native audit cannot create further auxiliary targets',async()=>{
+ const abort=new AbortController();abort.abort();let created=0;
+ const facade=ownedAuditPage({}, {newPage:async()=>{created++;}},new Map(),()=>{},undefined,PREVIEW,abort.signal);
+ await assert.rejects(facade.context().newPage(),/OWNED_NATIVE_OBSERVATION_DEADLINE/);
+ assert.equal(created,0);
+});
+
 
 test('audit facade constrains auxiliary pages without altering the native shared context',async()=>{
  let blocked=0,aborted=0,listener;const originalMethod=async()=>{};
@@ -89,7 +156,7 @@ test('audit facade constrains auxiliary pages without altering the native shared
 });
 
 test('actual Axe aggregation uses owned constrained blank pages and preserves original tabs',async t=>{
- const {default:AxeBuilder}=createRequire(new URL('../../onesa-ai-platform-frontend/apps/chat/package.json',import.meta.url))('@axe-core/playwright');
+ const {default:AxeBuilder}=require('@axe-core/playwright');
  const browser=await chromium.launch();t.after(()=>browser.close());const context=await browser.newContext();
  const original=await context.newPage(),page=await context.newPage(),auxiliary=new Map();let blocked=0;
  await page.setContent('<!doctype html><html lang="en"><title>Public fixture</title><main><h1>Public fixture</h1></main></html>');
@@ -204,4 +271,48 @@ test('stalled failure diagnostics finish boundedly and do not turn failure into 
  await observeDocumentationFailure(error,{evaluate:()=>new Promise(()=>{})});
  assert.ok(performance.now()-start<3000);assert.equal(error.message,'Original stalled interaction');
  assert.deepEqual(error.documentationObservation,{phase:'unspecified',state:null});
+});
+
+function assetFixture(count=12){
+ const body=Buffer.from('synthetic public asset');
+ const digest=createHash('sha256').update(body).digest('hex');
+ return {body,assets:Array.from({length:count},(_,i)=>({route:'/asset-'+i,bytes:body.length,sha256:digest,mimes:['text/plain']}))};
+}
+test('native public bytes use at most four actual concurrent reads and verify every response',async()=>{
+ const {body,assets}=assetFixture();let active=0,maximum=0;const seen=new Set();
+ const result=await verifyNativePublicAssets(async url=>{
+  active++;maximum=Math.max(maximum,active);await new Promise(r=>setTimeout(r,15));seen.add(url);active--;
+  return {status:()=>200,body:async()=>body,headers:()=>({'content-type':'text/plain; charset=utf-8'})};
+ },PREVIEW,assets);
+ assert.deepEqual(result,{verified:12,expected:12});assert.equal(maximum,4);assert.equal(active,0);assert.equal(seen.size,12);
+});
+test('bounded asset reads fail closed on HTTP, bytes, MIME and rejected transport',async()=>{
+ const {body,assets}=assetFixture();
+ for(const kind of ['http','bytes','mime','transport']){
+  let calls=0;
+  await assert.rejects(verifyNativePublicAssets(async()=>{
+   calls++;if(kind==='transport')throw Error('SYNTHETIC_TRANSPORT_FAILURE');
+   return {status:()=>kind==='http'?404:200,body:async()=>kind==='bytes'?Buffer.from('changed'):body,headers:()=>({'content-type':kind==='mime'?'text/html':'text/plain'})};
+  },PREVIEW,assets));
+  assert.ok(calls<=4,'No new reads may start after the first observed failure');
+ }
+});
+test('duplicate, foreign and oversized asset descriptors are refused before a request',async()=>{
+ const {assets}=assetFixture(1);
+ for(const candidate of [[assets[0],assets[0]],[{...assets[0],route:'//foreign.invalid/file'}],[{...assets[0],bytes:16*1024*1024+1}]]){
+  let reads=0;await assert.rejects(verifyNativePublicAssets(async()=>{reads++;},PREVIEW,candidate));assert.equal(reads,0);
+ }
+});
+test('asset failure settles every in-flight read before the caller can clean up',async()=>{
+ const {body,assets}=assetFixture();let calls=0,active=0;
+ const failure=new Error('ORIGINAL_SYNTHETIC_FAILURE');
+ await assert.rejects(verifyNativePublicAssets(async()=>{
+  const index=calls++;active++;
+  try{
+   if(index===0)throw failure;
+   await new Promise(resolve=>setTimeout(resolve,25));
+   return {status:()=>200,body:async()=>body,headers:()=>({'content-type':'text/plain'})};
+  }finally{active--;}
+ },PREVIEW,assets),error=>error===failure);
+ assert.equal(calls,4);assert.equal(active,0);
 });

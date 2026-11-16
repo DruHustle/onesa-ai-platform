@@ -2,6 +2,150 @@
 
 This preserved engineering record is not a post-launch release changelog. Current release state lives in the root CHANGELOG.md. Appearance schedules in historical entries are superseded by the 2026-10-14 system-preference design decision.
 
+## 2026-10-31 — Select canonical signed Ubuntu sources for browser CI
+
+The first main check of `da83084feaa936ce73348fc0280498a5bdef8a19`
+([run 41180154809](https://github.com/DruHustle/onesa-ai-platform/actions/runs/41180154809))
+failed in TLS browser preparation: the existing helper rejected an unexpected
+runner mirror-list URI before Playwright or TLS acceptance ran. The offending
+URI was not logged, so this change adds no inferred mirror hostname. That failed
+first attempt remains preserved and does not qualify a release.
+
+The initial correction explicitly selected the canonical HTTPS Ubuntu archive
+or security endpoint from a fully validated Ubuntu 24.04/noble Deb822 stanza.
+It required the exact existing archive-list reference and the canonical Ubuntu
+keyring with valid custody. Types, suites, components, architectures and activation
+remain bounded; duplicate, mixed, malformed, inline-comment, unknown and authentication-
+relaxing fields fail before any write. That first correction changed only URI bytes.
+Unused mirror-list bytes remain untouched, while signatures, suites, timeouts,
+retries and all release gates remain in place.
+
+Preparation-level fixtures cover both acquisition endpoints, preserved comments
+and line endings, keyring custody, idempotence and refusal without partial writes.
+An installed native APT parser cross-check prints the expected acquisition URIs
+using isolated temporary configuration/state/cache/log paths, without network
+acquisition or host APT writes. A new source candidate must pass the full native
+first-attempt checks; this prepared fix does not turn the failed main run into a pass.
+
+The first dev push of the correction at `8cc4458f04fad7470a48132d8e68de4afbd756ce`
+([run 41181491988](https://github.com/DruHustle/onesa-ai-platform/actions/runs/41181491988))
+then refused the canonical keyring's custody before writing sources or installing
+browsers. A diagnostic-only follow-up reports the fixed keyring role, file type,
+UID/GID, mode, size, existing bound and failing-condition codes from the already
+held stat snapshot. It reports no key contents, raw source URI, environment or
+path. That diagnostic change preserved every custody condition and refusal. This
+failed candidate is not qualified.
+
+The diagnostic source `bf66c140ff466d8965e343a1da040b2cb521e393`
+([push run 41182017947](https://github.com/DruHustle/onesa-ai-platform/actions/runs/41182017947))
+confirmed the canonical key was regular, UID/GID `0:0`, mode `0777`, size 3607 on
+runner image `20261025.353.1`; only group/other writability failed the existing
+custody predicate. Its failure remains preserved. The prepared repair captures the
+original public key once through a bounded no-follow/nonblocking descriptor and
+requires the reviewed Noble package's exact 3607-byte SHA-256 pin. It copies the
+same captured bytes into a fixed protected `/etc/apt/onesa-ci-keyrings` location,
+then rebinds only validated affected Signed-By paths. The original key and mirror
+file bytes/modes remain untouched. URI and Signed-By path substitutions now change;
+signer bytes, suites, components and all authentication/release gates remain intact.
+
+The copy has root-owned, APT-traversable protected ancestry and mode `0644`.
+Complete, fsynced temporary bytes are published without clobbering an existing or
+concurrent destination. Unknown bytes, aliases, unsupported metadata, unsafe parents
+and conflicting copies refuse; no runtime download or automatic rotation occurs.
+Every source/configuration/copy plan validates before writes, and repeated runs
+revalidate the original pin and protected copy. The real public-key fixture and
+checksum-bound official HTTPS provenance are recorded in
+[Build and test](../engineering/BUILD_AND_TEST.md); no independently verified
+InRelease-chain provenance is claimed. Local regressions cover bounded capture,
+FIFO refusal, original preservation, interrupted writes, destination races,
+idempotence and the isolated native APT parser. Fresh first-attempt native CI is
+still required; this prepared repair does not qualify any earlier failed source.
+
+## 2026-10-31 — Bound provider failures and repair dependency security gates
+
+The bounded consumer response reader now converts JSON decoder recursion failure
+into the existing redacted incompatibility error. The regression reproduces a
+small, deeply nested provider response and verifies no retry or provider-detail
+disclosure. The shared reader also serves the read-only MCP bridge.
+
+Retain the recovered pypdf 6.21.4 pin and both hash-locked dependency sets, plus
+the compatible Docs follow-redirects 1.16.2 and joi 17.13.9 security updates.
+Replace the remaining affected matchers with upstream minimatch 11.0.1 and glob
+14.0.2 in the affected Docs and isolated owner-tool dependency paths. Vercel stays
+at 65.2.0 and its official npm source stays at 12.2.1. Audit thresholds remain
+unchanged; the runtime Python, Chat, Docs, Vercel-tool and separate npm-runtime locks
+pass their local vulnerability audits.
+
+Chat's three modern lint consumers also use exact-version scoped minimatch
+11.0.1 overrides: eslint 10.12.0, @eslint/config-array 0.23.5 and
+@typescript-eslint/typescript-estree 8.71.1. Their toolchain versions and all
+unrelated optional-platform lock entries remain unchanged. Real ESLint fixtures
+retain file/ignore/negation selection and fatal diagnostics; the TypeScript
+project service still refuses files outside its explicit default-project pattern.
+The Chat lock additionally passes a low-threshold local audit with no findings.
+
+The two legacy callable consumers, serve-handler 6.1.7 and @ts-morph/common
+0.11.1, use a narrow local entry-point adapter to the unchanged fixed upstream
+matcher. It contains no old matcher code. Exact consumer overrides, upstream
+integrity/license, source/archive provenance and the identical owner-image archive
+are recorded. Installed-artifact regressions cover bounded hostile patterns,
+post-cancellation filesystem work, static Docs serving, Swagger file allowlists,
+TypeScript config, NFT asset tracing, npm workspace patterns and exclusion of
+private files from packages. The owner compatibility suite is a required CI step.
+
+The previously prepared pre-request continuation helper now rereads its signed
+intent/authorization/qualification chain and latest owner decision inside the
+SQLite write transaction immediately before claiming the one allowed attempt.
+A superseding decision or revocation during CI/operations preflight cannot leave
+a continuation reservation or issue a provider request. It never renews the
+original context or authorization; interrupted attempts still require inspection.
+
+These prepared source changes do not establish a live application, documentation
+or owner-tool release. Hosted CI, immutable image/protocol checks and the existing
+owner qualification path remain required; accepted production component versions
+remain recorded separately in the root changelog.
+
+## 2026-10-28 — Isolate release-unit commissioning fixtures
+
+Docs visual acceptance and its native-owner regression now resolve the existing
+Docs-owned Axe dependency. Preview transport browser fixtures also close their
+owned servers on launch or cleanup failure, retaining the original failed result.
+
+The product requirements also distinguish consumer application/provider portability
+from MCP tool and context interoperability. The current internal and product adapters
+remain accurately identified; shared-contract, configuration-switch and authorization
+acceptance criteria are recorded without claiming the feature is implemented.
+
+Release-unit tests use their own temporary commissioning registry, including root
+test execution, without reading the host's production trust registry. The profile
+ledger fixture explicitly updates its synthetic commissioning after its deliberate
+policy replacement. Production verifier and release requirements are unchanged.
+
+## 2026-10-28 — Declare Docs-owned accessibility validation dependencies
+
+The public static acceptance validator previously imported Axe from the Chat
+installation and could not be imported after a clean Docs-only install. Declare
+the existing reviewed Axe version in Docs and resolve it there alongside
+Playwright. Keep accessibility assertions, classified asset checks and independent
+release gates unchanged. Local import verification is separate from the complete
+browser acceptance suite and an authorized hosted publication.
+
+## 2026-10-27 — Bound retries for failed upstream build fetches
+
+Repeated native checks failed before testing during Alpine CDN TLS fetching or a
+PyPI audit handshake. Retry signed HTTPS package operations at most three times
+and allow the auditor a bounded 60-second socket timeout. Exhausted downloads and
+vulnerability findings still fail. No deployment or acceptance is implied.
+
+## 2026-10-27 — Check owner CLI authentication before qualification
+
+Verify the pinned vendor CLI's actual read-only owner authentication before consuming
+a qualification context. Refuse stale or concurrently replaced custody and retain
+redacted failures that occur before the hosted producer starts. Extend the offline
+real-client tests to assert authorization headers and user readback using synthetic
+OAuth state. Existing signatures, source binding and deployment attempt limits remain
+required; these changes do not establish a successful hosted release.
+
 ## 2026-10-13 — Protected Portal privacy-governance engineering reference
 
 Refresh committed Portal API/schema snapshots from the reviewed governance source and Robot snapshots from qualified main. Add seven internal workflows covering review, retention, deletion requests, processors, transfers, privacy publication and the planned Vercel commercial transition. Include the protected governance reference in architecture navigation while preserving every required topic and the public/internal boundary. Public builds exclude governance documents and mutation contracts; private policy content is never part of documentation source.
@@ -800,3 +944,17 @@ Verified the qualified staging revision through actual owner Cloudflare Access M
 ## 2026-10-13 — Reject retired approvals and reconcile architecture evidence
 
 Retire the compatibility qualification command’s acceptance of locally editable gate JSON, even when its source hash matches. Actual release authority remains the existing trusted qualification/promotion workflows. Add forged and malformed approval regressions. Update canonical architecture/workflow references with actual isolated Portal/AI staging and protected engineering publication evidence; preserve Robot’s HTTP401 and production operational limitations.
+
+
+## 2026-10-27 — Explicit owner deployment routing (unreleased)
+
+Manual prebuilt Previews have no Git source, so commit metadata alone does not
+supply the staging branch's server-only API origin. The owner frontend runner now
+verifies only the two named existing routing variables, binds their identities and
+canonical origins to the source-specific configuration, and passes that one
+nonsecret origin explicitly to the deployment. Real pinned-CLI protocol tests
+assert the outgoing binding for staging and production. Project variables,
+authentication, optional-feature defaults and independent services are preserved.
+Early hosted-probe failures now retain bounded source/operation/error-code diagnostics
+without credentials or exception messages; a failure record never qualifies a release.
+Source checks do not establish hosted qualification or production acceptance.

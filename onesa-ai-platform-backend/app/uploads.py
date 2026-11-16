@@ -63,20 +63,32 @@ def owned(db: DB, auth: Auth, identifier: UUID) -> BoundedUpload:
 @router.post("", status_code=201, response_model=Receipt)
 def start(body: Start, request: Request, db: DB, auth: Auth) -> Receipt:
     throttle(request, db, "upload:" + str(auth[0].id))
-    # Bound pending storage across replicas and clean expired fragments without touching documents.
+    # Serialize capacity across replicas. A user's request may only clean their
+    # own expired fragments; another account's cleanup belongs to the owner worker.
     db.execute(text("SELECT pg_advisory_xact_lock(757835)"))
-    db.execute(delete(BoundedUpload).where(BoundedUpload.expires_at < now()))
+    instant = now()
+    db.execute(
+        delete(BoundedUpload).where(
+            BoundedUpload.user_id == auth[0].id, BoundedUpload.expires_at <= instant
+        )
+    )
     count = (
         db.scalar(
             select(func.count())
             .select_from(BoundedUpload)
-            .where(BoundedUpload.user_id == auth[0].id, BoundedUpload.result.is_(None))
+            .where(
+                BoundedUpload.user_id == auth[0].id,
+                BoundedUpload.result.is_(None),
+                BoundedUpload.expires_at > instant,
+            )
         )
         or 0
     )
     total = (
         db.scalar(
-            select(func.count()).select_from(BoundedUpload).where(BoundedUpload.result.is_(None))
+            select(func.count())
+            .select_from(BoundedUpload)
+            .where(BoundedUpload.result.is_(None), BoundedUpload.expires_at > instant)
         )
         or 0
     )

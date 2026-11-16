@@ -2,9 +2,9 @@
 
 ## Identity boundaries
 
-Company Portal, AI Platform and Robot authenticate independently. A link between products does not transfer identity or permissions. HttpOnly session cookies, configured origins and CSRF tokens protect mutation paths. Backend authorization checks apply to every object and file access; UI restrictions alone are insufficient.
+Company Portal provides the hosted Onesa account. AI Platform and Onesa Robot require their own approved product access and verify that account when opening a workspace. HttpOnly session cookies, configured origins and CSRF tokens protect mutation paths. Backend authorization checks apply to every object and file access; UI restrictions alone are insufficient.
 
-Portal implements password/MFA and fresh proof for sensitive account changes. AI enforces invitations where enabled, expiring recovery and user-owned conversations/documents/trips. Robot confirms operator authority separately from motion validation. Sessions and execution authority can be revoked.
+Portal implements password/MFA and fresh proof for sensitive account changes. AI checks access to user-owned conversations, documents and trips. Onesa Robot checks the operator grant and applies motion validation independently. Sessions and execution authority can be revoked.
 
 ## Data and tool boundaries
 

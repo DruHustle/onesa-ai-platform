@@ -1,17 +1,30 @@
 """Password-confirmed, owner-scoped live account export and deletion."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, Request, Response
 from sqlalchemy import select, text
 
-from app.auth import DB, Auth, lock_account, prove_password
+from app.auth import DB, Auth, lock_account, prove_password, safe_user
 from app.errors import fail
-from app.models import AgentRun, Conversation, Document, InferenceRun, Message, Trip, now
+from app.industrial import InvestigationOut
+from app.industrial import output as investigation_output
+from app.models import (
+    AgentRun,
+    Conversation,
+    Document,
+    IndustrialInvestigation,
+    InferenceRun,
+    Message,
+    Trip,
+    now,
+)
 from app.responses import AgentRunOut, DocumentDetail, TripOut
 from app.schemas import ConversationOut, MessageOut, PasswordProof, SafeUser, Strict
 from app.travel import output as trip_output
+from app.twin_files import FileStore
+from app.twin_models import TwinFile
 
 router = APIRouter(prefix="/api/v1/account", tags=["account"])
 MAX_ROWS = 10000
@@ -31,6 +44,9 @@ class AccountExport(Strict):
     documents: list[DocumentDetail]
     agent_runs: list[AgentRunOut]
     trips: list[TripOut]
+    industrial_investigations: list[InvestigationOut]
+    digital_twins: dict[str, Any]
+    cybersecurity: dict[str, Any]
     scope: str
 
 
@@ -50,7 +66,14 @@ def export_account(
     user = lock_account(db, auth)
     count, size = 0, 0
     # Static identifiers only: never interpolate caller-provided SQL identifiers.
-    scopes = (
+    # Normal AI and the isolated demo migrate independently. Inspect this snapshot,
+    # never a feature flag or cached result: disabled features still own user data.
+    industrial_present = db.scalar(
+        text("SELECT to_regclass('industrial_investigations') IS NOT NULL")
+    )
+    twins_present = db.scalar(text("SELECT to_regclass('twin_assets') IS NOT NULL"))
+    cyber_present = db.scalar(text("SELECT to_regclass('cyber_sources') IS NOT NULL"))
+    scopes = [
         ("conversations t WHERE t.user_id=:owner", "pg_column_size(t)"),
         (
             "messages t JOIN conversations c ON c.id=t.conversation_id WHERE c.user_id=:owner",
@@ -65,7 +88,41 @@ def export_account(
             "trips t WHERE t.user_id=:owner",
             "octet_length(t.preferences)+octet_length(t.itinerary::text)+pg_column_size(t)",
         ),
-    )
+    ]
+    if industrial_present:
+        scopes.append(
+            (
+                "industrial_investigations t WHERE t.user_id=:owner",
+                "octet_length(t.payload::text)+pg_column_size(t)",
+            )
+        )
+    if twins_present:
+        for table in (
+            "twin_templates",
+            "twin_assets",
+            "twin_files",
+            "twin_models",
+            "twin_sources",
+            "twin_notes",
+        ):
+            scopes.append((table + " t WHERE t.user_id=:owner", "pg_column_size(t)"))
+        for table in ("twin_readings", "twin_events"):
+            scopes.append(
+                (
+                    table + " t JOIN twin_assets a ON a.id=t.asset_id WHERE a.user_id=:owner",
+                    "pg_column_size(t)",
+                )
+            )
+    if cyber_present:
+        from app.cyber_models import OWNED_MODELS
+
+        for cls in OWNED_MODELS:
+            scopes.append(
+                (
+                    cls.__tablename__ + " t WHERE t.user_id=:owner AND NOT t.sensitive",
+                    "pg_column_size(t)",
+                )
+            )
     for scope, length in scopes:
         row = db.execute(
             text("SELECT count(*),coalesce(sum(" + length + "),0) FROM " + scope),
@@ -98,7 +155,7 @@ def export_account(
         )
     exported = AccountExport(
         exported_at=now(),
-        account=SafeUser.model_validate(user),
+        account=safe_user(request, user),
         conversations=[
             ExportConversation(
                 conversation=ConversationOut.model_validate(row),
@@ -128,11 +185,32 @@ def export_account(
                 select(Trip).where(Trip.user_id == user.id).order_by(Trip.created_at, Trip.id)
             )
         ],
+        industrial_investigations=[
+            InvestigationOut.model_validate(investigation_output(row))
+            for row in db.scalars(
+                select(IndustrialInvestigation)
+                .where(IndustrialInvestigation.user_id == user.id)
+                .order_by(IndustrialInvestigation.created_at, IndustrialInvestigation.id)
+            )
+        ]
+        if industrial_present
+        else [],
+        digital_twins=twin_export(db, user.id) if twins_present else {},
+        cybersecurity=cyber_export(db, user.id) if cyber_present else {},
         scope=(
             "Live profile, conversations/messages (including saved sources), "
-            "extracted document text/metadata, tool runs and trips. Passwords, session "
+            "extracted document text/metadata, tool runs, trips and owned Industrial "
+            "investigations (immutable evidence, drafts and review decisions), including "
+            "records retained while Industrial is disabled. Passwords, session "
             "credentials, derived embedding vectors and internal inference telemetry "
-            "are excluded. Original uploaded binaries are not retained. "
+            "are excluded. Digital Twin equipment, model/file metadata, readings, events "
+            "and inspection evidence are included even when the feature is disabled; "
+            "source credentials are excluded. Original Twin binaries require their owned "
+            "file download and are not embedded in this JSON. Knowledge "
+            "originals are not retained. "
+            "Owned cybersecurity sources, mappings, events, findings and "
+            "decision histories are included even while disabled; ingestion"
+            " credentials and global operator records are excluded. "
             "Backups are outside this export."
         ),
     )
@@ -164,9 +242,79 @@ def delete_account(
     )
     if active_chat or active_agent:
         fail(409, "account_busy", "Stop active chat and tool runs before deleting your account")
+    twins_present = db.scalar(text("SELECT to_regclass('twin_files') IS NOT NULL"))
+    if twins_present and db.scalar(select(TwinFile.id).where(TwinFile.user_id == user.id).limit(1)):
+        storage = FileStore(request.app.state.settings.digital_twins_storage_directory)
+        if not storage.ready():
+            fail(
+                503,
+                "twin_storage_unavailable",
+                "Restore the private file mount before deleting equipment files and this account",
+            )
+        # The locked account excludes concurrent upload/creation. File removal is
+        # idempotent; a database commit failure remains retryable with the same account.
+        storage.remove_owner(user.id)
     # The locked parent and FK cascades make live-data deletion atomic, including
     # messages, sessions, documents/chunks/vectors, inference records, agents and trips.
     db.delete(user)
     db.commit()
     response.delete_cookie("onesa_session", path="/")
     response.delete_cookie("onesa_csrf", path="/")
+
+
+def twin_export(db: DB, owner: Any) -> dict[str, Any]:
+    from app.twin_models import (
+        TwinAsset,
+        TwinEvent,
+        TwinModel,
+        TwinNote,
+        TwinReading,
+        TwinSource,
+        TwinTemplate,
+    )
+    from app.twins import output, reading_output
+
+    result: dict[str, Any] = {}
+    for cls in (TwinTemplate, TwinAsset, TwinFile, TwinModel, TwinSource, TwinNote):
+        result[cls.__tablename__] = [
+            output(r)
+            for r in db.scalars(
+                select(cls)
+                .where(cls.user_id == owner)
+                .order_by(cls.created_at, cls.id)
+                .limit(MAX_ROWS + 1)
+            )
+        ]
+    result["twin_readings"] = [
+        reading_output(r)
+        for r in db.scalars(
+            select(TwinReading)
+            .join(TwinAsset)
+            .where(TwinAsset.user_id == owner)
+            .order_by(TwinReading.observed_at, TwinReading.id)
+            .limit(MAX_ROWS + 1)
+        )
+    ]
+    result["twin_events"] = [
+        {
+            "id": str(r.id),
+            "asset_id": str(r.asset_id),
+            "component_id": str(r.component_id),
+            "reading_id": str(r.reading_id),
+            "details": r.details,
+        }
+        for r in db.scalars(
+            select(TwinEvent)
+            .join(TwinAsset)
+            .where(TwinAsset.user_id == owner)
+            .order_by(TwinEvent.created_at, TwinEvent.id)
+            .limit(MAX_ROWS + 1)
+        )
+    ]
+    return result
+
+
+def cyber_export(db: DB, owner: Any) -> dict[str, Any]:
+    from app.cybersecurity import account_export
+
+    return account_export(db, owner)

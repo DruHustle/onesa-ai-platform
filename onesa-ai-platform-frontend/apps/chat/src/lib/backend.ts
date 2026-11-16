@@ -14,6 +14,21 @@ export async function proxy(request: Request): Promise<Response> {
         base.pathname !== '/' || base.search || base.hash) {
       throw new Error("Invalid server API origin");
     }
+    const loopback = (host: string) => ["localhost", "127.0.0.1", "[::1]"].includes(host);
+    // The default local Compose frontend reaches its API by the internal service name.
+    const localUpstream = loopback(base.hostname) || base.origin === "http://api:8000";
+    // Next standalone can use its internal listener in Request.url. Only a configured
+    // loopback Compose origin with the exact incoming Host can identify a local browser.
+    const publicOrigin = process.env.ONESA_PUBLIC_ORIGIN ? new URL(process.env.ONESA_PUBLIC_ORIGIN) : null;
+    const localComposeRequest = base.origin === "http://api:8000" && publicOrigin &&
+      loopback(publicOrigin.hostname) && request.headers.get("host") === publicOrigin.host;
+    const hosted = process.env.VERCEL || (publicOrigin && !loopback(publicOrigin.hostname)) ||
+      (!loopback(incoming.hostname) && !localComposeRequest) || !localUpstream;
+    const passwordEndpoint = /^\/api\/v1\/auth\/(login|register|recovery\/(request|complete))\/?$/;
+    if (hosted && request.method === "POST" && passwordEndpoint.test(incoming.pathname)) {
+      return Response.json({ error: { code: "shared_sign_in_required", message: "Continue with your Onesa account" } },
+        { status: 403, headers: { "cache-control": "no-store" } });
+    }
     const headers = new Headers(request.headers);
     for (const name of ['host', 'connection', 'transfer-encoding', 'content-length',
                         'forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto',
@@ -26,7 +41,7 @@ export async function proxy(request: Request): Promise<Response> {
     // Provider login/bypass cookies belong to Vercel, never the upstream API.
     const applicationCookies = (headers.get('cookie') || '').split(';')
       .map(cookie => cookie.trim())
-      .filter(cookie => ['onesa_session', 'onesa_csrf'].includes(cookie.split('=', 1)[0]));
+      .filter(cookie => ['onesa_session', 'onesa_csrf', 'onesa_identity_flow'].includes(cookie.split('=', 1)[0]));
     if (applicationCookies.length) headers.set('cookie', applicationCookies.join('; '));
     else headers.delete('cookie');
     // Avoid transparent fetch decompression leaving incorrect response headers.
@@ -63,15 +78,33 @@ export async function proxy(request: Request): Promise<Response> {
     const location = responseHeaders.get('location');
     if (location) {
       const redirect = new URL(location, base);
-      if (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol)) throw new Error("Invalid upstream redirect");
-      responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
+      const mobileCallback = incoming.pathname === '/api/v1/auth/onesa/callback' &&
+        request.method === 'GET' && upstream.status === 303 &&
+        redirect.protocol === 'onesaai:' && redirect.host === 'account' && redirect.pathname === '/callback' &&
+        !redirect.username && !redirect.password && !redirect.hash &&
+        redirect.searchParams.getAll('state').length === 1 && /^native_[a-zA-Z0-9_-]{43}$/.test(redirect.searchParams.get('state') || '');
+      if (!mobileCallback && (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol))) throw new Error("Invalid upstream redirect");
+      if (!mobileCallback) responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
     }
     responseHeaders.delete('set-cookie');
-    for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append('set-cookie', cookie);
+    const allowedResponseCookies = new Set([
+      'onesa_session',
+      'onesa_csrf',
+      'onesa_identity_flow',
+    ]);
+    for (const cookie of upstream.headers.getSetCookie()) {
+      const pair = cookie.split(';', 1)[0];
+      const separator = pair.indexOf('=');
+      const name = separator > 0 ? pair.slice(0, separator).trim() : '';
+      if (allowedResponseCookies.has(name)) responseHeaders.append('set-cookie', cookie);
+    }
     responseHeaders.set('cache-control', 'no-store');
     // Forward the stream directly: response-body cancellation closes the upstream stream.
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch {
-    return Response.json({ error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } }, { status: 503 });
+    return Response.json(
+      { error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } },
+      { status: 503, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } },
+    );
   }
 }

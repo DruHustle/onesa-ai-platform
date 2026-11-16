@@ -1,6 +1,6 @@
 # Tutorial verification steps
 
-Use [visual guides](/tutorials) for account creation, first Chat, history, Knowledge upload/search, agent grants and Travel. Screenshots use synthetic documentation data.
+Use [visual guides](/tutorials) for account creation, first Chat, history, Knowledge upload/search, agent grants and Travel. The screenshots below show synthetic data in the loopback developer quickstart. On the hosted platform, choose **Continue with Onesa** to sign in or create an account at Company Portal.
 
 | Procedure | Expected result |
 | --- | --- |
@@ -20,7 +20,7 @@ A checked deployment checklist is a local note, not automated infrastructure val
 
 ## Account, Chat and history
 
-1. Start the application with the quickstart, open the sign-in screen and choose Create an account.
+1. Start the loopback quickstart, open its sign-in screen and choose Create an account for the local fixture.
 2. Use synthetic development data and submit. Expected: the authenticated Chat view opens.
 3. Choose New conversation and send a short message. Expected: response text arrives and a completed message is saved.
 4. Reopen that conversation. Expected: owned history remains visible. The badge distinguishes real inference from mock.

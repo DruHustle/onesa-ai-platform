@@ -8,7 +8,11 @@ Content workflows implement draft creation, review, publication, unpublication, 
 
 ## Authentication and authorization
 
-Portal accounts are administrator-created. Password and MFA enrollment/login, recovery and session revocation are implemented. Mutations require same-origin validation and a session-bound CSRF token. Sensitive account changes require fresh password and authenticator/recovery proof. Backend roles constrain editorial, business, HR and owner operations. Hiding a navigation item does not authorize an operation.
+First-time users register, verify their email and wait for owner approval. Existing explicit approvals remain valid. Email sign-in links or email/password are supported; Portal administrators retain MFA. Factor requirements are disclosed only after credential proof. Recovery and session revocation are implemented. Mutations require same-origin validation and a session-bound CSRF token. Sensitive account changes require fresh password and authenticator/recovery proof. Backend roles constrain editorial, business, HR and owner operations. Hiding a navigation item does not authorize an operation.
+
+Engineering Docs uses separate individually enabled membership through Portal sign-in and the protected Docs access boundary. An ordinary AI account grants no Engineering, Portal or Robot permission. The protected Docs deployment is established; current owner sign-in and publication acceptance remain tied to their dated evidence.
+
+The Company Portal is Onesa’s corporate website and business system; it is not a separately marketed enterprise product.
 
 ## Public API reference
 

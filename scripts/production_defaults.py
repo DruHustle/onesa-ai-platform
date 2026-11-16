@@ -30,7 +30,7 @@ DEFAULTS = {
         "Given a user question, retrieve relevant document passages that answer the question"
     ),
     "ONESA_MAIL_PROVIDER": "disabled",
-    "ONESA_MAIL_FROM": "Onesa AI <noreply@mail.onesa.eu>",
+    "ONESA_MAIL_FROM": "Onesa AI <notifications-ai@onesa.eu>",
     "ONESA_MAIL_REPLY_TO": "info@onesa.eu",
 }
 PROFILES = (

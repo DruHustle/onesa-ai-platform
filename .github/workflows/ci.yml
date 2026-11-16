@@ -66,9 +66,14 @@ jobs:
           onesa-ai-platform-backend/requirements-dev.lock
 
           onesa-ai-platform-backend/requirements.lock'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24.22.1'
     - name: Verify shared system appearance and product contract
       run: node scripts/test_system_appearance.mjs
     - run: make install
+    - name: Evaluate synthetic industrial evidence without provider calls
+      run: .venv/bin/python scripts/evaluate_industrial.py
     - name: 'Release requirement: qualification failure-path tests'
       run: .venv/bin/python -m unittest discover -s scripts/release -p 'test_*.py'
     - run: .venv/bin/python scripts/check_secrets.py
@@ -94,8 +99,14 @@ jobs:
     - run: .venv/bin/python -m unittest discover -s scripts -p test_staging_release.py
     - run: python3 -m unittest discover -s scripts/docs -p 'test_*.py'
     - run: npm ci --prefix scripts/contract-tools --ignore-scripts
+    - name: Verify installed contract matcher safety and header selection
+      run: node scripts/contract-tools/matcher-security.test.cjs
+    - name: Audit locked contract generator dependencies
+      run: python3 scripts/ci/npm_audit.py --prefix scripts/contract-tools
     - run: make api-client contract-check && git diff --exit-code -- docs/api/openapi.json onesa-ai-platform-frontend/packages/api-client/
-    - run: .venv/bin/python -m pip_audit -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
+    - run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements.lock --disable-pip --no-deps
+    - name: Audit locked backend development dependencies
+      run: .venv/bin/python -m pip_audit --timeout 60 -r onesa-ai-platform-backend/requirements-dev.lock --disable-pip --no-deps
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.backend == 'true') }}
     timeout-minutes: 45
     permissions:
@@ -124,7 +135,7 @@ jobs:
       run: python3 scripts/ci/install_tools.py --only reviewdog
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
-        node-version: '24'
+        node-version: '24.22.1'
         cache: npm
         cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
 
@@ -134,6 +145,10 @@ jobs:
     - name: Verify application TLS trust and isolated certificate rejection
       run: node --test scripts/test_tls_trust.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
+    - name: Verify installed lint matcher safety and file selection
+      run: node --test scripts/test_lint_globs.cjs
+    - name: Validate the application-owned viewer contract and fixtures
+      run: node --test scripts/twins/viewer-contract.test.mjs scripts/twins/inspection.test.mjs scripts/twins/mechanical.test.mjs scripts/release/oracle_twin_backup_crypto.test.mjs scripts/release/oracle_vercel_transport_guard.test.cjs
     - run: 'cd onesa-ai-platform-frontend/apps/chat
 
         python3 ../../../scripts/ci/analyze.py eslint -- node_modules/.bin/eslint --format json .
@@ -144,8 +159,39 @@ jobs:
     - name: Verify TLS policy in traced server routes
       run: node scripts/check_tls_bundle.mjs onesa-ai-platform-frontend/apps/chat
     - run: node scripts/test_backend_proxy.cjs
-    - run: node --test scripts/test_ui_failure_diagnostics.cjs
-    - run: npm --prefix onesa-ai-platform-frontend/apps/chat audit --audit-level=high
+    - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs scripts/test_ui_navigation.cjs scripts/test_private_probe_receipt.cjs
+    - run: node --test scripts/release/oracle_ai_identity_browser.test.mjs
+    - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
+    - name: Audit the isolated owner CLI dependency lock
+      run: |
+        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/vercel-tools
+        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/npm-runtime
+    - name: Verify installed owner dependency security and compatibility
+      run: |
+        npm ci --ignore-scripts --prefix infra/oracle/vercel-tools
+        npm ci --ignore-scripts --prefix infra/oracle/npm-runtime
+        node --test scripts/release/oracle_dependency_security.test.cjs
+    - name: "Release requirement: private Docs publisher dependency lock"
+      run: python3 scripts/ci/npm_audit.py --prefix infra/oracle/cloudflare-tools
+    - name: "Release requirement: private Docs Linux single-dispatch protocol"
+      run: |
+        docker build -f infra/oracle/cloudflare.Dockerfile -t onesa-owner-cloudflare-cli:ci .
+        ONESA_CF_PROTOCOL_IMAGE=onesa-owner-cloudflare-cli:ci node --test scripts/release/oracle_cloudflare_client_protocol.test.cjs
+        node --test scripts/release/oracle_cloudflare_transport_guard.test.cjs
+    - name: Verify the pinned owner CLI prebuilt upload protocol offline
+      run: |
+        docker build -f infra/oracle/vercel.Dockerfile -t onesa-owner-cli-protocol:ci .
+        fixture=$(mktemp -d "$RUNNER_TEMP/onesa-cli-fixture-XXXXXX")
+        python3 - "$fixture" <<'PY'
+        import json, os, pathlib, sys
+        folder = pathlib.Path(sys.argv[1])
+        for name, value in [('auth.json', {'token': 'synthetic-loopback-only', 'userId': 'user_fixture', 'expiresAt': 4102444800, 'cachedUser': {'id': 'user_fixture', 'username': 'untrusted-cache'}}), ('config.json', {'currentTeam': 'team_fixture', 'usedBefore': False})]:
+            target = folder / name
+            target.write_text(json.dumps(value))
+            os.chmod(target, 0o600)
+        PY
+        python3 scripts/release/test_oracle_ai_frontend.py --prepare-cli-fixture "$fixture/workspaces"
+        docker run --rm --network none --read-only --user "$(id -u):$(id -g)" --tmpfs /tmp --tmpfs "/private/transport:rw,mode=700,uid=$(id -u),gid=$(id -g)" --cap-drop ALL --security-opt no-new-privileges -v "$fixture:/private/creds:ro" -v "$fixture/workspaces:/fixture-workspaces:ro" -v "$PWD/scripts/release/oracle_vercel_transport_guard.cjs:/private/guard.cjs:ro" -v "$PWD/scripts/release:/tests:ro" --entrypoint node onesa-owner-cli-protocol:ci --test /tests/oracle_vercel_client_protocol.test.cjs
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.frontend == 'true') }}
     timeout-minutes: 45
     env:
@@ -157,7 +203,7 @@ jobs:
     needs:
     - changes
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
       env:
@@ -175,18 +221,13 @@ jobs:
         ref: ${{ github.sha }}
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
-        node-version: '24'
+        node-version: '24.22.1'
         cache: npm
         cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
 
           onesa-ai-platform-frontend/apps/docs/package-lock.json
 
           scripts/contract-tools/package-lock.json'
-    - run: python3 scripts/bootstrap_env.py
-    - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
-    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
-    - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
       with:
         python-version: '3.11'
@@ -201,6 +242,31 @@ jobs:
 
           onesa-ai-platform-backend/requirements.lock'
     - run: make install
+    - run: python3 scripts/bootstrap_env.py
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
+    - run: ONESA_INDUSTRIAL_DEMO_ENABLED=true ONESA_INDUSTRIAL_IMPORT_ENABLED=true ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.twins-demo.yaml -f compose.cybersecurity-demo.yaml up --build --wait
+    - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
+    - run: ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- --project=chromium --project=webkit
+    # Stock headless Firefox disables WebGL 2 on this runner (AllowWebgl2:false).
+    # Exercise its real renderer under a disposable display, retaining every test.
+    - name: Verify Firefox rendering and workflows under Xvfb
+      run: xvfb-run -a env ONESA_BROWSER_URL=http://localhost:3100 npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- --project=firefox --headed
+    - name: Preserve isolated synthetic browser failure evidence
+      if: failure()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: isolated-browser-failure-${{ github.sha }}
+        path: onesa-ai-platform-frontend/apps/chat/test-results
+        if-no-files-found: ignore
+        retention-days: 1
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
     - run: make docs-api
     - run: node scripts/docs/capture.mjs
@@ -208,7 +274,7 @@ jobs:
     - run: .venv/bin/python scripts/docs/configure_test_demo.py --grant-test-demo
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose -f compose.yaml -f compose.docs.yaml
         up -d --wait
-    - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
+    - run: ONESA_DOCS_ASSISTANT_ENABLED=true ONESA_DOCS_API_URL=http://localhost:3100 make docs-public docs-internal
     - run: ONESA_DOCS_API_URL=http://localhost:3100 make docs-serve
     - run: ONESA_DOCS_EXPECT_BACKEND=mock make docs-browser
     - if: failure()
@@ -218,13 +284,13 @@ jobs:
 
         '
     - if: always()
-      run: docker compose down
+      run: docker compose -f compose.yaml -f compose.twins-demo.yaml -f compose.cybersecurity-demo.yaml down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.browser == 'true') }}
     timeout-minutes: 45
     needs:
     - changes
   documentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
       env:
@@ -257,7 +323,7 @@ jobs:
           onesa-ai-platform-backend/requirements.lock'
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
-        node-version: '24'
+        node-version: '24.22.1'
         cache: npm
         cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
 
@@ -286,7 +352,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       if: github.event.repository.private == false
       with:
-        repository: DruHustle/onesa-ai-robot
+        repository: DruHustle/onesa-robot
         ref: ${{ steps.docs-sources.outputs.robot }}
         path: data/docs-sources/robot
         persist-credentials: false
@@ -294,27 +360,37 @@ jobs:
       if: github.event.repository.private == false
       run: .venv/bin/python scripts/docs/ecosystem.py --portal data/docs-sources/portal --robot data/docs-sources/robot
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs ci
+    - name: "Release requirement: private Docs native asset refusals"
+      run: node --test scripts/docs/internal-native.test.mjs
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/docs && npx playwright install --with-deps chromium firefox webkit
+    - name: Install documentation browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/docs
+        npx playwright install --with-deps chromium firefox webkit
     - run: npm --prefix onesa-ai-platform-frontend/apps/docs run test:security
     - run: cd onesa-ai-platform-frontend/apps/docs && python3 ../../../scripts/ci/analyze.py tsc -- node_modules/.bin/tsc
         --noEmit --pretty false
     - run: python3 scripts/bootstrap_env.py
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_CHAT_PORT=3100 ONESA_PUBLIC_ORIGIN=http://localhost:3100 docker compose up --build --wait
     - run: node scripts/docs/capture.mjs
     - run: make docs-assets docs-public docs-internal docs-validate
     - name: Verify static public docs interactions and accessibility
       run: |
-        ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
-        node --test scripts/docs/readiness.test.mjs
-        node scripts/docs/acceptance.mjs
+        ONESA_DOCS_ENVIRONMENT=staging ONESA_DOCS_STATIC_HOSTING=true ONESA_DOCS_URL=https://docs.onesa.eu ONESA_APPLICATION_URL=https://platform.onesa.eu npm --prefix onesa-ai-platform-frontend/apps/docs run build:public
+        node --test scripts/docs/readiness.test.mjs scripts/docs/owned-browser-check.test.mjs scripts/docs/native-full-preflight.test.mjs
+        ONESA_DOCS_EXPECTED_ENVIRONMENT=staging node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
     - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.documentation == 'true') }}
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
@@ -348,16 +424,22 @@ jobs:
     - run: ONESA_MODEL_API_KEY=validation-only docker compose -f infra/deployment/proposals/compose.hosted-vllm.yaml config
         --quiet
     - run: docker compose build api chat
+    - name: Fetch pinned fixture database with bounded registry-read recovery
+      timeout-minutes: 4
+      run: python3 scripts/ci/pull_image.py --database
     - run: ONESA_MODEL_BACKEND=mock ONESA_PUBLIC_ORIGIN=http://localhost:3120 docker compose -p onesa-ci -f compose.yaml -f
         compose.staging.yaml up --wait --wait-timeout 180
     - run: curl --fail http://localhost:3120/ready
-    - run: docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down
+    - name: Verify NVIDIA artifact delivery from the running frontend image
+      run: python3 scripts/check_reference_delivery.py http://127.0.0.1:3120
+    - if: always()
+      run: docker compose -p onesa-ci -f compose.yaml -f compose.staging.yaml down
     if: ${{ (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && (needs.changes.result == 'success' && needs.changes.outputs.containers == 'true') }}
     timeout-minutes: 45
     needs:
     - changes
   tls-acceptance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Verify GitHub-hosted execution and actual visibility
       env:
@@ -388,7 +470,7 @@ jobs:
           onesa-ai-platform-backend/requirements.lock'
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
-        node-version: '24'
+        node-version: '24.22.1'
         cache: npm
         cache-dependency-path: 'onesa-ai-platform-frontend/apps/chat/package-lock.json
 
@@ -396,8 +478,10 @@ jobs:
 
           scripts/contract-tools/package-lock.json'
     - run: make install
-    - run: .venv/bin/python -m pip_audit -r infra/operations/requirements.lock --disable-pip --no-deps
+    - run: .venv/bin/python -m pip_audit --timeout 60 -r infra/operations/requirements.lock --disable-pip --no-deps
     - run: python3 scripts/acceptance/bootstrap.py
+    - name: Fetch pinned TLS proxy with bounded registry-read recovery
+      run: python3 scripts/ci/pull_image.py
     - name: Build and start isolated TLS staging
       run: docker compose --env-file data/acceptance-005/staging.env -p onesa-acceptance-005 -f compose.yaml -f compose.production.yaml
         -f compose.acceptance.yaml up --build --wait --wait-timeout 240
@@ -406,7 +490,12 @@ jobs:
         -f compose.acceptance.yaml cp proxy:/data/caddy/pki/authorities/local/root.crt data/acceptance-005/staging-ca.crt
     - run: .venv/bin/python scripts/acceptance/tls_security.py
     - run: npm --prefix onesa-ai-platform-frontend/apps/chat ci
-    - run: cd onesa-ai-platform-frontend/apps/chat && npx playwright install --with-deps chromium firefox webkit
+    - name: Install application browsers and system dependencies
+      timeout-minutes: 10
+      run: |
+        sudo -n --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,RUNNER_OS,GITHUB_REPOSITORY python3 scripts/ci/browser_dependencies.py
+        cd onesa-ai-platform-frontend/apps/chat
+        npx playwright install --with-deps chromium firefox webkit
     - run: ONESA_LOCAL_TLS_TEST=1 ONESA_BROWSER_URL=https://localhost:3443 npm --prefix onesa-ai-platform-frontend/apps/chat
         run test:e2e -- tests/chat.spec.ts
     - run: .venv/bin/python scripts/acceptance/load.py --resources --users 4 --iterations 3 --output data/acceptance-005/ci-load.json
@@ -460,6 +549,9 @@ jobs:
         ref: ${{ github.sha }}
     - name: Build application runtime
       run: docker build -t onesa-security-candidate:ci ./${{ matrix.application }}
+    - name: Verify health client success, failure, proxy isolation and timeout
+      if: matrix.application == 'onesa-ai-platform-backend'
+      run: python3 scripts/healthcheck_smoke.py onesa-security-candidate:ci
     - name: Verify default production image startup and shutdown
       if: matrix.application == 'onesa-ai-platform-backend'
       run: python3 scripts/startup_smoke.py onesa-security-candidate:ci

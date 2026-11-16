@@ -5,6 +5,7 @@ import io
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +22,32 @@ PATTERNS = {
     "credential-assignment": rb"(?im)^\s*(?:export\s+)?(?:[A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|API_KEY|SESSION_KEY|PRIVATE_KEY))\s*=\s*[\"']?([A-Za-z0-9_+/=-]{20,})",
 }
 RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
+
+# One exact historical fixture was a fake test credential, not provider authority.
+# Keep the exception scoped to both its test path and exact synthetic value.
+SAFE_CREDENTIAL_FIXTURES = {
+    # Exact, reviewed synthetic values used only by isolated protocol/UI tests.
+    (
+        "onesa-ai-platform-backend/tests/test_embedding_service.py",
+        b"synthetic-embedding-key",
+    ),
+    (
+        "onesa-ai-platform-backend/tests/test_onesa_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-backend/tests/test_shared_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-frontend/apps/chat/tests/account.spec.ts",
+        b"browser-account-changed-456",
+    ),
+    (
+        "scripts/release/test_oracle_ai_identity_probe.py",
+        b"synthetic-test-ciphertext",
+    ),
+}
 DENIED_PARTS = {
     "data",
     "storage",
@@ -113,20 +140,16 @@ def secrets(data, name):
     for rule, pattern in RULES.items():
         matches = list(pattern.finditer(data))
         if rule == "credential-assignment":
-            # Documented non-credential examples/test fixtures still need review.
+            # Only explicit replacement instructions are placeholders. Substring
+            # matches can hide real credentials containing ordinary words.
             matches = [
                 m
                 for m in matches
-                if not any(
-                    marker in m.group(1).lower()
-                    for marker in (
-                        b"placeholder",
-                        b"replace",
-                        b"example",
-                        b"test",
-                        b"change",
-                        b"your_",
-                    )
+                if (name, m.group(1)) not in SAFE_CREDENTIAL_FIXTURES
+                and not m.group(1)
+                .lower()
+                .startswith(
+                    (b"replace-with-", b"replace_with_", b"replace-if-", b"replace_if_")
                 )
             ]
         if matches:
@@ -138,9 +161,36 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--history", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--monorepo-root", type=Path)
     args = parser.parse_args()
-    if Path(git("rev-parse", "--show-toplevel").decode().strip()).resolve() != ROOT:
-        raise SystemExit("Refusing to scan an inherited ancestor repository")
+    repository_root = Path(
+        git("rev-parse", "--show-toplevel").decode().strip()
+    ).resolve()
+    if repository_root != ROOT:
+        gate = repository_root / "scripts/repository_hygiene.py"
+        if (
+            args.monorepo_root is None
+            or args.monorepo_root.resolve() != repository_root
+            or ROOT.parent != repository_root
+            or ROOT.name
+            not in {
+                "onesa-company-portal",
+                "onesa-ai-platform",
+                "onesa-robot",
+                "onesa-drone",
+            }
+            or gate.is_symlink()
+            or not gate.is_file()
+        ):
+            raise SystemExit("Refusing to scan an inherited ancestor repository")
+        command = [sys.executable, str(gate), "--product", ROOT.name]
+        command += ["--history"] if args.history else []
+        command += ["--json"] if args.json else []
+        raise SystemExit(
+            subprocess.run(command, cwd=repository_root, check=False).returncode
+        )
+    if args.monorepo_root is not None:
+        raise SystemExit("Monorepo mode requires the explicit consolidated checkout")
     findings = []
 
     def inspect(scope, name, data):

@@ -24,11 +24,16 @@ from app import (
     auth,
     capacity,
     chat,
+    consumer_api,
     conversations,
+    cybersecurity,
     documentation,
+    industrial,
     knowledge,
     observability,
+    release_identity,
     travel,
+    twins,
 )
 from app.config import Settings
 from app.database import REQUIRED_SCHEMA_REVISION, make_engine
@@ -48,7 +53,16 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
             engine.dispose()
 
     logging.getLogger("onesa.requests").setLevel(logging.INFO)
-    api = FastAPI(title="Onesa AI API", version="0.1.0", lifespan=lifespan)
+    # Contracts are generated offline and published through classified Docs.
+    # Do not expose an anonymous inventory of private application endpoints.
+    api = FastAPI(
+        title="Onesa AI API",
+        version="0.1.0",
+        lifespan=lifespan,
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+    )
     api.add_middleware(BodyLimit)
     api.state.auth_hash_semaphore = threading.BoundedSemaphore(config.auth_hash_concurrency)
     api.state.ingestion_semaphore = asyncio.Semaphore(config.knowledge_upload_concurrency)
@@ -64,16 +78,23 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
     from app.identity import router as identity_router
 
     api.include_router(identity_router)
+    from app.shared_identity import router as shared_identity_router
+
+    api.include_router(shared_identity_router)
     from app.uploads import router as uploads_router
 
     api.include_router(uploads_router)
     api.include_router(account.router)
     api.include_router(conversations.router)
+    api.include_router(consumer_api.router)
     api.include_router(chat.router)
     api.include_router(knowledge.router)
     api.include_router(agents.router)
     api.include_router(travel.router)
     api.include_router(documentation.router)
+    api.include_router(industrial.router)
+    api.include_router(twins.router)
+    api.include_router(cybersecurity.router)
     api.include_router(observability.router)
 
     @api.exception_handler(HTTPException)
@@ -136,7 +157,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
             )
         if lease_id is not None:
             # Error handlers produce a regular response; release immediately in that case.
-            if hasattr(response, "body_iterator"):
+            if response.status_code < 400 and hasattr(response, "body_iterator"):
                 stream = cast(StreamingResponse, response)
                 original = stream.body_iterator
                 identifier = lease_id
@@ -158,6 +179,15 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 stream.body_iterator = bounded_stream()
             else:
                 await run_in_threadpool(capacity.end, request, lease_id)
+        if config.cybersecurity_enabled and engine is not None:
+            try:
+                await run_in_threadpool(
+                    cybersecurity.capture_decision, request, response.status_code
+                )
+            except Exception:
+                # Optional monitoring must not turn an auth decision into an outage.
+                # Fixed diagnostic only; never include request, credentials or exceptions.
+                logging.getLogger("onesa.requests").error("security_capture_unavailable")
         observability.record(request, response.status_code, time.monotonic() - started)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -166,7 +196,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
 
     @api.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", **release_identity.identity(config.environment)}
 
     @api.get("/core-ready", responses={503: {"description": "Core database unavailable"}})
     @api.get("/ready", responses={503: {"description": "Model backend unavailable"}})
@@ -176,7 +206,34 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 return False
             with Session(engine) as db:
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
-                valid = revision == REQUIRED_SCHEMA_REVISION
+                valid = revision in {
+                    REQUIRED_SCHEMA_REVISION,
+                    "20261102_shared_identity",
+                    "20261026_cybersecurity",
+                    "20261025_twins",
+                    "20261021_industrial",
+                    "20261010_capacity",
+                }
+                if config.industrial_demo_enabled:
+                    valid = revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
+                        "20261026_cybersecurity",
+                        "20261025_twins",
+                        "20261021_industrial",
+                    }
+                if config.digital_twins_enabled:
+                    valid = revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
+                        "20261026_cybersecurity",
+                        "20261025_twins",
+                    }
+                if config.identity_enabled:
+                    valid = valid and revision in {
+                        REQUIRED_SCHEMA_REVISION,
+                        "20261102_shared_identity",
+                    }
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(

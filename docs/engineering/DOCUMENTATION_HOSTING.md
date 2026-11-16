@@ -1,5 +1,21 @@
 # Onesa UG documentation hosting
 
+Publication now belongs to [Onesa Documents](https://github.com/DruHustle/onesa-documents).
+Use [external documents](https://docs.onesa.eu) for public material and
+[internal documents](https://docs.internal.onesa.eu) for permissioned material.
+
+## Historical AI documentation hosting
+
+The following sections preserve the retired AI publisher's procedures and
+observations. Current deployments use the Onesa Documents repository.
+
+
+Public Docs native preflight checks every bound asset and the complete interaction,
+layout and accessibility matrix before qualification is reserved. Readiness still
+grants no qualification or deployment authority; signed observations remain separate.
+Cancelled same-origin reads retain mandatory response and UI checks; foreign or
+write requests and unexpected interception failures still block native acceptance.
+
 ## Public source and protected operational documents
 
 Repository visibility remains public under the owner's current instruction. Public
@@ -23,8 +39,79 @@ records the original per-document repository/revision/content hash plus the bund
 hash alongside the publishing code revision. Never label external private bodies as
 bytes committed in the public publishing revision. Internal caches/builds and final
 packages are restricted; public generation and exports remain separately allowlisted.
-Current protected publication still needs its own approved-identity browser acceptance;
+Each protected publication needs its own approved-identity browser acceptance;
 source cleanup or a temporary mailbox test cannot stand in for that observation.
+The current accepted protected edition is recorded below.
+
+Credential-free `docs-hosting.yml` builds produce separate staging-context and
+production-context public archives. The external owner toolchain can read these
+through `scripts/release/oracle_docs_build.py`, which revalidates exact Main CI,
+the real positive Actions run ID, mandatory successful build steps, skipped provider
+steps, both artifact digests, public provenance and their rendered context labels.
+Development-labelled archives cannot be renamed into staging evidence. This reader
+produces build evidence only: owner-controlled Preview publication, native hosted
+acceptance, scoped authorization and canonical production observation remain required.
+It creates no authorization record or deployment request and does not install or
+commission a Docs issuer. Existing conditional native-metadata paths retain their gates.
+
+New build-only runs also upload `onesa-public-docs-local-build-checks`, containing
+the actual typed staging and production local acceptance results. The external
+reader's explicit `require_local_checks=True` mode requires all three genuine
+artifacts and both additional successful recording/upload steps. It verifies the
+check archive digest, positive Actions run ID, source, context, full view matrix,
+expiry and unchanged custody after reading. Legacy two-archive inspection remains
+available separately; it cannot satisfy the new check mode. These local checks
+never claim an owner-run receipt, a hosted PASS or deployment authority.
+
+The consolidated repository has a separate generated, public build-only entrypoint:
+`onesa-public-docs-build.yml`. After reviewed source reaches canonical Main, the
+owner can dispatch it with `gh workflow run onesa-public-docs-build.yml --repo
+DruHustle/onesa-ug --ref main`. It has no Preview target, provider credential,
+deployment step or private source input. It preserves the existing classified
+build and local acceptance commands, uses the pinned imported Portal and Robot
+contracts, and uploads exactly the two public site archives and the local-check
+archive. Reference-only internal checks remain local to CI and are not uploaded.
+
+Its schema-2 local-check envelope binds numeric repository identity, exact root
+commit/tree and the `onesa-ai-platform` subtree, with verification-only status and
+all release grants false. The external reader requires the complete public trio
+and the separately pinned canonical Platform source-artifact ZIPs, reuses exact
+current-Main source/CI verification before and after the read, and retains all
+existing freshness, successful-step, archive, classification and context checks.
+Canonical build evidence cannot use the legacy two-archive inspection mode or
+contain provider steps. Schema-1 legacy evidence remains unchanged. This public
+build path grants no installation, owner context, publication or native authority.
+
+The separate canonical public operational profile explicitly selects schema 2 and
+`docs-public`. Installation, policy and every existing source/CI recheck bind the
+numeric repository, exact current-main commit/root tree, Platform subtree and
+fixed installed source-artifact ZIPs. Product-relative tar reconstruction remains
+separate from the root source identity. The full identity also travels through
+prepared publications, provider metadata and signed native observations. The
+existing public Docs project must remain independently pinned with no Git link.
+
+Canonical and legacy public installations retain the same global publication lock
+and operation journal scan. Uncertain older requests cannot be hidden by a new
+source/store; terminal provider inspection grants no production acceptance. The
+new policy is separate from all AI application profiles and cannot activate
+protected Engineering Docs. Legacy schema-1 records and private publication
+contracts remain unchanged. Actual controller cutover, installed custody, native
+observer commissioning and retained rollback facts require owner inspection.
+
+The public Docs owner adapter extends the existing external Oracle verifier. Its
+installation is checked against reviewed Main and fresh CI; installation, issuer
+commissioning and native-observer commissioning remain separate actions. A new
+observer key is untrusted until the owner commissions its exact source and runtime
+closure. Neither caller JSON nor an Actions artifact is owner authorization.
+
+Preview and production requests retain durable operation identities and a guarded
+create budget. Interrupted outcomes require read-only inspection; repeating an
+operation cannot submit another deployment. Production remains unverified until
+the actual canonical source, complete artifact bytes and required native browser
+workflows pass. Detailed commands, trust configuration and observed deployment
+status belong in the protected canonical procedure. This implementation reference
+does not claim a commissioned installation or a completed publication. Protected
+Engineering Docs retains its separate existing publication and access gates.
 
 
 ## Current public Docs release — 2026-10-20
@@ -50,11 +137,10 @@ and the already approved isolated browser was reopened when its endpoint was abs
 At the time of that Docs release, the AI application retained frontend `3b38acd862f8db177035adec49c920470217894d`
 / `dpl_2eoxXHgQwxrHxo72fL2uXmVEKKP9`, with Oracle API
 `6011890047dc16267147241ea68b94f494c89827`; no backend or application deployment
-accompanied this Docs release. Protected Engineering Docs retains the separate
-last accepted source `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages
-`2daea640-3c73-40da-8b01-397bec2ca3ea`. That identity is a release-record claim,
-not a new authenticated production observation. Its updated learning homepage
-remains unpublished pending its own approved-identity verification and controls.
+accompanied this public Docs release. At that time protected Engineering Docs retained
+source `0f2f19067cf4dc55b4fd2156571c7b612319aee1`, Pages
+`2daea640-3c73-40da-8b01-397bec2ca3ea`. That historical edition was superseded by the
+independently accepted 22 October protected release below.
 
 Restricted receipts, before/after captures and the 26-finding register remain in
 the existing owner release evidence area. No private evidence bundle is published
@@ -62,6 +148,30 @@ with these public sources. Rollback uses the previously accepted public Docs
 `3b38acd862f8db177035adec49c920470217894d` / `dpl_94epioyn7QQv1BpL1qPNYdNqY3Eh`
 through the same owner-controlled process after verifying current provider state;
 it does not roll back the AI application, backend or protected Docs.
+
+## Current protected Docs release — 2026-10-22
+
+Protected source `34e9ab83c412fc87183a1428537ae0547a22ed04` is accepted at
+`https://docs.engineering.onesa.eu/`, Pages `48d6eebd-3692-4241-87c1-df6e1d37ef4d`.
+Its exact-source Preview and canonical production each verified all 751 private
+files byte-for-byte, anonymous denial on every published path, 18 responsive and
+accessibility views, application navigation, search, icons and architecture topics.
+The edition contains 22 manuals and 87 diagrams. The actual approved owner session
+and current Portal identity / exact-membership controls passed; this is not inferred
+from a temporary mailbox or a successful link-request response.
+
+Actions qualification `39771458619` and conditional owner authorization
+`39771516658` carried only bounded counts and hashes. The external pinned
+verifier established hosted acceptance before one production upload. No private
+HTML/PDF/source bundle was uploaded to public Actions. The earlier edition, original
+source hashes, failed observations and rollback evidence remain in restricted custody.
+
+The AI application retained frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6`
+and Oracle backend `7079a66dc0c2fc9de9cd632894b45a9a5cea5048`; public Docs retains
+source `4f30218dca47d1197a0cb88b25a16bd33696832a`. This protected publication changed
+no backend, membership, credential or inference configuration. New repository
+metadata commits do not change the serving protected source above. G14 decisions
+remain deferred and are not converted into approvals by this publication.
 
 ## Engineering sign-in and membership — owner direction, 2026-10-16
 

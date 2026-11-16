@@ -1,5 +1,451 @@
 # Separate application builds and tests
 
+## Shared Onesa identity source candidate
+
+Run `tests/test_onesa_identity.py` and `tests/test_shared_identity.py` through the
+normal Python 3.11 backend suite against a disposable PostgreSQL/pgvector database
+whose name ends in `_test`. The shared adapter tests cover explicit account proof,
+immutable ownership, encrypted token custody, state expiry/replay/races, issuer
+failure, live central revocation, concurrent local logout/disable, subject-bound
+fresh reauthentication, preserved explicit user-ID grants, shared-account switching,
+refresh metadata and truthful partial/global sign-out. Generation regressions cover
+midstream central/local revocation, expiry/disable, quiet-upstream cancellation,
+forced final validation, local commit races, explicit browser-disconnect polling,
+existing real socket-disconnect cleanup and compatible callback lock ordering.
+Protocol tests independently
+exercise bounded HTTP parsing, reserved Basic credentials, current product roles,
+product/global administrator MFA and explicit global-revocation confirmation.
+
+Explicitly rejected, substituted or unmapped shared sessions are permanently revoked locally before the request fails; restoring central access requires a fresh sign-in. Transient issuer 503 responses preserve the session for retry. Real PostgreSQL regressions also ensure this revocation discards unrelated uncommitted application changes and preserves the existing post-introspection logout/expiry fence.
+
+The ordinary full suite also validates the additive schema and its owner DML grant
+set. Run `python -m unittest discover -s scripts/release -p 'test_oracle_ai_*.py'`
+for the existing release observation, backup and owner-runner policy checks. These
+checks keep prior release profiles closed. Explicit `identity-api` and
+`identity-frontend` profiles add source-bound identity activation without changing
+the existing foundation, Twins or Cybersecurity scopes. The identity profile
+preserves every native feature flag and requires its normal workflow, persistence,
+restore and replacement checks as well as real PKCE/MFA and immutable local-account
+mapping. Existing synthetic accounts retain their passwords, ownership and grants;
+the probe retires only sessions it created. First-time linking uses the separate
+existing local-account password through the real application interface.
+
+Run `test_oracle_ai_identity_release.py`, `test_oracle_release_profiles.py`,
+`test_oracle_profile_ledger.py` and `test_oracle_install.py` with unittest discovery
+for source, exact policy, custody, preserved-configuration and adverse receipt
+regressions. The new migration response requires all 24 scoped table grants;
+runtime DDL and privileged roles remain refused. A newly commissioned profile
+must prove the retained image against the additive identity schema with the
+actual prior native feature flags; an older future-schema receipt does not cover
+this migration. These local checks do not establish a commissioned host, actual
+provider configuration or hosted acceptance. Regenerate OpenAPI, typed clients
+and database documentation using the existing generators after changing
+authentication contracts.
+
+An incompatible historical image needs an independently qualified compatible
+bridge before identity activation. Existing native profiles can qualify the new
+source with identity disabled and native features unchanged. The separate identity
+profile may then use the same source and image only with different, fully bound
+identity configurations and a real accepted native-profile record. Its fresh
+restore rehearsal still executes the retained image against the new additive
+schema for both environments. Sharing an image never transfers the native
+profile's deployment authority to the identity profile.
+
+The native bridge is qualified against its existing feature-compatible schema;
+it does not apply the shared-identity migration early. Current application
+readiness accepts the supported native revisions while identity is disabled and
+requires `20261102_shared_identity` when enabled. The migration runner continues
+to refuse a downgrade. The native frontend consumes its matching accepted native
+API plan and schema; identity API/frontend contexts remain independent.
+`test_native_bridge_runs_before_and_after_actual_identity_migration` creates fresh
+disposable `_test` databases at the real Capacity, Twins and Cybersecurity
+revisions. It runs native authentication, ownership and workflow checks before and
+after the actual additive upgrade for all four feature combinations, verifies
+preserved account IDs/password hashes and data, and checks that identity-enabled
+readiness refuses the old schema. It never rewrites the shared test database's
+revision label or presents current-source tests as retained-image acceptance.
+
+`test_oracle_identity_restore.py` covers exact existing fixture UUID/email and
+issuer/subject mappings, preserved native flags, old configuration hashes, an
+independently accepted retained image, failed restore manifests and unsafe cleanup.
+`tests/test_identity_rollback_workflows.py` runs the same application program used
+inside the isolated rollback images against real PostgreSQL for all four native
+feature combinations. It verifies password sign-in, persisted conversation and
+native asset ownership, CSRF refusal and logout with shared identity disabled.
+The owner rehearsal additionally generates the exact additive schema, dumps and
+restores only new synthetic databases, and executes both immutable image IDs.
+Its receipt is written only after successful isolated-container cleanup. Neither
+unit fixtures nor current-source PostgreSQL tests prove that a historical image
+can serve the future schema; the exact retained-image rehearsal remains required.
+
+The identity browser bridge completes the actual Portal password, MFA, S256
+authorization and application callback flow for both existing synthetic actors.
+It observes the original AI user IDs, current central subjects and host-only
+session/CSRF cookies. An initial link additionally proves the separate existing
+AI password. Protected Preview access uses isolated origin-specific cookie
+handshakes with redirects disabled; provider access headers never follow the
+identity navigation. The ordinary API suite, all 42 staging interface views and
+every enabled native feature journey remain required. Only sessions whose token
+and CSRF hashes this operation actually observed may be retired. An unmatched
+concurrent session, uncertain callback or changed existing data prevents a passing
+receipt and preserves the private diagnostic inputs.
+
+`test_oracle_ai_identity_probe.py` covers narrowed source/actor/expiry custody,
+fixture boundaries, host-only cookies, observed-session cleanup and native probe
+integration. Its isolated in-memory ORM cleanup tests do not establish PostgreSQL
+hashing or hosted acceptance. Run the browser boundary tests with
+`node --test scripts/release/oracle_ai_identity_browser.test.mjs` alongside the
+existing navigation and private-receipt tests. These tests exercise real parser,
+cookie-scope and callback checks without supplying a live identity or provider.
+The UI observer registers the successful main-frame start POST and actual issuer
+authorization GET before clicking. It validates client, callback, S256 challenge,
+nonce, state, scope and step-up fields on the actual browser request, then binds the
+callback to that transaction and requires the actual account, session and cookies.
+It reads no UI response body after document replacement and installs no additional
+request route. The backend still binds the callback to its stored state, browser
+cookie and PKCE verifier. API-only acceptance keeps its original request and parses
+the JSON before navigation. Deterministic regressions cover unavailable UI response
+bodies, request boundaries and API-only behavior before Portal credential entry;
+they do not establish hosted acceptance.
+
+The private credential payload pin covers all source, scope, environment, actor
+and secret fields. Only its `created_at` and `expires_at` envelope may change.
+After verifying an already reserved staging context or recorded deployment
+intent, the owner runner can issue one bounded lease for that operation, capped
+at one hour and the earliest expiry in the verified signed record chain. It writes
+a durable private intent before replacing the time envelope, rechecks the identical
+signed chain and custody bytes, and refuses an interrupted or repeated extension.
+This does not renew release authority or change provider/runtime configuration. Each probe still
+receives a separately byte-pinned, single-environment copy and checks expiry
+before using credentials. In-flight copies cannot extend their own lifetime.
+
+The Chat `tests/shared-identity.spec.ts` fixtures are loopback-only and use synthetic
+intercepted responses. They cover English/German mobile and keyboard entry, loading
+or unavailable sign-in configuration, central code-flow navigation, retry, explicit
+legacy account proof, the common administration/settings hub, draft recovery,
+verified completion and partial global logout. Run them in the existing Chromium,
+Firefox and WebKit matrix. A separately supplied Chromium 153 binary can provide
+supplemental feedback where the normal Playwright browser download is unavailable;
+record its identity and safe launch options separately. It does not substitute for
+the pinned native browser matrix, actual issuer integration, manual accessibility,
+or source-bound staging acceptance. No hosted identity or production release is
+inferred from these synthetic checks.
+
+See [shared identity](SHARED_IDENTITY.md) for dependency provenance, private
+configuration, account migration and owner-controlled activation prerequisites.
+
+## NVIDIA visual reference library
+
+`tests/test_twin_references.py` validates the pinned catalog, exact GLB, thumbnail,
+licence and conversion-provenance bytes, and equality of the independently packaged
+frontend/backend copies. Real PostgreSQL tests cover account isolation, CSRF,
+revocation after parsing, concurrent and lost-response retries, existing quota limits,
+corrupt/missing files and absence of invented readings or device connections.
+Run it through the ordinary backend suite against a disposable `_test` database.
+
+`tests/twin-references.spec.ts` runs through the normal three-engine browser matrix.
+It exercises automatic rendering, selection, private import and reload, retry after
+a lost import response, file/catalog failures, graphics-context loss and disposal,
+mobile framing and fallback, keyboard accessibility and live system-theme changes.
+External network requests are blocked in this loopback-only synthetic fixture.
+Protected-preview coverage uses a synthetic HttpOnly cookie gate and real model
+rendering. A redirected reference must fail before the browser requests its target;
+retry after restoring local delivery preserves the signed-in session.
+Browser rendering does not qualify
+physical behaviour, collision accuracy, robot articulation or real model quality.
+
+Both components package their own copied `twin_reference_data` / `public/models/nvidia`
+bytes; no sibling checkout, remote asset server or NVIDIA service is required at
+runtime. Imports retain the source revision, attribution, licence and conversion
+metadata in private owned records. Existing Digital Twins activation, durable storage,
+source-bound CI and owner-controlled hosted release gates remain required.
+
+The frontend Docker runtime explicitly copies `apps/chat/public` alongside the
+standalone server and generated static files. Next.js standalone tracing does not
+copy this public directory automatically. The existing container job runs
+`python3 scripts/check_reference_delivery.py http://127.0.0.1:3120` against its
+running image through the isolated staging proxy. This credential-free HTTP check
+requires the exact source manifest and all twelve model, thumbnail, licence and
+provenance files, plus `/licenses/three.txt`, with matching byte lengths, SHA-256
+digests and media types.
+Missing files, redirects and changed bytes fail the container job. A local
+standalone-server rehearsal is supplemental; it does not replace image or hosted
+qualification.
+
+The browser distribution retains the complete Three.js MIT notice, copied unchanged
+from the installed `three@0.186.1` package's `LICENSE` (1,081 bytes; SHA-256
+`8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc`). Its provenance is
+the exact registry archive and SHA-512 integrity recorded in the application's
+`package-lock.json`. Every frontend build first runs
+`node scripts/check_renderer_notice.mjs` from `apps/chat`, comparing the pinned
+dependency, lock entry, installed package and complete public notice. Vendor upgrades
+must preserve the installed licence and update reviewed delivery metadata when its
+bytes change. This notice is separate from the unchanged NVIDIA CC BY artifacts.
+
+`node --test scripts/docs/cloudflare-access.test.mjs` checks the protected Pages
+worker with synthetic signed identities. Generated Mermaid sources must retain
+their exact bytes and private headers while overriding Pages' karaoke MIME type
+with UTF-8 plain text. Denied identities cannot reach assets; error responses and
+unrelated asset types retain their provider MIME type. Hosted byte and MIME
+verification remains mandatory for each new private Docs artifact.
+
+Hosted UI receipts are created privately and exclusively before the unchanged
+owner probe reads them. The credential-free receipt regression runs the actual
+Python reader against Node-created files, including a permissive-writer negative
+control, existing-file preservation and simultaneous independent writers. These
+local checks do not qualify a hosted release.
+
+`python3 -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
+and `python3 -m unittest discover -s scripts/docs -p test_build_evidence.py`
+verify genuine build/local-check custody separately from owner hosted acceptance.
+They reject run ID zero as an Actions run, source/context drift, failed or skipped
+checks, changed bytes, expiry and attempts to grant authority from local results.
+No provider or production credentials are used by these tests.
+
+The owner frontend fixture injects a conflicting production default and verifies
+explicit Preview selection before staging dispatch. A wrong provider target retains
+the one-create intent and refuses acceptance. Actual pinned CLI protocol fixtures
+also exercise the explicit staging argument with synthetic loopback-only services.
+These controls use no provider credentials and do not establish hosted acceptance.
+
+Installer fixtures also place disposable custody under the private home directory
+when executed as root. The explicit writable-parent regression still requires the
+production verifier to reject shared writable ancestors; no custody guard changes.
+
+Run `python3 -m unittest discover -s scripts/ci -p test_browser_dependencies.py`
+for the disposable GitHub-runner browser preparation boundary. The helper selects
+`https://archive.ubuntu.com/ubuntu/` for noble, noble-updates and noble-backports,
+and `https://security.ubuntu.com/ubuntu/` for a separate noble-security stanza.
+Selection requires the exact `mirror+file:/etc/apt/apt-mirrors.txt` URI, canonical
+Ubuntu Signed-By identity and reviewed public-key bytes, and bounded Deb822 fields. Unknown,
+duplicate, mixed, malformed or authentication-relaxing input fails before writes;
+legacy active mirror indirection also fails. Comments, continuations and line
+endings follow the [Ubuntu Noble source format](https://manpages.ubuntu.com/manpages/noble/en/man5/sources.list.5.html),
+with ambiguous inline comments refused. Only the affected URI and Signed-By path
+values change; all other source bytes are preserved.
+The unused mirror list is neither read nor modified, and disabled validated stanzas
+remain disabled. Existing source/config custody, signed package verification,
+timeouts, retries and fatal repository-update errors remain required.
+
+The observed hosted image made the canonical keyring root-owned but mode `0777`.
+The helper never changes its bytes or mode, and APT is not rebound to that writable
+file. A single no-follow, nonblocking descriptor captures at most 3608 bytes after
+validating regular-file metadata, one link, root ownership/group, mode `0644` or
+the observed `0777`, and exact size 3607. The captured buffer must match SHA-256
+`80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31`.
+Only those bytes can be copied to
+`/etc/apt/onesa-ci-keyrings/ubuntu-noble-2023.11.28.1.gpg`. Its held directory
+ancestry must be root-owned, non-writable by group/others and traversable by APT;
+the new directory is `0755` and file `0644`. A completed, fsynced exclusive temporary
+file is published without replacing any existing final name. Existing copies must
+already match the same bytes and custody; conflicts refuse. All sources, existing
+configuration and copy plans validate before any write. Repeated execution validates
+both original and protected key even after the affected stanzas have been rebound.
+The result reports Signed-By path changes separately from unchanged signer bytes,
+suites and components. No runtime download or automatic key rotation is supported.
+
+The reviewed pin and embedded public verification-key fixture come from Ubuntu's
+[Noble ubuntu-keyring 2023.11.28.1 metadata](https://packages.ubuntu.com/noble/all/ubuntu-keyring/download)
+and its [official package](https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1_all.deb).
+The 11124-byte package matches the HTTPS-published SHA-256
+`36de43b15853ccae0028e9a767613770c704833f82586f28eb262f0311adb8a8`;
+in-memory extraction of its canonical public-key member yields regular file,
+UID/GID `0:0`, mode `0644`, size 3607 and the key digest above. This is provenance
+from official HTTPS metadata and the checksum-bound package, not an independently
+verified signed InRelease chain. Unknown key versions or bytes require a reviewed
+pin update. The test fixture contains only this public verification key.
+
+The preparation fixtures verify canonical archive/security routing, removal of
+all active archive-list references, preserved unknown list bytes, idempotence,
+single bounded key capture, unchanged originals, unsafe ancestry/metadata/digest
+refusal, concurrent destination conflicts, interrupted-copy cleanup and validation
+of every source before any write. When the native
+`/usr/bin/apt-get` is already installed, one fixture uses `--print-uris` against
+isolated temporary configuration/state/cache/log directories to cross-check the
+actual APT parser without acquiring packages or changing host APT configuration.
+The full `scripts/ci/test_*.py` suite remains a mandatory pipeline-security step.
+This local evidence does not replace the exact-source hosted browser and TLS gates
+or the unchanged first-attempt release policy.
+
+Consumer response parsing rejects excessive JSON nesting as an incompatible
+provider response, even when the body fits the byte limit. The regression verifies
+one request, no automatic retry and no provider details in the public error; this
+also protects the MCP bridge's shared response reader.
+
+Docs and owner dependency regressions exercise the installed package entry points
+for [minimatch globparts amplification](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249)
+and [glob traversal after cancellation](https://github.com/isaacs/node-glob/security/advisories/GHSA-3g3m-2fjr-6pw4).
+The affected modern consumers use exact upstream minimatch 11.0.1 and glob 14.0.2.
+Only serve-handler 6.1.7 and @ts-morph/common 0.11.1 receive the reviewed callable
+entry-point adapter; it delegates to the fixed upstream matcher without copying
+the old implementation. `make docs-security-pack` regenerates the source/archive
+provenance and identical owner-image copy. Preserve upstream license and hashes.
+
+After locked Docs installation, `make docs-security-test` covers hostile patterns,
+real static-file headers/rewrites/redirects and default-deny Swagger file allowlists.
+For the isolated owner tools, run `npm ci --ignore-scripts --prefix
+infra/oracle/vercel-tools` and `npm ci --ignore-scripts --prefix
+infra/oracle/npm-runtime`, then `node --test
+scripts/release/oracle_dependency_security.test.cjs`. It checks the real NFT,
+TypeScript/config, npm workspace and packlist consumers and asserts that both
+promise and streaming glob calls stop filesystem reads after cancellation.
+Adversarial matching runs in a worker with memory/time bounds so a regression
+fails the suite without exhausting the runner. CI retains low-severity audits,
+the actual owner-image build and its separate offline provider protocol tests.
+Local package tests cannot replace those image checks or hosted qualification.
+
+Chat's exact eslint 10.12.0, @eslint/config-array 0.23.5 and TypeScript ESTree
+8.71.1 consumers use scoped upstream minimatch 11.0.1 overrides. Run `node --test
+scripts/test_lint_globs.cjs` after the locked Chat install, then
+`make frontend-check`. Real ESLint fixtures must retain file discovery, dotfiles,
+directory ignores, negation, unmatched-pattern errors and fatal parse diagnostics;
+the TypeScript project service must retain its default-project allowlist. These
+checks are required in CI without changing the existing audit policy or toolchain.
+
+`test_ai_pre_request_resume.py` exercises the continuation command with a newer
+owner decision arriving during CI preflight and a signed authorization revoked
+during the operations check. Both must fail before reservation or provider calls,
+retaining the original consumed context and unissued intent. Current signed-chain
+and latest-decision reads occur under the same immediate SQLite write transaction
+as the single-use claim; source changes do not commission this optional extension.
+
+Consumer interoperability checks are in `tests/test_consumer.py`,
+`tests/test_mcp_stdio.py`, `tests/test_mcp_context.py` and `tests/test_mcp_transport.py`.
+They cover unchanged consumer business code with Onesa
+and compatible provider transports, portable history/provenance, credential separation,
+strict completion/failure boundaries, response/input limits, cancellation and MCP
+discovery/explicit permissions. Route fixtures without PostgreSQL simulate admission
+and identity; the separate database test verifies actual sessions, CSRF, shared budgets
+and absence of stored conversations/messages. Run both with the existing backend
+`pytest -q` command and the isolated `_test` database. A skipped database case is
+not an authenticated integration PASS. No live provider or physical tool is used.
+The context tests additionally use the actual API and PostgreSQL to prove enrolled
+document ownership, cross-user refusal, deletion and session revocation. Separate
+adverse transport tests cover URI/parameter refusal before transmission, immutable
+scope lists, redacted malformed responses, cancellation and prompt injection remaining
+untrusted data without tool or model invocation. These tests do not substitute for
+a commissioned service identity, an external MCP client or hosted acceptance.
+Transport tests additionally send real pipe messages to a separate bridge process
+while its synthetic HTTP response is pending. They require cancellation to close
+that response before stdin closes, preserve a later ping, and emit no cancelled
+response or credential. Other cases cover duplicate IDs, concurrent-work bounds,
+fragmented oversized lines, deadlines and session cleanup. The synthetic upstream
+in this subprocess test does not establish a live provider's cancellation behavior.
+
+Release-unit fixtures pin a disposable commissioning registry and keep its keys,
+policy and database inside their temporary directory. Root test execution uses a
+private home-directory parent and never reads the host's production trust registry.
+Fixtures that deliberately replace their policy explicitly update their synthetic
+commissioning record. Production source, trust checks and release authority are unchanged.
+
+Docs visual acceptance and its native-owner regression resolve Axe from Docs' own
+locked dependency installation. Preview transport fixtures close their owned HTTP
+servers even if browser launch or browser cleanup fails; an unavailable renderer
+remains a failed check and must not leave the test process listening indefinitely.
+Native public asset verification uses at most four concurrent GETs. Every manifest
+entry still requires its exact status, size, digest and MIME before the full UI
+matrix, within the existing observation deadline. Failure stops further reads and
+settles in-flight reads before target cleanup. Run `node --test
+scripts/docs/native-owner.test.mjs scripts/docs/native-full-preflight.test.mjs`
+with the locked public build for the bounded-reader and complete TLS fixtures.
+
+Travel planning retains one provider request, the existing output-size/token and
+total generation-time budgets, strict JSON/schema/day validation, and the 503
+boundary for invalid plans. Its prompt explicitly requests compact complete JSON
+without Markdown. Fixed failure categories distinguish empty, oversized, invalid
+JSON/schema, day-sequence, timeout and provider failures without retaining model
+output, preferences or exception messages. Metrics and the bounded warning contain
+only those categories. Run `pytest -q tests/test_travel_planning_failures.py
+tests/test_agents_travel.py` from the backend with the disposable PostgreSQL test
+target configured; a rejected revision must preserve the saved trip. The hosted
+producer records the exact Travel create/revise/ownership step on failure. These
+synthetic tests and a stateless engineering diagnostic are not hosted acceptance.
+
+Owner preflight validates the matching frontend dependency and initializes private
+operation/observation parents for a new exact-source artifact. Existing operation
+directories and receipts remain reserved; initialization cannot retry a request.
+Cold-directory, concurrent-initialization and alias/permission refusal tests run
+with the release regression suite, without provider credentials.
+
+Oracle CI selection keeps an existing push authoritative, including failed,
+pending, skipped or cancelled evidence. Only an absent push permits the existing
+owner-dispatched full workflow; both owner identities, a complete run listing,
+first attempt and every mandatory job/security step remain required. Signed
+references preserve the actual CI event. Synthetic mixed-event regressions must
+reject a newer successful manual run presented over a failing push.
+
+The documentation security suite exercises `qs` comma-array serialization with
+hostile non-callable `toString` properties and ordinary parse/stringify compatibility.
+Its lock uses upstream 6.16.1 for
+[GHSA-6pq8-jhm2-2vcw](https://github.com/ljharb/qs/security/advisories/GHSA-6pq8-jhm2-2vcw),
+retaining the low-threshold dependency audit. Dependabot PR204 / source
+`bf6ab183548ad180c0f4d5c5e6b543780430c889` supplies the reviewed lockfile patch;
+local checks and source promotion do not establish a live documentation release.
+
+Browser, documentation and TLS browser jobs use Playwright's supported Ubuntu24.04
+runner explicitly. The previous moving `ubuntu-latest` selected Ubuntu26.04 and
+timed out installing TLS browser dependencies. All three engines, TLS checks,
+the bounded installer and job deadlines remain mandatory.
+
+The offline release suite includes `test_oracle_inventory.py`: completed temporary
+monitoring clients and list/inspect races do not become preservation baselines.
+Long-lived temporary workloads, unchanged-inventory command failures, incomplete
+metadata and real independent runtime changes still fail closed. These fixtures
+make only mocked Docker reads and do not establish hosted qualification.
+
+`test_oracle_owned_probe.py` reproduces the self-client replacement deadlock and
+checks the narrow owner-controlled exception. The Docker-written CID lives outside
+all producer mounts; its immutable identity, exact image, operation label, command,
+mounts and resource/security profile must agree. Missing, changed or forged clients
+and any other automatic-removal workload fail closed. Cancellation tests retain
+private inputs on uncertain exit, preserve the original failure and prohibit a
+second stop/deployment request. SIGTERM enters existing fixture cleanup. Run this
+with the full offline release suite; Linux root custody and genuine hosted
+replacement/rollback evidence remain mandatory before release.
+
+Hosted browser probes use the daemon's existing outbound bridge network in their
+own network namespace. Host networking exposes Chromium to unrelated host interface
+changes and can cancel a request with `net::ERR_NETWORK_CHANGED`. Preflight and
+execution reject a missing, foreign, host or internal-only bridge; they never fall
+back to host networking. Application deadlines, TLS, workflow assertions, fixture
+cleanup and source-bound release authority remain mandatory. See Docker's
+[network isolation reference](https://docs.docker.com/engine/network/drivers/host/).
+An engineering diagnostic is separate from full hosted qualification and cannot
+issue a release record.
+
+Container health uses the Alpine base image's existing BusyBox `wget`, with proxies
+disabled and response bodies discarded. It retains the production readiness and
+staging liveness routes, intervals, retries and network deadlines. After building an
+image, run `python3 scripts/healthcheck_smoke.py <image>`: an isolated network-free
+container tests the actual image command against a synthetic loopback server,
+including a custom port, HTTP 503/404, hostile proxy settings, refusal and timeout.
+These client checks are separate from application/database release qualification.
+
+Owner-run static artifact checks treat Next.js catch-all chunk names such as
+`[...path]` as literal filenames, encode them for HTTP, and reject traversal
+segments, encoded paths, controls, query strings and fragments. Regressions verify
+that every accepted asset is read and hashed; changed or oversized bodies still fail.
+
+The owner qualification image includes the versioned icon manifest used by the
+mandatory hosted UI checks. Its exact source hash is part of the commissioned
+probe inventory. Missing or changed image resources fail the credential-free
+preflight; image startup, a passing API suite or a partial UI result cannot replace
+the full hosted qualification. Keep the existing metadata and icon assertions.
+
+Oracle staging container probes use database-free `/health`. The image default
+retains `/core-ready` for existing production dependency monitoring. The middleware
+regression in `tests/test_foundation.py` installs a failing connection hook on a
+configured PostgreSQL engine, includes a session cookie and verifies repeated
+liveness requests acquire no connection. `/core-ready` still attempts real database
+readiness and fails on the unavailable engine; `/ready` retains model readiness.
+Deployment qualification must continue to check schema, restricted runtime identity,
+authentication and affected workflows. Container health establishes process liveness;
+hosted application acceptance and measured compute savings require separate evidence.
+
+CI and hosted artifact-build workflows pin Node 24.22.1 explicitly; a cached
+`24` major selector can otherwise select an older vulnerable patch. Runtime images
+and provider-managed runtimes require their own source-bound verification.
+
 > Current pipeline: [automated review, staging qualification and owner activation](../development/CI_CD_PIPELINE_REPORT.md). Prepared local changes are not live deployments; branch/PR optimization and automatic technical evidence supersede older manual-only details.
 
 Use Node 24 and Python 3.11. The existing Makefiles describe supported dependency installs.
@@ -22,6 +468,12 @@ use `npm --prefix onesa-ai-platform-frontend run docs:ci` and `make docs-assets
  docs-public docs-internal docs-validate` as one command without a line break.
 Regenerate ignored public/internal manuals in CI; do not commit them.
 
+The public static acceptance validator resolves both Playwright and Axe from the
+locked Docs installation. Importing `scripts/docs/acceptance.mjs` needs no Chat
+dependency installation. Screenshot capture and full documentation generation
+retain their separately documented application prerequisites; this dependency
+separation does not establish a passing browser suite or hosted publication.
+
 `apps/chat/tests/startup.spec.ts` uses synthetic browser network fixtures for initial
 rendering, the eight-second session-check deadline and cancellation, connection retry
 without a page reload, optional document loading and deferred Markdown rendering. It
@@ -32,6 +484,19 @@ an isolated loopback port, then run
 These fixture checks qualify prepared source behavior; they do not measure hosted
 startup latency or establish a production deployment. See
 [Performance checks](../testing/PERFORMANCE_TESTS.md) for the startup boundaries.
+
+`apps/chat/tests/workspace-navigation.spec.ts` covers long saved conversations,
+viewport-bound navigation/composer layout, reading-position and draft preservation,
+and the narrow-screen resource disclosure's keyboard behavior.
+`apps/chat/tests/knowledge-feedback.spec.ts` covers actual rendered upload/search
+feedback, unsuccessful requests, submitted-query identity, duplicate actions and
+late read responses invalidated by document changes. Both use explicit synthetic
+loopback API fixtures; they do not claim backend or real-model acceptance.
+With a fresh production frontend running on an isolated loopback port, run
+`ONESA_BROWSER_URL=http://127.0.0.1:<port> npm --prefix onesa-ai-platform-frontend/apps/chat run test:e2e -- tests/workspace-navigation.spec.ts tests/knowledge-feedback.spec.ts`.
+Retain all three configured engines and existing deadlines. Run the existing
+system-appearance and record-navigation suites for shared shell or scrolling
+changes, then the normal complete native workflow before source promotion.
 
 The Chat image install uses a BuildKit npm download cache, locked integrity checks,
 and explicit bounded fetch retries/timeouts. It omits installation-time audit/funding
@@ -57,6 +522,23 @@ needs an isolated PostgreSQL/pgvector database named with `_test`; tests truncat
 users. Use the existing integration guide before running `make integration`. Browser
 checks use an isolated mock stack, not the active application or a real inference service.
 See `docs/deployment/LOCAL_DEVELOPMENT.md` and `ACCEPTANCE_STAGING.md` for complete gates.
+
+Structured planning regressions use the actual provider stream parser with synthetic
+responses. Valid JSON with an incomplete finish reason must fail, later choices cannot
+replace a terminal result, and a rejected oversized stream must close before the planner
+returns. A trailing usage-only frame remains supported. These tests check protocol and
+resource handling; they do not qualify a real model's answer quality.
+
+The PostgreSQL planning-authority tests revoke the session during inference and require
+both new/revised Travel plans and agent runs to refuse persistence or tool execution.
+The refusal must retain its structured authentication error. Transaction-timezone tests
+start connections in non-UTC zones, require stable UTC timestamps inside each transaction,
+and confirm the transaction-local setting does not leak to the next pool user.
+
+The Industrial database suite includes a fresh status read while another transaction
+holds the record's writer lock. The read must return the committed snapshot promptly;
+stale-recovery mutations still acquire and recheck their own lock. This synthetic
+regression uses no model requests and does not replace hosted model acceptance.
 
 Existing CI jobs: `backend`, `frontend`, `browser`, `documentation`, `containers`,
 `tls-acceptance`. Add `publication-hygiene` to required checks. CI runs relevant main/staging PR checks and full release-source push checks, with fail-closed summaries. No remote
@@ -138,9 +620,24 @@ suite retains navigation, search, diagrams, PDF/source-link and private route ch
 A reference-only CI build does not qualify a protected edition with full runbooks.
 Keep all local model/database targets synthetic while generating documentation.
 
+## Conversation history and provider transport
+
+The conversation instruction identifies supplied messages as the current history
+and asks the model to copy recalled values verbatim. It is request context, never
+a stored user message. `tests/test_chat_integration.py` checks bounded history,
+ownership and persistence, including two-turn native Cloudflare request bodies
+for streaming and non-streaming responses. These protocol cases use synthetic
+provider responses; real model recall still requires hosted qualification.
+
 ## Node TLS trust regression
 
-Use Node 24.12 or later in the 24 series. Run
+`node --test scripts/test_ui_navigation.cjs` reproduces a delayed response from a
+previous page during navigation. Only newly observed GET responses can qualify the
+current interface; current 401/503, interrupted bodies and missing responses still
+fail. Request observation is removed after success and failure. This does not relax
+the existing browser content, account, required-response or deadline checks.
+
+Use Node 24.22.1 or a later reviewed security patch in the 24 series. Run
 `node --test scripts/test_tls_trust.mjs` from the repository root. The test uses
 a known public CA certificate and newly generated synthetic localhost certificates
 in isolated child processes. It proves native fetch/HTTPS trust, rejection of
@@ -162,3 +659,125 @@ the trust policy in each server gateway's actual file trace and rejects browser
 bundle inclusion. Owner-built Vercel artifacts require the same command with their
 `.vercel/output` directory as the third argument before publication; a successful
 Next build or instrumentation source alone does not prove serverless packaging.
+
+## Explicit Docs validation scope
+
+`make docs-public` generates and validates only public provenance with
+`python scripts/docs/validate.py --scope public --staged`. It requires no generated
+internal tree or private bundle. `validate.py` without `--scope` retains full public
+and internal validation. All allowlist, asset and private-exposure checks remain.
+Static public and Cloudflare Access artifacts omit assistant navigation and use an
+architecture action. Only an explicitly configured authenticated gateway enables
+`ONESA_DOCS_ASSISTANT_ENABLED=true`; direct unsupported assistant routes explain the
+limitation and link to guides. The CI gateway fixture opts in explicitly.
+
+Synthetic screenshot capture can use `ONESA_CAPTURE_URL` and a separate `ONESA_CAPTURE_FIXTURE_NAME` (lowercase letters, digits and hyphens). `ONESA_CAPTURE_NEW_FIXTURE=1` creates a fresh disposable account for that named fixture. Keep its ignored private state and use only an explicitly isolated mock stack; the default `demo` fixture remains compatible with the configured Docs gateway checks.
+
+For a public-only checkout, after the same locked prerequisites and browser installation, run `make DOCS_SCOPE=public docs-assets docs-public`. Asset rendering and staged validation read only public generated material. The default scope remains `all`; `make docs-assets docs-public docs-internal docs-validate` still requires both classified trees and the approved private source bundle for actual protected publication.
+
+
+The owner-run protocol fixture additionally asserts the real pinned Vercel CLI's
+outgoing `ONESA_API_URL` deployment value. Its loopback-only dummy credentials do
+not authorize provider operations. `test_oracle_ai_probe_boundary.py` verifies
+source-scoped early failure diagnostics, credential redaction and preservation of
+original failures. All existing qualification checks and one-use contexts remain
+mandatory; the protected deployment guide records current hosted outcomes.
+
+The offline protocol suite also verifies outgoing authentication headers and the
+pinned CLI's read-only user request with synthetic OAuth state. No provider credentials
+or external network access are used. `test_oracle_cli_auth.py` covers expiry,
+owner identity, concurrent custody changes and redacted early runner failures.
+
+Pinned Alpine image builds retry upstream package fetching at most three times.
+Each attempt keeps HTTPS, package signatures and the original package constraints;
+exhaustion fails the build. The dependency auditor uses a bounded 60-second socket
+timeout and retains the same vulnerability checks and failure status.
+
+The offline Oracle release tests cover the legacy API/frontend policy and a new,
+explicitly commissioned policy with fixed foundation, Twins and Cybersecurity
+scopes. Each scope still permits only one qualification context for an exact
+source. Mode changes, path aliases, expanded attempt limits, foreign repositories,
+changed CI, revoked dependencies and context reuse are rejected. Temporary test
+keys and a disposable signed ledger are not external release authority.
+
+`test_oracle_canonical_application.py` adds the explicit canonical application
+installation boundary: exact root/product source identity, the two fixed archived
+CI manifests, literal profile sets, installed-archive rechecks, one-use signed
+contexts, original retained verifier/key/chain binding, and refusal of borrowed
+source-only authority. It also checks product-relative build metadata against the
+canonical provider root and the fixed generation-only configuration transition.
+The signed-chain fixtures use real Ed25519 signatures and disposable ledgers;
+their synthetic commissioning registry is not an installed owner trust anchor.
+Root custody, real Docker builds, actual provider/model availability and hosted
+application/recovery acceptance are separate mandatory boundaries.
+
+Run that module with the existing Oracle release suite, including
+`test_oracle_context.py`, `test_oracle_ai_frontend.py`,
+`test_oracle_retained_frontend.py` and `test_oracle_profile_ledger.py`.
+The Python and Node context readers must retain the same private-fixture,
+source/origin and nonauthorizing receipt rules. The existing real loopback
+`oracle_vercel_transport_guard.test.cjs` also verifies canonical source metadata
+before a create, refuses uninspected raw transports, and preserves the single
+create plus bounded definitive missing-file continuation contract. Credential-free
+local fixtures and generated CI artifacts still cannot authorize runtime work.
+
+Qualification derives required feature journeys from the actual runtime flags.
+If both optional features are enabled, both journeys must pass across the same
+controlled replacement; a missing or skipped check fails qualification. A failure
+after one journey passes retains a failed receipt and fixture cleanup evidence.
+The new feature API profiles verify the retained frontend's original accepted
+record and served build hashes, then require rendered production journeys without
+another frontend deployment. Restore checks use the exact hosted schema, including
+Twins on a database whose Cybersecurity migration is already present.
+Combined activation also verifies the current coordinated database-and-file backup
+before authorization and refreshes it after the actual production runtime changes.
+Cybersecurity with Twins disabled keeps its independent database backup path.
+These tests do not commission the new policy, activate features, migrate a hosted
+database or establish hosted acceptance. Consult the protected canonical procedure
+and evidence index for actual installation, qualification and deployment outcomes.
+
+Upload regression tests exercise request-scoped expiry cleanup against disposable
+PostgreSQL: another account's expired chunks and active rows survive, an owner's
+expired fragments are removed, and the global limit still counts active leases.
+The owner probe retains metadata-only preservation baselines and changed-table
+diagnostics; every pre-existing row remains subject to the same strict comparison.
+
+Travel accepts bare JSON or one whole-response JSON fence, followed by the same
+strict itinerary schema and consecutive-day validation. It never extracts JSON
+from prose, repairs an incomplete response, retries inference or substitutes a mock.
+Protocol tests cover malformed framing, multiple objects, private reasoning markup,
+schema drift and preservation of the saved trip after a failed revision. This
+bounded framing support does not establish the cause of any historical hosted failure.
+
+## Credential-free Docs build handoff
+
+`.venv/bin/python -m unittest discover -s scripts/release -p test_oracle_docs_build.py`
+checks real-run identity requirements and disposable ZIP failure controls for the
+external Docs build reader. It refuses run ID zero as an Actions ID, missing/skipped
+mandatory checks, provider execution, changed source/custody, expired records,
+modified/private archives, unsafe ZIP members and mismatched rendered contexts.
+The fixtures never issue qualification, authorization or provider requests. Build-only
+workflow artifacts carry staging and production contexts separately; actual owner-run
+provenance and hosted acceptance remain independent requirements.
+
+The protected Docs adapter uses its own reviewed installation, source and runtime
+closure, private artifact custody and one-use owner ledger. Its new conditional
+metadata export/import/inspection commands retain the existing genuine Actions
+handoff; that handoff grants no publication authority. Run
+`python -m unittest discover -s scripts/release -p 'test_oracle_docs_internal_*.py'`
+for source, Access, build, provider, conditional and durable journal refusals.
+`node --test scripts/docs/internal-native.test.mjs scripts/release/oracle_cloudflare_transport_guard.test.cjs`
+checks private byte/header readback, anonymous denial and atomic single dispatch.
+The actual pinned Linux client protocol is mandatory in CI and uses synthetic
+responses with its network disabled. The private full-renderer regression requires
+an approved, isolated staging-context build outside Actions and runs
+`ONESA_INTERNAL_DOCS_TEST_BUILD=/absolute/private/fixture ONESA_INTERNAL_DOCS_TEST_ENVIRONMENT=staging node --test scripts/docs/internal-acceptance.test.mjs`.
+These tests do not commission a verifier, qualify a hosted deployment or publish
+documentation. Actual outcomes remain in the protected canonical evidence index.
+
+The release suite exercises the actual installed Docs module layout in a separate
+`python -I` process with no inherited import path or provider credentials. It
+reproduces the former missing-sibling import failure and verifies that both the
+root verifier and sibling runner parsers load before any operation starts. This
+startup regression is local evidence; fresh commissioning and hosted qualification
+remain required for a changed runner.

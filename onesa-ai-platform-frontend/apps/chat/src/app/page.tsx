@@ -1,14 +1,17 @@
 "use client";
+import {useRecordPage, RecordPageControls, useRecordSelection} from "../lib/record-page";
 import ApplicationsNav from "../components/applications-nav";
 import ProductionWorkspaceCue from "../components/production-workspace-cue";
 import DocumentationNav from "../components/documentation-nav";
+import IndustrialNav from "../components/industrial-nav";
 import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "../components/onesa-sign-in";
 
 const MessageContent = lazy(() => import("../components/message-content"));
 
-type User = { id: string; display_name: string };
+type User = { id: string; display_name: string; identity_mode?: string; administrator?: boolean };
 type Conversation = { id: string; title: string };
 type Message = {
   id: string;
@@ -21,6 +24,8 @@ import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
 export default function Chat() {
   const { copy, locale } = useLocale();
+  const identityMethod = useOnesaIdentity();
+  const [hasWorkspace, setHasWorkspace] = useState(false);
   const [model, setModel] = useState<{
     backend: string;
     model_identifier: string;
@@ -28,16 +33,19 @@ export default function Chat() {
   } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [sessionAttempt, setSessionAttempt] = useState(0);
-  const [documents, setDocuments] = useState<{ id: string; title: string }[]>(
-    [],
-  );
+  const [linkedDocument, setLinkedDocument] = useState<{id: string; title: string} | null>(null);
   const [documentIds, setDocumentIds] = useState<string[]>([]);
   const [knowledgeReady, setKnowledgeReady] = useState(false);
   const [user, setUser] = useState<User | null>(null),
     [checking, setChecking] = useState(true),
     [signup, setSignup] = useState(false);
-  const [list, setList] = useState<Conversation[]>([]),
-    [selected, setSelected] = useState<string | null>(null),
+  const [selectedLocation, setSelectedLocation] = useRecordSelection("conversation");
+  const history = useRecordPage<Conversation>("/conversations", user?.id || "");
+  const knowledge = useRecordPage<{id: string; title: string}>("/knowledge/documents", user?.id || "");
+  const {items: list, setItems: setList} = history;
+  const documents = linkedDocument && !knowledge.items.some(item => item.id === linkedDocument.id)
+    ? [linkedDocument, ...knowledge.items] : knowledge.items;
+  const [selected, setSelected] = useState<string | null>(null),
     [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState(""),
     [partial, setPartial] = useState<string | null>(null),
@@ -48,19 +56,41 @@ export default function Chat() {
   const sidebar = useRef<HTMLElement | null>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const abort = useRef<AbortController | null>(null),
-    bottom = useRef<HTMLDivElement | null>(null),
+    messageViewport = useRef<HTMLDivElement | null>(null),
     entry = useRef<HTMLTextAreaElement | null>(null);
   const credentialDraft = useRef<HTMLInputElement | null>(null);
-  const refreshList = useCallback(async () => {
-    const response = await call("/conversations");
-    setList((await response.json()).items);
-  }, []);
+  const detailRequest = useRef(0);
+  const identityEpoch = useRef(0), draftOwner = useRef<string | null>(null);
+  const refreshList = history.reload;
   const acceptUser = useCallback((current: User) => {
+    setHasWorkspace(true);
+    identityEpoch.current += 1;
+    if (draftOwner.current && draftOwner.current !== current.id) {
+      setInput(""); setMessages([]); setSelected(null); detailRequest.current += 1;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("conversation");
+      for (const key of [...url.searchParams.keys()]) if (key.startsWith("page_")) url.searchParams.delete(key);
+      window.history.replaceState(window.history.state, "", url);
+      window.dispatchEvent(new Event("onesa-record-page"));
+    }
+    draftOwner.current = current.id;
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
     const intended = new URLSearchParams(window.location.search).get("next");
-    if (intended === "/travel" || intended === "/knowledge") {window.location.replace(intended); return;}
+    if (intended === "/agents" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial" || intended === "/industrial/twins") {window.location.replace(intended); return;}
+    setLinkedDocument(null); setDocumentIds([]);
     setUser(current);
+  }, []);
+  useEffect(() => {
+    const expired = () => {
+      identityEpoch.current += 1; detailRequest.current += 1;
+      abort.current?.abort();
+      setUser(null); setBusy(false); setMessages([]); setSelected(null);
+      setLinkedDocument(null); setDocumentIds([]); setKnowledgeReady(false); setPartial(null);
+      setError("Your session expired. Sign in with the same account to continue your draft.");
+    };
+    window.addEventListener("onesa-session-expired", expired);
+    return () => window.removeEventListener("onesa-session-expired", expired);
   }, []);
   useEffect(() => {
     let active = true;
@@ -93,40 +123,23 @@ export default function Chat() {
         .then((r) => r.json())
         .then((data) => { if (active) setModel(data.items[0]); })
         .catch((e) => { if (active) setError(e.message); });
-    if (user)
-      call("/knowledge/documents", "GET", undefined, signal)
-        .then((r) => r.json())
-        .then((data) => {
+    if (user) {
+      const id = new URLSearchParams(window.location.search).get("document");
+      if (id) api("GET /knowledge/documents/{identifier}", {params: {identifier: id}, signal})
+        .then(document => {
           if (!active) return;
-          setDocuments(data.items);
-          const id = new URLSearchParams(window.location.search).get(
-            "document",
-          );
-          if (id && !data.items.some((d: { id: string }) => d.id === id)) {
-            setError("The selected document is unavailable. Open Knowledge to select an accessible document.");
-            return;
-          }
-          if (id) setDocumentIds([id]);
-          setKnowledgeReady(true);
+          setLinkedDocument(document); setDocumentIds([document.id]); setKnowledgeReady(true);
         })
-        .catch(() => {
-          if (!active) return;
-          const id = new URLSearchParams(window.location.search).get("document");
-          if (id) setError("Unable to load the selected document. Reload to retry.");
-          else setKnowledgeReady(true);
-        });
-    if (user)
-      call("/conversations", "GET", undefined, signal)
-        .then((r) => r.json())
-        .then((data) => { if (active) setList(data.items); })
-        .catch((e) => { if (active) setError(e.message); });
+        .catch(() => { if (active) setError("The selected document is unavailable or access could not be verified. Open Knowledge or reload to retry."); });
+    }
     return () => {
       active = false;
       controller.abort();
     };
   }, [user]);
   useEffect(() => {
-    if (followLatest.current) bottom.current?.scrollIntoView({ behavior: "auto" });
+    const viewport = messageViewport.current;
+    if (followLatest.current && viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [messages, partial]);
   const closeMenu = useCallback(() => {
     setMenu(false);
@@ -164,7 +177,8 @@ export default function Chat() {
   }, [menu, closeMenu]);
   async function authenticate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (checking || busy || unavailable) return;
+    if (checking || busy || unavailable || !identityMethod || identityMethod.pending ||
+        identityMethod.unavailable || identityMethod.enabled) return;
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -186,26 +200,48 @@ export default function Chat() {
       setBusy(false);
     }
   }
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!user || busy || selectedLocation === selected) return () => controller.abort();
+    const sequence = ++detailRequest.current;
+    const read = selectedLocation ? call(`/conversations/${encodeURIComponent(selectedLocation)}`, "GET", undefined,
+      AbortSignal.any([controller.signal, AbortSignal.timeout(8000)])).then(response => response.json()) : Promise.resolve({messages: []});
+    read.then(result => {
+      if (controller.signal.aborted || sequence !== detailRequest.current) return;
+      followLatest.current = true;
+      setMessages(result.messages); setSelected(selectedLocation); setPartial(null);
+    }).catch(() => {if (!controller.signal.aborted) setError("Unable to reopen this conversation. Select it again to retry.");});
+    return () => controller.abort();
+  }, [user, selectedLocation, selected, busy]);
+
   async function open(id: string) {
     if (busy) return;
     setError("");
     try {
-      const r = await call(`/conversations/${id}`);
-      setMessages((await r.json()).messages);
+      const request = ++detailRequest.current, epoch = identityEpoch.current;
+      const r = await call(`/conversations/${id}`, "GET", undefined, AbortSignal.timeout(8000));
+      const result = await r.json();
+      if (request !== detailRequest.current || epoch !== identityEpoch.current) return;
+      followLatest.current = true;
+      setMessages(result.messages);
+      setSelectedLocation(id);
       setSelected(id);
       setPartial(null);
       setMenu(false);
-      entry.current?.focus();
+      entry.current?.focus({ preventScroll: true });
     } catch (e) {
       setError((e as Error).message);
     }
   }
   async function create(): Promise<string> {
+    const epoch = identityEpoch.current;
     const r = await call("/conversations", "POST", {
       title: input.trim().slice(0, 70) || "New conversation",
     });
     const row = await r.json();
+    if (epoch !== identityEpoch.current) return row.id;
     setSelected(row.id);
+    setSelectedLocation(row.id);
     setMessages([]);
     await refreshList();
     return row.id;
@@ -226,13 +262,16 @@ export default function Chat() {
   async function send(event: React.FormEvent) {
     event.preventDefault();
     if (!input.trim() || busy || !knowledgeReady) return;
-    const content = input;
+    const content = input, epoch = identityEpoch.current;
+    detailRequest.current += 1;
+    followLatest.current = true;
     setBusy(true);
     setError("");
     setInput("");
     let id = selected;
     try {
       if (!id) id = await create();
+      if (epoch !== identityEpoch.current) return;
       setMessages((previous) => [
         ...previous,
         { id: "pending", role: "user", content: { text: content } },
@@ -257,6 +296,7 @@ export default function Chat() {
       }
       if (!response.body) throw new Error("Streaming unavailable");
       for await (const event of chatEvents(response.body)) {
+        if (epoch !== identityEpoch.current) break;
         if (event.kind === "message_start") { activeRun.current = event; setCanStop(true); }
         if (event.kind === "content_delta") setPartial(p => (p || "") + event.text);
         if (event.kind === "error") throw new Error(event.message);
@@ -264,12 +304,14 @@ export default function Chat() {
       }
       setPartial(null);
     } catch (e) {
+      if (epoch !== identityEpoch.current) return;
       setError(
         (e as Error).name === "AbortError"
           ? "Generation stopped."
           : (e as Error).message,
       );
     } finally {
+      if (epoch === identityEpoch.current) {
       abort.current = null;
       activeRun.current = null;
       setCanStop(false);
@@ -277,13 +319,15 @@ export default function Chat() {
       if (id) {
         try {
           const r = await call(`/conversations/${id}`);
-          setMessages((await r.json()).messages);
+          const saved = await r.json();
+          if (epoch === identityEpoch.current) setMessages(saved.messages);
         } catch {
           /* Keep the existing generation error visible if history reload fails. */
         }
       }
-      await refreshList().catch(() => {});
-      entry.current?.focus();
+      refreshList();
+      entry.current?.focus({ preventScroll: true });
+      }
     }
   }
   async function rename() {
@@ -307,6 +351,7 @@ export default function Chat() {
       return;
     try {
       await call(`/conversations/${selected}`, "DELETE");
+      setSelectedLocation(null);
       setSelected(null);
       setMessages([]);
       setPartial(null);
@@ -316,10 +361,22 @@ export default function Chat() {
     }
   }
   async function logout() {
+    detailRequest.current += 1;
     try {
-      await call("/auth/logout", "POST");
+      let notice = "";
+      try {
+        await call("/auth/logout", "POST");
+      } catch (reason) {
+        if (!(reason instanceof ApiError && reason.code === "identity_logout_incomplete")) throw reason;
+        notice = reason.message;
+      }
+      identityEpoch.current += 1;
       setUser(null);
-      setDocuments([]);
+      setHasWorkspace(false);
+      setError(notice);
+      setInput("");
+      draftOwner.current = null;
+      setLinkedDocument(null);
       setDocumentIds([]);
       setKnowledgeReady(false);
       setMessages([]);
@@ -329,6 +386,20 @@ export default function Chat() {
       setError((e as Error).message);
     }
   }
+  if (!user && (!identityMethod || identityMethod.unavailable))
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Dein Onesa-Arbeitsbereich" : "Your Onesa workspace"}</h1>
+      <IdentityEntryStatus method={identityMethod}/><LanguageSelect/>
+    </section></main>;
+  if (!user && identityMethod?.enabled)
+    return <main className="auth-shell"><section className="auth-card">
+      <div className="brand">Onesa <span>AI Platform</span></div>
+      <h1>{locale === "de" ? "Ein Konto. Dein Onesa-Arbeitsbereich." : "One account. Your Onesa workspace."}</h1>
+      {error && <p className="error" role="alert">{error}</p>}
+      <OnesaSignIn method={identityMethod} preserveDraft={hasWorkspace} onAuthenticated={acceptUser}/>
+      <LanguageSelect/>
+    </section></main>;
   if (!user)
     return (
       <main className="auth-shell">
@@ -340,7 +411,7 @@ export default function Chat() {
           <p>{locale==='de'?'Gespräche führen, eigenes Wissen nutzen und Aufgaben mit geführten Werkzeugen bearbeiten. Onesa AI Platform ist unser geschützter KI-Arbeitsbereich.':'Talk through ideas, use your own knowledge and work with guided tools. Onesa AI Platform is our protected AI workspace.'}</p>
           <p>{signup?(locale==='de'?'Die Registrierung hängt von der Freigabe dieser Umgebung ab. Wenn eine Einladung erforderlich ist, verwenden Sie Ihren privaten Einladungslink.':'Registration depends on this environment’s access policy. If an invitation is required, use your private invitation link.'):(locale==='de'?'Mit Ihrem bestehenden Plattformkonto anmelden. Ein Plattformkonto gewährt keinen Administrator-, Engineering- oder Robot-Zugriff.':'Sign in with your existing platform account. A platform account does not grant administrator, engineering or Robot access.')}</p>
           <nav className="auth-orientation" aria-label={locale==='de'?'Plattform kennenlernen':'Learn about the platform'}><a href={documentationUrls.public+'/docs/public/ai-platform'}>{locale==='de'?'Produkt und Funktionen':'Product and capabilities'}</a><a href={documentationUrls.public+'/docs/public/quickstart'}>{locale==='de'?'Entwickler-Schnellstart':'Developer quickstart'}</a></nav>
-          {checking && <p role="status">{copy.opening}</p>}
+          {(checking || identityMethod?.pending) && <p role="status">{copy.opening}</p>}
           <Link href="/recovery">{locale === "de" ? "Passwort vergessen?" : "Forgot password?"}</Link>
           {unavailable && <div role="alert"><p>{locale === "de" ? "Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es erneut." : "The service is unavailable. Please retry before signing in."}</p><button type="button" onClick={() => {
             setChecking(true);
@@ -349,7 +420,7 @@ export default function Chat() {
             setSessionAttempt(previous => previous + 1);
             credentialDraft.current?.focus();
           }}>{locale === "de" ? "Erneut versuchen" : "Retry connection"}</button></div>}
-          <form onSubmit={authenticate} aria-busy={checking || busy}>
+          <form onSubmit={authenticate} aria-busy={checking || busy || identityMethod?.pending}>
             {signup && (
               <label>
                 {copy.name}
@@ -386,14 +457,14 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <button className="send" disabled={busy || checking || unavailable}>
+            <button className="send" disabled={busy || checking || unavailable || identityMethod?.pending}>
               {busy ? copy.wait : signup ? copy.create : copy.signIn}
             </button>
           </form>
           <LanguageSelect />
           <button
             className="switch"
-            disabled={checking || busy || unavailable}
+            disabled={checking || busy || unavailable || identityMethod?.pending}
             onClick={() => {
               setSignup(!signup);
               setError("");
@@ -407,6 +478,7 @@ export default function Chat() {
   return (
     <main className="workspace">
       <aside
+        id="conversation-sidebar"
         ref={sidebar}
         className={`sidebar ${menu ? "open" : ""}`}
         role={menu ? "dialog" : undefined}
@@ -425,29 +497,36 @@ export default function Chat() {
         <div className="brand">
           Onesa <span>AI Platform</span>
         </div>
-        <div className="feature-nav">
+        <nav className="feature-nav" aria-label="AI workspace">
           <Link href="/" aria-current="page">{copy.chat}</Link>
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
-          <Link href="/settings" lang="en">Account settings</Link>
+          <IndustrialNav />
+        </nav>
+        <nav className="workspace-resources" aria-label="Workspace resources">
+          <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
           <DocumentationNav />
-        </div>
+        </nav>
         <ApplicationsNav />
         <button
           className="new"
           disabled={busy}
           onClick={() => {
+            detailRequest.current += 1;
+            setSelectedLocation(null);
             setSelected(null);
             setMessages([]);
             setPartial(null);
+            followLatest.current = true;
             setMenu(false);
-            entry.current?.focus();
+            entry.current?.focus({ preventScroll: true });
           }}
         >
           {copy.newConversation}
         </button>
-        <nav aria-label="Conversations">
+        <nav className="conversation-history" aria-label="Conversations">
+          <RecordPageControls page={history} />
           {list.map((c) => (
             <button
               key={c.id}
@@ -458,7 +537,7 @@ export default function Chat() {
               {c.title}
             </button>
           ))}
-          {!list.length && (
+          {!history.loading && !history.error && !list.length && (
             <p className="caption">Your saved conversations appear here.</p>
           )}
         </nav>
@@ -466,7 +545,7 @@ export default function Chat() {
         <div className="account">
           <span>{user.display_name}</span>
           <button disabled={busy} onClick={logout}>
-            {copy.signOut}
+            {user.identity_mode === "onesa" ? (locale === "de" ? "Von Onesa abmelden" : "Sign out of Onesa") : copy.signOut}
           </button>
         </div>
       </aside>
@@ -484,11 +563,13 @@ export default function Chat() {
             ref={toggle}
             className="mobile-toggle"
             aria-label="Toggle conversations"
+            aria-expanded={menu}
+            aria-controls="conversation-sidebar"
             onClick={() => setMenu(!menu)}
           >
             ☰
           </button>
-          <h1>{list.find((c) => c.id === selected)?.title || "Chat"}</h1>
+          <h1 title={list.find((c) => c.id === selected)?.title || "Chat"}>{list.find((c) => c.id === selected)?.title || "Chat"}</h1>
           {selected && (
             <>
               <button disabled={busy} onClick={rename}>
@@ -500,8 +581,8 @@ export default function Chat() {
             </>
           )}
         </header>
-        {model && (
-          <p className="inference-status" role="status">
+        <p className="inference-status" role="status">
+          {model ? <>
             {model.real_inference
               ? "Real inference"
               : "Mock inference — no AI model"}
@@ -509,10 +590,10 @@ export default function Chat() {
             {model.backend}
             {" · "}
             {model.model_identifier}
-          </p>
-        )}
-        <p className="inference-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
-        <div className="messages" aria-busy={busy} onScroll={event => {
+          </> : "Loading inference configuration…"}
+        </p>
+        <p className="inference-status conversation-status" role="status">{busy ? (locale === "de" ? "Antwort wird erstellt" : "Generating response") : (messages.length ? (locale === "de" ? "Unterhaltung geladen" : "Conversation loaded") : "")}</p>
+        <div ref={messageViewport} className="messages" aria-busy={busy} onScroll={event => {
           const element = event.currentTarget;
           followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
         }}>
@@ -539,7 +620,7 @@ export default function Chat() {
                     key={text}
                     onClick={() => {
                       setInput(text);
-                      entry.current?.focus();
+                      entry.current?.focus({ preventScroll: true });
                     }}
                   >
                     {text} ↗
@@ -587,12 +668,13 @@ export default function Chat() {
               </Suspense>
             </article>
           )}
-          <div ref={bottom} />
         </div>
         <div className="composer">
-          {!!documents.length && (
+          {(!!documents.length || knowledge.error || knowledge.loading) && (
             <details className="document-picker">
               <summary>Use documents ({documentIds.length} selected)</summary>
+              <RecordPageControls page={knowledge} />
+              {!!documentIds.length && <button type="button" disabled={busy} onClick={() => setDocumentIds([])}>Clear selected documents</button>}
               {documents.map((d) => (
                 <label key={d.id}>
                   <input
@@ -653,8 +735,8 @@ export default function Chat() {
             )}
           </form>
           <div className="caption">
+            <span className="composer-shortcuts">Enter to send · Shift + Enter for a new line.</span>
             <DocumentationHelp topic="chat" /> · Check important information.
-            The selected inference backend is shown above.
           </div>
         </div>
       </section>

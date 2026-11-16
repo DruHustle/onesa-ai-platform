@@ -34,15 +34,16 @@ test('actual cross-origin HTTP redirect never forwards the Preview credential',a
  const foreignOrigin=`http://127.0.0.1:${foreign.address().port}`;
  const owner=http.createServer((req,res)=>{ownerHeaders.push(req.headers);res.writeHead(302,{Location:foreignOrigin+'/destination'});res.end();});
  await new Promise(resolve=>owner.listen(0,'127.0.0.1',resolve));
- const ownerOrigin=`http://127.0.0.1:${owner.address().port}`,browser=await chromium.launch();
+ const ownerOrigin=`http://127.0.0.1:${owner.address().port}`;let browser;
  try{
+  browser=await chromium.launch();
   const context=await browser.newContext(),access=boundPreviewTransport(credential.secret,ownerOrigin);
   await context.route('**/*',route=>access.route(route));
   const page=await context.newPage();await page.goto(ownerOrigin+'/redirect');assert.equal(new URL(page.url()).origin,foreignOrigin);
   assert.equal(ownerHeaders.length,1);assert.equal(ownerHeaders[0]['x-vercel-protection-bypass'],credential.secret);
   assert.equal(foreignHeaders.length,1);assert.equal(Object.hasOwn(foreignHeaders[0],'x-vercel-protection-bypass'),false);
   const response=await access.get(context.request,ownerOrigin+'/redirect');assert.equal(response.status(),302);assert.equal(foreignHeaders.length,1);
- }finally{await browser.close();await Promise.all([new Promise(resolve=>owner.close(resolve)),new Promise(resolve=>foreign.close(resolve))]);}
+ }finally{try{await browser?.close();}finally{owner.closeAllConnections();foreign.closeAllConnections();await Promise.all([new Promise(resolve=>owner.close(resolve)),new Promise(resolve=>foreign.close(resolve))]);}}
 });
 
 test('transport failures cannot expose provider request diagnostics or credential values',async()=>{
@@ -72,10 +73,11 @@ test('actual compressed HTML JS and JSON survive exact-origin fetch and fulfill'
   '/value.json':{mime:'application/json',body:JSON.stringify({message:'Compressed assets rendered'})},
  };
  const server=http.createServer((req,res)=>{headers.push(req.headers);const brotli=req.url.startsWith('/br/'),entry=bodies[brotli?req.url.slice(3):req.url];if(!entry){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':entry.mime,'Content-Encoding':brotli?'br':'gzip'});const body=brotli?entry.body.replaceAll('/asset.js','/br/asset.js').replaceAll('/value.json','/br/value.json'):entry.body;res.end((brotli?brotliCompressSync:gzipSync)(body));});
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const owner=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch();
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const owner=`http://127.0.0.1:${server.address().port}`;let browser;
  try{
+  browser=await chromium.launch();
   const context=await browser.newContext(),access=boundPreviewTransport(credential.secret,owner);await context.route('**/*',route=>access.route(route));const page=await context.newPage(),errors=[],types=[];page.on('pageerror',error=>errors.push(error.name));page.on('response',response=>types.push(response.headers()['content-type']));
   await page.goto(owner+'/');await page.locator('main').filter({hasText:'Compressed assets rendered'}).waitFor();assert.deepEqual(errors,[]);assert(types.includes('text/html'));assert(types.includes('application/javascript'));assert(types.includes('application/json'));await page.goto(owner+'/br/');await page.locator('main').filter({hasText:'Compressed assets rendered'}).waitFor();assert.deepEqual(errors,[]);assert.equal(headers.length,6);assert(headers.every(h=>h['x-vercel-protection-bypass']===credential.secret));
   const response=await access.get(context.request,owner+'/value.json');assert.deepEqual(await response.json(),{message:'Compressed assets rendered'});
- }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+ }finally{try{await browser?.close();}finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}}
 });

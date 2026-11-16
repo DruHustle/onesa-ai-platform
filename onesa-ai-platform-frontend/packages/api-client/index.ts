@@ -31,6 +31,7 @@ export async function call(path: string, method = "GET", body?: unknown, signal?
 export async function api<K extends keyof Operations>(operation: K, options?: {
   body?: Operations[K]["body"];
   params?: Record<string, string>;
+  query?: Record<string, string | number | undefined>;
   signal?: AbortSignal;
 }): Promise<Operations[K]["response"]> {
   const [method, template] = operation.split(" ");
@@ -39,6 +40,8 @@ export async function api<K extends keyof Operations>(operation: K, options?: {
     if (!value) throw new Error(`Missing route parameter: ${name}`);
     return encodeURIComponent(value);
   });
-  const response = await call(path, method, options?.body, options?.signal);
+  const query = new URLSearchParams();
+  for (const [name, value] of Object.entries(options?.query || {})) if (value !== undefined) query.set(name, String(value));
+  const response = await call(path + (query.size ? `?${query}` : ""), method, options?.body, options?.signal);
   return response.status === 204 ? undefined : response.json();
 }

@@ -5,15 +5,44 @@ const { createRequire } = require("node:module");
 const { createHash } = require("node:crypto");
 const { safeFailureDiagnostics } = require("./ui_failure_diagnostics.cjs");
 const { withTemporaryDraft } = require("./usability-draft.cjs");
+const { navigateInterface: nativeNavigateInterface } = require("./ui_navigation.cjs");
+const { loadContext, writeReceipt } = require("./oracle_context.cjs");
 const requireChat = createRequire(
   path.resolve("onesa-ai-platform-frontend/apps/chat/package.json"),
 );
 const { chromium, expect } = requireChat("@playwright/test");
 const { default: AxeBuilder } = requireChat("@axe-core/playwright");
 const oracle = process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT
-  ? require("./oracle_context.cjs").loadContext(process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT)
+  ? loadContext(process.env.ONESA_ORACLE_QUALIFICATION_CONTEXT)
   : null;
+const identityModule = () => import("./release/oracle_ai_identity_browser.mjs");
+function navigateInterface(page, origin, route, options = {}) {
+  return nativeNavigateInterface(page, origin, route, {...options, sharedIdentity: Boolean(oracle?.identity)});
+}
+async function scopeContext(context, origin, bypass) {
+  if (oracle?.identity) {
+    const identity = await identityModule();
+    return identity.scopeIdentityRequests(context, oracle.identity, bypass);
+  }
+  await context.route("**/*", async route => {
+    const request = route.request();
+    await route.continue({headers: {...request.headers(),
+      ...(new URL(request.url()).origin === origin ? {"x-vercel-protection-bypass": bypass} : {})}});
+  });
+}
+async function signIn(page, context, account, bypass, observe) {
+  if (oracle?.identity) {
+    const identity = await identityModule();
+    const actor = ["primary", "foreign"].find(key => oracle.identity.accounts[key].local_user_id === account.id);
+    if (!actor) throw Error("Bound identity actor required");
+    return identity.signInIdentity(page, context, oracle.identity, {actor, appBypass: bypass, observe});
+  }
+  await page.getByLabel("Email", {exact: true}).fill(account.email);
+  await page.getByLabel("Password", {exact: true}).fill(account.password);
+  await page.getByRole("button", {name: "Sign in", exact: true}).click();
+}
 const sourceIdentity = () => oracle ? {
+  ...(oracle.source_binding ? {repository: oracle.repository, source_binding: oracle.source_binding} : {}),
   candidate_commit: oracle.candidate_commit,
   workflow_run_id: 0,
   ci_run_id: oracle.ci_run_id,
@@ -49,7 +78,8 @@ async function verifyIcons(page, origin, bypass) {
       ? "/favicon.ico"
       : "/brand/icons/v1/" + name;
     const response = await page.request.get(origin + url, {
-      headers: { "x-vercel-protection-bypass": bypass },
+      headers: oracle?.identity ? {} : { "x-vercel-protection-bypass": bypass },
+      maxRedirects: 0,
     });
     expect(response.status()).toBe(200);
     const bytes = await response.body();
@@ -116,17 +146,7 @@ async function measureUsability(browser, origin, bypass, account, pageErrors, ob
       await context.addCookies([
         { name: "onesa_ui_locale", value: "en", url: origin },
       ]);
-      await context.route("**/*", async (route) => {
-        const request = route.request();
-        await route.continue({
-          headers: {
-            ...request.headers(),
-            ...(new URL(request.url()).origin === origin
-              ? { "x-vercel-protection-bypass": bypass }
-              : {}),
-          },
-        });
-      });
+      await scopeContext(context, origin, bypass);
       const page = await context.newPage();
       page.on("pageerror", () => pageErrors.push("pageerror"));
       const session = await context.newCDPSession(page);
@@ -152,16 +172,25 @@ async function measureUsability(browser, origin, bypass, account, pageErrors, ob
         () => performance.getEntriesByName("first-contentful-paint").length > 0,
       );
       const signInVisible = Math.round(performance.now() - started);
-      await page.getByLabel("Email", { exact: true }).fill(account.email);
-      await page.getByLabel("Password", { exact: true }).fill(account.password);
-      const draftEditable = Math.round(performance.now() - started);
-      const submit = page.getByRole("button", { name: "Sign in", exact: true });
-      observeCheck("usability_submission_ready");
-      await expect(submit).toBeEnabled({ timeout: 20000 });
-      const submissionReady = Math.round(performance.now() - started);
+      let draftEditable, submissionReady;
       const signInStarted = performance.now();
       observeCheck("usability_sign_in_complete");
-      await submit.click();
+      if (oracle?.identity) {
+        await signIn(page, context, account, bypass, event => {
+          if (event === "credential_draft_editable") draftEditable = Math.round(performance.now() - started);
+          if (event === "submission_ready") submissionReady = Math.round(performance.now() - started);
+        });
+        expect(Number.isSafeInteger(draftEditable) && Number.isSafeInteger(submissionReady)).toBe(true);
+      } else {
+        await page.getByLabel("Email", { exact: true }).fill(account.email);
+        await page.getByLabel("Password", { exact: true }).fill(account.password);
+        draftEditable = Math.round(performance.now() - started);
+        const submit = page.getByRole("button", { name: "Sign in", exact: true });
+        observeCheck("usability_submission_ready");
+        await expect(submit).toBeEnabled({ timeout: 20000 });
+        submissionReady = Math.round(performance.now() - started);
+        await submit.click();
+      }
       await expect(page.getByLabel("Message Onesa AI")).toBeEnabled({
         timeout: 20000,
       });
@@ -308,17 +337,7 @@ async function main() {
           },
           mode === "light" ? 23 : 12,
         );
-        await context.route("**/*", async (route) => {
-          const request = route.request();
-          await route.continue({
-            headers: {
-              ...request.headers(),
-              ...(new URL(request.url()).origin === origin
-                ? { "x-vercel-protection-bypass": bypass }
-                : {}),
-            },
-          });
-        });
+        await scopeContext(context, origin, bypass);
         const page = await context.newPage();
         page.on("pageerror", () => pageErrors.push("pageerror"));
         const authenticationStarted = performance.now();
@@ -336,19 +355,13 @@ async function main() {
               elapsed_ms: Math.round(performance.now() - authenticationStarted),
             });
         });
-        await page.goto(origin, { waitUntil: "networkidle" });
+        await navigateInterface(page, origin, "/", { authentication: true });
         if (!identityIcons) {
           phase = "metadata-and-icons";
           identityIcons = await verifyIcons(page, origin, bypass);
         }
         phase = "authenticated-login:" + name + ":" + mode;
-        await page.getByLabel("Email", { exact: true }).fill(accounts[0].email);
-        await page
-          .getByLabel("Password", { exact: true })
-          .fill(accounts[0].password);
-        await page
-          .getByRole("button", { name: "Sign in", exact: true })
-          .click();
+        await signIn(page, context, accounts[0], bypass);
         await expect(page.getByLabel("Message Onesa AI")).toBeVisible();
         for (const route of [
           "/",
@@ -360,9 +373,7 @@ async function main() {
           "/invitation",
         ]) {
           phase = "layout:" + name + ":" + route + ":" + mode;
-          const response = await page.goto(origin + route, {
-            waitUntil: "networkidle",
-          });
+          const response = await navigateInterface(page, origin, route);
           if (!response || response.status() !== 200)
             throw new Error("Interface route failed");
           await expect(page.locator("main")).toBeVisible();
@@ -404,7 +415,7 @@ async function main() {
         ]) {
           phase = "live-draft:" + name + ":" + route + ":" + mode;
           observeDraftCheck("navigate");
-          await page.goto(origin + route, { waitUntil: "networkidle" });
+          await navigateInterface(page, origin, route);
           const field = page.getByLabel(label, { exact: true });
           observeDraftCheck("field_visible");
           await expect(field).toBeVisible();
@@ -460,7 +471,8 @@ async function main() {
         expect(
           (
             await context.request.get(origin + "/api/v1/auth/me", {
-              headers: { "x-vercel-protection-bypass": bypass },
+              headers: oracle?.identity ? {} : { "x-vercel-protection-bypass": bypass },
+              maxRedirects: 0,
             })
           ).status(),
         ).toBe(200);
@@ -476,25 +488,11 @@ async function main() {
     await context.addCookies([
       { name: "onesa_ui_locale", value: "en", url: origin },
     ]);
-    await context.route("**/*", async (route) => {
-      const request = route.request();
-      await route.continue({
-        headers: {
-          ...request.headers(),
-          ...(new URL(request.url()).origin === origin
-            ? { "x-vercel-protection-bypass": bypass }
-            : {}),
-        },
-      });
-    });
+    await scopeContext(context, origin, bypass);
     const page = await context.newPage();
     page.on("pageerror", () => pageErrors.push("pageerror"));
-    await page.goto(origin, { waitUntil: "networkidle" });
-    await page.getByLabel("Email", { exact: true }).fill(accounts[1].email);
-    await page
-      .getByLabel("Password", { exact: true })
-      .fill(accounts[1].password);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await navigateInterface(page, origin, "/", { authentication: true });
+    await signIn(page, context, accounts[1], bypass);
     const input = page.getByLabel("Message Onesa AI");
     await expect(input).toBeVisible();
     let submissions = 0,
@@ -548,11 +546,11 @@ async function main() {
     const headers = {
       Origin: origin,
       "X-CSRF-Token": csrf,
-      "x-vercel-protection-bypass": bypass,
+      ...(oracle?.identity ? {} : {"x-vercel-protection-bypass": bypass}),
     };
     expect(
       (
-        await context.request.get(origin + "/api/v1/auth/me", { headers })
+        await context.request.get(origin + "/api/v1/auth/me", { headers, maxRedirects: 0 })
       ).status(),
     ).toBe(200);
     if (conversation)
@@ -560,7 +558,7 @@ async function main() {
         (
           await context.request.delete(
             origin + "/api/v1/conversations/" + conversation,
-            { headers },
+            { headers, maxRedirects: 0 },
           )
         ).status(),
       ).toBe(204);
@@ -588,12 +586,13 @@ async function main() {
       identity_icons: identityIcons,
       usability,
       real_hosted: true,
+      qualification_profile: oracle?.identity ? "shared-identity-v1" : "legacy-password-v1",
       synthetic_only: true,
       manual_safari_and_screen_reader: "NOT TESTED",
     };
-    fs.writeFileSync(
+    writeReceipt(
       path.join(outputDirectory(), "hosted-ui.json"),
-      JSON.stringify(report, null, 2),
+      report,
     );
     console.log(
       JSON.stringify({
@@ -611,9 +610,9 @@ async function main() {
       "Hosted UI authentication statuses: " +
         JSON.stringify(authenticationStatuses),
     );
-    fs.writeFileSync(
+    writeReceipt(
       path.join(outputDirectory(), "hosted-ui.json"),
-      JSON.stringify({
+      {
         status: "FAIL",
         ...sourceIdentity(),
         failure_phase: phase,
@@ -623,7 +622,7 @@ async function main() {
         views,
         authentication_statuses: authenticationStatuses,
         workflow_checks: workflowChecks,
-      }),
+      },
     );
     throw new Error("Hosted UI verification failed");
   } finally {

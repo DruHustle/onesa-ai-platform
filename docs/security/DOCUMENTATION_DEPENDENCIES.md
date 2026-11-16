@@ -1,5 +1,26 @@
 # Documentation dependency security and compatibility
 
+## 28 October 2026 deepmerge backport
+
+The mandatory all-severity Docs audit now reports
+[GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4).
+The official registry still supplies4.3.1 and no patched release. The reported
+null-placeholder exploit was reproduced against that exact integrity-checked
+package. A local, unpublished `@onesa/deepmerge`4.3.1-onesa.2 backport skips
+`__proto__` in both object-copy loops before reading or assigning its value.
+Source, CommonJS and UMD distributions carry the same focused change, derived
+from the [reviewed upstream proposal](https://github.com/TehShrike/deepmerge/pull/274).
+This is an Onesa patch, not an upstream-approved release. Original MIT attribution,
+archive identity, exact diffs and portable package integrity are preserved.
+
+Every SVGR and Swagger consumer must resolve the reviewed bytes. Regressions
+exercise poisoned source/target objects, null-prototype targets, primitive nested
+placeholders, arrays and getters, plus ordinary nested/symbol/custom merges in both
+shipped distributions. Full Docusaurus builds and Swagger compatibility remain
+required. The audit threshold and advisory checks are unchanged; a zero audit
+report alone cannot establish the safety of a private fork. This source change
+does not establish a hosted deployment or authorize publication.
+
 Updated 2026-10-09 · internal engineering · documentation 0.2.0.
 
 ## Finding and remediation
@@ -16,7 +37,7 @@ sprintf-js retains sprintf/vsprintf, named arguments, flags and ordinary numeric
 
 ## Supported runtime and peers
 
-Documentation is qualified on Node 24.21.0. CI uses Node 24. A checksum-verified optional native runtime lives in ignored data/runtime/node24; install with `.venv/bin/python scripts/local/install_node24.py`. Make automatically prefers it when present, without modifying system executables. The official distribution and SHA-256 list come from nodejs.org; no system package installer is used.
+Earlier documentation qualification used Node 24.21.0; new security candidates use Node 24.22.1. CI uses Node 24. A checksum-verified optional native runtime lives in ignored data/runtime/node24-24.22.1; install with `.venv/bin/python scripts/local/install_node24.py`. Make automatically prefers it when present, without modifying system executables. The official distribution and SHA-256 list come from nodejs.org; no system package installer is used.
 
 The docs project uses React/React DOM 18.3.1, the supported intersection of Docusaurus and its Swagger dependencies, with matching TypeScript types. The separate Onesa Chat application retains its existing React version. Runtime and peer alignment remove the earlier unsupported engine/React dependency warnings.
 
@@ -30,8 +51,23 @@ make docs-release-check
 make docs-browser
 ```
 
-Use Node 24 on PATH for direct npm commands, or the repository-local bin directory. The release gate runs all twelve adversarial/compatibility checks, validates installed source and tarball hashes, type-checks docs, verifies classified artifacts and runs an unsuppressed npm audit at all severities. CI enforces the same controls. Live browser verification exercises Swagger Try it out/Execute/response rendering in addition to search, PDFs, authorization, revocation, navigation and real assistant generation.
+Use Node 24 on PATH for direct npm commands, or the repository-local bin directory. The release gate runs the full adversarial/compatibility suite, validates installed source and tarball hashes, type-checks docs, verifies classified artifacts and runs an unsuppressed npm audit at all severities. CI enforces the same controls. Live browser verification exercises Swagger Try it out/Execute/response rendering in addition to search, PDFs, authorization, revocation, navigation and real assistant generation.
 
 For a backport change, review the source/diff, increment its local version, regenerate exact patches, run `make docs-security-pack`, update direct tarball specs, reinstall and commit reviewed sources, archives, provenance and lockfile together. Changing a tarball under the same version risks cached installations; integrity tests intentionally reject stale files. Replace a backport with an official compatible fixed release only after these regressions and both scope builds pass. Never remove an advisory from the audit, spoof an upstream release, or mark a local fork safe based solely on a zero audit result.
 
 The dependency blocker is resolved locally. Publication still requires an explicitly authorized target/workflow; this change publishes nothing. Semantic embedding, NVIDIA, provider and production qualification are separate outstanding milestones, not package-release failures.
+
+## 24 October 2026 source patches
+
+The Docs lock narrowly updates body-parser 1.20.9, Fast URI 3.1.9 and
+serialize-javascript 7.1.3. The existing backports and unrelated locks are retained.
+These dependencies participate in the build/dev toolchain; static hosting does not
+run Express. A fixed lock does not establish a rebuilt or accepted hosted artifact.
+Authoritative advisories: [body-parser](https://github.com/advisories/GHSA-27r3-jxmh-p828),
+[Serialize JavaScript](https://github.com/advisories/GHSA-m5mm-p8h7-m29v).
+Chat's development tooling resolves Zod 4.6.6 for
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+Full locked installs, behavioral backport checks, all-severity audits and final
+runtime/artifact qualification remain separate required evidence.
+
+The Node 24.22.1 runtime patch follows the [official 21 October security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases), including the bundled Brotli decoder fix. OS Brotli in the separate file scanner is independently constrained to Alpine 1.2.1-r0 or later; a clean npm audit does not cover either native runtime.

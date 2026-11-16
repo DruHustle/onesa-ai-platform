@@ -1,5 +1,18 @@
 # Security architecture
 
+## Independent security evidence product scope
+
+The optional Cybersecurity module separates immutable observed evidence, deterministic
+derived findings and human decisions. It is separate from these platform security
+controls and defaults off. Owned imports and scoped/revocable source credentials do
+not grant global security-log access. Global native decisions require explicit server
+security-operator UUIDs; application configuration events are captured only after a
+real committed action. No request payload grants user, site or tenant authority.
+Current ownership, active eligibility, session revocation and mutation Origin/CSRF
+remain required. Tool/document reads reauthorize current access, and model output
+cannot modify findings, incident status or equipment. See
+[the feature boundary and tests](../engineering/CYBERSECURITY.md).
+
 Public entry is one same-origin web service. Production uses TLS/Secure cookies and
 private database/API/inference networks. Production uses a separate restricted CRUD
 application database URL and readiness rejects superuser connections. Sessions are opaque and hashed, passwords

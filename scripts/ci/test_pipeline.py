@@ -13,6 +13,7 @@ from unittest.mock import patch
 import analyze
 import install_tools
 import paths
+import pull_image
 import security
 import summary
 
@@ -310,6 +311,108 @@ class PipelineTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertNotIn(fake, result.stdout + result.stderr)
+
+    def test_tls_proxy_success_needs_no_retry_or_delay(self):
+        image = "caddy:2.10-alpine@sha256:" + "a" * 64
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                side_effect=[
+                    subprocess.CompletedProcess([], 0, b"", b""),
+                    subprocess.CompletedProcess(
+                        [], 0, json.dumps(["caddy@sha256:" + "a" * 64]), ""
+                    ),
+                ],
+            ) as run,
+            patch.object(pull_image.time, "sleep") as sleep,
+        ):
+            pull_image.pull(image)
+        self.assertEqual(run.call_count, 2)
+        sleep.assert_not_called()
+
+    def test_tls_proxy_pull_retries_only_the_same_immutable_read(self):
+        image = "caddy:2.10-alpine@sha256:" + "a" * 64
+        inspected = subprocess.CompletedProcess(
+            [], 0, json.dumps(["caddy@sha256:" + "a" * 64]), ""
+        )
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                side_effect=[
+                    subprocess.TimeoutExpired(["docker", "image", "pull"], 90),
+                    subprocess.CompletedProcess([], 0, b"", b""),
+                    inspected,
+                ],
+            ) as run,
+            patch.object(pull_image.time, "sleep") as sleep,
+        ):
+            pull_image.pull(image)
+        self.assertEqual(run.call_count, 3)
+        self.assertEqual(run.call_args_list[0].args, run.call_args_list[1].args)
+        self.assertEqual(run.call_args_list[0].kwargs["timeout"], 90)
+        self.assertEqual(run.call_args_list[1].kwargs["timeout"], 90)
+        sleep.assert_called_once_with(3)
+        self.assertTrue(all("up" not in call.args[0] for call in run.call_args_list))
+
+    def test_tls_proxy_failed_reads_stop_without_starting_tests(self):
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 1, b"", b""),
+            ) as run,
+            patch.object(pull_image.time, "sleep"),
+            self.assertRaisesRegex(RuntimeError, "TLS checks have not started"),
+        ):
+            pull_image.pull("caddy:2.10-alpine@sha256:" + "a" * 64)
+        self.assertEqual(run.call_count, 2)
+        self.assertTrue(
+            all(
+                call.args[0][:3] == ["docker", "image", "pull"]
+                for call in run.call_args_list
+            )
+        )
+
+    def test_tls_proxy_identity_mismatch_is_not_retried(self):
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                side_effect=[
+                    subprocess.CompletedProcess([], 0, b"", b""),
+                    subprocess.CompletedProcess(
+                        [], 0, json.dumps(["caddy@sha256:" + "b" * 64]), ""
+                    ),
+                ],
+            ) as run,
+            self.assertRaisesRegex(RuntimeError, "identity"),
+        ):
+            pull_image.pull("caddy:2.10-alpine@sha256:" + "a" * 64)
+        self.assertEqual(run.call_count, 2)
+
+    def test_tls_proxy_unpinned_or_other_registry_is_rejected_before_use(self):
+        with patch.object(pull_image.subprocess, "run") as run:
+            for image in ["caddy:latest", "example.com/caddy:2@sha256:" + "a" * 64]:
+                with self.assertRaises(ValueError):
+                    pull_image.pull(image)
+        run.assert_not_called()
+
+    def test_tls_compose_failure_does_not_disclose_configuration(self):
+        marker = "synthetic-not-a-real-secret"
+        output = io.StringIO()
+        with (
+            patch.object(
+                pull_image.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 1, marker, marker),
+            ),
+            patch("sys.stdout", output),
+            self.assertRaisesRegex(RuntimeError, "configuration unavailable") as error,
+        ):
+            pull_image.main()
+        self.assertNotIn(marker, str(error.exception) + output.getvalue())
 
     def test_checksum_mismatch_is_rejected_before_binary_install(self):
         with tempfile.TemporaryDirectory() as folder:
