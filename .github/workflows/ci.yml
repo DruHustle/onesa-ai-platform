@@ -345,7 +345,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       if: github.event.repository.private == false
       with:
-        repository: DruHustle/onesa-company-portal
+        repository: DruHustle/onesa-portal
         ref: ${{ steps.docs-sources.outputs.portal }}
         path: data/docs-sources/portal
         persist-credentials: false
@@ -385,7 +385,7 @@ jobs:
         node --test scripts/docs/readiness.test.mjs scripts/docs/owned-browser-check.test.mjs scripts/docs/native-full-preflight.test.mjs
         ONESA_DOCS_EXPECTED_ENVIRONMENT=staging node scripts/docs/acceptance.mjs
     - run: .venv/bin/python scripts/docs/validate.py --negative-test
-    - run: git diff --exit-code -- docs/api/openapi.json docs/diagrams/database.mmd docs/public/examples.md docs/database/SCHEMA.md
+    - run: git diff --exit-code -- docs/api/openapi.json 'docs/diagrams/database*.mmd' docs/public/examples.md docs/database/SCHEMA.md
     - run: make docs-release-check
     - if: always()
       run: docker compose down

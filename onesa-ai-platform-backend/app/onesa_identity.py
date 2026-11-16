@@ -44,6 +44,10 @@ class IdentityConfig:
     redirect_uri: str
     product: str
     allow_local_http: bool = False
+    audience: str = ""
+    public_jwks: str = ""
+    mapping_issuer: str = ""
+    account_url: str = ""
 
     def __post_init__(self) -> None:
         for name, value in (("issuer", self.issuer), ("callback", self.redirect_uri)):
@@ -60,7 +64,20 @@ class IdentityConfig:
                 or (parsed.scheme != "https" and not (local and parsed.scheme == "http"))
             ):
                 raise ValueError(f"Onesa identity {name} requires an exact trusted HTTPS URL")
-        if self.issuer.endswith("/"):
+        if self.audience:
+            from app.managed_oidc import public_keys
+
+            if (
+                self.issuer != "https://" + urlsplit(self.issuer).netloc + "/"
+                or not self.mapping_issuer.startswith("https://")
+                or not self.audience.startswith("https://")
+                or not self.account_url.startswith("https://")
+            ):
+                raise ValueError(
+                    "Managed issuer, audience, mapping namespace and account URL required"
+                )
+            public_keys(self.public_jwks)
+        elif self.issuer.endswith("/") and not self.audience:
             raise ValueError("Onesa identity issuer must not end with a slash")
         if (
             not self.client_id
@@ -103,12 +120,34 @@ def new_transaction() -> tuple[str, str, str]:
     return secrets.token_urlsafe(32), secrets.token_urlsafe(32), secrets.token_urlsafe(48)
 
 
+def pkce_challenge(verifier: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
+        raise ValueError("Invalid PKCE verifier")
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
 def authorization_url(
-    config: IdentityConfig, state: str, nonce: str, verifier: str, *, reauthenticate: bool = False
+    config: IdentityConfig,
+    state: str,
+    nonce: str,
+    verifier: str | None,
+    *,
+    reauthenticate: bool = False,
+    code_challenge: str | None = None,
 ) -> str:
-    if not all(re.fullmatch(r"[A-Za-z0-9_-]{40,128}", item) for item in (state, nonce, verifier)):
-        raise ValueError("Invalid server-generated identity transaction")
-    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest())
+    if not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", state) or not re.fullmatch(
+        r"[A-Za-z0-9_-]{40,128}", nonce
+    ):
+        raise ValueError("Invalid identity transaction")
+    if code_challenge is None:
+        if verifier is None:
+            raise ValueError("PKCE verifier or challenge is required")
+        challenge = pkce_challenge(verifier)
+    else:
+        if not re.fullmatch(r"[A-Za-z0-9_-]{43}", code_challenge):
+            raise ValueError("Invalid PKCE challenge")
+        challenge = code_challenge
     params = {
         "client_id": config.client_id,
         "redirect_uri": config.redirect_uri,
@@ -116,11 +155,15 @@ def authorization_url(
         "scope": "openid email profile onesa",
         "state": state,
         "nonce": nonce,
-        "code_challenge": challenge.decode().rstrip("="),
+        "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
     if reauthenticate:
         params.update(prompt="login", max_age="0", acr_values="urn:onesa:mfa")
+    if config.audience:
+        from app.managed_oidc import authorize
+
+        return authorize(config, params, reauthenticate)
     return config.issuer + "/auth?" + urlencode(params)
 
 
@@ -133,7 +176,9 @@ def _request(
     client: httpx.Client | None = None,
 ) -> dict[str, Any]:
     own_client = client is None
-    connection = client or httpx.Client(timeout=httpx.Timeout(5.0), follow_redirects=False)
+    connection = client or httpx.Client(
+        timeout=httpx.Timeout(5.0), follow_redirects=False, trust_env=False
+    )
     try:
         with connection.stream(
             "POST",
@@ -178,7 +223,7 @@ def _request(
 def exchange_code(
     config: IdentityConfig, code: str, verifier: str, *, client: httpx.Client | None = None
 ) -> str:
-    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", verifier):
+    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
         raise IdentityError("identity_callback_invalid", "Sign-in has expired. Please start again")
     result = _request(
         config,
@@ -219,6 +264,10 @@ def _strings(value: Any, allowed: set[str] | frozenset[str] | None = None) -> tu
 def validate_session(
     config: IdentityConfig, token: str, *, client: httpx.Client | None = None
 ) -> Identity:
+    if config.audience:
+        from app.managed_oidc import validate
+
+        return validate(config, token)
     if not isinstance(token, str) or not 20 <= len(token) <= 4096:
         raise IdentityError("identity_rejected", "Your Onesa session is no longer valid")
     raw = _request(config, "/session", body={"token": token}, client=client)
@@ -312,6 +361,8 @@ def revoke_session(
     all_sessions: bool = False,
     client: httpx.Client | None = None,
 ) -> bool:
+    if config.audience:
+        return False  # Local sign-out cannot prove termination of the provider SSO session.
     body: dict[str, Any] = {"token": token}
     if all_sessions:
         body["all_sessions"] = True

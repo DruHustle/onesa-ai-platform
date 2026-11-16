@@ -75,7 +75,7 @@ def translate(config: MqttConfig, topic: str, payload: bytes) -> Batch:
         raise ValueError("Smart Factory timestamp must be epoch milliseconds")
     observed = datetime.fromtimestamp(timestamp / 1000, UTC)
     status = record.get("sensorStatus")
-    if status not in {None, "ok", "read_error"}:
+    if status is not None and (not isinstance(status, str) or status not in {"ok", "read_error"}):
         raise ValueError("Unsupported MQTT source quality")
     quality = {None: "unknown", "ok": "good", "read_error": "bad"}[status]
     samples = []
@@ -103,6 +103,26 @@ def translate(config: MqttConfig, topic: str, payload: bytes) -> Batch:
     return Batch.model_validate({"mode": config.mode, "samples": samples})
 
 
+def retryable_platform_response(response: httpx.Response) -> bool:
+    """Retry every non-200 response except an explicitly documented permanent conflict."""
+    if response.status_code != 409:
+        # Authentication, authorization, missing-source, throttling and server errors
+        # may be resolved by operator or service recovery. Keep QoS evidence unacked.
+        return response.status_code != 200
+    try:
+        payload = response.json()
+    except ValueError:
+        return True
+    if not isinstance(payload, dict):
+        return True
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return True
+    # Only these documented identity/time conflicts are permanent. An unknown
+    # conflict (including new server error codes) must not drop QoS evidence.
+    return error.get("code") not in {"sample_identity_conflict", "sample_time_conflict"}
+
+
 def serve(config: MqttConfig) -> None:
     token = os.environ.get(config.source_token_env, "")
     if len(token) < 40:
@@ -126,7 +146,7 @@ def serve(config: MqttConfig) -> None:
     client.reconnect_delay_set(min_delay=1, max_delay=30)
     stopped = Event()
     retry_requested = False
-    with httpx.Client(timeout=5, follow_redirects=False) as http:
+    with httpx.Client(timeout=5, follow_redirects=False, trust_env=False) as http:
 
         def connected(
             current: Any, _userdata: Any, _flags: Any, code: Any, _properties: Any
@@ -147,18 +167,13 @@ def serve(config: MqttConfig) -> None:
                 if response.status_code == 200:
                     current.ack(message.mid, message.qos)
                     print("MQTT telemetry accepted", flush=True)
-                elif response.status_code in {408, 425, 429} or (
-                    response.status_code == 409
-                    and response.json().get("error", {}).get("code") == "reading_capacity"
-                ):
+                elif retryable_platform_response(response):
                     retry_requested = True
                     current.disconnect()
                 elif response.status_code < 500:
-                    # Invalid/revoked input must not hammer the API or be relabeled successful.
-                    print(
-                        "MQTT telemetry rejected by platform; check scoped configuration",
-                        flush=True,
-                    )
+                    # The only terminal response is a documented immutable identity/time
+                    # conflict. All other non-200 responses retain broker QoS evidence.
+                    print("MQTT telemetry conflicts with an existing immutable reading", flush=True)
                     current.ack(message.mid, message.qos)
                 else:
                     retry_requested = True

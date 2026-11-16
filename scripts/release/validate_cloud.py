@@ -26,11 +26,7 @@ assert not any(
     for service in blueprint["services"]
     for entry in service["envVars"]
 ), "Preserve existing credentials"
-front = ROOT / (
-    "onesa-ai-platform-frontend/apps/chat"
-    if ROOT.name == "onesa-ai-platform"
-    else "onesa-company-portal-frontend"
-)
+front = ROOT / "onesa-ai-platform-frontend/apps/chat"
 vercel = json.loads((front / "vercel.json").read_text())
 deployments = vercel["git"]["deploymentEnabled"]
 assert deployments is False or deployments == {

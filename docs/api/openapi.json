@@ -11927,6 +11927,23 @@
             "type": "boolean",
             "title": "Reauthenticate",
             "default": false
+          },
+          "mobile": {
+            "type": "boolean",
+            "title": "Mobile",
+            "default": false
+          },
+          "code_challenge": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Challenge"
           }
         },
         "additionalProperties": false,

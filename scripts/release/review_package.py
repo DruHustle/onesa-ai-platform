@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-PRODUCTS = ("onesa-company-portal", "onesa-ai-platform", "onesa-ai-robot")
+PRODUCTS = ("onesa-company-portal", "onesa-ai-platform", "onesa-robot")
 
 
 def git(root, *arguments):
@@ -69,7 +69,7 @@ def project(root):
                     "operations": operations,
                 }
             )
-    if root.name == "onesa-ai-robot":
+    if root.name == "onesa-robot":
         routes.append(
             {
                 "pattern": "/",

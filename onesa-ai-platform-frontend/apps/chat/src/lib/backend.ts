@@ -78,15 +78,33 @@ export async function proxy(request: Request): Promise<Response> {
     const location = responseHeaders.get('location');
     if (location) {
       const redirect = new URL(location, base);
-      if (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol)) throw new Error("Invalid upstream redirect");
-      responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
+      const mobileCallback = incoming.pathname === '/api/v1/auth/onesa/callback' &&
+        request.method === 'GET' && upstream.status === 303 &&
+        redirect.protocol === 'onesaai:' && redirect.host === 'account' && redirect.pathname === '/callback' &&
+        !redirect.username && !redirect.password && !redirect.hash &&
+        redirect.searchParams.getAll('state').length === 1 && /^native_[a-zA-Z0-9_-]{43}$/.test(redirect.searchParams.get('state') || '');
+      if (!mobileCallback && (redirect.host !== base.host || !["http:", "https:"].includes(redirect.protocol))) throw new Error("Invalid upstream redirect");
+      if (!mobileCallback) responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
     }
     responseHeaders.delete('set-cookie');
-    for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append('set-cookie', cookie);
+    const allowedResponseCookies = new Set([
+      'onesa_session',
+      'onesa_csrf',
+      'onesa_identity_flow',
+    ]);
+    for (const cookie of upstream.headers.getSetCookie()) {
+      const pair = cookie.split(';', 1)[0];
+      const separator = pair.indexOf('=');
+      const name = separator > 0 ? pair.slice(0, separator).trim() : '';
+      if (allowedResponseCookies.has(name)) responseHeaders.append('set-cookie', cookie);
+    }
     responseHeaders.set('cache-control', 'no-store');
     // Forward the stream directly: response-body cancellation closes the upstream stream.
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch {
-    return Response.json({ error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } }, { status: 503 });
+    return Response.json(
+      { error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } },
+      { status: 503, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } },
+    );
   }
 }

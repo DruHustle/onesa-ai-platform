@@ -484,6 +484,15 @@ def test_telemetry_units_duplicates_late_bad_stale_hysteresis_and_replay(twins):
     assert ingest(twins, src, [sample(1, -1)]).status_code == 401
 
 
+def test_scoped_edge_ingestion_does_not_require_browser_sso(twins):
+    asset_row = seed(twins)[0]
+    src, _ = source(twins, asset_row)
+    twins.app.state.settings.identity_enabled = True
+    response = ingest(twins, src, [sample(4, -1)])
+    assert response.status_code == 200, response.text
+    assert response.json()["accepted"] == 1
+
+
 def test_simultaneous_duplicate_ingestion_is_atomic(twins):
     a = seed(twins)[0]
     src, _ = source(twins, a)

@@ -157,13 +157,13 @@ def repair_vercel(repo, portal):
 def main():
     repo = os.environ.get("GITHUB_REPOSITORY", "")
     if (
-        repo not in {"DruHustle/onesa-company-portal", "DruHustle/onesa-ai-platform"}
+        repo not in {"DruHustle/onesa-portal", "DruHustle/onesa-ai-platform"}
         or os.environ.get("GITHUB_REF") != "refs/heads/main"
     ):
         raise SystemExit(
             "Configuration repair requires the approved application repository on main"
         )
-    portal = repo.endswith("/onesa-company-portal")
+    portal = repo.endswith("/onesa-portal")
     report = {
         "backend": repair_render(
             repo, os.environ.get("RENDER_BACKEND_SERVICE_ID", ""), portal

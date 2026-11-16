@@ -54,6 +54,10 @@ async def serve(
                 response = await dispatch(value)
         except TimeoutError:
             response = error(value["id"], -32603, "Request deadline exceeded")
+        except Exception:
+            # A faulty tool/adapter must not terminate unrelated MCP requests.
+            # Never expose exception text, potentially containing private data.
+            response = error(value["id"], -32603, "Request failed")
         # CancelledError propagates: no response or remote replay follows cancellation.
         emit(response)
 
@@ -104,14 +108,32 @@ async def serve(
             ):
                 emit(error(None, -32600, "Request identifier is already active"))
                 continue
+            identifier = value.get("id") if isinstance(value, dict) else None
+            method = value.get("method") if isinstance(value, dict) else None
+            if (
+                isinstance(value, dict)
+                and type(identifier) in {str, int}
+                and not isinstance(method, str)
+            ):
+                emit(error(identifier, -32600, "Invalid request"))
+                continue
             if (
                 not isinstance(value, dict)
-                or type(value.get("id")) not in {str, int}
-                or value.get("method") in {"initialize", "ping"}
+                or type(identifier) not in {str, int}
+                or method in {"initialize", "ping"}
             ):
                 # Initialization is ordered and cannot be cancelled. Notifications
                 # never invoke remote work; ping remains responsive under load.
-                emit(await dispatch(value))
+                try:
+                    response = await dispatch(value)
+                except Exception:
+                    identifier = (
+                        value.get("id")
+                        if isinstance(value, dict) and type(value.get("id")) in {str, int}
+                        else None
+                    )
+                    response = error(identifier, -32603, "Request failed")
+                emit(response)
                 continue
             if len(active) >= MAX_IN_FLIGHT:
                 emit(error(value["id"], -32000, "Too many outstanding requests"))

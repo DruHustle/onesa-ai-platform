@@ -30,12 +30,13 @@ from tests.conftest import signup
 TOKEN = "synthetic-test-access-token-" + "x" * 32
 
 
-def enable(api, monkeypatch, email="shared@example.com", *, admin=False):
+def enable(api, monkeypatch, email="shared@example.com", *, admin=False, mobile=False):
     settings = api.app.state.settings
     issuer = "https://account.example.test/api/v1/identity"
     api.app.state.settings = settings.model_copy(
         update={
             "identity_enabled": True,
+            "identity_mobile_enabled": mobile,
             "identity_issuer": issuer,
             "identity_client_id": "ai-test",
             "identity_client_secret": "synthetic-" + "x" * 40,
@@ -101,6 +102,82 @@ def finish(api, state):
     if "onesa_csrf" in api.cookies:
         api.headers["X-CSRF-Token"] = api.cookies["onesa_csrf"]
     return response
+
+
+def start_mobile(api, challenge):
+    response = api.post(
+        "/api/v1/auth/onesa/start",
+        json={"mobile": True, "code_challenge": challenge},
+    )
+    assert response.status_code == 200, response.text
+    query = parse_qs(urlsplit(response.json()["authorize_url"]).query)
+    assert query["code_challenge_method"] == ["S256"]
+    assert query["code_challenge"] == [challenge]
+    return query["state"][0]
+
+
+def test_native_pkce_exchange_is_bound_to_verifier_without_browser_cookie(api, monkeypatch):
+    current = enable(api, monkeypatch, mobile=True)
+    verifier = "v" * 64
+    challenge = shared_identity.pkce_challenge(verifier)
+    state = start_mobile(api, challenge)
+    assert "onesa_identity_flow" not in api.cookies
+
+    callback = api.get(
+        "/api/v1/auth/onesa/callback",
+        params={"state": state, "code": "synthetic-code"},
+        follow_redirects=False,
+    )
+    assert callback.status_code == 303
+    returned = urlsplit(callback.headers["location"])
+    returned_query = parse_qs(returned.query)
+    assert (
+        returned.scheme == "onesaai"
+        and returned.netloc == "account"
+        and returned.path == "/callback"
+    )
+    assert returned_query == {"state": [state], "code": ["synthetic-code"]}
+
+    original_exchange = shared_identity.exchange_code
+
+    def assert_verifier(config, code, supplied):
+        assert supplied == verifier
+        return original_exchange(config, code, supplied)
+
+    monkeypatch.setattr(shared_identity, "exchange_code", assert_verifier)
+    invalid = api.post(
+        "/api/v1/auth/onesa/mobile/exchange",
+        json={"state": state, "code": "synthetic-code", "code_verifier": "x" * 64},
+    )
+    assert invalid.status_code == 400
+    assert current["exchanges"] == 0
+
+    exchanged = api.post(
+        "/api/v1/auth/onesa/mobile/exchange",
+        json={"state": state, "code": "synthetic-code", "code_verifier": verifier},
+    )
+    assert exchanged.status_code == 200, exchanged.text
+    assert exchanged.json()["csrf"]
+    assert api.get("/api/v1/auth/me").status_code == 200
+    assert current["exchanges"] == 1
+
+    replay = api.post(
+        "/api/v1/auth/onesa/mobile/exchange",
+        json={"state": state, "code": "synthetic-code", "code_verifier": verifier},
+    )
+    assert replay.status_code == 400
+    assert current["exchanges"] == 1
+
+
+def test_native_pkce_start_requires_explicit_mobile_enablement(api, monkeypatch):
+    enable(api, monkeypatch)
+    challenge = shared_identity.pkce_challenge("v" * 64)
+    response = api.post(
+        "/api/v1/auth/onesa/start",
+        json={"mobile": True, "code_challenge": challenge},
+    )
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "native_identity_disabled"
 
 
 def test_shared_sign_in_creates_passwordless_local_owner_and_encrypts_token(api, pg, monkeypatch):

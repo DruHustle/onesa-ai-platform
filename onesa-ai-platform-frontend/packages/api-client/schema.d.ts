@@ -3735,6 +3735,13 @@ export interface components {
              * @default false
              */
             reauthenticate: boolean;
+            /**
+             * Mobile
+             * @default false
+             */
+            mobile: boolean;
+            /** Code Challenge */
+            code_challenge?: string | null;
         };
         /** AssetCreate */
         app__twin_schemas__AssetCreate: {

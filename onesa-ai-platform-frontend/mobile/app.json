@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Onesa AI Platform",
+    "slug": "onesa-ai-platform",
+    "version": "0.1.0",
+    "scheme": "onesaai",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "ios": {
+      "bundleIdentifier": "eu.onesa.aiplatform",
+      "buildNumber": "1",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "eu.onesa.aiplatform",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "updates": {
+      "enabled": false
+    }
+  }
+}

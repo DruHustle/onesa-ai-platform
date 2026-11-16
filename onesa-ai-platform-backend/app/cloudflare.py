@@ -20,7 +20,9 @@ def embeddings(
     body: dict[str, object] = {"queries" if query else "documents": texts}
     if query and config.embedding_query_instruction:
         body["instruction"] = config.embedding_query_instruction
-    with httpx.Client(timeout=httpx.Timeout(30, connect=3), transport=transport) as client:
+    with httpx.Client(
+        timeout=httpx.Timeout(30, connect=3), trust_env=False, transport=transport
+    ) as client:
         with client.stream(
             "POST",
             config.embedding_base_url.rstrip("/") + "/run/" + config.embedding_name,
