@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
+    identity_mobile_enabled: bool = False
     identity_audience: str = ""
     identity_public_jwks: str = ""
     identity_mapping_issuer: str = ""
@@ -152,6 +153,9 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "Identity requires a private 32-byte Fernet encryption key"
                 ) from None
+
+        if self.identity_mobile_enabled and not self.identity_enabled:
+            raise ValueError("Native identity sign-in requires shared Onesa identity")
 
         if any(str(UUID(value)) != value for value in self.cybersecurity_operator_user_ids):
             raise ValueError("Security operators require canonical configured user UUIDs")
