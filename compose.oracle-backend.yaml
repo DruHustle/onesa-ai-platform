@@ -51,6 +51,16 @@
         "org.onesa.product": "ai",
         "org.onesa.environment": "staging",
         "org.onesa.source-commit": "${ORACLE_STAGING_COMMIT:?Exact source commit required}"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "wget -q -Y off -T 5 -O /dev/null \"http://127.0.0.1:$${PORT:-8000}/health\""
+        ],
+        "interval": "15s",
+        "timeout": "6s",
+        "start_period": "20s",
+        "retries": 5
       }
     },
     "production": {

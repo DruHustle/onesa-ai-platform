@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.main import create_app
-from app.models import BoundedUpload, Document, UploadChunk, now
+from app.models import BoundedUpload, Document, UploadChunk, User, now
 from tests.conftest import signup
 
 
@@ -186,3 +186,73 @@ def test_chunk_replay_and_concurrent_finalize_create_one_document(api, pg):
     assert results[0] == results[1]
     with Session(pg) as db:
         assert db.scalar(select(func.count()).select_from(Document)) == 1
+
+
+def test_start_cleans_only_owned_expired_rows_and_preserves_other_accounts(api, pg):
+    signup(api, "existing@example.com")
+    expired, active = start(api, b"expired"), start(api, b"active")
+    fill(api, expired, b"expired")
+    with Session(pg) as db:
+        row = db.get(BoundedUpload, UUID(expired))
+        row.expires_at = now() - timedelta(seconds=1)
+        db.commit()
+        before = [
+            (str(r.id), r.expires_at, r.received, r.checksum)
+            for r in db.scalars(select(BoundedUpload).order_by(BoundedUpload.id))
+        ]
+    signup(api, "requesting@example.com")
+    own_expired = start(api, b"own")
+    fill(api, own_expired, b"own")
+    with Session(pg) as db:
+        db.get(BoundedUpload, UUID(own_expired)).expires_at = now() - timedelta(seconds=1)
+        db.commit()
+    start(api, b"new")
+    with Session(pg) as db:
+        assert db.get(BoundedUpload, UUID(own_expired)) is None
+        assert db.get(UploadChunk, (UUID(own_expired), 0)) is None
+        assert db.get(UploadChunk, (UUID(expired), 0)).data == b"expired"
+        after = [
+            (str(r.id), r.expires_at, r.received, r.checksum)
+            for r in db.scalars(
+                select(BoundedUpload)
+                .where(BoundedUpload.id.in_([UUID(expired), UUID(active)]))
+                .order_by(BoundedUpload.id)
+            )
+        ]
+        assert after == before
+
+
+def test_global_quota_counts_active_leases_without_deleting_other_expired_rows(api, pg):
+    signup(api, "existing@example.com")
+    with Session(pg) as db:
+        owner = db.scalar(select(User.id).where(User.email == "existing@example.com"))
+        for index in range(101):
+            db.add(
+                BoundedUpload(
+                    user_id=owner,
+                    filename=f"fixture-{index}.txt",
+                    media_type="text/plain",
+                    size=1,
+                    checksum="0" * 64,
+                    expires_at=now() + timedelta(minutes=20)
+                    if index < 99
+                    else now() - timedelta(seconds=1),
+                )
+            )
+        db.commit()
+    signup(api, "requesting@example.com")
+    start(api, b"last active capacity")
+    response = api.post(
+        "/api/v1/knowledge/uploads",
+        json={"filename": "over.txt", "media_type": "text/plain", "size": 1, "sha256": "0" * 64},
+    )
+    assert response.status_code == 429
+    with Session(pg) as db:
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(BoundedUpload)
+                .where(BoundedUpload.user_id == owner)
+            )
+            == 101
+        )

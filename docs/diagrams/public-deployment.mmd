@@ -1,11 +1,14 @@
-flowchart TB
-Browser[HTTPS product frontend] --> Vercel[Vercel product frontend]
-Vercel --> Render[Render product API]
-Render --> Neon[Independent product PostgreSQL and vector storage]
-Render --> Storage[Private object storage]
-Oracle[Oracle background worker - staging verified] --> Neon
-Oracle --> Storage
-Oracle --> ClamAV[Private scanner - staging verified]
-Render --> Model[Workers AI inference and embeddings - staging verified]
-Docs[Separate Vercel public docs] --> Public[Allowlisted public output]
-Internal[Separate engineering Pages build] -. hosted access qualification pending .-> Access[Cloudflare Access and fail-closed origin verifier]
+flowchart LR
+Vercel[Vercel product frontends] --> Portal[Oracle Portal API]
+Portal --> PortalDB[Portal PostgreSQL]
+Portal --> Storage[Private Portal files]
+Worker[Oracle Portal worker] --> PortalDB
+Worker --> Storage
+Worker --> Scanner[Private ClamAV scanner]
+Vercel --> AI[Oracle AI Platform API]
+AI --> AIDB[AI PostgreSQL and pgvector]
+AI --> Model[Cloudflare Workers AI]
+Vercel --> Robot[Oracle Robot simulation API]
+Robot --> Journal[Turso simulation journal]
+Docs[Public Docs on Vercel] --> Public[Public guides and manuals]
+Access[Cloudflare Access] --> Internal[Engineering Docs]

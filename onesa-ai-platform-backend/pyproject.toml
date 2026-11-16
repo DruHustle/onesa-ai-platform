@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==83.0.0"]
+requires = ["setuptools==84.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,27 +17,36 @@ dependencies = [
   "argon2-cffi==25.1.0",
   "email-validator==2.3.0",
   "pgvector==0.5.1",
-  "pypdf==6.21.2",
+  "pypdf==6.21.4",
   "python-multipart==0.0.32",
   "prometheus-client==0.26.0",
   "PyYAML==6.0.3",
   "greenlet==3.5.6",
   "httpx==0.28.1",
+  "cryptography==50.0.2",
+  "PyJWT==2.15.1",
+  "basyx-python-sdk==2.2.0",
+  "paho-mqtt==2.1.0",
+  "defusedxml==0.7.1",
 ]
 
 [project.optional-dependencies]
 dev = [
   "httpx==0.28.1",
   "pytest==9.1.1",
-  "ruff==0.17.0",
+  "ruff==0.16.10",
   "mypy==2.4.0",
   "pip-tools==7.6.2",
   "pip-audit==2.10.1",
-  "setuptools==83.0.0",
+  "types-defusedxml==0.7.0.20260504",
+  "setuptools==84.1.0",
 ]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["twin_fixture_data/*", "twin_reference_data/*", "twin_reference_data/*/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

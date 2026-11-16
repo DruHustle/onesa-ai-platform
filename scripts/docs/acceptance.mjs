@@ -9,8 +9,7 @@ import {installPreviewAccess} from './preview-access.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const docsRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'));
 const {chromium,expect}=docsRequire('@playwright/test');
-const chatRequire=createRequire(path.join(root,'onesa-ai-platform-frontend/apps/chat/package.json'));
-const {default:AxeBuilder}=chatRequire('@axe-core/playwright');
+const {default:AxeBuilder}=docsRequire('@axe-core/playwright');
 const build=path.join(root,'onesa-ai-platform-frontend/apps/docs/build-public');
 const {version:documentationVersion}=JSON.parse(await fs.readFile(path.join(root,'onesa-ai-platform-frontend/apps/docs/package.json'),'utf8'));
 const policy=JSON.parse(await fs.readFile(path.join(root,'docs/documentation-policy.json'),'utf8'));
@@ -156,6 +155,11 @@ try{
  await page.locator('.diagram-canvas').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('.diagram-canvas > div')).toHaveAttribute('style',/30px/);
  await page.getByRole('button',{name:'Reset',exact:true}).click();await page.getByRole('button',{name:'Enlarge diagram',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await expect(page.getByLabel('Zoom in',{exact:true})).toBeFocused();await page.keyboard.press('Shift+Tab');await expect(page.getByRole('link',{name:'Editable Mermaid'})).toBeFocused();await page.keyboard.press('Tab');await expect(page.getByLabel('Zoom in',{exact:true})).toBeFocused();await page.keyboard.press('Escape');await expect(page.locator('.diagram-panel.expanded')).toHaveCount(0);await expect(page.getByRole('button',{name:'Enlarge diagram',exact:true})).toBeFocused();
  await page.goto(origin+'/api-explorer');for(const product of ['ai','portal','robot']){await page.getByLabel('API product').selectOption(product);await expect(page.locator('.swagger-ui .opblock').first()).toBeVisible();await expect(page.getByRole('button',{name:'Try it out',exact:true})).toHaveCount(0);}
+ const searchEntries=await (await requestGet(origin+'/generated/search.json')).json();
+ const operationLink=searchEntries.find(entry=>entry.url.startsWith('/api-explorer#/')&&entry.title.startsWith('POST '));
+ expect(operationLink,'Search must link to an exact API operation').toBeTruthy();
+ await page.goto(origin+operationLink.url);
+ await expect(page.locator('.swagger-ui .opblock.is-open .opblock-summary-path').first()).toHaveAttribute('data-path',operationLink.title.slice(5));
  await page.goto(origin+'/');await page.keyboard.press('Control+k');await page.getByLabel('Search documentation').fill('Robot');await expect(page.locator('.search-results a').first()).toBeVisible();await page.keyboard.press('Escape');
  for(const width of [320,390,768,1024,1440])for(const route of ['/','/architecture','/downloads','/api-explorer']){
   await page.setViewportSize({width,height:900});await page.goto(origin+route);await expect(page.locator('main').first()).toBeVisible();

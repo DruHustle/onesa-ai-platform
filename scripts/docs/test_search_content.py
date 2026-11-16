@@ -35,12 +35,16 @@ flowchart LR
             "post",
             {
                 "summary": "Create a session",
+                "operationId": "login_api_v1_auth_login_post",
+                "tags": ["authentication"],
                 "description": "Use **email** and password.",
                 "parameters": [{"name": "remember"}],
                 "responses": {"200": {"description": "Session created", "content": {}}},
             },
         )
         self.assertEqual(result["title"], "POST /api/v1/auth/login")
-        self.assertEqual(result["url"], "/api-explorer")
+        self.assertEqual(
+            result["url"], "/api-explorer#/authentication/login_api_v1_auth_login_post"
+        )
         self.assertIn("200 Session created", result["preview"])
         self.assertNotIn("{", result["preview"])

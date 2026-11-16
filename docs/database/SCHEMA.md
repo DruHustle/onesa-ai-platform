@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261010_capacity. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261104_email_presentation. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -81,6 +81,238 @@ Indexes: [{"name": "conversation_owner_updated", "columns": ["user_id", "updated
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
 
+## cyber_actions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| investigation_id | UUID | True | FK cyber_investigations.id / CASCADE |
+| kind | VARCHAR(48) | False |  |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_actions_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: investigation_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## cyber_assets
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| name | VARCHAR(120) | False |  |
+| identity | VARCHAR(128) | False |  |
+| zone | VARCHAR(80) | False |  |
+| criticality | VARCHAR(16) | False |  |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_assets_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: user_id, identity"]
+
+## cyber_baselines
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK cyber_sources.id / CASCADE |
+| revision | VARCHAR(128) | False |  |
+| config | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_baselines_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: source_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, revision"]
+
+## cyber_events
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK cyber_sources.id / CASCADE |
+| source_event_id | VARCHAR(128) | False |  |
+| asset_id | UUID | True | FK cyber_assets.id / CASCADE |
+| mapping_id | UUID | True | FK cyber_mappings.id / None |
+| event_type | VARCHAR(64) | False |  |
+| mode | VARCHAR(16) | False |  |
+| run_id | VARCHAR(128) | False | ORM default |
+| occurred_at | TIMESTAMP WITH TIME ZONE | False |  |
+| expires_at | TIMESTAMP WITH TIME ZONE | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| wire | JSONB | False |  |
+| provenance | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_events_owner_time", "columns": ["user_id", "created_at", "id"], "unique": false}, {"name": "ix_cyber_events_user_id", "columns": ["user_id"], "unique": false}, {"name": "ix_cyber_events_window", "columns": ["source_id", "mode", "run_id", "event_type", "occurred_at"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: mapping_id", "ForeignKeyConstraint: source_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, source_event_id"]
+
+## cyber_findings
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK cyber_sources.id / CASCADE |
+| asset_id | UUID | True | FK cyber_assets.id / CASCADE |
+| dedupe_key | VARCHAR(64) | False | unique |
+| rule | VARCHAR(64) | False |  |
+| rule_version | VARCHAR(32) | False |  |
+| mode | VARCHAR(16) | False |  |
+| run_id | VARCHAR(128) | False |  |
+| severity | VARCHAR(16) | False |  |
+| confidence | VARCHAR(16) | False |  |
+| priority | INTEGER | False |  |
+| first_seen | TIMESTAMP WITH TIME ZONE | False |  |
+| last_seen | TIMESTAMP WITH TIME ZONE | False |  |
+| occurrences | INTEGER | False | ORM default |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_findings_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: source_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: dedupe_key"]
+
+## cyber_investigations
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| title | VARCHAR(160) | False |  |
+| finding_id | UUID | False | FK cyber_findings.id / CASCADE |
+| status | VARCHAR(24) | False | ORM default |
+| priority | INTEGER | False |  |
+| revision | INTEGER | False | ORM default |
+| updated_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+| acceptance_until | TIMESTAMP WITH TIME ZONE | True |  |
+| snapshot | JSONB | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_investigations_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: finding_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## cyber_mappings
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK cyber_sources.id / CASCADE |
+| asset_id | UUID | False | FK cyber_assets.id / CASCADE |
+| external_namespace | VARCHAR(128) | False |  |
+| external_asset | VARCHAR(128) | False |  |
+| external_component | VARCHAR(128) | False | ORM default |
+| review | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_mappings_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: source_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, external_namespace, external_asset, external_component"]
+
+## cyber_policies
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK cyber_sources.id / CASCADE |
+| version | INTEGER | False |  |
+| config | JSONB | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_policies_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: source_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, version"]
+
+## cyber_reports
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK cyber_assets.id / CASCADE |
+| sha256 | VARCHAR(64) | False |  |
+| profile | VARCHAR(48) | False |  |
+| producer | VARCHAR(160) | False |  |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_reports_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## cyber_results
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| finding_id | UUID | False | FK cyber_findings.id / CASCADE |
+| evidence_key | VARCHAR(64) | False |  |
+| snapshot | JSONB | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_results_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: finding_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: finding_id, evidence_key"]
+
+## cyber_sources
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| name | VARCHAR(120) | False |  |
+| namespace | VARCHAR(64) | False |  |
+| token_hash | VARCHAR(64) | True | unique |
+| scope | VARCHAR(16) | False | ORM default |
+| config | JSONB | False |  |
+| revoked_at | TIMESTAMP WITH TIME ZONE | True |  |
+| last_seen_at | TIMESTAMP WITH TIME ZONE | True |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_sources_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash", "UniqueConstraint: user_id, namespace"]
+
+## cyber_summaries
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| investigation_id | UUID | False | FK cyber_investigations.id / CASCADE |
+| snapshot | JSONB | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| result | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| sensitive | BOOLEAN | False | ORM default |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_cyber_summaries_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: investigation_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
 ## document_chunks
 
 | Field | PostgreSQL type | Nullable | Constraints / relationship |
@@ -142,7 +374,20 @@ Constraints: ["ForeignKeyConstraint: actor_id", "PrimaryKeyConstraint: id"]
 
 Indexes: []
 
-Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id", "attempts BETWEEN 0 AND 5", "state IN ('queued', 'leased', 'accepted', 'failed', 'cancelled')"]
+Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id", "attempts BETWEEN 0 AND 5", "state IN ('queued', 'leased', 'queued_html_v1', 'leased_html_v1', 'accepted', 'failed', 'cancelled')"]
+
+## identity_sessions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| session_id | UUID | False | primary key; FK auth_sessions.id / CASCADE |
+| issuer | VARCHAR(1000) | False |  |
+| subject | VARCHAR(36) | False |  |
+| encrypted_token | VARCHAR(8192) | False |  |
+
+Indexes: []
+
+Constraints: ["ForeignKeyConstraint: session_id", "PrimaryKeyConstraint: session_id"]
 
 ## identity_tokens
 
@@ -162,6 +407,36 @@ Constraints: ["ForeignKeyConstraint: token_id", "PrimaryKeyConstraint: token_id"
 Indexes: [{"name": "ix_identity_tokens_expires_at", "columns": ["expires_at"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash", "purpose IN ('invitation', 'recovery')"]
+
+## identity_transactions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| state_hash | VARCHAR(64) | False | primary key |
+| browser_hash | VARCHAR(64) | False |  |
+| payload | VARCHAR(16384) | False |  |
+| expires_at | TIMESTAMP WITH TIME ZONE | False |  |
+| consumed_at | TIMESTAMP WITH TIME ZONE | True |  |
+
+Indexes: [{"name": "ix_identity_transactions_expires_at", "columns": ["expires_at"], "unique": false}]
+
+Constraints: ["PrimaryKeyConstraint: state_hash"]
+
+## industrial_investigations
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| user_id | UUID | False | FK users.id / CASCADE |
+| revision | INTEGER | False | ORM default |
+| status | VARCHAR(20) | False | ORM default |
+| updated_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+| payload | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_industrial_investigations_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "revision > 0", "status IN ('ready', 'running', 'completed', 'failed', 'cancelled')"]
 
 ## inference_runs
 
@@ -224,6 +499,20 @@ Indexes: [{"name": "ix_rate_buckets_expires_at", "columns": ["expires_at"], "uni
 
 Constraints: ["PrimaryKeyConstraint: key"]
 
+## shared_identities
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| issuer | VARCHAR(1000) | False |  |
+| subject | VARCHAR(36) | False |  |
+| user_id | UUID | False | unique; FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: []
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: issuer, subject", "UniqueConstraint: user_id"]
+
 ## trips
 
 | Field | PostgreSQL type | Nullable | Constraints / relationship |
@@ -243,6 +532,143 @@ Constraints: ["PrimaryKeyConstraint: key"]
 Indexes: [{"name": "ix_trips_user_id", "columns": ["user_id"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "budget > 0", "duration BETWEEN 1 AND 14", "revision > 0"]
+
+## twin_assets
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| template_id | UUID | False | FK twin_templates.id / None |
+| name | VARCHAR(120) | False |  |
+| serial | VARCHAR(120) | False |  |
+| definition | JSONB | False |  |
+| active_model_id | UUID | True |  |
+| revision | INTEGER | False | ORM default |
+| updated_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_assets_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: template_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: user_id, serial", "revision > 0"]
+
+## twin_events
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| source_id | UUID | False | FK twin_sources.id / CASCADE |
+| component_id | UUID | False |  |
+| reading_id | UUID | False | FK twin_readings.id / CASCADE |
+| details | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_events_asset_id", "columns": ["asset_id", "created_at"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: reading_id", "ForeignKeyConstraint: source_id", "PrimaryKeyConstraint: id"]
+
+## twin_files
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| filename | VARCHAR(200) | False |  |
+| sha256 | VARCHAR(64) | False |  |
+| size | INTEGER | False |  |
+| details | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_files_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "size BETWEEN 1 AND 4194304"]
+
+## twin_models
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| template_id | UUID | False | FK twin_templates.id / None |
+| file_id | UUID | False | FK twin_files.id / None |
+| definition | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_models_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: file_id", "ForeignKeyConstraint: template_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## twin_notes
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| component_id | UUID | True |  |
+| kind | VARCHAR(20) | False |  |
+| payload | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_notes_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "kind IN ('annotation', 'viewpoint', 'inspection')"]
+
+## twin_readings
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| source_id | UUID | False | FK twin_sources.id / CASCADE |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| component_id | UUID | False |  |
+| message_id | VARCHAR(160) | False |  |
+| tag | VARCHAR(80) | False |  |
+| mode | VARCHAR(16) | False |  |
+| unit | VARCHAR(24) | False |  |
+| value | FLOAT | False |  |
+| quality | VARCHAR(16) | False |  |
+| observed_at | TIMESTAMP WITH TIME ZONE | False |  |
+| provenance | JSONB | False |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_readings_history", "columns": ["asset_id", "mode", "observed_at", "id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: source_id", "PrimaryKeyConstraint: id", "UniqueConstraint: source_id, message_id, tag, mode", "mode IN ('live', 'simulated', 'replay')", "quality IN ('good', 'bad', 'unknown')"]
+
+## twin_sources
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| asset_id | UUID | False | FK twin_assets.id / CASCADE |
+| name | VARCHAR(120) | False |  |
+| token_hash | VARCHAR(64) | False | unique |
+| definition | JSONB | False |  |
+| revoked_at | TIMESTAMP WITH TIME ZONE | True |  |
+| last_seen_at | TIMESTAMP WITH TIME ZONE | True |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_sources_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: asset_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: token_hash"]
+
+## twin_templates
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| name | VARCHAR(120) | False |  |
+| kind | VARCHAR(80) | False |  |
+| definition | JSONB | False |  |
+| user_id | UUID | False | FK users.id / CASCADE |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_twin_templates_user_id", "columns": ["user_id"], "unique": false}]
+
+Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
 
 ## upload_chunks
 

@@ -1,5 +1,28 @@
 # Onesa AI Platform
 
+Canonical source: [DruHustle/onesa-ai-platform](https://github.com/DruHustle/onesa-ai-platform).
+Run product commands from this repository root. The latest application changes
+from the former consolidated checkout are retained here with independent CI,
+release authority and runtime boundaries. See [standalone source](docs/engineering/standalone-source.md).
+
+[Onesa Documents](https://github.com/DruHustle/onesa-documents) owns publication
+for [external documents](https://docs.onesa.eu) and [internal documents](https://docs.internal.onesa.eu).
+Internal documents require Onesa Identity and document access. This AI repository
+retains source validation and historical release evidence. Its documentation
+workflow has no production publishing authority.
+
+The shared-account source candidate adds **Continue with Onesa**, one central
+account/access hub, explicit existing-account linking and MFA-protected cross-product
+administration. It remains disabled until the existing owner-controlled staging and
+release process qualifies the issuer, migration and private client configuration.
+See [shared identity](docs/engineering/SHARED_IDENTITY.md) for the permission boundary,
+account migration and activation requirements. Oracle hosting remains unchanged.
+
+The owner-run qualification candidate identifies its active probe from a private
+Docker CID and verifies its image, command, mounts and isolation before observing
+a controlled staging replacement. Other temporary clients still block the check.
+This source correction requires fresh hosted qualification and release records.
+
 Server gateway imports and traced-bundle checks keep the Node trust policy in
 serverless artifacts as well as conventional Node startup.
 
@@ -13,23 +36,91 @@ Vercel frontend and existing data services remain. See the
 [verified hosting cutover](docs/engineering/DEPLOYMENT.md#verified-production-hosting-cutover--2026-10-16)
 for source identities, protected ingress, acceptance and rollback.
 
-Public Docs source `4f30218dca47d1197a0cb88b25a16bd33696832a` is accepted at
-`docs.onesa.eu`, Vercel `dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` (2026-10-20).
-Exact-source native Preview qualification passed; canonical acceptance verified all
-279 public files, 16 responsive/accessibility views and six private-path denials.
-The AI frontend `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` is accepted at
-`dpl_3ExobTe8RY5QzpkhEpwN7vAnk8gW` on `platform.onesa.eu` (2026-10-21).
-The qualified Node TLS correction passes five canonical public/private checks;
-application UI, authentication and business workflow bytes are unchanged. Prior
-23 real workflow checks and 42 UI views remain separately source-bound evidence.
-Oracle API `776362dcbd994ecde3ca253cbc558faf2c279a56` is retained, accepted under
-qualified main `204e666c40943af2dc1f53359f360feaffbaa126`. No model call, new
-production account, backend deployment or application-data change accompanied the
-frontend release. Public and protected Docs have independent release identities.
-Protected Engineering Docs at `docs.engineering.onesa.eu` retains its separate
-18 October accepted record; the newer protected build is not published or currently
-verified with an approved production identity. See the
-[component-specific Docs release](docs/engineering/DOCUMENTATION_HOSTING.md#current-public-docs-release--2026-10-20).
+Public Docs source `373889be9bda3357ff50b74692e9b75637e2bb59` is accepted at
+`docs.onesa.eu`, Vercel `dpl_4h1tQYKcCssNgrsEwPUL2DnjKFEi` (2026-10-22).
+The source-bound native Preview passed all 279 public file hashes, 124 responsive/
+accessibility views, 20 additional layout checks, 21 diagram journeys and 11 PDF
+checks. Canonical production verifies all 279 qualified file hashes, 16 responsive/
+accessibility views and six private-path denials. DOMPurify 3.4.17 is included in
+the qualified artifact; SSO, domains, credentials and AI services are unchanged.
+The earlier public edition `4f30218dca47d1197a0cb88b25a16bd33696832a` /
+`dpl_GXToVcRYjwsRhDQqfwN84zLfkey2` remains retained release history.
+The earlier AI frontend security candidate `ac7f840938b39c3d22f2d7a90460578684ecbafe` was
+accepted on `platform.onesa.eu` (2026-10-22), with Next.js 16.4.2 verified in the
+sealed traced artifact, full native CI, 48 staged views and 16 canonical views.
+Private denials, readiness and served asset hashes passed. It preserves the
+preceding production application UI/proxy source and retains API `7079a66` with
+its accepted image, container and runtime configuration. It does not activate
+Industrial functionality. Its temporary security branch remains retained for
+release/rollback evidence; the same dependency fix follows dev → staging → main.
+The preceding `b2e93529e9ed6e8c1f566f1a2f8a741d05b48bd6` frontend carried the
+Node TLS correction (2026-10-21). Those trust controls remain preserved. Prior
+23 real workflow checks and 42 UI views retain their original independent scope;
+no new real-model or authenticated production walkthrough is inferred from the
+security-only frontend checks. Actual provider receipts remain in the restricted
+component-serving manifest, separate from repository metadata commits.
+On 2026-10-22, backend source `7079a66dc0c2fc9de9cd632894b45a9a5cea5048`
+was independently accepted with `pypdf 6.21.2` verified in staging and production.
+Its application code and schema are unchanged from the preceding backend; runtime,
+credential and record-identifier preservation checks passed. Canonical readiness and
+private-access denials pass. This parser patch introduced no production model request,
+new account or Industrial feature. The frontend and both Docs retain independent identities.
+Protected Engineering Docs source `373889be9bda3357ff50b74692e9b75637e2bb59`
+was accepted at the former engineering hostname on Pages deployment
+`2d937ff1-391f-4156-8df6-75d2d14aaa5e` (2026-10-22), with DOMPurify 3.4.17
+and factual isolated-demo documentation. All 751 private assets and anonymous denials,
+18 production responsive/accessibility views, 18 architecture topics, 17 chapters,
+four onboarding days, 22 manuals and 87 diagrams pass. Staging reuses completed
+751-asset/denial and 18-view evidence with only its unfinished architecture/onboarding
+tail continued; the original stopped observation is preserved.
+Actual approved-owner membership/access and supported Access logout/refusal were
+observed, including the retained Preview cookie without extracting session values.
+The original email challenge was owner-confirmed, not independently witnessed.
+No membership, password, MFA or provider policy changed; no private artifact entered
+public GitHub Actions. This supersedes protected source `34e9ab8` / Pages `48d6eebd`;
+repository metadata commits remain distinct from each accepted component identity.
+
+On 2026-10-23, normal AI frontend source
+`69b7a21ec3d5a6cd477170473e8538ba6894c0d4`, Vercel
+`dpl_G6QBtLwvZHELx43VLASEaDZHUMYZ`, was accepted at `platform.onesa.eu`.
+It includes the first-click Chat layout correction and access-aware Industrial
+navigation. Full exact-main native checks and eight canonical Chromium/WebKit
+light/dark responsive views pass. Those canonical UI journeys use intercepted
+synthetic authentication/submission responses; they do not claim a new real-owner
+login or model result. Normal API `7079a66`, its configuration and data remain
+unchanged. Industrial is still disabled on normal production.
+
+Industrial Investigation V1.1 is separately accepted at the protected
+`industrial-demo.onesa.eu/industrial` address. Its frontend and isolated Oracle API
+use source `b81945414faa5ee07782b2a0a916626c7d76a67d`; Vercel deployment
+`dpl_Ds2HmjJWEEsCqL3M6z3DndXZgSqp`. The final reviewed main differs only in a
+regression assertion, with identical application/runtime bytes. The existing
+synthetic owner account passes actual canonical login, two-asset selection,
+current navigation, accessibility, logout and private-access refusal. Outer Vercel
+Preview protection remains; automated provider access is not human SSO acceptance.
+No new account, grant renewal, model request or business-record write accompanied
+this component update. The original versioned fixture and isolated database remain.
+Fresh status reads no longer wait for a generation writer lock; stale recovery
+still locks and rechecks before changing state.
+
+The retained six-scenario V1.1 evaluation produced two accepted source-cited model
+responses and four pre-inference abstentions. One earlier numeric-narrative rejection
+remains recorded: three cumulative provider attempts, with no automatic retries or
+remaining agent generation allowance. Current deployment reuses those responses
+only after calculation, evidence, prompt, authorization and runtime-equivalence
+checks. Frozen evaluation remains 43 synthetic cases, separate from scoring controls.
+Human/domain ratings, baseline comparison and cost per useful completed task remain
+unperformed. Temporary qualification records were removed after their evidence was
+archived; they are not promised as live owner records. Use the existing
+[evaluation worksheet](docs/product/INDUSTRIAL_EVALUATION.md) and protected evidence
+package for the recorded demonstration and human review.
+
+No live factory/customer connector, external work order, machine write, physical
+operation or comparative accuracy/business benefit is claimed. See the
+[PRD](docs/product/PRD.md#v1-event-semantics-and-working-scope) and
+`scripts/evaluate_industrial.py` for the finite fixture and evidence scope.
+Public/protected Docs retain source `373889b`; repository metadata commits do not
+republish any component or establish a new authenticated production walkthrough.
 
 Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
 Agents and Travel. It serves European and international applications; regional
@@ -52,9 +143,9 @@ flowchart LR
 
 ## Product tracks
 
-**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** is a
-planned track for evidence-backed operational investigation and human-reviewed
-internal work drafts. The focused milestone and evaluation contract are in the
+**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** has
+a qualified synthetic investigation demonstration for evidence-backed operational
+investigation and internal drafts; broader industrial integrations remain planned. The focused milestone and evaluation contract are in the
 [existing product requirements](docs/product/PRD.md#current-product-hierarchy-and-industrial-milestone--2026-10-20).
 No live machine/PLC/MES/ERP/CMMS connection or autonomous industrial control is claimed.
 Onesa Robotics / Physical AI remains a separate product development line.
@@ -90,7 +181,7 @@ are implemented; other workspace copy remains English and is not claimed fully t
 | `docs` | Classified engineering references and approved public sources |
 | `scripts`, `infra`, `.github/workflows` | Verified build, operations and delivery tooling |
 
-This is an independent Git repository in the `onesa-ug` workspace.
+This is the independent `DruHustle/onesa-ai-platform` Git repository.
 Frontend/backend builds use their own contexts; builds do not import sibling source.
 
 ## Local quickstart
@@ -115,6 +206,20 @@ For native Apple Silicon Ollama or real hosted provider configuration, follow th
 change the smallest local path.
 
 ## Verification and contributions
+
+The app-owned Digital Twin Workspace candidate lives at Industrial AI → Digital Twins.
+Its optional local pilot uses this repository's models, storage, simulator and authentication;
+Smart Factory and any custom shared SDK are not dependencies. See the
+[local setup, formats, telemetry and rollback guide](docs/engineering/DIGITAL_TWINS.md).
+Production exposure remains unchanged until the established release process qualifies it.
+
+The reference-library candidate includes three NVIDIA SimReady visual derivatives:
+transfer conveyor, mobile cart and warehouse rack. Their source revision, CC BY 4.0
+attribution, conversion record and local hashes are retained. Selecting a reference
+loads its 3D preview automatically; unsupported graphics retain an image of the same
+model. Explicit import creates an owned model and equipment record without telemetry,
+device connections or physical-operation authority. The normal Digital Twins feature
+and durable-storage release gates still apply.
 
 ```sh
 make install check

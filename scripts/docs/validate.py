@@ -14,13 +14,15 @@ from pypdf import PdfReader
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def validate(staged=False, assets_only=False):
+def validate(staged=False, assets_only=False, scope="all"):
+    if scope not in {"all", "public", "internal"}:
+        raise ValueError("Explicit documentation scope must be all, public or internal")
     from ecosystem import validate as validate_ecosystem
 
     validate_ecosystem()
     from documentation_identity import validate_identity
 
-    documentation_version = validate_identity()
+    documentation_version = validate_identity(scope=scope)
     policy = json.loads((ROOT / "docs/documentation-policy.json").read_text())
     from visual_policy import validate_navigation
 
@@ -28,19 +30,20 @@ def validate(staged=False, assets_only=False):
         ROOT, json.loads((ROOT / "docs/diagrams/catalog.json").read_text())
     )
     approved = set(policy["public_sources"])
-    for scope in ["public", "internal"]:
+    scopes = ["public", "internal"] if scope == "all" else [scope]
+    for publication_scope in scopes:
         generated = (
             ROOT
-            / f"onesa-ai-platform-frontend/apps/docs/.generated/{scope}/static/generated"
+            / f"onesa-ai-platform-frontend/apps/docs/.generated/{publication_scope}/static/generated"
         )
         provenance = json.loads((generated / "provenance.json").read_text())
-        expected_private = protected_source_provenance(scope)
+        expected_private = protected_source_provenance(publication_scope)
         assert provenance.get("protected_document_sources") == expected_private, (
             "Protected document provenance drift"
         )
         if expected_private is not None:
             validate_publication(provenance)
-        if scope == "internal":
+        if publication_scope == "internal":
             assert (
                 provenance["navigation_sha256"]
                 == hashlib.sha256(
@@ -58,11 +61,11 @@ def validate(staged=False, assets_only=False):
         for source, digest in provenance["sources"].items():
             assert (
                 hashlib.sha256(
-                    document_content(ROOT / source, ROOT, scope).encode()
+                    document_content(ROOT / source, ROOT, publication_scope).encode()
                 ).hexdigest()
                 == digest
             ), f"Source drift: {source}"
-            if scope == "public":
+            if publication_scope == "public":
                 assert source in approved, f"Unapproved source: {source}"
         for source, digest in provenance.get("code_sources", {}).items():
             assert hashlib.sha256((ROOT / source).read_bytes()).hexdigest() == digest, (
@@ -82,8 +85,11 @@ def validate(staged=False, assets_only=False):
         assert provenance["code_sha256"] == current_code, (
             "API/ORM/migration drift; regenerate documentation"
         )
-        docs = ROOT / f"onesa-ai-platform-frontend/apps/docs/.generated/{scope}/docs"
-        if scope == "public":
+        docs = (
+            ROOT
+            / f"onesa-ai-platform-frontend/apps/docs/.generated/{publication_scope}/docs"
+        )
+        if publication_scope == "public":
             assert {
                 "docs/" + p.relative_to(docs).as_posix() for p in docs.rglob("*.md")
             } == approved
@@ -91,10 +97,10 @@ def validate(staged=False, assets_only=False):
                 ROOT / "onesa-ai-platform-frontend/apps/docs/build-public/database.html"
             ).exists()
         retrieval = json.loads((generated / "retrieval.json").read_text())
-        assert retrieval["classification"] == scope
+        assert retrieval["classification"] == publication_scope
         assert set(retrieval["approved_sources"]) == set(provenance["sources"])
         for chunk in retrieval["chunks"]:
-            assert chunk["classification"] == scope
+            assert chunk["classification"] == publication_scope
             assert chunk["source"] in retrieval["approved_sources"]
         schema = json.loads((generated / "openapi.json").read_text())
         assert all(path.startswith("/api/v1/") for path in schema["paths"])
@@ -105,10 +111,10 @@ def validate(staged=False, assets_only=False):
         for product in ["portal", "robot"]:
             contract = json.loads((generated / f"openapi-{product}.json").read_text())
             assert contract["paths"] and not contract.get("servers")
-            if scope == "public" and product == "portal":
+            if publication_scope == "public" and product == "portal":
                 assert all(p.startswith("/api/v1/public/") for p in contract["paths"])
         diagrams = json.loads((generated / "diagrams.json").read_text())
-        if scope == "public":
+        if publication_scope == "public":
             assert {d["id"] for d in diagrams} == set(policy["public_diagrams"])
             assert "/api/v1/documentation/access" not in schema["paths"]
             assert all(
@@ -122,7 +128,7 @@ def validate(staged=False, assets_only=False):
                 )
                 for e in json.loads((generated / "search.json").read_text())
             )
-        if scope == "public":
+        if publication_scope == "public":
             allowed = {
                 "openapi.json",
                 "openapi-portal.json",
@@ -171,9 +177,9 @@ def validate(staged=False, assets_only=False):
                 "Empty diagram PDF"
             )
         manuals = json.loads((generated / "manuals.json").read_text())
-        if scope == "public":
+        if publication_scope == "public":
             assert {m["category"] for m in manuals} == set(policy["public_pdfs"])
-        if scope == "internal":
+        if publication_scope == "internal":
             assert set(policy["required_ecosystem_manuals"]).issubset(
                 {m["category"] for m in manuals}
             ), "Missing mandatory ecosystem manuals"
@@ -184,7 +190,9 @@ def validate(staged=False, assets_only=False):
             for source, digest in manual.get("source_hashes", {}).items():
                 assert (
                     hashlib.sha256(
-                        document_content(ROOT / source, ROOT, scope).encode()
+                        document_content(
+                            ROOT / source, ROOT, publication_scope
+                        ).encode()
                     ).hexdigest()
                     == digest
                 ), f"PDF source drift: {source}"
@@ -199,7 +207,7 @@ def validate(staged=False, assets_only=False):
             )
             assert len(document.pages) >= 3
             text = "\n".join(page.extract_text() for page in document.pages)
-            assert documentation_version in text and scope in text.lower()
+            assert documentation_version in text and publication_scope in text.lower()
             assert document.outline, f"Missing PDF bookmarks: {path}"
             links = {
                 str(action["/URI"])
@@ -207,8 +215,10 @@ def validate(staged=False, assets_only=False):
                 for ref in page.get("/Annots", [])
                 if (action := ref.get_object().get("/A")) and action.get("/URI")
             }
-            validate_manual_source_links(links, manual.get("source_hashes", {}), scope)
-            if scope == "public":
+            validate_manual_source_links(
+                links, manual.get("source_hashes", {}), publication_scope
+            )
+            if publication_scope == "public":
                 assert not any(
                     word in text
                     for word in [
@@ -220,7 +230,7 @@ def validate(staged=False, assets_only=False):
                 )
             manual["pages"] = len(document.pages)
         (generated / "manuals.json").write_text(json.dumps(manuals, indent=2) + "\n")
-        (ROOT / f"docs/generated/{scope}/manuals.json").write_text(
+        (ROOT / f"docs/generated/{publication_scope}/manuals.json").write_text(
             json.dumps(manuals, indent=2) + "\n"
         )
     if not staged and not assets_only:
@@ -267,6 +277,7 @@ def validate(staged=False, assets_only=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--scope", choices=["all", "public", "internal"], default="all")
     parser.add_argument("--staged", action="store_true")
     parser.add_argument("--assets", action="store_true")
     parser.add_argument("--negative-test", action="store_true")
@@ -293,4 +304,4 @@ if __name__ == "__main__":
         finally:
             canary.unlink()
     else:
-        validate(args.staged, args.assets)
+        validate(args.staged, args.assets, args.scope)

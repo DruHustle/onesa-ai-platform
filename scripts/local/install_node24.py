@@ -9,13 +9,18 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = "v24.21.0"
+VERSION = "v24.22.1"
 
 
 def install():
-    target = ROOT / "data/runtime/node24"
+    target = ROOT / ("data/runtime/node24-" + VERSION.removeprefix("v"))
     if (target / "bin/node").is_file():
-        subprocess.run([str(target / "bin/node"), "--version"], check=True)
+        actual = subprocess.check_output(
+            [str(target / "bin/node"), "--version"], text=True
+        ).strip()
+        if actual != VERSION:
+            raise SystemExit("Existing runtime version mismatch; preserve it and stop")
+        print(actual)
         return
     operating_system = {"Darwin": "darwin", "Linux": "linux"}.get(platform.system())
     architecture = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "x64"}.get(
@@ -26,7 +31,7 @@ def install():
     name = f"node-{VERSION}-{operating_system}-{architecture}"
     filename = name + ".tar.xz"
     base = f"https://nodejs.org/dist/{VERSION}/"
-    staging = ROOT / "data/runtime/node24-install"
+    staging = ROOT / ("data/runtime/node24-" + VERSION.removeprefix("v") + "-install")
     staging.mkdir(parents=True, exist_ok=True)
     with urllib.request.urlopen(base + "SHASUMS256.txt", timeout=30) as response:
         checksums = response.read().decode().splitlines()

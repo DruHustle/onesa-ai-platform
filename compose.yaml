@@ -18,6 +18,8 @@ services:
     build: {context: ./onesa-ai-platform-backend, dockerfile: Dockerfile}
     environment: &api-env
       ONESA_ENVIRONMENT: ${ONESA_ENVIRONMENT:-development}
+      ONESA_INDUSTRIAL_DEMO_ENABLED: ${ONESA_INDUSTRIAL_DEMO_ENABLED:-false}
+      ONESA_INDUSTRIAL_IMPORT_ENABLED: ${ONESA_INDUSTRIAL_IMPORT_ENABLED:-false}
       ONESA_SESSION_HOURS: ${ONESA_SESSION_HOURS:-24}
       ONESA_AUTH_PEER_RATE_LIMIT: ${ONESA_AUTH_PEER_RATE_LIMIT:-100}
       ONESA_AUTH_HASH_CONCURRENCY: ${ONESA_AUTH_HASH_CONCURRENCY:-4}
@@ -58,6 +60,7 @@ services:
     restart: unless-stopped
   chat:
     environment:
+      ONESA_PUBLIC_ORIGIN: ${ONESA_PUBLIC_ORIGIN:-http://localhost:3100}
       ONESA_PROXY_TIMEOUT_SECONDS: ${ONESA_PROXY_TIMEOUT_SECONDS:-135}
       ONESA_API_URL: ${ONESA_API_URL:-http://api:8000}
       ONESA_UI_LOCALE: ${ONESA_UI_LOCALE:-en}

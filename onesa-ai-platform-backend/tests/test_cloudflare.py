@@ -25,7 +25,7 @@ from app.knowledge import version
 def settings(**changes):
     values = dict(
         model_backend="cloudflare",
-        model_name="@cf/qwen/qwen3-30b-a3b-fp8",
+        model_name="@cf/google/gemma-4-26b-a4b-it",
         model_base_url="https://api.cloudflare.com/client/v4/accounts/" + "a" * 32 + "/ai/v1",
         model_api_key=secrets.token_hex(24),
         embedding_backend="cloudflare",
@@ -36,6 +36,24 @@ def settings(**changes):
         embedding_query_instruction="Retrieve relevant document passages",
     )
     return Settings(**(values | changes))
+
+
+def test_cloudflare_model_catalogue_health_response_is_bounded():
+    client = CloudflareModelClient(
+        settings(),
+        httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                headers={"content-type": "application/json"},
+                content=b" " * (1024 * 1024 + 1),
+                request=request,
+            )
+        ),
+    )
+
+    with pytest.raises(InferenceError) as error:
+        asyncio.run(client.healthy())
+    assert error.value.code == "invalid_inference_response"
 
 
 def test_cloudflare_selection_catalog_and_native_stream():
@@ -140,6 +158,32 @@ def test_provider_quota_failure_is_not_retried_or_replaced_by_mock():
     assert len(calls) == 1
 
 
+def test_native_synchronous_json_is_not_accepted_as_a_completed_stream():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        assert json.loads(request.content)["stream"] is True
+        return httpx.Response(
+            200,
+            json={
+                "choices": [{"message": {"content": "Synthetic answer"}, "finish_reason": "stop"}]
+            },
+        )
+
+    async def run():
+        client = CloudflareModelClient(settings(), httpx.MockTransport(handler))
+        chunks = []
+        with pytest.raises(InferenceError) as error:
+            async for chunk in client.stream([ModelMessage(role="user", content="Hi")]):
+                chunks.append(chunk)
+        assert error.value.reason == "stream_terminated_early"
+        assert chunks == []
+
+    asyncio.run(run())
+    assert len(calls) == 1
+
+
 @pytest.mark.parametrize(
     "changes",
     [
@@ -149,6 +193,8 @@ def test_provider_quota_failure_is_not_retried_or_replaced_by_mock():
             + "a" * 32
             + "/ai/v1"
         },
+        {"model_name": "@cf/qwen/qwen3-30b-a3b-fp8"},
+        {"model_name": "@cf/qwen/qwen3.8-27b"},
         {"model_name": "@cf/unreviewed/paid-model"},
         {"model_api_key": ""},
         {"embedding_base_url": "https://localhost/ai"},
@@ -223,3 +269,23 @@ def test_input_limits_reject_before_request():
     for texts in ([], ["text"] * 17, ["x" * 4001]):
         with pytest.raises(ValueError):
             embeddings(texts, settings(), transport=httpx.MockTransport(unexpected))
+
+
+def test_embedding_provider_ignores_ambient_proxy_configuration(monkeypatch):
+    config = settings()
+    observed = {}
+    real_client = httpx.Client
+
+    def client_factory(*args, **kwargs):
+        observed.update(kwargs)
+        return real_client(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "Client", client_factory)
+    embeddings(
+        ["bounded synthetic input"],
+        config,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, json=response_for([[1.0] * 1024]))
+        ),
+    )
+    assert observed["trust_env"] is False

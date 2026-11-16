@@ -2,12 +2,14 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
 
+// Register the existing account journey budget before browser/page fixture setup.
+test.describe.configure({ timeout: 90000 });
+
 test("account profile, session revocation, password rotation and responsive accessibility", async ({
   page,
   browser,
   baseURL,
 }, info) => {
-  test.setTimeout(90000);
   const email = `account-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
   const password = "browser-account-password-123!",
     newPassword = "browser-account-changed-456!";

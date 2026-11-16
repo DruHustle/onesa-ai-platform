@@ -1,4 +1,4 @@
 # Reproducible packaging tools, confined to the build stage.
-setuptools==83.0.0
+setuptools==84.1.0
 wheel==0.48.0
 packaging==26.3

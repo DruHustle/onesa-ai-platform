@@ -1,5 +1,14 @@
 # API reference
 
+The optional `/api/v1/cybersecurity` domain has independent scoped readiness, owned
+assets/sources/mappings/policies/baselines, bounded JSON/NDJSON ingestion, event search,
+findings, persistent human investigations/decisions, exports and read-only assistance.
+Collector ingestion uses its own source credential, not the session as global source
+authority. All retrieval and administration retain current owner/operator checks.
+See [the versioned event/report profiles](../engineering/CYBERSECURITY.md#wire-contract-and-imports)
+and generated OpenAPI for exact fields and limits. Disabled routes do not establish
+production availability or grant global authentication-log access.
+
 All business routes use `/api/v1`. Session-cookie authentication is declared in OpenAPI;
 mutations also require exact Origin and X-CSRF-Token. Register/login are unauthenticated
 but Origin checked and throttled. Probes are public; metrics use an independent private bearer token.
@@ -11,7 +20,42 @@ submitted values/passwords. Common statuses: 401 auth, 403 Origin/CSRF/permissio
 415 format, 422 validation/model selection, 429 auth throttle, 503 dependency/generation failure.
 
 [openapi.json](openapi.json) is the implemented machine-readable contract. Regenerate with
-`make openapi`; inspect `/docs` on the internal/local API for schema details.
+`make openapi`; inspect the exported snapshot for exact schema details.
+
+## Optional consumer text inference v1
+
+`POST /api/v1/inference/completions` accepts `ConsumerRequest` and returns
+`ConsumerCompletion` when the server-only consumer flag is enabled. It defaults off.
+Existing authenticated sessions, invitation eligibility, Origin/CSRF and shared
+model admission/budgets apply; no public bearer credential or account is created.
+Commission a dedicated consumer identity through the existing approved process.
+
+The profile `onesa-inference-v1` accepts explicit portable role/content history,
+returns a complete bounded text result with model/revision and known usage, and
+does not store conversations or messages. Inputs over 32 messages or 32,000 total
+characters, unsupported roles/models/options and output over 8,000 characters are
+refused. Partial, revoked, disconnected or failed generation never returns success.
+The Python `app.consumer` client maps this profile and a documented text-only
+OpenAI Chat Completions subset to the same message/result records. It does not claim
+full vendor API, streaming, multimodal, embedding or remote tool-call compatibility.
+See [consumer configuration and the separate MCP bridge](../engineering/AI_CONFIGURATION_INVENTORY.md#consumer-inference-and-mcp-source-candidate).
+
+## Optional Digital Twins v1
+
+`/api/v1/twins` is default-off and independently owned. Its OpenAPI schemas define
+template/asset creation, private file preview and import commit, explicit model mappings,
+revision-fenced activation, source bindings, time-window history, documents, annotations,
+viewpoints, scoped evidence tools and saved inspection snapshots. Owner sessions and
+existing grants authorize every indirect resource. Mutations retain Origin/CSRF.
+`POST /sources/{id}/readings` instead requires a hashed, revocable ingestion-only
+`X-Onesa-Source-Token`; it grants no read access or tenant choice.
+
+The locally owned v1 observation body is `{mode, samples}`. Samples identify message,
+tag, finite value, unit, timezone timestamp and quality. The source's reviewed mapping
+selects the installed asset/component. Duplicate identities are idempotent; conflicting
+content fails. Replay cannot overwrite live state. No shared executable schema SDK or
+peer service is required. The [Digital Twins guide](../engineering/DIGITAL_TWINS.md)
+documents supported formats, bounds, optional MQTT translation and field ownership.
 
 ## Implemented endpoints
 
@@ -128,3 +172,69 @@ The private upstream embedding request now explicitly includes `dimensions:256`.
 The configured optional query instruction applies only to search text; uploaded passages
 remain unprefixed. This is an internal provider protocol change, with no public route/
 request/response change. Production HTTP embedding endpoints require authenticated HTTPS.
+
+
+## Synthetic Industrial Investigation V1
+
+All routes below require the existing session; every mutation also requires Origin/CSRF.
+The feature defaults disabled. Shared demo assets are synthetic, not organization tenancy.
+Investigation resources and drafts are user-owned. Foreign identifiers return no data.
+The generated OpenAPI/client are authoritative for current schemas.
+
+| Method and relative route | Behavior |
+| --- | --- |
+| GET `/industrial/assets` | Allowlisted synthetic asset metadata |
+| GET `/industrial/evidence` | Asset/scenario and aware start/end queries; read-only facts/coverage |
+| POST `/industrial/investigations` | Explicit ID, asset/scenario/window; persist immutable input snapshot and calculated facts |
+| GET `/industrial/investigations` | Current user's saved investigations |
+| GET `/industrial/investigations/{id}` | Owned result; expired interrupted generation is marked failed |
+| POST `/industrial/investigations/{id}/generate` | Expected revision; bounded existing model/retrieval adapters or explicit abstention |
+| POST `/industrial/investigations/{id}/cancel` | Expected revision; stop application operation; upstream computation may continue |
+| PUT `/industrial/investigations/{id}/draft` | Expected revision and explicit internal draft text; never external dispatch |
+| POST `/industrial/investigations/{id}/review` | Expected revision, accepted/needs_changes and note; records owner self-review, not independent approval |
+
+Creation IDs are idempotent only for the same owner and identical selection. A mutation
+response with an uncertain network outcome must be reconciled by reading the owned ID,
+not blindly submitted again. A failed generation retains facts and never becomes a
+completed result. Sparse/missing/conflicting inputs are explicit. No OEE or certified
+diagnosis is produced. A review binds the saved revision/draft hash and editing invalidates
+its current approval without erasing earlier decisions. Retention and real industrial
+processing decisions remain separate; this API authorizes synthetic development only.
+
+## Bounded record navigation and account data
+
+Conversation, document, run and trip lists support `limit` (1–100; default 50)
+and an opaque `cursor`, returning `next_cursor` or null. Immutable creation time
+descending and UUID descending break ties deterministically; updates do not move
+records between pages. Conversation/document offset requests remain compatible.
+Each query and cursor stays owner scoped; a cursor never grants access. Use the
+detail endpoint for an explicitly selected document, even when it is absent from
+the current page. Travel keeps a saved trip ID in the URL and restores it through
+the owner-checked detail endpoint on reload; failed restoration blocks saving until
+retried or another trip is selected. Draft text stays in the current window only.
+Account export includes saved Industrial evidence, drafts and
+review decisions when that schema exists, including when Industrial is disabled.
+Row and byte ceilings include those records before materialization. Pre-Industrial
+normal AI schemas return an empty Industrial collection without querying an absent
+table. Export remains password/session/Origin/CSRF protected.
+
+## Synthetic Industrial JSON adapter
+
+`POST /industrial/imports/preview` validates `EvidenceBundle` v1 without storing it.
+`POST /industrial/investigations` accepts the same bundle as `source`, with its
+exact asset/window and a client UUID. Both existing Industrial and import flags
+must be explicitly enabled; defaults remain false. Customer data is not approved.
+The preview JSON body and validated bundle are bounded to 512 KiB. Saving uses
+a 516 KiB pre-parsing ceiling to accommodate the bounded UUID/selection envelope. Up to 500 events, 500 sparse
+signal samples and 20 references are supported. Explicit UTC timestamps, IANA source
+timezone, compatible pressure/bar or temperature/degC units, bounded finite numbers,
+asset/metadata identity, reference text hashes and immutable source IDs are required.
+Import quality/provenance, event kind/end, reference rights/superseded state and
+evidence metadata version must be explicitly supplied; bundled-fixture defaults
+never fill missing imported facts. Superseded is a JSON boolean.
+Conflicting source IDs fail transactionally; idempotent same-content retries cannot
+overwrite a saved investigation. No URLs, files, SQL or instructions are executed.
+See the generated OpenAPI schema and synthetic `tests/fixtures/industrial-import-v1.json`.
+`industrial_facts` is registered only in the enabled isolated scope, requires an
+explicit tool grant and owner-checked investigation ID/hash, and reads saved facts
+without model inference or equipment actions. Original local tools remain available.

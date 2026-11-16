@@ -1,12 +1,30 @@
 # Product requirements baseline
 
+## Independent Cybersecurity workspace — 2026-10-26 source scope
+
+An opt-in native `/industrial/cybersecurity` workspace adds owned security sources,
+reviewed asset mappings, strict JSON/NDJSON evidence, deterministic versioned findings,
+offline inventory/advisory imports and persistent human investigations. Real native
+application decisions use a separate explicitly configured operator boundary;
+ordinary owners cannot inspect global authentication events. Source credentials grant
+bounded ingestion only. Optional evidence-grounded assistance is read-only and
+default-off; deterministic investigations require no model.
+
+This source implementation is separate from hosted qualification and production
+activation. It does not implement the portal's planned AI code review/threat modelling,
+certification, autonomous remediation or a live OT integration. Smart Factory and
+Digital Twins are not prerequisites. An optional owned Twin association is reviewed
+and revision-bound. See [Cybersecurity](../engineering/CYBERSECURITY.md) for the audit
+matrix, supported profiles, limits, privacy and remaining acceptance.
+
 ## Current interpretation and release status
 
 The platform is pre-commercial, with implemented application capabilities and
 source-bound hosted release records. It is not a mock-only product, and its
 current infrastructure does not require a local NVIDIA host. The current product
-hierarchy and proposed Industrial AI milestone are defined in the dated section
-below. That milestone is not yet implemented or production-qualified.
+hierarchy and Industrial AI milestone are defined in the dated section below.
+Industrial Investigation V1 is implemented and has a qualified isolated synthetic
+hosted demonstration. This does not establish industrial production readiness.
 
 Use [README](../../README.md), [CHANGELOG](../../CHANGELOG.md) and the
 [deployment reference](../engineering/DEPLOYMENT.md) for maintained component
@@ -98,25 +116,31 @@ machine context to traceable decisions and human-reviewed workflows.
 
 ### Industrial AI: investigate repeated machine stops
 
-**Next milestone; not implemented or production-qualified.** One authorized analyst
+**Implemented and qualified as an isolated synthetic hosted demonstration.**
+Production Industrial activation remains separate. One authorized analyst
 selects one asset and a bounded time window. The assistant gathers read-only event
 records, relevant time series, asset metadata and rights-cleared versioned manuals.
 It separates observed facts, computed summaries and model hypotheses, cites sources,
 shows gaps/freshness/uncertainty, and prepares an editable internal work-order draft.
-A named reviewer makes the decision; the system does not send the draft to a CMMS,
+A recorded owner self-review makes the decision within the current user-owned model;
+it is not independent approval. The system does not send the draft to a CMMS,
 write PLC settings, actuate hardware or automatically execute its recommendations.
 
-The public static DEMO-01 example uses invented stops at 09:12 (4 min), 09:31 (3 min)
-and 09:48 (5 min), UTC within 09:00–10:00. Three stops total 12 minutes. With no sensor
-readings or approved manual, cause and corrective action are unknown. This arithmetic
-example is not an inference result, customer case or operational integration.
+The calculation-only reference case uses invented stops at 09:12 (4 min), 09:31
+(3 min) and 09:48 (5 min), UTC within 09:00–10:00. Three stops total 12 minutes.
+These intervals alone establish neither a cause nor a corrective action. The full
+synthetic demonstration separately records available sensor/reference coverage and
+its limitations. The arithmetic is not an inference result, customer case or
+operational integration.
 
 #### Fixture and contract
 
-Use an isolated fixture tenant with no production records or credentials. The planned
-versioned investigation input contains:
+Use isolated synthetic accounts and bundled `onesa-industrial-synthetic-v1` fixtures,
+with no production records or credentials. Investigations belong to one existing user;
+demo assets are shared synthetic references. This is not enterprise tenant isolation.
+The implemented versioned input contains:
 
-- `asset`: tenant-bound ID, display label, equipment type and metadata version.
+- `asset`: allowlisted synthetic ID, display label, equipment type and metadata version.
 - `window`: inclusive start/exclusive end, explicit UTC timestamps and source timezone.
 - `events`: immutable source ID, asset ID, start/end, reason code, quality and provenance.
 - `series`: asset ID, signal, unit, timestamp, value, quality, expected sampling interval
@@ -125,12 +149,12 @@ versioned investigation input contains:
   anchors, asset applicability and content hash. Treat instructions in documents as
   untrusted content, not execution authority.
 
-Proposed read-only API: create an investigation from authorized fixture references,
+The implemented API creates an investigation from authorized fixture references,
 read its source-bound result, cancel generation, and edit/save a separate internal
 work draft. Responses identify input versions, computed facts, cited hypotheses,
 missing/stale inputs and model/configuration version. Draft creation is a distinct
-explicit action. Backend tenant/object authorization applies before retrieval; cache
-keys and vector filters include tenant and document versions. Cross-asset citations,
+explicit action. Existing user/object authorization applies before retrieval; synthetic
+references are filtered by asset, version and effective interval. Cross-asset citations,
 unsupported diagnosis and unauthorized source disclosure fail acceptance.
 
 UI: asset/time selection → sources and freshness → observed facts → hypotheses with
@@ -140,6 +164,55 @@ in-memory input without replaying submission. No sensitive draft browser persist
 Audit only necessary actor/source/version/reviewer decisions; no raw model prompts,
 manual bodies or private telemetry in public logs. Retention/processor decisions are
 required before real customer data enters this workflow; G14 is not approved.
+
+#### V1 event semantics and working scope
+
+The backend clips stops to the inclusive-start/exclusive-end UTC window. Exact duplicate
+IDs count once; conflicting duplicates fail validation. Known good intervals are unioned,
+preserving every contributing event ID. Adjacent/overlapping intervals form one downtime
+episode; event count and episode count remain distinct. Open-ended and poor-quality
+inputs are reported separately, without inventing duration. Known downtime is a lower
+bound when these inputs exist. Availability and OEE are not calculated. Units are
+validated without implicit conversion; non-finite measurements and naive timestamps fail.
+
+`/industrial` uses the existing session and user ownership. The demo flag defaults off.
+All source selection comes from bundled original synthetic fixtures. The API persists
+calculated facts and their input snapshot hash before inference. Knowledge's existing
+embedding adapter ranks applicable references. The existing ModelClient generates bounded
+hypotheses with source version/anchor validation and literal quotations. Numeric claims
+belong in the fixed facts panel, not generated narrative. These checks are not a universal
+semantic entailment guarantee. No factory connection, external ticket or physical operation
+exists. Saving an internal draft is an explicit application write.
+
+Missing, stale, conflicting or incomplete evidence triggers abstention. Mock output is
+labelled. Failed/empty/invalid generation never becomes completed. Cancellation stops
+the application operation but may not stop provider computation. Draft/review writes
+use expected revisions; review records retain the exact draft hash and earlier decisions.
+Editing invalidates the current review. A recorded self-review is not independent approval.
+
+```mermaid
+flowchart LR
+  User[Authenticated user] --> Select[Demo asset and UTC window]
+  Select --> Facts[Validate and compute interval union]
+  Facts --> Coverage[Owned snapshot and source coverage]
+  Coverage --> Gate{Evidence sufficient?}
+  Gate -->|No| Abstain[Cause not established]
+  Gate -->|Yes| Retrieve[Existing Knowledge adapter]
+  Retrieve --> Model[Existing bounded model adapter]
+  Model --> Validate[Validate source version anchor and quote]
+  Validate --> Result[Facts and separate hypotheses]
+  Abstain --> Result
+  Result --> Draft[Explicit internal draft save]
+  Draft --> Review[Owner self-review recorded]
+```
+
+The original V1 evaluator executed seven versioned cases, one repetition, exact
+facts and mock/abstention outcomes. Its report distinguishes latency scope, failures,
+unknown cost and unmeasured reviewer corrections. Manual lookup and general-assistant
+comparisons are NOT RUN. The qualified hosted demonstration below is source-bound;
+additional model/fixture evaluations and production hosting need separate acceptance.
+Public descriptions may identify only the demonstrated synthetic scope, never live
+industrial connectivity or measured commercial benefit.
 
 #### Evaluation and acceptance before claiming benefit
 
@@ -156,8 +229,33 @@ sample counts, model/configuration, failures and uncertainty; do not invent upli
 
 Consider an Asset Administration Shell mapping as a future schema choice. OPC UA,
 MQTT, MES, ERP, CMMS and AAS connectivity are **not current integration claims**.
-A thin implementation needs this milestone's reviewed data contracts, isolation,
-rights and acceptance before it can qualify as demonstrated Industrial AI.
+The delivered thin workflow demonstrates only its reviewed synthetic fixture,
+source contracts and tested access boundaries. Live industrial integration and
+commercial benefit remain separate, unestablished outcomes.
+
+### Qualified synthetic demonstration — 2026-10-22
+
+Source-bound staging acceptance exercised the isolated Oracle demo API/database and
+protected Vercel interface with `onesa-industrial-synthetic-v1`. The accepted example
+calculated three stops and 720 seconds of union downtime, retained unknown cause,
+and returned one validated explanation from the existing Qwen3 adapter with a
+permitted source/version/anchor citation. Explicit internal draft save/reopen and
+revision-bound owner self-review were exercised with synthetic identities. That
+review action was automated; no human domain approval is claimed.
+
+The recorded sample comprises three application generation attempts, two real model
+responses and one validated result. Provider latency for the accepted result was
+6,259 ms (application 6,490 ms), with 1,858 input and 1,014 output tokens. All 42
+general and 16 Industrial UI views passed; unchanged real API checks were reused
+within their recorded scope. Owned test identities were removed after acceptance.
+These are finite observations, not model-accuracy, reliability, cost-saving or
+performance-improvement guarantees. Manual/general-assistant comparisons and human
+reviewer corrections remain NOT RUN. No new inference is authorized by this record.
+
+The demo is separate from ordinary production data and application activation.
+It has no factory connector, customer machine data, externally dispatched work
+order or physical control. Component source/configuration and release evidence
+remain independently bound; later source commits do not redeploy the application.
 
 ### Pilot and commercial readiness
 
@@ -171,3 +269,131 @@ Do not promise unlimited inference, uptime/HA, grant eligibility, patents, softw
 ownership clearance or superiority over a general assistant. Model, dataset, image,
 employment and contributor IP rights need their actual records. No outreach, payment,
 new provider or real industrial processing is authorized by this specification.
+
+### Industrial Investigation V1.1 — benchmarkable synthetic evaluation
+
+The V1 thin workflow is retained. V1.1 corrects review-state feedback, cancel/restart
+observation and partial-quality abstention, and extends the existing evaluator to
+43 versioned synthetic cases (7 development, 36 visible held-out regression cases).
+Golden facts and allowed/forbidden claim criteria are frozen before execution;
+these are not secret training data or a blind model-generalization benchmark.
+`--database` adds separately scored local authorization/state/fault tests using mocked
+inference. Unknown costs remain null; model outcomes, human support ratings and
+manual/general-assistant comparisons retain their actual independent status.
+
+The owned evidence download is an internal evaluation artifact. It does not dispatch
+work, approve equipment operation or bypass review. See the
+[demonstration and evaluation package](INDUSTRIAL_EVALUATION.md) for the five-minute
+script, failing-evidence example, human criteria, discovery and pilot boundaries.
+A new hosted model run requires a finite current allowance and exact source/model
+scope. Ordinary production remains distinct from the isolated synthetic demonstration.
+
+## Interoperable AI integration requirement — 2026-10-28
+
+The consumer is the application, developer or organisation integrating the AI
+Platform. A consumer application must be able to replace Onesa AI with another
+compatible provider through configuration or a provider adapter, without rewriting
+its business workflows, tool integrations or stored domain records. A Chat UI model
+picker is a separate product choice and is not this acceptance criterion.
+
+The source candidate adds `onesa-inference-v1`: opt-in stateless text inference,
+a portable Python client with Onesa and OpenAI-compatible transport adapters, and
+bounded caller-owned message/history records. Synthetic tests run the same consumer
+business code through both adapters; provider/model/revision and known token usage
+remain attached to each result. This is a text-only subset, not complete compatibility
+with another vendor's API. Streaming, vision, speech, remote tool-calling and automatic
+history/embedding migration are outside this profile. Unknown usage stays unknown.
+
+An optional local MCP stdio bridge pins protocol `2025-11-25` and exposes only
+explicitly permitted `text_stats`/`arithmetic` tools through existing authenticated
+Onesa services. It opens no HTTP listener, accepts no arbitrary tool or URL and invokes
+no model planner. Its lifecycle, discovery, explicit calls, refusal, revocation and
+bounded JSON transport have synthetic regressions. The version 1.1 source candidate
+adds independently enrolled model and caller-owned Knowledge resources plus a
+user-selected `summarize-text` prompt. Every discovery/read/get reauthenticates;
+documents retain existing API ownership and embedding identity. Context scopes
+default empty, and prompt retrieval invokes no model or tool. Version 1.2 also
+processes request-scoped wire cancellation while API work is pending, with bounded
+concurrency and response-stream cleanup. Cancellation never replays or rolls back
+an already committed remote request. HTTP MCP/OAuth
+discovery, dedicated service credentials, authenticated external-client qualification
+and hosted acceptance remain separate work.
+Robot's optional read-only asset-context import remains an ordinary HTTP integration.
+
+The internal `ModelClient` adapters still support mock, Ollama, vLLM and Cloudflare.
+Consumer inference defaults off; deployment, new processing/provider identities and
+live provider/MCP acceptance are not established by this implementation. The full
+acceptance below remains open until its broader and hosted gates are observed.
+
+Two independent boundaries are required:
+
+| Boundary | Required contract |
+| --- | --- |
+| Consumer inference integration | A versioned provider-neutral client contract for capability discovery, messages, generation, bounded streaming, cancellation, usage and redacted failures. A configured Onesa or alternative-provider adapter implements that contract; the consumer's business logic stays the same. |
+| Tools and context | Versioned MCP client/server adapters expose approved tools, resources and prompts through standard discovery and authorization. Application services retain their existing ownership and permission checks. |
+
+MCP standardizes context/tool exchange; it does not define the application's model
+routing. Follow the [official architecture](https://modelcontextprotocol.io/docs/learn/architecture)
+and explicitly pin the supported protocol/SDK version when implementation is qualified.
+Do not label an ordinary HTTP API as MCP-compatible without protocol conformance tests.
+
+Acceptance must demonstrate all of the following before this requirement is closed:
+
+- The same consumer integration scenario passes through the Onesa adapter and at
+  least one alternative-provider adapter with identical application business code.
+  Only the approved configuration/adapter changes. Capability negotiation rejects
+  unavailable, unauthorized or unsupported requests before provider transmission.
+- Provider-specific sessions, identifiers and response formats stay inside adapters.
+  Document the supported inference API profile and any compatibility limits; an
+  endpoint's name alone does not establish OpenAI-compatible or MCP conformance.
+- Switching providers preserves the consumer application's owned conversation and
+  document records, with a documented portable message/export format. Record the
+  actual provider/model/revision for each generation; do not relabel prior messages
+  or silently truncate context when model limits differ.
+- Chat generation and Knowledge embeddings have separate identities. Changing a
+  chat model must not silently change embedding dimensions, normalization or index
+  version. Embedding changes need an explicit compatible reindex and rollback plan.
+- MCP calls carry the existing caller/tenant authority and approved scopes. Tool
+  discovery, a model response or a connection never grants additional permission.
+  Test cross-user denial, revocation, cancellation, malformed responses and injection.
+- Provider credentials and approved endpoint configuration stay server-side. Consumer
+  access uses an explicitly scoped authenticated identity; browser-session automation
+  is not the portable service contract. Configuration cannot authorize arbitrary
+  destinations or cross-tenant connections. New hosted providers require their actual
+  privacy, rights, budget and release approval.
+- Fallback is explicit and separately approved. An outage must not silently send
+  private content to another provider or present deterministic output as model output.
+- Products can retain their own compatible releases and tool schemas. Robot and
+  Drone safety supervisors remain independent of every model and MCP adapter;
+  generative output cannot authorize physical operation or a Drone launch.
+
+Local synthetic contract tests establish software behavior only. Live provider,
+authenticated MCP-client and hosted product acceptance require their own bounded,
+source-bound evidence; this requirement grants no model download or paid inference.
+
+## Versioned synthetic import candidate
+
+The first evidence adapter accepts a bounded JSON `onesa-industrial-evidence-v1`
+bundle with an explicit synthetic classification. Asset and metadata version, UTC
+window, IANA source timezone, immutable event/signal identities, source/reason/quality,
+pressure/bar or temperature/degC units, sampling/freshness and hashed versioned
+references are required. It never fetches a source URL or executes instructions.
+Preview is non-persistent. Save binds the validated snapshot and source hash to an
+owned investigation transactionally; conflicting investigation/source IDs fail.
+The original bundled demo remains reproducible. Normal production and import flags
+remain default off. A real customer's data rights and processing/deployment approval
+are prerequisites beyond a software feature flag.
+
+The supported flow is import/select → validate and inspect facts/coverage → bounded
+hypothesis or abstention → editable draft → explicit self-review → reopen/export.
+The registered `industrial_facts` tool requires an explicit grant and reauthorizes
+the owned saved source/hash. It cannot command a machine or infer a diagnosis.
+
+Each new generation records a bounded attempt identity, outcome, actual task,
+retrieval and provider-stream durations when observed, available token usage and
+reserved ceilings separately. Failed and cancelled observations remain retained;
+missing costs/pricing/independent acceptance remain null. Self-review is not an
+independent accepted-useful-task denominator. The initial pilot deployment is one
+isolated customer with individual personal permissions, never implicit organisation
+sharing. SSO, directory provisioning, mapping and shared roles require actual approved
+customer requirements before implementation.
