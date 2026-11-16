@@ -157,7 +157,7 @@ def repair_vercel(repo, portal):
 def main():
     repo = os.environ.get("GITHUB_REPOSITORY", "")
     if (
-        repo not in {"DruHustle/onesa-company-portal", "DruHustle/onesa-ai-platform"}
+        repo not in {"DruHustle/onesa-portal", "DruHustle/onesa-ai-platform"}
         or os.environ.get("GITHUB_REF") != "refs/heads/main"
     ):
         raise SystemExit(

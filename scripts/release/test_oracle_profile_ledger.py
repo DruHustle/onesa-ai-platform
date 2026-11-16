@@ -159,7 +159,7 @@ class ProfileLedgerTests(unittest.TestCase):
                 f.store.db.execute("SELECT count(*) FROM records").fetchone()[0], count
             )
             for key, value in [
-                ("repository", "DruHustle/onesa-company-portal"),
+                ("repository", "DruHustle/onesa-portal"),
                 ("target_environment", "staging"),
                 ("candidate_commit", "b" * 40),
                 ("artifact_digest", "sha256:" + "9" * 64),

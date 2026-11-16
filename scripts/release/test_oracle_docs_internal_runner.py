@@ -26,7 +26,7 @@ class PrivateRunnerTests(unittest.TestCase):
     def setUp(self):
         fixtures.OwnerStoreTests.setUp(self)
         self.store.db.close()
-        profile = self.policy["components"].pop("DruHustle/onesa-company-portal:api")
+        profile = self.policy["components"].pop("DruHustle/onesa-portal:api")
         profile["publication_mechanism"] = (
             "existing-isolated-owner-cloudflare-pages-cli"
         )
