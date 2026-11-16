@@ -38,7 +38,7 @@ function packageMetadata(name) {
 }
 
 test('all three pinned modern lint consumers resolve the fixed bounded matcher', async () => {
-  for (const [parent, version] of [['eslint', '10.12.0'], ['@eslint/config-array', '0.23.5'], ['@typescript-eslint/typescript-estree', '8.71.1']]) {
+  for (const [parent, version] of [['eslint', '10.13.0'], ['@eslint/config-array', '0.23.5'], ['@typescript-eslint/typescript-estree', '8.72.0']]) {
     const consumer = createRequire(chat.resolve(parent));
     assert.equal(packageMetadata(parent).version, version);
     assert.equal(consumer('minimatch/package.json').version, '11.0.1');

@@ -51,7 +51,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       if: github.event.repository.private == false
       with:
-        repository: DruHustle/onesa-company-portal
+        repository: DruHustle/onesa-portal
         ref: ${{ steps.docs-sources.outputs.portal }}
         path: data/docs-sources/portal
         persist-credentials: false

@@ -7,7 +7,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.chat import CONVERSATION_INSTRUCTION
+from app.chat import CONVERSATION_INSTRUCTION, TRUNCATED_CONVERSATION_NOTICE
 from app.inference import InferenceError, MockModelClient
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from tests.conftest import signup
@@ -240,12 +240,15 @@ def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
         event.remove(api.app.state.engine, "before_cursor_execute", observe)
     assert [message.content for message in context] == [
         CONVERSATION_INSTRUCTION,
+        TRUNCATED_CONVERSATION_NOTICE,
         *[f"turn-{sequence}" for sequence in range(46, 76)],
         "Next",
     ]
     assert context[0].role == "system"
     assert len(bounded_queries) == 1 and "LIMIT" in bounded_queries[0][0]
-    assert 30 in bounded_queries[0][1].values()
+    assert 31 in bounded_queries[0][1].values()
+    assert "Earlier user messages remain available" not in CONVERSATION_INSTRUCTION
+    assert "cannot see it in the available history" in CONVERSATION_INSTRUCTION
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert [item["sequence"] for item in history] == list(range(1, 78))
 
@@ -446,11 +449,14 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     started = threading.Event()
+    release = threading.Event()
 
     class Slow(MockModelClient):
         async def stream(self, messages):
             started.set()
-            await asyncio.sleep(0.2)
+            assert await asyncio.to_thread(release.wait, 10), (
+                "Concurrent request did not release generation"
+            )
             yield "Complete response"
 
     signup(api)
@@ -459,9 +465,12 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     body = {"conversation_id": identifier, "content": "First", "stream": False}
     with ThreadPoolExecutor(max_workers=1) as pool:
         future = pool.submit(api.post, "/api/v1/chat/completions", json=body)
-        assert started.wait(timeout=2)
-        assert api.post("/api/v1/chat/completions", json=body).status_code == 409
-        assert future.result(timeout=3).status_code == 200
+        try:
+            assert started.wait(timeout=5)
+            assert api.post("/api/v1/chat/completions", json=body).status_code == 409
+        finally:
+            release.set()
+        assert future.result(timeout=5).status_code == 200
 
 
 def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, pg: Engine) -> None:
@@ -495,6 +504,7 @@ def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, p
     try:
         with httpx.Client(
             base_url=f"http://127.0.0.1:{port}",
+            trust_env=False,
             cookies=dict(api.cookies),
             headers={"Origin": "http://localhost:3000", "X-CSRF-Token": api.cookies["onesa_csrf"]},
         ) as client:
@@ -568,3 +578,39 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert len(history) == 5
     assert history[-1]["content"]["inference"]["model"]["model_identifier"] == "test-model"
+
+
+def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8():
+    import asyncio
+
+    import app.inference as inference
+
+    class Chunks:
+        def __init__(self, *values):
+            self.values = values
+
+        async def aiter_bytes(self):
+            for value in self.values:
+                yield value
+
+    async def collect(response):
+        return [line async for line in inference.bounded_sse_lines(response)]
+
+    assert asyncio.run(collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))) == [
+        'data: {"text":"café"}',
+        "",
+    ]
+    assert asyncio.run(collect(Chunks(b"data: first\rdata: second\r"))) == [
+        "data: first",
+        "data: second",
+    ]
+
+    oversized = Chunks(b"x" * inference.MAX_SSE_LINE_BYTES, b"x")
+    with pytest.raises(inference.InferenceError) as failure:
+        asyncio.run(collect(oversized))
+    assert failure.value.code == "invalid_inference_response"
+
+    malformed = Chunks(b"data: \xff\n")
+    with pytest.raises(InferenceError) as failure:
+        asyncio.run(collect(malformed))
+    assert failure.value.reason == "invalid_stream_utf8"

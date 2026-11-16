@@ -14,6 +14,7 @@ import pytest
 from app.onesa_identity import (
     IdentityConfig,
     IdentityError,
+    _request,
     authorization_url,
     exchange_code,
     new_transaction,
@@ -97,6 +98,23 @@ def test_code_exchange_never_uses_unvalidated_id_token():
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         assert exchange_code(CONFIG, "one-use-code", verifier, client=client) == TOKEN
+
+
+def test_code_exchange_accepts_all_rfc7636_verifier_characters():
+    verifier = "v" * 41 + ".~"
+    requests = []
+
+    def handler(request):
+        params = parse_qs(request.content.decode())
+        requests.append(params)
+        return httpx.Response(
+            200,
+            json={"access_token": TOKEN, "token_type": "Bearer"},
+        )
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert exchange_code(CONFIG, "one-use-code", verifier, client=client) == TOKEN
+    assert requests[0]["code_verifier"] == [verifier]
 
 
 def test_oauth_client_basic_credentials_are_form_encoded_and_global_logout_is_explicit():
@@ -267,3 +285,30 @@ def test_deep_nested_json_is_a_safe_error():
 def test_invalid_config_fails_at_startup(issuer):
     with pytest.raises(ValueError):
         replace(CONFIG, issuer=issuer)
+
+
+def test_identity_provider_client_ignores_ambient_proxy_configuration(monkeypatch):
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:9")
+    monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:9")
+    monkeypatch.setenv("ALL_PROXY", "http://127.0.0.1:9")
+    observed = {}
+
+    class Probe(Exception):
+        pass
+
+    class Client:
+        def __init__(self, **kwargs):
+            observed.update(kwargs)
+
+        def stream(self, *args, **kwargs):
+            raise Probe()
+
+        def close(self):
+            observed["closed"] = True
+
+    monkeypatch.setattr(httpx, "Client", Client)
+    with pytest.raises(Probe):
+        _request(CONFIG, "/session", body={"token": TOKEN})
+    assert observed["trust_env"] is False
+    assert observed["follow_redirects"] is False
+    assert observed["closed"] is True

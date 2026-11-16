@@ -110,6 +110,26 @@ async function main() {
   assert.equal(upstream.headers.get('cookie'), 'onesa_session=synthetic-session; onesa_csrf=synthetic-csrf');
   assert.equal(upstream.headers.get('x-csrf-token'), 'synthetic-csrf');
   assert.equal(upstream.headers.get('origin'), 'https://preview.example.invalid');
+
+  context.fetch = async (url, options) => {
+    fetches++;
+    upstream = {url, ...options};
+    return new Response('synthetic cookie response', {status:200, headers:[
+    ['set-cookie', 'onesa_session=synthetic-session; Path=/; HttpOnly; Secure; SameSite=Lax'],
+    ['set-cookie', 'onesa_csrf=synthetic-csrf; Path=/; Secure; SameSite=Lax'],
+    ['set-cookie', 'onesa_identity_flow=synthetic-flow; Path=/; HttpOnly; Secure; SameSite=Lax'],
+    ['set-cookie', '_vercel_sso_token=provider-cookie; Path=/; Secure'],
+    ['set-cookie', 'unexpected=untrusted; Path=/'],
+    ]});
+  };
+  const cookieResponse = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/onesa/exchange'));
+  assert.deepEqual(cookieResponse.headers.getSetCookie().map(value => value.split(';', 1)[0]), [
+    'onesa_session=synthetic-session',
+    'onesa_csrf=synthetic-csrf',
+    'onesa_identity_flow=synthetic-flow',
+  ], 'Only application-owned cookies may cross the BFF boundary');
+  assert.equal(cookieResponse.headers.get('cache-control'), 'no-store');
+
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
   const requestIds = new Set();
   for (const headers of [
@@ -213,7 +233,10 @@ async function main() {
   assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=revoked'}}))).status, 401);
   assert.equal(fetches, count + 1);
   context.fetch = async () => {fetches++; throw new Error('Synthetic sleeping backend unavailable');};
-  assert.equal((await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}))).status, 503);
+  const unavailable = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {headers:{cookie:'onesa_session=unverified'}}));
+  assert.equal(unavailable.status, 503);
+  assert.equal(unavailable.headers.get('cache-control'), 'no-store');
+  assert.equal(unavailable.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(fetches, count + 2);
   console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 8 unchanged-route, 4 hosted credential denials, configuration, sleeping-upstream and failed-session cases');
   await identityMethodBootstrap();

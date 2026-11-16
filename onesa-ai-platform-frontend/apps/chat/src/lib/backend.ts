@@ -87,11 +87,24 @@ export async function proxy(request: Request): Promise<Response> {
       if (!mobileCallback) responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
     }
     responseHeaders.delete('set-cookie');
-    for (const cookie of upstream.headers.getSetCookie()) responseHeaders.append('set-cookie', cookie);
+    const allowedResponseCookies = new Set([
+      'onesa_session',
+      'onesa_csrf',
+      'onesa_identity_flow',
+    ]);
+    for (const cookie of upstream.headers.getSetCookie()) {
+      const pair = cookie.split(';', 1)[0];
+      const separator = pair.indexOf('=');
+      const name = separator > 0 ? pair.slice(0, separator).trim() : '';
+      if (allowedResponseCookies.has(name)) responseHeaders.append('set-cookie', cookie);
+    }
     responseHeaders.set('cache-control', 'no-store');
     // Forward the stream directly: response-body cancellation closes the upstream stream.
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch {
-    return Response.json({ error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } }, { status: 503 });
+    return Response.json(
+      { error: { code: 'backend_unavailable', message: 'Service temporarily unavailable' } },
+      { status: 503, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } },
+    );
   }
 }

@@ -34,6 +34,7 @@ from app.onesa_identity import (
     authorization_url,
     exchange_code,
     new_transaction,
+    pkce_challenge,
     revoke_session,
     validate_session,
 )
@@ -47,11 +48,13 @@ class Start(Strict):
     next: str = Field(default="/", max_length=1000)
     reauthenticate: bool = False
     mobile: bool = False
+    code_challenge: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{43}$")
 
 
 class MobileExchange(Strict):
     state: str = Field(pattern=r"^native_[A-Za-z0-9_-]{43}$")
     code: str = Field(min_length=1, max_length=4096)
+    code_verifier: str = Field(min_length=43, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
 
 
 class Authorization(Strict):
@@ -67,10 +70,12 @@ class Link(PasswordProof):
     email: str = Field(min_length=3, max_length=254)
 
 
-def configuration(request: Request) -> IdentityConfig:
+def configuration(request: Request, *, native: bool = False) -> IdentityConfig:
     config = request.app.state.settings
     if not config.identity_enabled:
         fail(404, "identity_disabled", "Shared Onesa sign-in is not enabled")
+    if native and not config.identity_mobile_enabled:
+        fail(404, "native_identity_disabled", "Native Onesa sign-in is not configured")
     return IdentityConfig(
         config.identity_issuer,
         config.identity_client_id,
@@ -266,9 +271,13 @@ def method(request: Request) -> Method:
 
 @router.post("/start", response_model=Authorization)
 def start(body: Start, request: Request, response: Response, db: DB) -> Authorization:
-    config = configuration(request)
+    config = configuration(request, native=body.mobile)
     origin(request)
     throttle(request, db, "shared-sign-in")
+    if body.mobile and (body.reauthenticate or body.code_challenge is None):
+        fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+    if not body.mobile and body.code_challenge is not None:
+        fail(422, "invalid_flow", "PKCE challenge is only valid for native sign-in")
     target = safe_next(body.next)
     binding = None
     if body.reauthenticate:
@@ -284,21 +293,27 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
         }
     state, nonce, verifier = new_transaction()
     if body.mobile:
-        if body.reauthenticate:
-            fail(422, "invalid_flow", "Start a new mobile sign-in")
         state = "native_" + state
     browser = secrets.token_urlsafe(32)
+    browser_hash = digest(browser)
+    if body.mobile:
+        challenge = body.code_challenge
+        if challenge is None:
+            fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+        browser_hash = digest("native:" + challenge)
     db.execute(delete(IdentityTransaction).where(IdentityTransaction.expires_at <= now()))
     db.add(
         IdentityTransaction(
             state_hash=digest(state),
-            browser_hash=digest(browser),
+            browser_hash=browser_hash,
             payload=encrypt(
                 request,
                 json.dumps(
                     {
                         "nonce": nonce,
-                        "verifier": verifier,
+                        "verifier": None if body.mobile else verifier,
+                        "code_challenge": body.code_challenge,
+                        "native": body.mobile,
                         "next": target,
                         "reauthenticate": body.reauthenticate,
                         "binding": binding,
@@ -309,18 +324,24 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
         )
     )
     db.commit()
-    response.set_cookie(
-        FLOW_COOKIE,
-        state + "." + browser,
-        httponly=True,
-        secure=request.app.state.settings.secure_cookies,
-        samesite="lax",
-        max_age=300,
-        path="/api/v1/auth/onesa",
-    )
+    if not body.mobile:
+        response.set_cookie(
+            FLOW_COOKIE,
+            state + "." + browser,
+            httponly=True,
+            secure=request.app.state.settings.secure_cookies,
+            samesite="lax",
+            max_age=300,
+            path="/api/v1/auth/onesa",
+        )
     return Authorization(
         authorize_url=authorization_url(
-            config, state, nonce, verifier, reauthenticate=body.reauthenticate
+            config,
+            state,
+            nonce,
+            None if body.mobile else verifier,
+            reauthenticate=body.reauthenticate,
+            code_challenge=body.code_challenge,
         )
     )
 
@@ -367,8 +388,9 @@ def issue_shared(
 def callback(
     request: Request, db: DB, state: str = "", code: str = "", error: str = ""
 ) -> Response:
-    config = configuration(request)
-    if re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state):
+    native = re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state) is not None
+    config = configuration(request, native=native)
+    if native:
         pairs = request.query_params
         row = db.get(IdentityTransaction, digest(state))
         if (
@@ -392,17 +414,49 @@ def callback(
 @router.post("/mobile/exchange", include_in_schema=False)
 def mobile_exchange(body: MobileExchange, request: Request, db: DB) -> Response:
     origin(request)
-    response = finish_sign_in(request, db, body.state, body.code, "")
+    response = finish_sign_in(
+        request, db, body.state, body.code, "", native_verifier=body.code_verifier
+    )
     if response.status_code != 200:
         fail(403, "mobile_sign_in_unavailable", "Sign-in requires account support or a new attempt")
     return response
 
 
-def finish_sign_in(request: Request, db: Session, state: str, code: str, error: str) -> Response:
-    row = transaction(request, db, state)
+def finish_sign_in(
+    request: Request,
+    db: Session,
+    state: str,
+    code: str,
+    error: str,
+    *,
+    native_verifier: str | None = None,
+) -> Response:
+    row: IdentityTransaction | None
+    if native_verifier is None:
+        row = transaction(request, db, state)
+    else:
+        configuration(request, native=True)
+        row = db.scalar(
+            select(IdentityTransaction)
+            .where(IdentityTransaction.state_hash == digest(state))
+            .with_for_update()
+        )
+        if row is None or row.expires_at <= now() or row.consumed_at is not None:
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
+        native_payload = json.loads(decrypt(request, row.payload))
+        challenge = native_payload.get("code_challenge")
+        if (
+            native_payload.get("native") is not True
+            or not isinstance(challenge, str)
+            or not secrets.compare_digest(row.browser_hash, digest("native:" + challenge))
+            or not secrets.compare_digest(pkce_challenge(native_verifier), challenge)
+        ):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     if row.consumed_at is not None:
         fail(400, "identity_callback_invalid", "Sign-in has already been used. Please start again")
     payload = json.loads(decrypt(request, row.payload))
+    if payload.get("native") is not state.startswith("native_"):
+        fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     row.consumed_at = now()
     db.commit()  # Code exchange is never retried after an ambiguous network result.
     if error or not code:
@@ -410,13 +464,16 @@ def finish_sign_in(request: Request, db: Session, state: str, code: str, error: 
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
-        config = configuration(request)
+        config = configuration(request, native=payload.get("native") is True)
+        verifier = native_verifier if payload.get("native") is True else payload["verifier"]
+        if not isinstance(verifier, str):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
         if config.audience:
             from app.managed_oidc import exchange
 
-            token = exchange(config, code, payload["verifier"], payload["nonce"])
+            token = exchange(config, code, verifier, payload["nonce"])
         else:
-            token = exchange_code(config, code, payload["verifier"])
+            token = exchange_code(config, code, verifier)
     except IdentityError:
         response = RedirectResponse("/?identity=unavailable", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")

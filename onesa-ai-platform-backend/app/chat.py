@@ -19,9 +19,9 @@ from app.auth import DB, Auth, eligible
 from app.conversations import idle, owned
 from app.errors import fail
 from app.inference import (
+    MAX_MODEL_MESSAGE_CHARS,
     GenerationStats,
     InferenceError,
-    MAX_MODEL_MESSAGE_CHARS,
     ModelMessage,
     model_metadata,
     observe_generation,
@@ -36,12 +36,20 @@ router = APIRouter(prefix="/api/v1", tags=["chat"])
 CONVERSATION_INSTRUCTION = (
     "You are Onesa, a conversational AI assistant. The user and assistant messages following "
     "this instruction are the available history of this conversation. Read that history "
-    "before answering a follow-up question. Earlier user messages remain available in this "
-    "request. When recalling a name, code, identifier or other stated value, copy it exactly "
-    "from the user's message, preserving its spelling, digits and punctuation. If the requested "
-    "fact is absent from the supplied history, say that it is absent. Refer to other "
-    "conversations, private accounts, external systems or tool results only when their data "
-    "has been explicitly supplied."
+    "before answering a follow-up question. Only messages included in this request are available; "
+    "older messages or parts of long saved messages may be omitted to fit context limits. "
+    "If a requested fact is not present in the supplied context, say you cannot see it in the "
+    "available history; do not claim it was never stated. When recalling a name, code, identifier "
+    "or other stated value, copy it exactly from the user's message, preserving its spelling, "
+    "digits and punctuation. Refer to other conversations, private accounts, external systems "
+    "or tool results only when their data has been explicitly supplied."
+)
+
+MAX_HISTORY_MESSAGES = 30
+TRUNCATED_CONVERSATION_NOTICE = (
+    f"[Earlier conversation messages omitted from model context: only the most recent "
+    f"{MAX_HISTORY_MESSAGES} saved messages are supplied. Do not infer their contents. "
+    "If the user asks about omitted history, explain that it is not available in this request.]"
 )
 
 
@@ -170,14 +178,23 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
             select(Message)
             .where(Message.conversation_id == row.id)
             .order_by(Message.sequence.desc())
-            .limit(30)
+            .limit(MAX_HISTORY_MESSAGES + 1)
         )
     )
+    history_truncated = len(history) > MAX_HISTORY_MESSAGES
     history.reverse()
-    # Bound context rather than growing requests without limit.
+    if history_truncated:
+        history = history[-MAX_HISTORY_MESSAGES:]
+    # Bound context rather than growing requests without limit. Tell the model
+    # when older saved turns are outside this request; never imply full recall.
     messages = [
         ModelMessage(role="system", content=CONVERSATION_INSTRUCTION),
-        *[ModelMessage(role=m.role, content=history_content(m)) for m in history[-30:]],
+        *(
+            [ModelMessage(role="system", content=TRUNCATED_CONVERSATION_NOTICE)]
+            if history_truncated
+            else []
+        ),
+        *[ModelMessage(role=m.role, content=history_content(m)) for m in history],
     ]
     if sum(len(m.content) for m in messages) + len(body.content) > 96000:
         fail(422, "context_limit", "Start a new conversation to continue")
@@ -241,7 +258,7 @@ async def complete(body: ChatRequest, request: Request, db: DB, auth: Auth) -> A
                     from app.shared_identity import authenticate_shared
 
                     authenticate_shared(request, check, user, session)
-                    last_identity_check = monotonic()
+                    last_identity_check = time.monotonic()
                 eligible(request, check, user)
             except HTTPException as failure:
                 raise InferenceError(

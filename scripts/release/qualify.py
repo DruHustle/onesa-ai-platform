@@ -11,7 +11,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
-PRODUCT = ROOT.name
+# Standalone product identity is stable across arbitrary checkout paths.
+PRODUCT = "onesa-ai-platform"
 GATES = (
     "CODE_VERIFIED",
     "STAGING_VERIFIED",

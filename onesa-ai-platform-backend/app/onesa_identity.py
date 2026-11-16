@@ -120,12 +120,34 @@ def new_transaction() -> tuple[str, str, str]:
     return secrets.token_urlsafe(32), secrets.token_urlsafe(32), secrets.token_urlsafe(48)
 
 
+def pkce_challenge(verifier: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
+        raise ValueError("Invalid PKCE verifier")
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
 def authorization_url(
-    config: IdentityConfig, state: str, nonce: str, verifier: str, *, reauthenticate: bool = False
+    config: IdentityConfig,
+    state: str,
+    nonce: str,
+    verifier: str | None,
+    *,
+    reauthenticate: bool = False,
+    code_challenge: str | None = None,
 ) -> str:
-    if not all(re.fullmatch(r"[A-Za-z0-9_-]{40,128}", item) for item in (state, nonce, verifier)):
-        raise ValueError("Invalid server-generated identity transaction")
-    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest())
+    if not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", state) or not re.fullmatch(
+        r"[A-Za-z0-9_-]{40,128}", nonce
+    ):
+        raise ValueError("Invalid identity transaction")
+    if code_challenge is None:
+        if verifier is None:
+            raise ValueError("PKCE verifier or challenge is required")
+        challenge = pkce_challenge(verifier)
+    else:
+        if not re.fullmatch(r"[A-Za-z0-9_-]{43}", code_challenge):
+            raise ValueError("Invalid PKCE challenge")
+        challenge = code_challenge
     params = {
         "client_id": config.client_id,
         "redirect_uri": config.redirect_uri,
@@ -133,7 +155,7 @@ def authorization_url(
         "scope": "openid email profile onesa",
         "state": state,
         "nonce": nonce,
-        "code_challenge": challenge.decode().rstrip("="),
+        "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
     if reauthenticate:
@@ -154,7 +176,9 @@ def _request(
     client: httpx.Client | None = None,
 ) -> dict[str, Any]:
     own_client = client is None
-    connection = client or httpx.Client(timeout=httpx.Timeout(5.0), follow_redirects=False)
+    connection = client or httpx.Client(
+        timeout=httpx.Timeout(5.0), follow_redirects=False, trust_env=False
+    )
     try:
         with connection.stream(
             "POST",
@@ -199,7 +223,7 @@ def _request(
 def exchange_code(
     config: IdentityConfig, code: str, verifier: str, *, client: httpx.Client | None = None
 ) -> str:
-    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]{40,128}", verifier):
+    if not code or len(code) > 4096 or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier):
         raise IdentityError("identity_callback_invalid", "Sign-in has expired. Please start again")
     result = _request(
         config,
