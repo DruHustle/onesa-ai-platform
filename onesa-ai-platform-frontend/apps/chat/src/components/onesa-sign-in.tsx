@@ -78,8 +78,10 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
       sessionStorage.setItem("onesa.ai.registration-page", requested);
     } catch { /* Registration still returns to the AI homepage without session storage. */ }
   }
-  const registrationOrigin = new URL(method.account_url || "https://auth.onesa.eu").origin;
-  const registration = new URL("/register", registrationOrigin === "https://portal.onesa.eu" ? "https://auth.onesa.eu" : registrationOrigin);
+  const advertisedAccountOrigin = new URL(method.account_url || "https://account.onesa.eu").origin;
+  const registrationOrigin = ["https://portal.onesa.eu", "https://auth.onesa.eu"].includes(advertisedAccountOrigin)
+    ? "https://account.onesa.eu" : advertisedAccountOrigin;
+  const registration = new URL("/register", registrationOrigin);
   registration.search = "product=ai&platform=web";
   async function start() {
     if (pending.current || method.pending || method.unavailable) return;
