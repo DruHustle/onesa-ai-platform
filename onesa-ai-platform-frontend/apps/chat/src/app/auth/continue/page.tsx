@@ -11,7 +11,15 @@ export default function ContinueSignIn() {
     if (started.current) return;
     started.current = true;
     const params = new URLSearchParams(window.location.search);
-    void beginOnesaSignIn(params.get("next") || "/", params.get("reauthenticate") === "true")
+    let next = params.get("next") || "/";
+    if (params.get("registration") === "complete") {
+      try {
+        const stored = sessionStorage.getItem("onesa.ai.registration-page");
+        sessionStorage.removeItem("onesa.ai.registration-page");
+        if (stored && stored.startsWith("/") && !stored.startsWith("//") && !stored.includes("\\")) next = stored;
+      } catch { /* The existing product OIDC flow can resume at the homepage. */ }
+    }
+    void beginOnesaSignIn(next, params.get("reauthenticate") === "true")
       .catch(reason => setError(reason instanceof Error ? reason.message : "Sign-in is unavailable"));
   }, []);
   return <main className="auth-shell"><section className="auth-card">

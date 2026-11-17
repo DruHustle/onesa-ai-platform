@@ -1,9 +1,10 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
+import {ActivityIndicator, Button, Platform, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import * as Browser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
+import {registerWithOnesa} from './registration.mjs';
 import {call, signIn, signOut} from './session.mjs';
 import {clearSubmittedDraft, draftFor, moveDraft, openConversation, withDraft} from './conversation-state.mjs';
 
@@ -109,7 +110,11 @@ export default function App() {
     <Text accessibilityRole="header" style={styles.title}>Onesa AI Platform</Text>
     {busy && <ActivityIndicator accessibilityLabel="Working" />}
     {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
-    {!account ? <Button title="Sign in with Onesa" disabled={busy} onPress={()=>perform(()=>connect(true))} /> : <>
+    {!account ? <>
+      <Button title="Sign in with Onesa" disabled={busy} onPress={()=>perform(()=>connect(true))} />
+      <Button title="Create an Onesa account" disabled={busy} onPress={()=>perform(()=>registerWithOnesa(Browser.openAuthSessionAsync, Platform.OS, "user", ()=>connect(true)))} />
+      <Button title="Request administrator access" disabled={busy} onPress={()=>perform(()=>registerWithOnesa(Browser.openAuthSessionAsync, Platform.OS, "admin", ()=>connect(true)))} />
+    </> : <>
       <Text style={styles.muted}>{account.display_name || account.name}</Text>
 
       <Text style={styles.heading}>{selected?.conversation.title || 'New conversation'}</Text>
