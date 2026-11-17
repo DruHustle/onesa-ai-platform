@@ -165,17 +165,23 @@ for (const path of ["/invitation", "/recovery"]) {
   });
 }
 
-test("registration returns to AI and starts its own code flow for the original page", async ({ page, baseURL }) => {
-  const resume = new URL("/auth/continue?registration=complete", baseURL || "http://localhost:3100").href;
-  await page.route("https://account.example.test/register?*", route => route.fulfill({
-    status: 303, headers: { location: resume }, body: "",
-  }));
-  await page.route("**/api/v1/auth/onesa/start", route => {
-    expect(route.request().postDataJSON()).toEqual({ next: "/?next=%2Fknowledge", reauthenticate: false });
-    return json(route, { authorize_url: "https://account.example.test/authorize?state=synthetic" });
+for (const [tier, linkName] of [["user", "Create an Onesa account"], ["admin", "Request administrator access"]]) {
+  test(`${tier} registration returns to AI and starts its own code flow for the original page`, async ({ page, baseURL }) => {
+    const resume = new URL("/auth/continue?registration=complete", baseURL || "http://localhost:3100").href;
+    await page.route("https://account.example.test/register?*", route => {
+      expect(Object.fromEntries(new URL(route.request().url()).searchParams)).toEqual({ product: "ai", platform: "web", audience: tier });
+      return route.fulfill({ contentType: "text/html", body: `<!doctype html><script>location.replace(${JSON.stringify(resume)})</script>` });
+    });
+    await page.route("**/api/v1/auth/onesa/start", route => {
+      expect(route.request().postDataJSON()).toEqual({ next: "/?next=%2Fknowledge", reauthenticate: false });
+      return json(route, { authorize_url: "https://account.example.test/authorize?state=synthetic" });
+    });
+    await page.goto("/?next=%2Fknowledge");
+    await Promise.all([
+      page.waitForRequest(request => request.isNavigationRequest() && request.url() === resume),
+      page.getByRole("link", { name: linkName, exact: true }).click(),
+    ]);
+    await expect(page.getByRole("heading", { name: "Synthetic central account" })).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe("/authorize");
   });
-  await page.goto("/?next=%2Fknowledge");
-  await page.getByRole("link", { name: "Create an Onesa account", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Synthetic central account" })).toBeVisible();
-  expect(new URL(page.url()).pathname).toBe("/authorize");
-});
+}
