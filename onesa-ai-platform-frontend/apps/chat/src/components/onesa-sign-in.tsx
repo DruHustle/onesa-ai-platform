@@ -70,6 +70,17 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
     return () => { active = false; if (timer.current) clearInterval(timer.current); };
   }, [de]);
 
+  function rememberPage() {
+    try {
+      const current = new URL(window.location.href);
+      current.searchParams.delete("identity");
+      const requested = next === "/" ? current.pathname + current.search : next;
+      sessionStorage.setItem("onesa.ai.registration-page", requested);
+    } catch { /* Registration still returns to the AI homepage without session storage. */ }
+  }
+  const registrationOrigin = new URL(method.account_url || "https://auth.onesa.eu").origin;
+  const registration = new URL("/register", registrationOrigin === "https://portal.onesa.eu" ? "https://auth.onesa.eu" : registrationOrigin);
+  registration.search = "product=ai&platform=web";
   async function start() {
     if (pending.current || method.pending || method.unavailable) return;
     pending.current = true; setBusy(true); setError("");
@@ -136,6 +147,8 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
     </button>}
     {busy && preserveDraft && <p role="status">{de ? "Schließe die Anmeldung im neuen Fenster ab. Dein Entwurf bleibt hier erhalten." : "Finish signing in in the new window. Your draft stays here."}</p>}
     {error && <p className="error" role="alert">{error}</p>}
+    <p><a href={registration.href + "&audience=user"} onClick={rememberPage}>{de ? "Onesa-Konto erstellen" : "Create an Onesa account"}</a></p>
+    <p><a href={registration.href + "&audience=admin"} onClick={rememberPage}>{de ? "Administratorzugang beantragen" : "Request administrator access"}</a></p>
     {method.account_url && <p><a href={method.account_url}>{de ? "Konto und Zugriff" : "Account and access"}</a></p>}
   </div>;
 }
