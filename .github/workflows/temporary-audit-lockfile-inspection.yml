@@ -18,8 +18,11 @@ jobs:
         working-directory: onesa-ai-platform-frontend/apps/chat
         run: |
           npm --version
-          npm audit fix --package-lock-only --ignore-scripts --no-fund
+          npm audit fix --force --package-lock-only --ignore-scripts --no-fund
           npm audit --audit-level=high --package-lock-only
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run lint
+          npm run typecheck
       - name: Display generated public lockfile in reviewable chunks
         if: always()
         working-directory: onesa-ai-platform-frontend/apps/chat
@@ -30,4 +33,8 @@ jobs:
           console.log('LOCKFILE_DATA_BEGIN');
           for(let i=0;i<text.length;i+=1500) console.log('LOCKFILE_DATA_CHUNK:'+JSON.stringify(text.slice(i,i+1500)));
           console.log('LOCKFILE_DATA_END');
+          const manifest=fs.readFileSync('package.json','utf8');
+          console.log('MANIFEST_DATA_BEGIN');
+          for(let i=0;i<manifest.length;i+=1500) console.log('MANIFEST_DATA_CHUNK:'+JSON.stringify(manifest.slice(i,i+1500)));
+          console.log('MANIFEST_DATA_END');
           NODE
