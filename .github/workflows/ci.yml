@@ -162,17 +162,15 @@ jobs:
     - run: node --test scripts/test_ui_failure_diagnostics.cjs scripts/test_browser_registration.cjs scripts/test_ui_navigation.cjs scripts/test_private_probe_receipt.cjs
     - run: node --test scripts/release/oracle_ai_identity_browser.test.mjs
     - run: python3 scripts/ci/npm_audit.py --prefix onesa-ai-platform-frontend/apps/chat
-    - name: Verify scoped patched owner CLI matchers independently before dependency audit
-      run: node --test infra/oracle/vercel-tools/test-picomatch-redos.mjs
-    - name: Audit the isolated owner CLI dependency lock
-      run: |
-        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/vercel-tools
-        npm audit --package-lock-only --audit-level=low --prefix infra/oracle/npm-runtime
-    - name: Verify installed owner dependency security and compatibility
+    - name: Verify installed owner dependencies and patched source regressions
       run: |
         npm ci --ignore-scripts --prefix infra/oracle/vercel-tools
         npm ci --ignore-scripts --prefix infra/oracle/npm-runtime
+        node --test infra/oracle/vercel-tools/test-picomatch-redos.mjs
         node --test scripts/release/oracle_dependency_security.test.cjs
+        node --test scripts/ci/audit-patched-picomatch.test.mjs
+    - name: Audit both isolated owner CLI dependencies with exact-source advisory mitigation
+      run: node scripts/ci/audit-patched-picomatch.mjs
     - name: "Release requirement: private Docs publisher dependency lock"
       run: python3 scripts/ci/npm_audit.py --prefix infra/oracle/cloudflare-tools
     - name: "Release requirement: private Docs Linux single-dispatch protocol"
