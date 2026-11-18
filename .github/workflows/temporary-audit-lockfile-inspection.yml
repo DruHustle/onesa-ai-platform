@@ -1,12 +1,13 @@
 name: Temporary audit lockfile inspection
 on:
-  push:
+  pull_request:
     branches:
-      - 'dependabot/npm_and_yarn/onesa-ai-platform-frontend/apps/chat/next-16.4.5'
+      - main
 permissions:
   contents: read
 jobs:
   inspect:
+    if: github.head_ref == 'dependabot/npm_and_yarn/onesa-ai-platform-frontend/apps/chat/next-16.4.5'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
