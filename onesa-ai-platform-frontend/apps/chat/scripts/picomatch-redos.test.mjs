@@ -9,5 +9,9 @@ test("Onesa scoped fork explicitly blocks CVE-2026-112366 while preserving rende
  assert.equal(picomatch.isMatch("apps/chat/src/chat.tsx","apps/chat/src/**/*.tsx"),true);
  assert.equal(picomatch.isMatch("apps/chat/src/chat.js","apps/chat/src/**/*.tsx"),false);
  assert.equal(picomatch.isMatch("docs/.internal/secret.tsx","docs/**/*.tsx",{dot:true}),true);
+ for (const override of [{maxExtglobRecursion: false}, {maxExtglobRecursion: 999999}, {maxExtglobRecursion: Infinity}]) {
+  assert.equal(picomatch.isMatch("a".repeat(150)+"!", "+(a*)", override), false, "security guard cannot be disabled");
+  assert.equal(picomatch.isMatch("+(a*)", "+(a*)", override), true);
+ }
  assert.equal(picomatch.isMatch("fff","*(f)"),true);
 });
