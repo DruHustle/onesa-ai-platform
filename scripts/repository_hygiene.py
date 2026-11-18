@@ -97,6 +97,15 @@ def denied(name):
     )
 
 
+def matched_line(data, match):
+    """Return the complete assignment line, never just a pattern prefix."""
+    start = data.rfind(b"\n", 0, match.start()) + 1
+    end = data.find(b"\n", match.end())
+    if end == -1:
+        end = len(data)
+    return data[start:end].strip()
+
+
 def secrets(data, name):
     # Decode PDF text when pypdf is available; otherwise raw-byte scanning only.
     if name.lower().endswith(".pdf"):
@@ -118,8 +127,8 @@ def secrets(data, name):
             # not a provider credential. Keep all other assignments scanned,
             # including the same value in another file or a changed fixture.
             if name == "onesa-ai-platform-backend/tests/test_embedding_service.py":
-                fixture = b'embedding_api_key="synthetic-embedding-key'
-                matches = [m for m in matches if m.group(0).strip() != fixture]
+                fixture = b'embedding_api_key="synthetic-embedding-key",'
+                matches = [m for m in matches if matched_line(data, m) != fixture]
             # Documented non-credential examples/test fixtures still need review.
             matches = [
                 m
