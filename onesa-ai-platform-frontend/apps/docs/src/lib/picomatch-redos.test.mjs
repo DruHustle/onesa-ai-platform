@@ -9,7 +9,11 @@ test("Docs scoped 2.x picomatch fork blocks repeated-extglob ReDoS and retains D
     assert.equal(picomatch.isMatch("a".repeat(150)+"!",pattern),false,pattern);
     assert.equal(picomatch.isMatch(pattern,pattern),true,pattern);
   }
-  assert.equal(picomatch.isMatch("docs/internal/engineering.md","docs/**/*.md"),true);
+  for (const override of [{maxExtglobRecursion: false}, {maxExtglobRecursion: 999999}, {maxExtglobRecursion: Infinity}]) {
+  assert.equal(picomatch.isMatch("a".repeat(150)+"!", "+(a*)", override), false, "security guard cannot be disabled");
+  assert.equal(picomatch.isMatch("+(a*)", "+(a*)", override), true);
+ }
+ assert.equal(picomatch.isMatch("docs/internal/engineering.md","docs/**/*.md"),true);
   assert.equal(picomatch.isMatch("docs/internal/engineering.js","docs/**/*.md"),false);
   assert.deepEqual(micromatch(["a.md","a.ts","docs/b.md"],"**/*.md"),["a.md","docs/b.md"]);
 });

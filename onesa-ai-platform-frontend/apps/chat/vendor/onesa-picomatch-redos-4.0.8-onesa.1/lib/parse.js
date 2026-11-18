@@ -290,14 +290,12 @@ const repeatedExtglobRecursion = pattern => {
 };
 
 const analyzeRepeatedExtglob = (body, options) => {
-  if (options.maxExtglobRecursion === false) {
-    return { risky: false };
-  }
-
-  const max =
-    typeof options.maxExtglobRecursion === 'number'
-      ? options.maxExtglobRecursion
-      : constants.DEFAULT_MAX_EXTGLOB_RECURSION;
+  // Never let caller options disable the CVE-2026-112366 mitigation. Cap any
+  // requested recursion limit at the independently reviewed safe default.
+  const requestedLimit = typeof options.maxExtglobRecursion === 'number' &&
+    Number.isFinite(options.maxExtglobRecursion)
+      ? options.maxExtglobRecursion : constants.DEFAULT_MAX_EXTGLOB_RECURSION;
+  const max = Math.max(0, Math.min(requestedLimit, constants.DEFAULT_MAX_EXTGLOB_RECURSION));
 
   const branches = splitTopLevel(body).map(branch => branch.trim());
 

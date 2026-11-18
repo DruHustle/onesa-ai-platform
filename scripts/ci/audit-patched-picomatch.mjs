@@ -8,8 +8,8 @@ import {pathToFileURL} from 'node:url';
 const source=resolve(process.cwd());
 const advisory='https://github.com/advisories/GHSA-fc5q-39xc-vjpf';
 const releases={
- v4:{dir:'onesa-picomatch-redos-4.0.8-onesa.1',version:'4.0.8-onesa.1',sha:'526b223084caa8bc76ab5706d3257b90af0cf762'},
- v2:{dir:'onesa-picomatch-redos-2.3.3-onesa.1',version:'2.3.3-onesa.1',sha:'aa99da7ba6195cd0e9b991517bbaaa41ae4b6184'}
+ v4:{dir:'onesa-picomatch-redos-4.0.8-onesa.1',version:'4.0.8-onesa.1',sha:'9d4a8c690688cfd3e230676a561400a7f2c95f98'},
+ v2:{dir:'onesa-picomatch-redos-2.3.3-onesa.1',version:'2.3.3-onesa.1',sha:'e12f0260d0d315f18f8b0571136f2466b3bffa1c'}
 };
 const roots=[
  {name:'Vercel CLI',folder:'infra/oracle/vercel-tools',nodes:{'node_modules/picomatch':'v4','node_modules/micromatch/node_modules/picomatch':'v2'}},

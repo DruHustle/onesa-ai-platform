@@ -10,9 +10,9 @@ const require = createRequire(import.meta.url);
 const root = dirname(fileURLToPath(import.meta.url));
 const releases = [
   { directory: "onesa-picomatch-redos-4.0.8-onesa.1", version: "4.0.8-onesa.1",
-    parseBlob: "526b223084caa8bc76ab5706d3257b90af0cf762" },
+    parseBlob: "9d4a8c690688cfd3e230676a561400a7f2c95f98" },
   { directory: "onesa-picomatch-redos-2.3.3-onesa.1", version: "2.3.3-onesa.1",
-    parseBlob: "aa99da7ba6195cd0e9b991517bbaaa41ae4b6184" }
+    parseBlob: "e12f0260d0d315f18f8b0571136f2466b3bffa1c" }
 ];
 
 function gitBlobSha(data) {
