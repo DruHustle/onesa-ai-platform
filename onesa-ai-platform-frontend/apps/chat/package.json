@@ -6,14 +6,14 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "node scripts/check_renderer_notice.mjs && next build --webpack",
     "start": "next start --hostname 0.0.0.0",
-    "lint": "eslint .",
+    "lint": "node --test scripts/picomatch-redos.test.mjs && eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
     "highlight.js": "11.12.0",
-    "next": "16.4.2",
+    "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-markdown": "10.1.0",
@@ -40,9 +40,16 @@
     "typescript-eslint": "8.71.1"
   },
   "overrides": {
-    "eslint@10.12.0": {"minimatch": "11.0.1"},
-    "@eslint/config-array@0.23.5": {"minimatch": "11.0.1"},
-    "@typescript-eslint/typescript-estree@8.71.1": {"minimatch": "11.0.1"}
+    "eslint@10.12.0": {
+      "minimatch": "11.0.1"
+    },
+    "@eslint/config-array@0.23.5": {
+      "minimatch": "11.0.1"
+    },
+    "@typescript-eslint/typescript-estree@8.71.1": {
+      "minimatch": "11.0.1"
+    },
+    "picomatch": "file:vendor/onesa-picomatch-redos-4.0.8-onesa.1"
   },
   "engines": {
     "node": ">=24.12.0 <25"
