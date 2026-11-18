@@ -117,15 +117,9 @@ def secrets(data, name):
             # This literal is a public synthetic fixture in an old backend test,
             # not a provider credential. Keep all other assignments scanned,
             # including the same value in another file or a changed fixture.
-            fixture = (
-                name == "onesa-ai-platform-backend/tests/test_embedding_service.py"
-                and b'embedding_api_key="synthetic-embedding-key'
-            )
-            if fixture:
-                matches = [
-                    m for m in matches
-                    if m.group(0).strip() != b'embedding_api_key="synthetic-embedding-key'
-                ]
+            if name == "onesa-ai-platform-backend/tests/test_embedding_service.py":
+                fixture = b'embedding_api_key="synthetic-embedding-key'
+                matches = [m for m in matches if m.group(0).strip() != fixture]
             # Documented non-credential examples/test fixtures still need review.
             matches = [
                 m
