@@ -118,7 +118,16 @@ def secrets(data, name):
             matches = [
                 m
                 for m in matches
-                if not any(
+                if not (
+                    # Reviewed historical-only synthetic embedding fixture
+                    # (e134cbf6989c): this value was used exclusively by
+                    # TestClient/MockTransport, never issued by a provider.
+                    # Match both the exact path and bytes; other assignments
+                    # must continue to fail the publication gate.
+                    name == "onesa-ai-platform-backend/tests/test_embedding_service.py"
+                    and m.group(1) == b"synthetic-embedding-key"
+                )
+                and not any(
                     marker in m.group(1).lower()
                     for marker in (
                         b"placeholder",
