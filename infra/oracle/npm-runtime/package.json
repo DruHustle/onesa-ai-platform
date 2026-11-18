@@ -76,6 +76,7 @@
     "glob": "$glob",
     "minimatch": "$minimatch",
     "undici": "6.29.1",
-    "ip-address": "10.7.5"
+    "ip-address": "10.7.5",
+    "picomatch": "file:vendor/onesa-picomatch-redos-4.0.8-onesa.1"
   }
 }
