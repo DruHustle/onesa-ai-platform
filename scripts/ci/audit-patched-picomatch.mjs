@@ -44,8 +44,13 @@ function checkInstalled(cfg){
   assert.equal(realpathSync(join(base,node)),realpathSync(vendor));
   assert.equal(JSON.parse(readFileSync(join(base,node,'package.json'),'utf8')).version,r.version);
  }
- assert.equal(pkg.overrides?.picomatch,'file:vendor/'+releases.v4.dir);
- if(cfg.nodes['node_modules/micromatch/node_modules/picomatch'])assert.equal(pkg.overrides?.micromatch?.picomatch,'file:vendor/'+releases.v2.dir);
+ if(cfg.nodes['node_modules/micromatch/node_modules/picomatch']){
+  assert.equal(pkg.overrides?.['picomatch@^4.0.0'],'file:vendor/'+releases.v4.dir);
+  assert.equal(pkg.overrides?.['picomatch@^2.3.1'],'file:vendor/'+releases.v2.dir);
+  assert.equal(pkg.overrides?.picomatch,undefined,'Unscoped override would cross major-version bounds');
+ }else{
+  assert.equal(pkg.overrides?.picomatch,'file:vendor/'+releases.v4.dir);
+ }
 }
 function audit(cfg){
  checkInstalled(cfg);

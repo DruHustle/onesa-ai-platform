@@ -29,9 +29,7 @@
     "undici@5.28.4": "6.29.1",
     "undici@5.29.0": "6.29.1",
     "zod": "4.6.7",
-    "picomatch": "file:vendor/onesa-picomatch-redos-4.0.8-onesa.1",
-    "micromatch": {
-      "picomatch": "file:vendor/onesa-picomatch-redos-2.3.3-onesa.1"
-    }
+    "picomatch@^4.0.0": "file:vendor/onesa-picomatch-redos-4.0.8-onesa.1",
+    "picomatch@^2.3.1": "file:vendor/onesa-picomatch-redos-2.3.3-onesa.1"
   }
 }
