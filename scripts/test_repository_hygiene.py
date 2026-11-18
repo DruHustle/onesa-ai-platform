@@ -16,6 +16,10 @@ class PublicationFixtureTests(unittest.TestCase):
         changed = b'embedding_api_key="synthetic-embedding-key-not-approved"\n'
         self.assertIn("credential-assignment", hygiene.secrets(changed, self.PATH))
 
+    def test_fixture_prefix_with_other_data_still_requires_review(self):
+        changed = b'embedding_api_key="synthetic-embedding-key:unexpected-tail",\n'
+        self.assertIn("credential-assignment", hygiene.secrets(changed, self.PATH))
+
     def test_fixture_literal_in_other_source_still_requires_review(self):
         other_path = "onesa-ai-platform-backend/app/config.py"
         self.assertIn(
