@@ -9,6 +9,8 @@ export default ts.config(
       "next-env.d.ts",
       "playwright-report/**",
       "test-results/**",
+      // Exact reviewed third-party CommonJS source is covered by native matcher tests.
+      "vendor/onesa-picomatch-redos-4.0.8-onesa.1/**",
     ],
   },
   js.configs.recommended,
