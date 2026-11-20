@@ -37,6 +37,15 @@ router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 registry = default_registry()
 
 
+class ScopedToolRegistry(ToolRegistry):
+    """Preserve the shared built-in execution and monitoring boundary."""
+
+    async def execute(self, call: ToolCall, allowed: set[str]) -> dict[str, Any]:
+        if call.tool in registry.tools:
+            return await registry.execute(call, allowed)
+        return await super().execute(call, allowed)
+
+
 class InvestigationFacts(Strict):
     investigation_id: UUID
     snapshot_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -52,7 +61,7 @@ def scoped_registry(request: Request, user_id: UUID) -> ToolRegistry:
     from app.industrial import owned
     from app.knowledge import Search, retrieve
 
-    current = ToolRegistry()
+    current = ScopedToolRegistry()
     current.tools.update(registry.tools)
 
     async def knowledge_search(arguments: Any) -> dict[str, Any]:
