@@ -94,3 +94,41 @@ def test_registered_knowledge_plugin_needs_explicit_grant(api: TestClient):
         },
     )
     assert denied.status_code == 403
+
+
+def test_knowledge_plugin_executes_for_owner_and_refuses_foreign_document(api: TestClient):
+    signup(api)
+    upload = api.post(
+        "/api/v1/knowledge/documents",
+        files={
+            "file": (
+                "work-guide.txt",
+                b"Harare is Zimbabwe's capital city and home to an industrial hub.",
+                "text/plain",
+            )
+        },
+    )
+    assert upload.status_code == 201, upload.text
+    document_id = upload.json()["id"]
+    goal = {
+        "goal": "Find saved evidence about Harare",
+        "allowed_tools": ["knowledge_search"],
+        "steps": [
+            {
+                "tool": "knowledge_search",
+                "arguments": {"query": "Harare Zimbabwe capital", "document_ids": [document_id]},
+            }
+        ],
+    }
+    result = api.post("/api/v1/agents/runs", json=goal)
+    assert result.status_code == 201, result.text
+    assert result.json()["status"] == "completed"
+    assert result.json()["steps"][0]["result"]["sources"][0]["document_id"] == document_id
+
+    signup(api, "other@example.com")
+    denied = api.post("/api/v1/agents/runs", json=goal)
+    assert denied.status_code == 201, denied.text
+    assert denied.json()["status"] == "failed"
+    assert denied.json()["steps"] == [
+        {"status": "failed", "error": "Tool validation or execution failed"}
+    ]
