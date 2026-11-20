@@ -5,6 +5,7 @@ import asyncio
 import pytest
 from fastapi.testclient import TestClient
 
+from app import capacity
 from app.agent_report import synthesize_report
 from app.inference import MockModelClient
 from tests.conftest import signup
@@ -49,7 +50,15 @@ def test_empty_or_oversized_report_rejected(report):
         asyncio.run(synthesize_report(ReportClient(report), "Task", []))
 
 
-def test_work_model_plan_report_and_history(api: TestClient):
+def test_work_model_plan_report_and_history(api: TestClient, monkeypatch):
+    reserved = []
+    original_begin = capacity.begin
+
+    def observed_begin(request, *, model_calls=1):
+        reserved.append(model_calls)
+        return original_begin(request, model_calls=model_calls)
+
+    monkeypatch.setattr(capacity, "begin", observed_begin)
     signup(api)
     api.app.state.settings.model_backend = "vllm"
     api.app.state.model_client = ReportClient()
@@ -60,6 +69,7 @@ def test_work_model_plan_report_and_history(api: TestClient):
     assert response.status_code == 201, response.text
     data = response.json()
     assert data["status"] == "completed"
+    assert reserved == [2]
     assert data["steps"][0]["tool"] == "text_stats"
     assert data["steps"][1]["tool"] == "work_report"
     assert data["steps"][1]["result"]["text"] == "Grounded tool report"
