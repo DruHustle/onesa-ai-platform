@@ -48,6 +48,12 @@ export default function FeatureShell({
           <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
             {copy.chat}
           </Link>
+          <Link href="/work" aria-current={pathname === "/work" ? "page" : undefined}>
+            {locale === "de" ? "Arbeiten" : "Work"}
+          </Link>
+          <Link href="/plugins" aria-current={pathname === "/plugins" ? "page" : undefined}>
+            Plugins
+          </Link>
           <Link
             href="/knowledge"
             aria-current={pathname === "/knowledge" ? "page" : undefined}

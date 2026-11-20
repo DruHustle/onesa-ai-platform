@@ -30,7 +30,9 @@ def applies(request: Request) -> bool:
 # request validation and explicit tool-permission checks, and release it in finally.
 
 
-def begin(request: Request) -> UUID:
+def begin(request: Request, *, model_calls: int = 1) -> UUID:
+    if not 1 <= model_calls <= 2:
+        raise ValueError("Model call reservation must be bounded")
     config = request.app.state.settings
     with Session(request.app.state.engine) as db:
         user, _ = authenticated(request, db, request.cookies.get("onesa_session"))
@@ -46,7 +48,9 @@ def begin(request: Request) -> UUID:
         if total >= config.model_global_concurrency or own >= config.model_user_concurrency:
             fail(429, "model_capacity", "Generation capacity is busy; retry later")
         # Reservation uses the configured maximum input+output ceiling, not fabricated actual usage.
-        tokens = config.model_context_length + config.model_max_output_tokens
+        # A model-planned Work request may also synthesize one report. Reserve
+        # both generations up front rather than understating its resource usage.
+        tokens = (config.model_context_length + config.model_max_output_tokens) * model_calls
         window = int(now().timestamp()) // 60
         for scope, identity, amount, limit in [
             ("requests", str(user.id), 1, config.model_user_requests_per_minute),
