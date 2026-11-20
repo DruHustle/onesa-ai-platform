@@ -8,7 +8,7 @@ test.beforeEach(async ({page, baseURL}) => {
   let saved: Record<string, unknown> | null = null;
   await page.route("**/api/v1/**", async route => {
     const path = new URL(route.request().url()).pathname;
-    let data: unknown = {};
+    let data: unknown;
     if (path === "/api/v1/auth/me") {
       data = {id: "synthetic-work-owner", display_name: "Synthetic Work User"};
     } else if (path === "/api/v1/documentation/access") {
