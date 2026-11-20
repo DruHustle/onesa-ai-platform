@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app import capacity
+from app.agent_report import synthesize_report
 from app.agent_runtime import (
     BasicPlanner,
     ModelToolPlanner,
@@ -36,22 +37,52 @@ router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 registry = default_registry()
 
 
+class ScopedToolRegistry(ToolRegistry):
+    """Preserve the shared built-in execution and monitoring boundary."""
+
+    async def execute(self, call: ToolCall, allowed: set[str]) -> dict[str, Any]:
+        if call.tool in registry.tools:
+            return await registry.execute(call, allowed)
+        return await super().execute(call, allowed)
+
+
 class InvestigationFacts(Strict):
     investigation_id: UUID
     snapshot_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
+class KnowledgeLookup(Strict):
+    query: str = Field(min_length=1, max_length=1000)
+    document_ids: list[UUID] = Field(default_factory=list, max_length=5)
+
+
 def scoped_registry(request: Request, user_id: UUID) -> ToolRegistry:
     """Bind authority in server context, never in model-supplied arguments."""
     from app.industrial import owned
+    from app.knowledge import Search, retrieve
 
-    if not request.app.state.settings.cybersecurity_enabled and not (
-        request.app.state.settings.industrial_demo_enabled
-        and request.app.state.settings.industrial_import_enabled
-    ):
-        return registry
-    current = ToolRegistry()
+    current = ScopedToolRegistry()
     current.tools.update(registry.tools)
+
+    async def knowledge_search(arguments: Any) -> dict[str, Any]:
+        body = KnowledgeLookup.model_validate(arguments.model_dump())
+
+        def read() -> dict[str, Any]:
+            with Session(request.app.state.engine) as check:
+                identity = authenticated(request, check, request.cookies.get("onesa_session"))
+                if identity[0].id != user_id:
+                    fail(403, "source_access_denied", "Knowledge access is no longer available")
+                results = retrieve(
+                    Search(query=body.query, document_ids=body.document_ids, limit=3),
+                    request.app.state.settings,
+                    check,
+                    user_id,
+                )
+                return {"sources": results, "backend": request.app.state.settings.embedding_backend}
+
+        return await run_in_threadpool(read)
+
+    current.register("knowledge_search", Tool(KnowledgeLookup, knowledge_search))
     if request.app.state.settings.cybersecurity_enabled:
         from app.cyber_schemas import EvidenceRequest
         from app.cybersecurity import read_evidence
@@ -124,7 +155,7 @@ def tools(request: Request, auth: Auth) -> dict[str, Any]:
                 "name": name,
                 "schema": tool.schema.model_json_schema(),
                 "effect": "read-only owned evidence"
-                if name in {"industrial_facts", "cybersecurity_evidence_v1"}
+                if name in {"industrial_facts", "cybersecurity_evidence_v1", "knowledge_search"}
                 else "local computation",
             }
             for name, tool in scoped_registry(request, auth[0].id).tools.items()
@@ -142,7 +173,13 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
     # Invalid permissions must not reserve model capacity or enter response-stream
     # lease checks. Valid runs retain the same shared admission and expiry limits.
-    lease = await run_in_threadpool(capacity.begin, request)
+    lease = await run_in_threadpool(
+        capacity.begin,
+        request,
+        model_calls=2
+        if not body.steps and request.app.state.settings.model_backend != "mock"
+        else 1,
+    )
     try:
         result = await execute_admitted(body, request, db, auth, allowed, current)
         if not await run_in_threadpool(capacity.active, request, lease):
@@ -199,6 +236,28 @@ async def execute_admitted(
                 steps.append({"tool": call.tool, "status": "completed", "result": result})
             else:
                 status = "completed"
+        if (
+            status == "completed"
+            and not body.steps
+            and request.app.state.settings.model_backend != "mock"
+        ):
+            try:
+                async with asyncio.timeout(request.app.state.settings.generation_timeout):
+                    report = await synthesize_report(
+                        request.app.state.model_client, body.goal, steps
+                    )
+                steps.append(
+                    {
+                        "tool": "work_report",
+                        "status": "completed",
+                        "result": {"text": report, "model_based": True},
+                    }
+                )
+            except Exception:
+                # Completed tool evidence stays available when synthesis fails.
+                steps.append(
+                    {"status": "failed", "error": "AI report unavailable; tool results are saved"}
+                )
     except Exception:
         status = "failed"
         steps.append({"status": "failed", "error": "Tool validation or execution failed"})
@@ -220,7 +279,7 @@ def owned_run(db: Session, identifier: UUID, user_id: UUID) -> AgentRun:
     row = db.scalar(select(AgentRun).where(AgentRun.id == identifier, AgentRun.user_id == user_id))
     if row is None:
         fail(404, "not_found", "Agent run not found")
-    if row.status == "running" and row.created_at < now() - timedelta(seconds=15):
+    if row.status == "running" and row.created_at < now() - timedelta(seconds=300):
         row.status = "failed"
         db.commit()
     return row

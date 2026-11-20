@@ -77,7 +77,7 @@ export default function Chat() {
     // Ordinary chat does not depend on the optional document list.
     setKnowledgeReady(!new URLSearchParams(window.location.search).get("document"));
     const intended = new URLSearchParams(window.location.search).get("next");
-    if (intended === "/agents" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial" || intended === "/industrial/twins") {window.location.replace(intended); return;}
+    if (intended === "/agents" || intended === "/work" || intended === "/plugins" || intended === "/travel" || intended === "/knowledge" || intended === "/industrial" || intended === "/industrial/twins") {window.location.replace(intended); return;}
     setLinkedDocument(null); setDocumentIds([]);
     setUser(current);
   }, []);
@@ -499,6 +499,8 @@ export default function Chat() {
         </div>
         <nav className="feature-nav" aria-label="AI workspace">
           <Link href="/" aria-current="page">{copy.chat}</Link>
+          <Link href="/work">{locale === "de" ? "Arbeiten" : "Work"}</Link>
+          <Link href="/plugins">Plugins</Link>
           <Link href="/knowledge">{copy.knowledge}</Link>
           <Link href="/agents">{copy.agents}</Link>
           <Link href="/travel">{copy.travel}</Link>
