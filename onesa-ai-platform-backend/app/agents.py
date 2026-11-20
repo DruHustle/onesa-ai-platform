@@ -164,7 +164,13 @@ async def execute(body: RunRequest, request: Request, db: DB, auth: Auth) -> dic
         fail(403, "tool_not_allowed", "Grant permission for each requested tool")
     # Invalid permissions must not reserve model capacity or enter response-stream
     # lease checks. Valid runs retain the same shared admission and expiry limits.
-    lease = await run_in_threadpool(capacity.begin, request)
+    lease = await run_in_threadpool(
+        capacity.begin,
+        request,
+        model_calls=2
+        if not body.steps and request.app.state.settings.model_backend != "mock"
+        else 1,
+    )
     try:
         result = await execute_admitted(body, request, db, auth, allowed, current)
         if not await run_in_threadpool(capacity.active, request, lease):
