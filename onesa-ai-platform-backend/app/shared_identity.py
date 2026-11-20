@@ -196,7 +196,7 @@ def administrator(request: Request, user_id: object) -> bool:
     identity = current_identity(request, user_id)
     return bool(
         identity
-        and (identity.global_admin or identity.product_roles.get("ai") == "admin")
+        and (identity.global_admin or identity.product_roles.get("ai") in {"admin", "administrator"})
         and {"otp", "mfa"}.intersection(identity.amr)
     )
 
