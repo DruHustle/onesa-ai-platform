@@ -21,9 +21,9 @@ import httpx
 
 PRODUCTS = frozenset({"ai", "drone", "robot"})
 PRODUCT_ROLES = {
-    "ai": {"user", "admin"},
-    "drone": {"viewer", "operator", "admin"},
-    "robot": {"viewer", "operator", "admin"},
+    "ai": {"user", "admin", "administrator"},
+    "drone": {"viewer", "operator", "admin", "administrator"},
+    "robot": {"viewer", "operator", "admin", "administrator"},
 }
 MAX_RESPONSE_BYTES = 65536
 
@@ -281,7 +281,7 @@ def validate_session(
             dict(product_roles),
             tuple(dict(item) for item in memberships),
         )
-        if ("global_admin" in roles or product_roles.get(config.product) == "admin") and not {
+        if ("global_admin" in roles or product_roles.get(config.product) in {"admin", "administrator"}) and not {
             "otp",
             "mfa",
         }.intersection(amr):
