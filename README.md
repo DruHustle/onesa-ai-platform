@@ -122,8 +122,8 @@ operation or comparative accuracy/business benefit is claimed. See the
 Public/protected Docs retain source `373889b`; repository metadata commits do not
 republish any component or establish a new authenticated production walkthrough.
 
-Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Knowledge,
-Agents and Travel. It serves European and international applications; regional
+Onesa AI Platform is Onesa UG's general-purpose AI workspace for Chat, Work,
+Plugins, Knowledge, Agents and Travel. It serves European and international applications; regional
 language/domain adaptation is an additional specialization. Existing open-weight
 models come first, with evaluated fine-tuning kept separate.
 
@@ -143,7 +143,7 @@ flowchart LR
 
 ## Product tracks
 
-**Applications** includes Chat, Knowledge, Agents and Travel. **Industrial AI** has
+**Applications** includes Chat, Work, Plugins, Knowledge, Agents and Travel. **Industrial AI** has
 a qualified synthetic investigation demonstration for evidence-backed operational
 investigation and internal drafts; broader industrial integrations remain planned. The focused milestone and evaluation contract are in the
 [existing product requirements](docs/product/PRD.md#current-product-hierarchy-and-industrial-milestone--2026-10-20).
@@ -155,8 +155,15 @@ Onesa Robotics / Physical AI remains a separate product development line.
 - Chat streams responses with context, history, rename/delete, Stop and explicit failures.
 - Knowledge validates text/PDF uploads, extracts and indexes content, restricts retrieval
   by owner, exposes citations and supports deletion/reindexing.
-- Agents run registered bounded tools with explicit permission and an execution record.
-  Registered tools include arithmetic and text statistics; arbitrary external actions are unavailable.
+- Work supports model-planned runs of up to eight registered tools with per-run
+  permission grants, saved execution history, cancellation, and optional AI-written
+  reports based only on completed tool results.
+- Plugins lists registered tools and their input schemas/effect levels. Available
+  tools include arithmetic, text statistics, and owner-scoped Knowledge search.
+  Arbitrary external plugin installation, OAuth app connectors and consequential
+  external actions are not yet enabled.
+- The original Agents tool screen remains available for an explicit deterministic
+  text-analysis run; it shares the same authorization and history backend.
 - Travel persists editable itinerary suggestions. Unconfigured live providers do not
   supply prices, availability, bookings or reservations.
 - Identity includes sessions/CSRF, invitation/recovery workflows, rate limits and ownership.
@@ -174,7 +181,7 @@ are implemented; other workspace copy remains English and is not claimed fully t
 
 | Location | Responsibility |
 | --- | --- |
-| `onesa-ai-platform-frontend/apps/chat` | Next.js Chat/Knowledge/Agents/Travel workspace |
+| `onesa-ai-platform-frontend/apps/chat` | Next.js Chat/Work/Plugins/Knowledge/Agents/Travel workspace |
 | `onesa-ai-platform-frontend/apps/docs` | Separately classified public/internal Docusaurus builds |
 | `onesa-ai-platform-frontend/packages/api-client` | Generated contracts and bounded SSE transport |
 | `onesa-ai-platform-backend` | FastAPI, Alembic, tests and optional model tooling |
