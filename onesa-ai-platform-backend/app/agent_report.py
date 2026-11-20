@@ -9,9 +9,7 @@ from typing import Any
 from app.inference import GenerationStats, ModelClient, ModelMessage, observe_generation
 
 
-async def synthesize_report(
-    client: ModelClient, goal: str, steps: list[dict[str, Any]]
-) -> str:
+async def synthesize_report(client: ModelClient, goal: str, steps: list[dict[str, Any]]) -> str:
     """Summarize completed results without allowing a follow-up tool call."""
     evidence = [
         {
