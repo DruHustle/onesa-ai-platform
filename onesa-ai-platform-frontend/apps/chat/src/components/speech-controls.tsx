@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useSyncExternalStore} from "react";
 
 type Result = {isFinal: boolean; [index: number]: {transcript: string}};
 type RecognitionEvent = {resultIndex: number; results: ArrayLike<Result>};
@@ -21,6 +21,18 @@ type RecognitionWindow = Window & {
   webkitSpeechRecognition?: new () => BrowserRecognition;
 };
 
+const subscribeBrowserCapability = () => () => {};
+const unavailableOnServer = () => false;
+function canTranscribe() {
+  if (typeof window === "undefined") return false;
+  const browser = window as RecognitionWindow;
+  return Boolean(browser.SpeechRecognition || browser.webkitSpeechRecognition);
+}
+function canSpeak() {
+  return typeof window !== "undefined" &&
+    "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+}
+
 export function SpeechDictation({
   language, disabled, onTranscript,
 }: {
@@ -28,18 +40,14 @@ export function SpeechDictation({
   disabled: boolean;
   onTranscript: (text: string) => void;
 }) {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(subscribeBrowserCapability, canTranscribe, unavailableOnServer);
   const [listening, setListening] = useState(false);
   const [notice, setNotice] = useState("");
   const recognizer = useRef<BrowserRecognition | null>(null);
   const deadline = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const callback = useRef(onTranscript);
   const delivered = useRef(new Set<number>());
-  callback.current = onTranscript;
 
   useEffect(() => {
-    const speech = window as RecognitionWindow;
-    setSupported(Boolean(speech.SpeechRecognition || speech.webkitSpeechRecognition));
     return () => {
       if (deadline.current) clearTimeout(deadline.current);
       recognizer.current?.abort();
@@ -80,7 +88,7 @@ export function SpeechDictation({
         }
       }
       if (words.length) {
-        callback.current(words.join(" "));
+        onTranscript(words.join(" "));
         setNotice("Transcript added. Review and edit it before sending.");
       }
     };
@@ -122,14 +130,14 @@ export function SpeechDictation({
         {listening ? "Stop mic" : "🎙 Dictate"}
       </button>
       <span className="onesa-voice-notice" role="status" aria-live="polite">
-        {notice || (!supported ? "Dictation not supported in this browser." : "")}
+        {notice || (!supported ? "Dictation not supported in this browser." : "Browser speech recognition may send audio to the browser provider.")}
       </span>
     </span>
   );
 }
 
 export function SpeechReader({text, language}: {text: string; language: string}) {
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(subscribeBrowserCapability, canSpeak, unavailableOnServer);
   const [status, setStatus] = useState<"idle"|"playing"|"paused">("idle");
   const [rate, setRate] = useState(1);
   const [voiceId, setVoiceId] = useState("");
@@ -138,22 +146,21 @@ export function SpeechReader({text, language}: {text: string; language: string})
   const active = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
-    const available = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
-    setSupported(available);
-    if (!available) return;
+    if (!supported) return;
     const engine = window.speechSynthesis;
     const updateVoices = () => setVoices(engine.getVoices().filter(voice =>
       voice.lang.startsWith(language.slice(0, 2))));
-    updateVoices();
+    const frame = requestAnimationFrame(updateVoices);
     engine.addEventListener("voiceschanged", updateVoices);
     return () => {
+      cancelAnimationFrame(frame);
       engine.removeEventListener("voiceschanged", updateVoices);
       if (active.current) {
         active.current = null;
         engine.cancel();
       }
     };
-  }, [language]);
+  }, [language, supported]);
 
   function play() {
     if (!supported || !text.trim()) return;
