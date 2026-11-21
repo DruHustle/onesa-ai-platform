@@ -21,6 +21,14 @@ test("register, stream, reopen, rename, delete, sign in", async ({ page }) => {
   await expect(
     page.getByText("[Mock response — no AI inference] Hello from browser"),
   ).toBeVisible();
+  // The streamed partial is NOT a persisted reply. A reload during an active
+  // generation correctly cancels the lease; never treat partial visibility
+  // as proof that the server committed an assistant message. Require the
+  // completed server receipt and the saved message before testing reopen.
+  await expect(page.locator(".messages")).toHaveAttribute("aria-busy", "false", {timeout: 30_000});
+  await expect(page.locator(".message.assistant")).toContainText(
+    "[Mock response — no AI inference] Hello from browser",
+  );
   await page.screenshot({
     path: "../../../data/screenshots/chat-desktop.png",
     fullPage: true,
