@@ -22,6 +22,7 @@ import { chatEvents } from "../../../../packages/api-client/sse";
 import { call, csrf, api, ApiError } from "../lib/api";
 import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
+import {SpeechDictation, SpeechReader} from "../components/speech-controls";
 export default function Chat() {
   const { copy, locale } = useLocale();
   const identityMethod = useOnesaIdentity();
@@ -639,6 +640,7 @@ export default function Chat() {
               <Suspense fallback={<div style={{whiteSpace: "pre-wrap"}}>{m.content.text}</div>}>
                 <MessageContent text={m.content.text}/>
               </Suspense>
+              {m.role === "assistant" && <SpeechReader text={m.content.text} language={locale === "de" ? "de-DE" : "en-US"}/>}
               {!!m.content.sources?.length && (
                 <div className="sources">
                   Sources:{" "}
@@ -722,6 +724,12 @@ export default function Chat() {
                 }
               }}
             />
+            <SpeechDictation language={locale === "de" ? "de-DE" : "en-US"}
+              disabled={busy || !knowledgeReady}
+              onTranscript={transcript => {
+                setInput(previous => [previous.trim(), transcript].filter(Boolean).join(" ").slice(0, 32000));
+                entry.current?.focus({preventScroll: true});
+              }}/>
             {busy ? (
               <button type="button" disabled={!canStop} onClick={() => void stop()}>
                 Stop
