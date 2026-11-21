@@ -19,7 +19,9 @@ export default function RequireSession({
     | "/industrial"
     | "/industrial/twins"
     | "/industrial/cybersecurity"
-    | "/agents";
+    | "/agents"
+    | "/work"
+    | "/plugins";
   children: React.ReactNode;
 }) {
   const { locale } = useLocale(),
