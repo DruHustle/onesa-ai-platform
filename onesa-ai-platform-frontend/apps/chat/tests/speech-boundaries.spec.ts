@@ -43,7 +43,8 @@ test("mocked microphone produces an editable draft and playback requires a click
   await page.getByRole("button", {name: "Create account", exact: true}).click();
   await page.getByRole("button", {name: "Dictate message"}).click();
   await expect(page.getByLabel("Message Onesa AI")).toHaveValue("Hello by voice");
-  await expect(page.getByText("Hello by voice", {exact: true})).toHaveCount(0);
+  // A textarea's editable value is text too; only submitted messages count.
+  await expect(page.locator(".messages article.message").filter({hasText:"Hello by voice"})).toHaveCount(0);
   await page.getByLabel("Message Onesa AI").fill("Edited speech question");
   await page.getByRole("button", {name: "Send message"}).click();
   await expect(page.getByText("[Mock response — no AI inference] Edited speech question")).toBeVisible();
