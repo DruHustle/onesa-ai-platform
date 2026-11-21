@@ -641,3 +641,11 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 
 .session-workspace{border:0;margin:0;padding:0;min-inline-size:0}
 .session-signin>fieldset,.travel-fields{border:0;margin:0;padding:0;min-inline-size:0;display:grid;gap:1rem}
+
+/* Opt-in device speech controls. The browser/OS owns audio processing. */
+.onesa-voice-control { display:inline-flex; gap:0.4rem; align-items:center; flex-wrap:wrap; max-width:100%; font-size:0.78rem; }
+.onesa-voice-control button, .onesa-voice-control select { font:inherit; padding:0.35rem 0.5rem; border:1px solid currentColor; border-radius:0.45rem; background:transparent; color:inherit; }
+.onesa-voice-control button:disabled { opacity:0.55; cursor:not-allowed; }
+.onesa-voice-control button:focus-visible, .onesa-voice-control select:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+.onesa-voice-control label { display:inline-flex; align-items:center; gap:0.25rem; }
+.onesa-voice-notice { opacity:0.78; max-width:28rem; }
