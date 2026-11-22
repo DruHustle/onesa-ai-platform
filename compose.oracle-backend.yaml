@@ -83,7 +83,11 @@
         "127.0.0.1:18000:8000"
       ],
       "networks": [
-        "production"
+        "production",
+        "ai_database"
+      ],
+      "volumes": [
+        "/etc/onesa/production-databases/ai/server.crt:/run/onesa/ai-db-ca.crt:ro"
       ],
       "mem_limit": "512m",
       "cpus": 0.6,
@@ -118,6 +122,10 @@
   },
   "networks": {
     "staging": null,
-    "production": null
+    "production": null,
+    "ai_database": {
+      "external": true,
+      "name": "onesa-ai-database-production"
+    }
   }
 }
