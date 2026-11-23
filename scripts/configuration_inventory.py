@@ -11,7 +11,7 @@ REPOSITORY = "https://github.com/DruHustle/onesa-ai-platform"
 SAFE_HOSTS = (".onesa.eu", ".onrender.com", ".vercel.app")
 ENUMS = {
     "ONESA_ENVIRONMENT": {"development", "test", "staging", "production"},
-    "ONESA_MODEL_BACKEND": {"mock", "ollama", "vllm", "cloudflare"},
+    "ONESA_MODEL_BACKEND": {"mock", "ollama", "vllm", "llamacpp", "cloudflare"},
     "ONESA_EMBEDDING_BACKEND": {"lexical", "http", "cloudflare"},
     "ONESA_MAIL_PROVIDER": {"disabled", "resend"},
     "ONESA_REGISTRATION_MODE": {"open", "invitation"},
