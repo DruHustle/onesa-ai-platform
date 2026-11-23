@@ -10310,6 +10310,7 @@
               "mock",
               "ollama",
               "vllm",
+              "llamacpp",
               "cloudflare"
             ],
             "title": "Backend"
@@ -10515,6 +10516,7 @@
               "mock",
               "ollama",
               "vllm",
+              "llamacpp",
               "cloudflare"
             ],
             "title": "Backend"

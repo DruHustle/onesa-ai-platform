@@ -1,0 +1,17 @@
+{
+  "runner": {
+    "source": "https://github.com/ggml-org/llama.cpp/releases/tag/b12244",
+    "version": "b12244",
+    "target": "linux-arm64-cpu"
+  },
+  "model": {
+    "identifier": "qwen3:4b-instruct-2507-q4_K_M",
+    "source": "https://ollama.com/library/qwen3:4b-instruct-2507-q4_K_M",
+    "revision": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+    "model_layer_sha256": "85e4a5b7b8ef0e48af0e8658f5aaab9c2324c76c1641493f4d1e25fce54b18b9",
+    "upstream": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/tree/cdbee75f17c01a7cc42f958dc650907174af0554",
+    "license": "Apache-2.0",
+    "quantization": "Q4_K_M",
+    "context_tokens": 8192
+  }
+}
