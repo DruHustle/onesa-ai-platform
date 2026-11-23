@@ -1,4 +1,4 @@
-import { test, expect, type Route } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 
 const method = { enabled: true, account_url: "https://account.example.test/account" };
 const user = { id: "shared-user", email: "shared@example.com", display_name: "Shared user", identity_mode: "onesa", global_admin: false, administrator: false };
@@ -139,18 +139,53 @@ test("completion page verifies the session before confirming sign-in", async ({ 
   await expect(page.getByText("Your Onesa sign-in is confirmed.", { exact: false })).toHaveCount(0);
 });
 
-test("partial global logout clears the local private workspace and shows the limitation", async ({ page }) => {
+async function stubChatWorkspace(page: Page) {
   await page.route("**/api/v1/auth/me", route => json(route, user));
   await page.route("**/api/v1/models", route => json(route, { items: [] }));
   for (const path of ["conversations", "knowledge/documents"])
     await page.route(`**/api/v1/${path}{,?*}`, route => json(route, { items: [], total: 0, limit: 20, offset: 0 }));
   await page.route("**/api/v1/documentation/access", route => json(route, { engineering: false }));
+}
+
+test("partial global logout clears the local private workspace and shows the limitation", async ({ page }) => {
+  await stubChatWorkspace(page);
   await page.route("**/api/v1/auth/logout", route => json(route, { error: { code: "identity_logout_incomplete", message: "Signed out here. Central sign-out is unavailable" } }, 503));
   await page.goto("/");
   await page.getByLabel("Message Onesa AI").fill("Private draft to clear");
   await page.getByRole("button", { name: "Sign out of Onesa", exact: true }).click();
   await expect(page.getByRole("button", { name: "Continue with Onesa", exact: true })).toBeVisible();
   await expect(page.getByRole("alert").filter({ hasText: "Signed out here" })).toBeVisible();
+  await expect(page.getByLabel("Message Onesa AI")).toHaveCount(0);
+});
+
+test("browser sign-out hands off to the exact Onesa issuer and product return address", async ({ page, baseURL }) => {
+  const product = new URL("/", baseURL).href;
+  const provider = new URL("https://auth.onesa.eu/oidc/logout");
+  provider.search = new URLSearchParams({ client_id: "synthetic-ai", post_logout_redirect_uri: product }).toString();
+  await stubChatWorkspace(page);
+  await page.route("**/api/v1/auth/logout", route => {
+    expect(route.request().postDataJSON()).toEqual({ browser: true });
+    return json(route, { browser_logout_url: provider.href });
+  });
+  await page.route("https://auth.onesa.eu/oidc/logout?*", route => {
+    expect(route.request().url()).toBe(provider.href);
+    return route.fulfill({ contentType: "text/html", body: "<h1>Synthetic Onesa signed out</h1>" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sign out of Onesa", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Synthetic Onesa signed out" })).toBeVisible();
+});
+
+test("a foreign browser sign-out response clears the private view without navigation", async ({ page, baseURL }) => {
+  const product = new URL("/", baseURL).href;
+  const wrongProvider = new URL("https://foreign.example.test/oidc/logout");
+  wrongProvider.search = new URLSearchParams({ client_id: "synthetic-ai", post_logout_redirect_uri: product }).toString();
+  await stubChatWorkspace(page);
+  await page.route("**/api/v1/auth/logout", route => json(route, { browser_logout_url: wrongProvider.href }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sign out of Onesa", exact: true }).click();
+  await expect(page).toHaveURL(product);
+  await expect(page.getByRole("alert").filter({ hasText: "Onesa sign-out could not be opened." })).toBeVisible();
   await expect(page.getByLabel("Message Onesa AI")).toHaveCount(0);
 });
 

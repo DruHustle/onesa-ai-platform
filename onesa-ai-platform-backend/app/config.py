@@ -10,13 +10,15 @@ from email_validator import EmailNotValidError, validate_email
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+ModelBackend = Literal["mock", "ollama", "vllm", "llamacpp", "cloudflare"]
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ONESA_", extra="ignore", hide_input_in_errors=True
     )
 
-    model_backend: Literal["mock", "ollama", "vllm", "cloudflare"] = "mock"
+    model_backend: ModelBackend = "mock"
     model_name: str = Field(default="Qwen/Qwen3-4B-Instruct-2507", min_length=1)
     model_max_output_tokens: int = Field(default=1024, ge=1, le=8192)
     model_context_length: int = Field(default=8192, ge=512, le=131072)
@@ -37,6 +39,8 @@ class Settings(BaseSettings):
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
     identity_mobile_enabled: bool = False
+    # Enable after registering the app root as an allowed Auth0 logout URL.
+    identity_browser_logout_enabled: bool = False
     identity_audience: str = ""
     identity_public_jwks: str = ""
     identity_mapping_issuer: str = ""
@@ -128,6 +132,14 @@ class Settings(BaseSettings):
     def production_defaults(self) -> Self:
         from uuid import UUID
 
+        if self.identity_browser_logout_enabled and (
+            not self.identity_enabled
+            or not self.identity_audience
+            or self.identity_issuer != "https://auth.onesa.eu/"
+            or not self.public_origin.startswith("https://")
+        ):
+            raise ValueError("Browser sign-out requires managed Onesa identity and an HTTPS app")
+
         if self.identity_enabled:
             from cryptography.fernet import Fernet
 
@@ -200,6 +212,18 @@ class Settings(BaseSettings):
                     "Cloudflare inference requires its account HTTPS endpoint, "
                     "token and reviewed model"
                 )
+        if self.model_backend == "llamacpp":
+            endpoint = urlsplit(self.model_base_url)
+            if (
+                endpoint.scheme not in {"http", "https"}
+                or not endpoint.hostname
+                or endpoint.username
+                or endpoint.password
+                or endpoint.path not in {"/v1", "/v1/"}
+                or endpoint.query
+                or endpoint.fragment
+            ):
+                raise ValueError("llama.cpp requires its configured OpenAI-compatible /v1 endpoint")
         if self.embedding_backend == "cloudflare":
             if (
                 not re.fullmatch(

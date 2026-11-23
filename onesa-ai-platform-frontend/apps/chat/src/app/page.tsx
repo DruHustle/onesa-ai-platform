@@ -8,6 +8,7 @@ import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "../components/onesa-sign-in";
+import { parseBrowserLogout } from "../lib/identity-method";
 
 const MessageContent = lazy(() => import("../components/message-content"));
 
@@ -22,6 +23,7 @@ import { chatEvents } from "../../../../packages/api-client/sse";
 import { call, csrf, api, ApiError } from "../lib/api";
 import Link from "next/link";
 import { LanguageSelect, useLocale } from "../lib/i18n";
+import {SpeechDictation, SpeechReader} from "../components/speech-controls";
 export default function Chat() {
   const { copy, locale } = useLocale();
   const identityMethod = useOnesaIdentity();
@@ -364,13 +366,20 @@ export default function Chat() {
     detailRequest.current += 1;
     try {
       let notice = "";
+      let redirect: URL | null = null;
       try {
-        await call("/auth/logout", "POST");
+        const response = await call("/auth/logout", "POST", { browser: true });
+        if (response.status === 200) {
+          const handoff: unknown = await response.json().catch(() => null);
+          redirect = parseBrowserLogout(handoff, window.location.origin);
+          if (!redirect) notice = "Signed out here. Onesa sign-out could not be opened.";
+        }
       } catch (reason) {
         if (!(reason instanceof ApiError && reason.code === "identity_logout_incomplete")) throw reason;
         notice = reason.message;
       }
       identityEpoch.current += 1;
+      abort.current?.abort();
       setUser(null);
       setHasWorkspace(false);
       setError(notice);
@@ -382,6 +391,7 @@ export default function Chat() {
       setMessages([]);
       setSelected(null);
       setList([]);
+      if (redirect) window.location.replace(redirect.href);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -639,6 +649,7 @@ export default function Chat() {
               <Suspense fallback={<div style={{whiteSpace: "pre-wrap"}}>{m.content.text}</div>}>
                 <MessageContent text={m.content.text}/>
               </Suspense>
+              {m.role === "assistant" && <SpeechReader text={m.content.text} language={locale === "de" ? "de-DE" : "en-US"}/>}
               {!!m.content.sources?.length && (
                 <div className="sources">
                   Sources:{" "}
@@ -722,6 +733,12 @@ export default function Chat() {
                 }
               }}
             />
+            <SpeechDictation language={locale === "de" ? "de-DE" : "en-US"}
+              disabled={busy || !knowledgeReady}
+              onTranscript={transcript => {
+                setInput(previous => [previous.trim(), transcript].filter(Boolean).join(" ").slice(0, 32000));
+                entry.current?.focus({preventScroll: true});
+              }}/>
             {busy ? (
               <button type="button" disabled={!canStop} onClick={() => void stop()}>
                 Stop

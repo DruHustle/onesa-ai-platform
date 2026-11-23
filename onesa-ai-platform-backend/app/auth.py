@@ -4,6 +4,7 @@ import hashlib
 import secrets
 from datetime import timedelta
 from typing import Annotated
+from urllib.parse import urlencode
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -28,6 +29,7 @@ from app.schemas import (
     SafeUser,
     SessionList,
     SessionOut,
+    Strict,
 )
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
@@ -289,14 +291,26 @@ def refresh(request: Request, response: Response, db: DB, auth: Auth) -> SafeUse
     return safe_user(request, auth[0])
 
 
-@router.post("/logout", status_code=204)
-def logout(request: Request, response: Response, db: DB) -> Response:
+class LogoutOptions(Strict):
+    browser: bool = False
+
+
+class BrowserLogout(Strict):
+    browser_logout_url: str
+
+
+@router.post("/logout", status_code=204, responses={200: {"model": BrowserLogout}})
+def logout(
+    request: Request, response: Response, db: DB, options: LogoutOptions | None = None
+) -> Response:
     # Local sign-out remains available when the identity provider is unavailable.
     # This narrowly scoped route still proves possession of the local session,
     # exact Origin and session-bound CSRF before revoking an active session.
     origin(request)
     response.status_code = 204
-    central_signed_out = not request.app.state.settings.identity_enabled
+    settings = request.app.state.settings
+    central_signed_out = not settings.identity_enabled
+    browser_logout_url = None
     session = db.scalar(
         select(AuthSession)
         .where(AuthSession.token_hash == digest(request.cookies.get("onesa_session", "")))
@@ -308,11 +322,30 @@ def logout(request: Request, response: Response, db: DB) -> Response:
             fail(403, "csrf_rejected", "Invalid CSRF token")
         session.revoked_at = now()
         db.commit()
-        if request.app.state.settings.identity_enabled:
+        if settings.identity_enabled:
             from app.shared_identity import sign_out
 
-            central_signed_out = sign_out(request, db, session)
-    if not central_signed_out:
+            binding = (
+                db.get(IdentitySession, session.id)
+                if options and options.browser and settings.identity_browser_logout_enabled
+                else None
+            )
+            if binding and binding.issuer == settings.identity_issuer:
+                query = urlencode(
+                    {
+                        "client_id": settings.identity_client_id,
+                        "post_logout_redirect_uri": settings.public_origin + "/",
+                    }
+                )
+                browser_logout_url = settings.identity_issuer + "oidc/logout?" + query
+            else:
+                central_signed_out = sign_out(request, db, session)
+    if browser_logout_url:
+        response = JSONResponse(
+            content=BrowserLogout(browser_logout_url=browser_logout_url).model_dump(),
+            headers={"Cache-Control": "private, no-store"},
+        )
+    elif not central_signed_out:
         response = JSONResponse(
             status_code=503,
             content={

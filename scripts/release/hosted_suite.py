@@ -297,7 +297,8 @@ def generation(client, body):
     start = frames[0][1]
     require(
         start.get("model", {}).get("real_inference") is True
-        and start["model"].get("backend") in {"cloudflare", "ollama", "vllm"},
+        and start["model"].get("backend")
+        in {"cloudflare", "ollama", "vllm", "llamacpp"},
         "Hosted inference metadata is not real",
     )
     chunks = [value.get("text") for name, value in frames if name == "content_delta"]

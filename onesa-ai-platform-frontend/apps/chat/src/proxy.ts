@@ -18,7 +18,18 @@ export function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set("x-nonce", nonce);
   headers.set("content-security-policy", policy);
-  const response = NextResponse.next({request:{headers}});
+  const path = request.nextUrl.pathname;
+  const publicHost = request.nextUrl.hostname === "platform.onesa.eu" ||
+    process.env.ONESA_PUBLIC_ORIGIN === "https://platform.onesa.eu";
+  const showOverview = path === "/" && publicHost && !request.nextUrl.search &&
+    !request.cookies.get("onesa_session")?.value;
+  headers.delete("x-onesa-product-overview");
+  if (showOverview || path === "/explore") {
+    headers.set("x-onesa-product-overview", "1");
+  }
+  const response = showOverview
+    ? NextResponse.rewrite(new URL("/explore", request.url), { request: { headers } })
+    : NextResponse.next({ request: { headers } });
   response.headers.set("Content-Security-Policy", policy);
   response.headers.set("Cache-Control", "private, no-store");
   // Enable only after approved domain/TLS verification; no inherited subdomain policy.
