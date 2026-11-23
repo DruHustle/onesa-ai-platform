@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import Field, JsonValue
 
+from app.config import ModelBackend
 from app.schemas import Strict
 
 
@@ -99,7 +100,7 @@ class UnavailableTravelProvider(Strict):
 
 class PlannedItinerary(Itinerary):
     providers: list[UnavailableTravelProvider]
-    backend: Literal["mock", "ollama", "vllm", "cloudflare"]
+    backend: ModelBackend
 
 
 class TripOut(Strict):
@@ -125,7 +126,7 @@ class TripList(Strict):
 class ModelOut(Strict):
     id: Literal["default"]
     name: str
-    backend: Literal["mock", "ollama", "vllm", "cloudflare"]
+    backend: ModelBackend
     model_identifier: str
     context_tokens: int
     modalities: list[Literal["text", "vision", "speech"]]

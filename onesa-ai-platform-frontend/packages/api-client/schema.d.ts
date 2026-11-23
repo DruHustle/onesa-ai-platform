@@ -3055,7 +3055,7 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "mock" | "ollama" | "vllm" | "cloudflare";
+            backend: "mock" | "ollama" | "vllm" | "llamacpp" | "cloudflare";
             /** Model Identifier */
             model_identifier: string;
             /** Context Tokens */
@@ -3116,7 +3116,7 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "mock" | "ollama" | "vllm" | "cloudflare";
+            backend: "mock" | "ollama" | "vllm" | "llamacpp" | "cloudflare";
         };
         /** PolicyCreate */
         PolicyCreate: {
