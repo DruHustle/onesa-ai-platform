@@ -146,9 +146,46 @@
         ],
         "summary": "Logout",
         "operationId": "logout_api_v1_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LogoutOptions"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Options"
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserLogout"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -8095,6 +8132,20 @@
         ],
         "title": "Body_upload_file_api_v1_twins_files_post"
       },
+      "BrowserLogout": {
+        "properties": {
+          "browser_logout_url": {
+            "type": "string",
+            "title": "Browser Logout Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "browser_logout_url"
+        ],
+        "title": "BrowserLogout"
+      },
       "CancelGeneration": {
         "properties": {
           "run_id": {
@@ -10039,6 +10090,18 @@
           "email"
         ],
         "title": "Link"
+      },
+      "LogoutOptions": {
+        "properties": {
+          "browser": {
+            "type": "boolean",
+            "title": "Browser",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LogoutOptions"
       },
       "Mapping": {
         "properties": {
