@@ -22,3 +22,21 @@ export function parseIdentityMethod(value: unknown, allowLocal: boolean): OnesaM
   }
   return { enabled: method.enabled, account_url: method.enabled ? method.account_url as string : null };
 }
+
+export function parseBrowserLogout(value: unknown, productOrigin: string): URL | null {
+  if (!value || typeof value !== "object" || !("browser_logout_url" in value) ||
+      typeof value.browser_logout_url !== "string") return null;
+  try {
+    const target = new URL(value.browser_logout_url);
+    const params = target.searchParams;
+    if (
+      target.origin + target.pathname !== "https://auth.onesa.eu/oidc/logout" ||
+      target.username || target.password || target.hash ||
+      Array.from(params).length !== 2 || !params.get("client_id") ||
+      params.get("post_logout_redirect_uri") !== productOrigin + "/"
+    ) return null;
+    return target;
+  } catch {
+    return null;
+  }
+}

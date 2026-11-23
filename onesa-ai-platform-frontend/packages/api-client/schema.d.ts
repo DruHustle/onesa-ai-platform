@@ -2080,6 +2080,11 @@ export interface components {
             /** File */
             file: string;
         };
+        /** BrowserLogout */
+        BrowserLogout: {
+            /** Browser Logout Url */
+            browser_logout_url: string;
+        };
         /** CancelGeneration */
         CancelGeneration: {
             /**
@@ -2919,6 +2924,14 @@ export interface components {
             current_password: string;
             /** Email */
             email: string;
+        };
+        /** LogoutOptions */
+        LogoutOptions: {
+            /**
+             * Browser
+             * @default false
+             */
+            browser: boolean;
         };
         /** Mapping */
         Mapping: {
@@ -3920,14 +3933,36 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LogoutOptions"] | null;
+            };
+        };
         responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserLogout"];
+                };
+            };
             /** @description Successful Response */
             204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
