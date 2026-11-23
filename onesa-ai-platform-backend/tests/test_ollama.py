@@ -11,6 +11,7 @@ from app.inference import (
     MockModelClient,
     ModelMessage,
     OllamaModelClient,
+    OpenAIModelClient,
     VLLMModelClient,
     build_model_client,
     model_metadata,
@@ -23,7 +24,30 @@ def explicit_transport_endpoint(monkeypatch):
     monkeypatch.setenv("ONESA_MODEL_BASE_URL", "https://model.example.invalid/v1")
 
 
-@pytest.mark.parametrize("backend", ["ollama", "vllm"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "",
+        "https://model.example.invalid/chat",
+        "https://model.example.invalid/v1?forward=another",
+        "https://model.example.invalid/v1#fragment",
+        "https://user:password@model.example.invalid/v1",
+    ],
+)
+def test_llamacpp_requires_an_exact_openai_endpoint(url: str) -> None:
+    with pytest.raises(ValueError, match="llama.cpp requires"):
+        Settings(model_backend="llamacpp", model_base_url=url)
+
+
+def test_llamacpp_metadata_identifies_the_real_backend() -> None:
+    settings = Settings(model_backend="llamacpp", model_name="qwen-synthetic")
+    metadata = model_metadata(settings)
+    assert metadata["backend"] == "llamacpp"
+    assert metadata["model_identifier"] == "qwen-synthetic"
+    assert metadata["real_inference"] is True
+
+
+@pytest.mark.parametrize("backend", ["ollama", "vllm", "llamacpp"])
 def test_shared_mapping_context_and_request_owned_usage(backend: str) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/models"):
@@ -40,16 +64,16 @@ def test_shared_mapping_context_and_request_owned_usage(backend: str) -> None:
             "data: [DONE]\n\n",
         )
 
-    client_type = OllamaModelClient if backend == "ollama" else VLLMModelClient
-    client = client_type(
+    client = build_model_client(
         Settings(
             model_backend=backend,
             model_name="test-model",
             model_max_output_tokens=32,
             model_temperature=0,
         ),
-        httpx.MockTransport(handler),
     )
+    assert isinstance(client, OpenAIModelClient)
+    client.transport = httpx.MockTransport(handler)
 
     async def collect():
         assert await client.healthy()

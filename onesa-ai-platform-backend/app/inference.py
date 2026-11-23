@@ -372,6 +372,8 @@ def build_model_client(settings: Settings) -> ModelClient:
         return CloudflareModelClient(settings)
     if settings.model_backend == "ollama":
         return OllamaModelClient(settings)
+    if settings.model_backend == "llamacpp":
+        return OpenAIModelClient(settings)
     return VLLMModelClient(settings)
 
 
