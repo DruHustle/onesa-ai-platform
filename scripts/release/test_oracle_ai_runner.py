@@ -609,3 +609,67 @@ class ComponentCheckScopeTests(unittest.TestCase):
         )
         self.assertTrue({"twins_disabled", "ordinary_workflows"} <= foundation)
         self.assertNotIn("twins_model_delivery", foundation)
+
+
+class ProductionDatabaseAttachmentTests(unittest.TestCase):
+    """Redeploys must keep the private VM PostgreSQL network and pinned CA."""
+
+    def tracked(self):
+        source = Path(__file__).resolve().parents[2] / "compose.oracle-backend.yaml"
+        return json.loads(source.read_text())
+
+    def test_tracked_recipe_keeps_private_database_attachment(self):
+        r.production_database_recipe(json.dumps(self.tracked()))
+
+    def test_recipe_without_exact_database_attachment_is_refused(self):
+        ca = ":".join(r.PRODUCTION_DATABASE_CA) + ":ro"
+        for change in [
+            lambda c: c["services"]["production"].update(networks=["production"]),
+            lambda c: c["services"]["production"].pop("volumes"),
+            lambda c: c["services"]["production"].update(volumes=[ca[: -len(":ro")]]),
+            lambda c: c["networks"]["ai_database"].update(name="another-network"),
+            lambda c: c["networks"]["ai_database"].pop("external"),
+            lambda c: c["services"]["production"]["networks"].append("staging"),
+            lambda c: c["networks"].pop("ai_database"),
+        ]:
+            config = self.tracked()
+            change(config)
+            with (
+                self.subTest(change=change),
+                self.assertRaisesRegex(
+                    r.Refused, "PRODUCTION_DATABASE_ATTACHMENT_REQUIRED"
+                ),
+            ):
+                r.production_database_recipe(json.dumps(config))
+        with self.assertRaises(r.Refused):
+            r.production_database_recipe("not json")
+
+    def test_production_migration_joins_only_the_private_database_network(self):
+        runtime = {"ONESA_DATABASE_URL": "postgresql://synthetic@example.test/onesa"}
+        plan = {"migration_revision": "synthetic"}
+        response = {
+            "migration_revision": "synthetic",
+            "runtime_DDL_granted": False,
+            "runtime_new_tables_DML_granted": 9,
+        }
+        for env, expected in [
+            (
+                "production",
+                [
+                    "--network",
+                    r.PRODUCTION_DATABASE_NETWORK,
+                    "--volume",
+                    ":".join(r.PRODUCTION_DATABASE_CA) + ":ro",
+                ],
+            ),
+            ("staging", ["--network", "host"]),
+        ]:
+            with (
+                patch.object(r, "runtime_values", return_value=runtime),
+                patch.object(r, "docker", return_value=r.canonical(response)) as docker,
+            ):
+                r.migrate({"artifact_digest": "sha256:" + "a" * 64}, env, "op", plan)
+            args = list(docker.call_args.args)
+            with self.subTest(env=env):
+                self.assertEqual(args[3 : 3 + len(expected)], expected)
+                self.assertEqual(args.count("--network"), 1)
