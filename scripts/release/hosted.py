@@ -90,7 +90,7 @@ def platform_workflow_evidence(suite, ui, sha, origin, run_id):
         if not (
             isinstance(model, dict)
             and model.get("real_inference") is True
-            and model.get("backend") in {"cloudflare", "ollama", "vllm"}
+            and model.get("backend") in {"cloudflare", "ollama", "vllm", "llamacpp"}
         ):
             result["real_context_and_history"] = "FAIL"
             model = {}
@@ -315,7 +315,7 @@ def require_stage_acceptance(record):
 def require_full_serving_profile(settings):
     require(
         settings.get("ONESA_ENVIRONMENT") == "staging"
-        and settings.get("ONESA_MODEL_BACKEND") in {"ollama", "vllm", "cloudflare"}
+        and settings.get("ONESA_MODEL_BACKEND") in {"ollama", "vllm", "llamacpp", "cloudflare"}
         and settings.get("ONESA_EMBEDDING_BACKEND") in {"http", "cloudflare"},
         "Full release probes require actual configured inference and semantic embeddings",
     )
