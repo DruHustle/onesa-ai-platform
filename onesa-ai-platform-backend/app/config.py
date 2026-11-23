@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
     identity_mobile_enabled: bool = False
+    # Enable after registering the app root as an allowed Auth0 logout URL.
+    identity_browser_logout_enabled: bool = False
     identity_audience: str = ""
     identity_public_jwks: str = ""
     identity_mapping_issuer: str = ""
@@ -129,6 +131,14 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def production_defaults(self) -> Self:
         from uuid import UUID
+
+        if self.identity_browser_logout_enabled and (
+            not self.identity_enabled
+            or not self.identity_audience
+            or self.identity_issuer != "https://auth.onesa.eu/"
+            or not self.public_origin.startswith("https://")
+        ):
+            raise ValueError("Browser sign-out requires managed Onesa identity and an HTTPS app")
 
         if self.identity_enabled:
             from cryptography.fernet import Fernet
