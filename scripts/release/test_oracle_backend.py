@@ -17,6 +17,10 @@ class OracleBackendConfigTests(unittest.TestCase):
     def setUpClass(cls):
         cls.config = json.loads((ROOT / "compose.oracle-backend.yaml").read_text())
         cls.product, cls.stage_port, cls.prod_port, cls.target_port = POLICY[ROOT.name]
+        cls.database_ca = (
+            f"/etc/onesa/production-databases/{cls.product}/server.crt"
+            f":/run/onesa/{cls.product}-db-ca.crt:ro"
+        )
 
     def test_explicit_profiles_required_image_pins_and_source_labels(self):
         self.assertEqual(set(self.config["services"]), {"staging", "production"})
@@ -43,14 +47,33 @@ class OracleBackendConfigTests(unittest.TestCase):
         ):
             service = self.config["services"][name]
             self.assertEqual(service["ports"], [f"127.0.0.1:{port}:{self.target_port}"])
-            self.assertEqual(service["networks"], [name])
+            database = [self.product + "_database"] if name == "production" else []
+            self.assertEqual(service["networks"], [name, *database])
             self.assertEqual(
                 service["env_file"][0]["path"],
                 f"/etc/onesa/backends/{self.product}-{name}.env",
             )
             self.assertEqual(service["env_file"][0]["format"], "raw")
             for volume in service.get("volumes", []):
+                if name == "production" and volume == self.database_ca:
+                    continue
                 self.assertEqual(volume, f"{name}_storage:/app/storage")
+
+    def test_production_reaches_private_vm_database_through_internal_network(self):
+        # A redeploy renders only this recipe, so it must carry the private
+        # PostgreSQL attachment; a hand-applied override would be lost.
+        production = self.config["services"]["production"]
+        self.assertIn(self.product + "_database", production["networks"])
+        self.assertIn(self.database_ca, production["volumes"])
+        self.assertEqual(
+            self.config["networks"][self.product + "_database"],
+            {"external": True, "name": f"onesa-{self.product}-database-production"},
+        )
+        staging = self.config["services"]["staging"]
+        self.assertNotIn(self.product + "_database", staging["networks"])
+        self.assertFalse(
+            any("production-databases" in v for v in staging.get("volumes", []))
+        )
 
     def test_staging_liveness_preserves_production_dependency_monitoring(self):
         stage = self.config["services"]["staging"]["healthcheck"]

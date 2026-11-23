@@ -980,8 +980,14 @@ class GenerationTransitionTests(unittest.TestCase):
     ):
         """Configuration integration; image/probe and owner custody stay separate."""
         root = Path(self.temp.name)
-        for name in ("source.tar", "image.tar.gz", "compose.yaml"):
+        for name in ("source.tar", "image.tar.gz"):
             (root / name).write_bytes(b"synthetic " + name.encode())
+        # The installed recipe is the tracked production Compose file.
+        (root / "compose.yaml").write_bytes(
+            (
+                Path(__file__).resolve().parents[2] / "compose.oracle-backend.yaml"
+            ).read_bytes()
+        )
         self.binding.update(
             component="cybersecurity-api",
             target_environment="production",
