@@ -518,6 +518,16 @@ export default function Chat() {
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
+          {user.administrator && identityMethod?.account_url && (
+            <>
+              <a href={identityMethod.account_url + "?tab=access"}>
+                {locale === "de" ? "Anwendungen verwalten" : "Manage applications"}
+              </a>
+              <a href={new URL("/admin?product=ai", identityMethod.account_url).toString()}>
+                {locale === "de" ? "Onesa-Administratoren verwalten" : "Manage Onesa administrators"}
+              </a>
+            </>
+          )}
           <DocumentationNav />
         </nav>
         <ApplicationsNav />

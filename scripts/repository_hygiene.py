@@ -23,14 +23,8 @@ PATTERNS = {
 }
 RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
 
-# One exact historical fixture was a fake test credential, not provider authority.
-# Keep the exception scoped to both its test path and exact synthetic value.
 SAFE_CREDENTIAL_FIXTURES = {
     # Exact, reviewed synthetic values used only by isolated protocol/UI tests.
-    (
-        "onesa-ai-platform-backend/tests/test_embedding_service.py",
-        b"synthetic-embedding-key",
-    ),
     (
         "onesa-ai-platform-backend/tests/test_onesa_identity.py",
         b"synthetic-test-access-token-",
@@ -123,6 +117,15 @@ def denied(name):
     )
 
 
+def matched_line(data, match):
+    """Return the complete assignment line, never just a pattern prefix."""
+    start = data.rfind(b"\n", 0, match.start()) + 1
+    end = data.find(b"\n", match.end())
+    if end == -1:
+        end = len(data)
+    return data[start:end].strip()
+
+
 def secrets(data, name):
     # Decode PDF text when pypdf is available; otherwise raw-byte scanning only.
     if name.lower().endswith(".pdf"):
@@ -140,6 +143,10 @@ def secrets(data, name):
     for rule, pattern in RULES.items():
         matches = list(pattern.finditer(data))
         if rule == "credential-assignment":
+            # The reviewed embedding fixture must match the complete assignment.
+            if name == "onesa-ai-platform-backend/tests/test_embedding_service.py":
+                fixture = b'embedding_api_key="synthetic-embedding-key",'
+                matches = [m for m in matches if matched_line(data, m) != fixture]
             # Only explicit replacement instructions are placeholders. Substring
             # matches can hide real credentials containing ordinary words.
             matches = [
