@@ -315,7 +315,8 @@ def require_stage_acceptance(record):
 def require_full_serving_profile(settings):
     require(
         settings.get("ONESA_ENVIRONMENT") == "staging"
-        and settings.get("ONESA_MODEL_BACKEND") in {"ollama", "vllm", "llamacpp", "cloudflare"}
+        and settings.get("ONESA_MODEL_BACKEND")
+        in {"ollama", "vllm", "llamacpp", "cloudflare"}
         and settings.get("ONESA_EMBEDDING_BACKEND") in {"http", "cloudflare"},
         "Full release probes require actual configured inference and semantic embeddings",
     )

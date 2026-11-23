@@ -7,14 +7,17 @@ import httpx
 from app.config import Settings
 
 config = Settings()
-if config.model_backend != "vllm":
+if config.model_backend not in {"vllm", "llamacpp"}:
     raise SystemExit(
-        "Set ONESA_MODEL_BACKEND=vllm and an already-running private model URL"
+        "Select vllm or llamacpp with the private URL of an already-running model"
     )
 with httpx.Client(
     base_url=config.model_base_url.rstrip("/") + "/",
     timeout=120,
-    headers={"Authorization": "Bearer " + config.model_api_key},
+    headers={"Authorization": "Bearer " + config.model_api_key}
+    if config.model_api_key
+    else {},
+    trust_env=False,
 ) as client:
     discovery = client.get("models")
     discovery.raise_for_status()
@@ -37,6 +40,7 @@ with httpx.Client(
     print(
         json.dumps(
             {
+                "backend": config.model_backend,
                 "model": config.model_name,
                 "latency_seconds": elapsed,
                 "output_tokens": tokens,
