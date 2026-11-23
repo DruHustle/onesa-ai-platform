@@ -40,6 +40,14 @@ ENV = {
     e: Path("/etc/onesa/backends/ai-" + e + ".env") for e in ["staging", "production"]
 }
 TARGET = {e: "onesa-ai-oracle-api-" + e + "-1" for e in ENV}
+# Production reaches the private PostgreSQL container on the VM only through its
+# internal network and verifies its server certificate with this read-only CA.
+# Both belong to the tracked production recipe, so a redeploy cannot drop them.
+PRODUCTION_DATABASE_NETWORK = "onesa-ai-database-production"
+PRODUCTION_DATABASE_CA = (
+    "/etc/onesa/production-databases/ai/server.crt",
+    "/run/onesa/ai-db-ca.crt",
+)
 IDENTITY_CREDENTIALS = Path("/run/onesa-release/ai-identity.json")
 IDENTITY_KEYS = frozenset(
     {
@@ -1163,6 +1171,34 @@ def image_security(scan, identity):
     )
 
 
+def production_database_recipe(raw):
+    """Refuse an installed recipe that would detach production from its database."""
+    try:
+        config = json.loads(raw)
+        service = config["services"]["production"]
+        networks = service["networks"]
+        attached = {
+            name: config["networks"][name]
+            for name in (networks if isinstance(networks, list) else list(networks))
+        }
+        volumes = service.get("volumes", [])
+    except (KeyError, TypeError, ValueError):
+        attached, volumes = {}, []
+    database = [
+        value
+        for value in attached.values()
+        if isinstance(value, dict)
+        and value.get("name") == PRODUCTION_DATABASE_NETWORK
+        and value.get("external") is True
+    ]
+    require(
+        len(attached) == 2
+        and len(database) == 1
+        and ":".join(PRODUCTION_DATABASE_CA) + ":ro" in volumes,
+        "PRODUCTION_DATABASE_ATTACHMENT_REQUIRED",
+    )
+
+
 def validate_plan(binding):
     require(
         binding.get("repository")
@@ -1189,6 +1225,7 @@ def validate_plan(binding):
     require(
         sha(private(COMPOSE)) == plan["compose_sha256"], "COMPOSE_CONFIGURATION_CHANGED"
     )
+    production_database_recipe(private(COMPOSE).read_text())
     require(
         plan.get("mode") in profiles.MODES,
         "EXPLICIT_API_RELEASE_MODE",
@@ -2620,12 +2657,23 @@ def migrate(binding, env, operation, plan):
         "runtime": current["ONESA_DATABASE_URL"],
         "target_revision": plan["migration_revision"],
     }
+    # Production PostgreSQL publishes no host port; the migration joins only its
+    # internal network with the same pinned CA. Staging keeps its hosted database.
+    network = (
+        [
+            "--network",
+            PRODUCTION_DATABASE_NETWORK,
+            "--volume",
+            ":".join(PRODUCTION_DATABASE_CA) + ":ro",
+        ]
+        if env == "production"
+        else ["--network", "host"]
+    )
     raw = docker(
         "run",
         "--rm",
         "-i",
-        "--network",
-        "host",
+        *network,
         "--read-only",
         "--tmpfs",
         "/tmp",
