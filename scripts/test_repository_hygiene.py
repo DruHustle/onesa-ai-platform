@@ -1,3 +1,5 @@
+"""Regression checks for the publication scanner’s exact fixture rules."""
+
 import unittest
 
 from repository_hygiene import secrets
@@ -5,14 +7,20 @@ from repository_hygiene import secrets
 
 class RepositoryHygieneTests(unittest.TestCase):
     def test_exact_historical_synthetic_fixture_is_path_scoped(self):
-        fixture = b'embedding_api_key="synthetic-embedding-key"'
-        self.assertNotIn(
-            "credential-assignment",
-            secrets(
-                fixture, "onesa-ai-platform-backend/tests/test_embedding_service.py"
-            ),
-        )
+        path = "onesa-ai-platform-backend/tests/test_embedding_service.py"
+        fixture = b'        embedding_api_key="synthetic-embedding-key",\n'
+        self.assertNotIn("credential-assignment", secrets(fixture, path))
         self.assertIn("credential-assignment", secrets(fixture, "app/config.py"))
+
+    def test_a_changed_embedding_fixture_is_checked_as_a_credential(self):
+        path = "onesa-ai-platform-backend/tests/test_embedding_service.py"
+        for value in (
+            b"synthetic-embedding-key-not-approved",
+            b"synthetic-embedding-key:unexpected-tail",
+        ):
+            with self.subTest(length=len(value)):
+                assignment = b'embedding_api_key="' + value + b'",\n'
+                self.assertIn("credential-assignment", secrets(assignment, path))
 
     def test_other_long_credentials_remain_detected_in_test_paths(self):
         credentials = [

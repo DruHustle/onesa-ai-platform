@@ -11,7 +11,7 @@
     "verify": "node ../../../scripts/docs/verify.mjs",
     "build:public": "ONESA_DOCS_SCOPE=public docusaurus build --out-dir build-public",
     "build:internal": "ONESA_DOCS_SCOPE=internal docusaurus build --out-dir build-internal && node ../../../scripts/docs/secure_internal_output.mjs",
-    "test:security": "node --test ../../../scripts/docs/security.test.cjs src/lib/application-origin.test.mjs ../../../scripts/docs/search.test.mjs ../../../scripts/docs/preview-access.test.mjs ../../../scripts/docs/native-owner.test.mjs ../../../scripts/docs/secure_internal_output.test.mjs",
+    "test:security": "node --test ../../../scripts/docs/security.test.cjs src/lib/application-origin.test.mjs ../../../scripts/docs/search.test.mjs ../../../scripts/docs/preview-access.test.mjs ../../../scripts/docs/native-owner.test.mjs ../../../scripts/docs/secure_internal_output.test.mjs src/lib/picomatch-redos.test.mjs",
     "test:search": "node --test ../../../scripts/docs/search.test.mjs"
   },
   "dependencies": {
@@ -53,8 +53,13 @@
     "braces": "$braces",
     "sprintf-js": "$sprintf-js",
     "deepmerge": "$deepmerge",
-    "serve-handler@6.1.7": {"minimatch": "$minimatch"},
-    "@swagger-api/apidom-reference": {"minimatch": "11.0.1"}
+    "serve-handler@6.1.7": {
+      "minimatch": "$minimatch"
+    },
+    "@swagger-api/apidom-reference": {
+      "minimatch": "11.0.1"
+    },
+    "picomatch": "file:vendor/onesa-picomatch-redos-2.3.3-onesa.1"
   },
   "engines": {
     "node": ">=24 <25"

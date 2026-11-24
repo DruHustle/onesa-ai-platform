@@ -42,13 +42,20 @@ export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) 
   </div> : <p role="status">{de ? "Anmeldung wird vorbereitet…" : "Preparing sign-in…"}</p>;
 }
 
-export async function beginOnesaSignIn(next: string, reauthenticate = false) {
+export const registrationPageKey = "onesa.ai.registration-page";
+
+export async function beginOnesaSignIn(next: string, { reauthenticate = false, fromRegistration = false } = {}) {
   const response = await call("/auth/onesa/start", "POST", { next, reauthenticate }, AbortSignal.timeout(10000));
   const value = await response.json();
   const url = new URL(value.authorize_url);
   if (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
     throw new Error("Onesa sign-in is unavailable. Please try again.");
-  window.location.assign(url.href);
+  if (fromRegistration) {
+    try { sessionStorage.removeItem(registrationPageKey); } catch { /* Session storage is optional. */ }
+    window.location.replace(url.href);
+  } else {
+    window.location.assign(url.href);
+  }
 }
 
 export default function OnesaSignIn({ method, next = "/", preserveDraft = false, onAuthenticated }:
@@ -75,7 +82,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
       const current = new URL(window.location.href);
       current.searchParams.delete("identity");
       const requested = next === "/" ? current.pathname + current.search : next;
-      sessionStorage.setItem("onesa.ai.registration-page", requested);
+      sessionStorage.setItem(registrationPageKey, requested);
     } catch { /* Registration still returns to the AI homepage without session storage. */ }
   }
   const advertisedAccountOrigin = new URL(method.account_url || "https://account.onesa.eu").origin;

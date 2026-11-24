@@ -6,7 +6,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "node scripts/check_renderer_notice.mjs && next build --webpack",
     "start": "next start --hostname 0.0.0.0",
-    "lint": "eslint .",
+    "lint": "node --test scripts/picomatch-redos.test.mjs && eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test"
   },
@@ -14,8 +14,8 @@
     "@react-three/fiber": "9.8.2",
     "highlight.js": "11.12.0",
     "next": "16.4.5",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-markdown": "10.1.0",
     "rehype-highlight": "7.0.2",
     "remark-gfm": "4.0.1",
@@ -23,27 +23,33 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.14.0",
+    "@axe-core/playwright": "4.11.0",
     "@eslint/js": "10.0.1",
-    "@playwright/test": "1.64.1",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/three": "0.186.0",
-    "eslint": "10.13.0",
+    "eslint": "10.12.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
-    "prettier": "3.9.10",
+    "prettier": "3.9.9",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.0"
+    "typescript-eslint": "8.71.1"
   },
   "overrides": {
-    "@axe-core/playwright@4.14.0": {"playwright-core": "1.64.1"},
-    "eslint@10.13.0": {"minimatch": "11.0.1"},
-    "@eslint/config-array@0.23.5": {"minimatch": "11.0.1"},
-    "@typescript-eslint/typescript-estree@8.72.0": {"minimatch": "11.0.1"}
+    "eslint@10.12.0": {
+      "minimatch": "11.0.1"
+    },
+    "@eslint/config-array@0.23.5": {
+      "minimatch": "11.0.1"
+    },
+    "@typescript-eslint/typescript-estree@8.71.1": {
+      "minimatch": "11.0.1"
+    },
+    "picomatch": "file:vendor/onesa-picomatch-redos-4.0.8-onesa.1"
   },
   "engines": {
     "node": ">=24.12.0 <25"
