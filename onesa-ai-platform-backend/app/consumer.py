@@ -221,7 +221,7 @@ async def complete(
                 revision = metadata.get("revision")
                 backend = metadata.get("backend")
                 if backend is not None and (
-                    backend not in {"mock", "ollama", "vllm", "cloudflare"}
+                    backend not in {"mock", "ollama", "vllm", "llamacpp", "cloudflare"}
                     or (backend == "mock") == real
                 ):
                     raise CompletionError()

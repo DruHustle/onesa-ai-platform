@@ -6,6 +6,10 @@
 
 ## Unreleased
 
+- AI web and installed apps return to their own sign-in flow after shared user or administrator registration. The browser keeps the original AI page locally.
+
+- Add an opt-in Auth0 OIDC client for AI web and the AI API, preserving stable application-user bindings, scoped permissions, short token expiry and offline public-key validation.
+
 - Correct the public deployment and model-hosting drawings, engineering diagrams and onboarding guide to show the Oracle-hosted product APIs. Record the capacity reported by the Oracle guest in the engineering infrastructure drawing.
 
 - Route hosted sign-in, account creation and recovery through Company Portal.

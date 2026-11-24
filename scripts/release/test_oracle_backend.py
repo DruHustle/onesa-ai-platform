@@ -4,6 +4,8 @@ import json
 import unittest
 from pathlib import Path
 
+from evidence import PRODUCT
+
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = {
     "onesa-company-portal": ("portal", 18301, 18300, 8300),
@@ -16,7 +18,7 @@ class OracleBackendConfigTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = json.loads((ROOT / "compose.oracle-backend.yaml").read_text())
-        cls.product, cls.stage_port, cls.prod_port, cls.target_port = POLICY[ROOT.name]
+        cls.product, cls.stage_port, cls.prod_port, cls.target_port = POLICY[PRODUCT]
         cls.database_ca = (
             f"/etc/onesa/production-databases/{cls.product}/server.crt"
             f":/run/onesa/{cls.product}-db-ca.crt:ro"
@@ -80,7 +82,7 @@ class OracleBackendConfigTests(unittest.TestCase):
         expected = "/api/v1/health" if self.product == "portal" else "/health"
         self.assertIn(expected, " ".join(stage["test"]))
         self.assertNotIn("healthcheck", self.config["services"]["production"])
-        dockerfile = ROOT / (ROOT.name + "-backend") / "Dockerfile"
+        dockerfile = ROOT / (PRODUCT + "-backend") / "Dockerfile"
         probe = next(
             line
             for line in dockerfile.read_text().splitlines()

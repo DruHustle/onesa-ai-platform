@@ -22,6 +22,26 @@ PATTERNS = {
     "credential-assignment": rb"(?im)^\s*(?:export\s+)?(?:[A-Z0-9_]*(?:PASSWORD|SECRET|TOKEN|API_KEY|SESSION_KEY|PRIVATE_KEY))\s*=\s*[\"']?([A-Za-z0-9_+/=-]{20,})",
 }
 RULES = {key: re.compile(value) for key, value in PATTERNS.items()}
+
+SAFE_CREDENTIAL_FIXTURES = {
+    # Exact, reviewed synthetic values used only by isolated protocol/UI tests.
+    (
+        "onesa-ai-platform-backend/tests/test_onesa_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-backend/tests/test_shared_identity.py",
+        b"synthetic-test-access-token-",
+    ),
+    (
+        "onesa-ai-platform-frontend/apps/chat/tests/account.spec.ts",
+        b"browser-account-changed-456",
+    ),
+    (
+        "scripts/release/test_oracle_ai_identity_probe.py",
+        b"synthetic-test-ciphertext",
+    ),
+}
 DENIED_PARTS = {
     "data",
     "storage",
@@ -123,26 +143,20 @@ def secrets(data, name):
     for rule, pattern in RULES.items():
         matches = list(pattern.finditer(data))
         if rule == "credential-assignment":
-            # This literal is a public synthetic fixture in an old backend test,
-            # not a provider credential. Keep all other assignments scanned,
-            # including the same value in another file or a changed fixture.
+            # The reviewed embedding fixture must match the complete assignment.
             if name == "onesa-ai-platform-backend/tests/test_embedding_service.py":
                 fixture = b'embedding_api_key="synthetic-embedding-key",'
                 matches = [m for m in matches if matched_line(data, m) != fixture]
-            # Documented non-credential examples/test fixtures still need review.
+            # Only explicit replacement instructions are placeholders. Substring
+            # matches can hide real credentials containing ordinary words.
             matches = [
                 m
                 for m in matches
-                if not any(
-                    marker in m.group(1).lower()
-                    for marker in (
-                        b"placeholder",
-                        b"replace",
-                        b"example",
-                        b"test",
-                        b"change",
-                        b"your_",
-                    )
+                if (name, m.group(1)) not in SAFE_CREDENTIAL_FIXTURES
+                and not m.group(1)
+                .lower()
+                .startswith(
+                    (b"replace-with-", b"replace_with_", b"replace-if-", b"replace_if_")
                 )
             ]
         if matches:

@@ -20,7 +20,7 @@ export function OnesaIdentityProvider({ initialMethod, allowLocal, accountHelp, 
         if (!controller.signal.aborted) setMethod(verified);
       }).catch(reason => {
         if (controller.signal.aborted) return;
-        // Older local fixtures may omit the capability endpoint. Hosted clients require Portal.
+        // Older local fixtures may omit the capability endpoint. Hosted clients require a configured identity provider.
         setMethod({ enabled: false, account_url: null, unavailable: !(allowLocal && reason instanceof ApiError && reason.status === 404) });
       });
     return () => controller.abort();
@@ -38,17 +38,24 @@ export function IdentityEntryStatus({ method }: { method: OnesaMethod | null }) 
   return method?.unavailable ? <div>
     <p role="alert">{de ? "Die Anmeldemethode konnte nicht geladen werden. Bitte versuche es erneut." : "We could not load the sign-in method. Please try again."}</p>
     <button type="button" onClick={() => window.location.reload()}>{de ? "Erneut versuchen" : "Retry sign-in"}</button>
-    {method.account_url && <p><a href={method.account_url}>{de ? "Company Portal öffnen" : "Open Company Portal"}</a></p>}
+    {method.account_url && <p><a href={method.account_url}>{de ? "Onesa-Konto öffnen" : "Open your Onesa account"}</a></p>}
   </div> : <p role="status">{de ? "Anmeldung wird vorbereitet…" : "Preparing sign-in…"}</p>;
 }
 
-export async function beginOnesaSignIn(next: string, reauthenticate = false) {
+export const registrationPageKey = "onesa.ai.registration-page";
+
+export async function beginOnesaSignIn(next: string, { reauthenticate = false, fromRegistration = false } = {}) {
   const response = await call("/auth/onesa/start", "POST", { next, reauthenticate }, AbortSignal.timeout(10000));
   const value = await response.json();
   const url = new URL(value.authorize_url);
   if (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
     throw new Error("Onesa sign-in is unavailable. Please try again.");
-  window.location.assign(url.href);
+  if (fromRegistration) {
+    try { sessionStorage.removeItem(registrationPageKey); } catch { /* Session storage is optional. */ }
+    window.location.replace(url.href);
+  } else {
+    window.location.assign(url.href);
+  }
 }
 
 export default function OnesaSignIn({ method, next = "/", preserveDraft = false, onAuthenticated }:
@@ -70,6 +77,19 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
     return () => { active = false; if (timer.current) clearInterval(timer.current); };
   }, [de]);
 
+  function rememberPage() {
+    try {
+      const current = new URL(window.location.href);
+      current.searchParams.delete("identity");
+      const requested = next === "/" ? current.pathname + current.search : next;
+      sessionStorage.setItem(registrationPageKey, requested);
+    } catch { /* Registration still returns to the AI homepage without session storage. */ }
+  }
+  const advertisedAccountOrigin = new URL(method.account_url || "https://account.onesa.eu").origin;
+  const registrationOrigin = ["https://portal.onesa.eu", "https://auth.onesa.eu"].includes(advertisedAccountOrigin)
+    ? "https://account.onesa.eu" : advertisedAccountOrigin;
+  const registration = new URL("/register", registrationOrigin);
+  registration.search = "product=ai&platform=web";
   async function start() {
     if (pending.current || method.pending || method.unavailable) return;
     pending.current = true; setBusy(true); setError("");
@@ -124,7 +144,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
   }
 
   return <div className="onesa-shared-signin">
-    <p>{de ? "Melde dich im Company Portal an oder erstelle dort dein Onesa-Konto." : "Sign in or create your Onesa account in Company Portal."}</p>
+    <p>{de ? "Melde dich mit deinem Onesa-Konto an oder erstelle ein Konto." : "Sign in with your Onesa account or register for one."}</p>
     {linking ? <form onSubmit={link}>
       <h2>{de ? "Bisheriges AI-Konto verbinden" : "Connect your existing AI account"}</h2>
       <p>{de ? "Bestätige dein bisheriges AI-Passwort einmalig. Deine Gespräche und Dateien bleiben deinem Konto zugeordnet." : "Confirm your existing AI password once. Your conversations and files stay with your account."}</p>
@@ -136,6 +156,8 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
     </button>}
     {busy && preserveDraft && <p role="status">{de ? "Schließe die Anmeldung im neuen Fenster ab. Dein Entwurf bleibt hier erhalten." : "Finish signing in in the new window. Your draft stays here."}</p>}
     {error && <p className="error" role="alert">{error}</p>}
+    <p><a href={registration.href + "&audience=user"} onClick={rememberPage}>{de ? "Onesa-Konto erstellen" : "Create an Onesa account"}</a></p>
+    <p><a href={registration.href + "&audience=admin"} onClick={rememberPage}>{de ? "Administratorzugang beantragen" : "Request administrator access"}</a></p>
     {method.account_url && <p><a href={method.account_url}>{de ? "Konto und Zugriff" : "Account and access"}</a></p>}
   </div>;
 }

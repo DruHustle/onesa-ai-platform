@@ -7,7 +7,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.chat import CONVERSATION_INSTRUCTION
+from app.chat import CONVERSATION_INSTRUCTION, TRUNCATED_CONVERSATION_NOTICE
 from app.inference import InferenceError, MockModelClient
 from app.models import AuthSession, Conversation, InferenceRun, Message, User, now
 from tests.conftest import signup
@@ -152,6 +152,54 @@ def test_failed_chat_reports_safe_reason_and_releases_lease(api, pg, empty):
         assert db.get(Conversation, UUID(identifier)).active_run_id is None
 
 
+@pytest.mark.parametrize("reason", ["length", "content_filter", "tool_calls", "function_call"])
+@pytest.mark.parametrize("stream", [False, True])
+def test_provider_incomplete_finish_is_not_saved_and_can_retry(api, pg, reason, stream):
+    """A terminal SSE frame with incomplete finish must not commit partial history."""
+    import json
+
+    import httpx
+
+    from app.config import Settings
+    from app.inference import VLLMModelClient
+
+    signup(api)
+    identifier = new(api)
+
+    def provider(request):
+        assert request.url.path == "/v1/chat/completions"
+        frame = {"choices": [{"delta": {"content": "partial"}, "finish_reason": reason}]}
+        return httpx.Response(200, text="data: " + json.dumps(frame) + "\n\ndata: [DONE]\n\n")
+
+    settings = Settings(model_backend="vllm", model_base_url="https://provider.example.test/v1")
+    api.app.state.model_client = VLLMModelClient(settings, httpx.MockTransport(provider))
+    response = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Synthetic prompt", "stream": stream},
+    )
+    if stream:
+        assert response.status_code == 200
+        assert "event: error" in response.text
+        assert "event: message_end" not in response.text
+        assert "incomplete_response" in response.text
+    else:
+        assert response.status_code == 503
+        assert response.json()["error"]["code"] == "generation_failed"
+    with Session(pg) as db:
+        assert [m.role for m in db.scalars(select(Message).order_by(Message.sequence))] == ["user"]
+        assert db.scalar(select(InferenceRun)).status == "failed"
+        assert db.get(Conversation, UUID(identifier)).active_run_id is None
+
+    api.app.state.model_client = MockModelClient()
+    retry = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Please retry", "stream": False},
+    )
+    assert retry.status_code == 200
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert [item["role"] for item in history] == ["user", "user", "assistant"]
+
+
 def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
     from sqlalchemy import event
 
@@ -192,14 +240,65 @@ def test_long_history_bounds_database_read_and_preserves_context_order(api, pg):
         event.remove(api.app.state.engine, "before_cursor_execute", observe)
     assert [message.content for message in context] == [
         CONVERSATION_INSTRUCTION,
+        TRUNCATED_CONVERSATION_NOTICE,
         *[f"turn-{sequence}" for sequence in range(46, 76)],
         "Next",
     ]
     assert context[0].role == "system"
     assert len(bounded_queries) == 1 and "LIMIT" in bounded_queries[0][0]
-    assert 30 in bounded_queries[0][1].values()
+    assert 31 in bounded_queries[0][1].values()
+    assert "Earlier user messages remain available" not in CONVERSATION_INSTRUCTION
+    assert "cannot see it in the available history" in CONVERSATION_INSTRUCTION
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert [item["sequence"] for item in history] == list(range(1, 78))
+
+
+def test_long_saved_assistant_answer_can_be_followed_up_without_losing_history(api):
+    from app.inference import MAX_MODEL_MESSAGE_CHARS
+
+    signup(api)
+    identifier = new(api)
+    old_answer = "Initial answer: " + "x" * 40000 + " PRESERVED-TAIL"
+    with Session(api.app.state.engine) as db:
+        db.add_all(
+            [
+                Message(
+                    conversation_id=UUID(identifier),
+                    role="user",
+                    content={"text": "First"},
+                    sequence=1,
+                ),
+                Message(
+                    conversation_id=UUID(identifier),
+                    role="assistant",
+                    content={"text": old_answer},
+                    sequence=2,
+                ),
+            ]
+        )
+        db.commit()
+
+    captured = []
+
+    class Capture(MockModelClient):
+        async def stream(self, messages):
+            captured.extend(messages)
+            yield "A follow-up answer"
+
+    api.app.state.model_client = Capture()
+    response = api.post(
+        "/api/v1/chat/completions",
+        json={"conversation_id": identifier, "content": "Please continue", "stream": False},
+    )
+    assert response.status_code == 200
+    assert [message.role for message in captured] == ["system", "user", "assistant", "user"]
+    prior = captured[2].content
+    assert len(prior) == MAX_MODEL_MESSAGE_CHARS
+    assert prior.startswith("[Earlier part of this saved message omitted from model context.]")
+    assert prior.endswith(" PRESERVED-TAIL")
+    history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
+    assert history[1]["content"]["text"] == old_answer
+    assert history[-1]["content"]["text"] == "A follow-up answer"
 
 
 def test_each_turn_receives_supplied_context_without_persisting_system_instruction(api):
@@ -350,11 +449,14 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     started = threading.Event()
+    release = threading.Event()
 
     class Slow(MockModelClient):
         async def stream(self, messages):
             started.set()
-            await asyncio.sleep(0.2)
+            assert await asyncio.to_thread(release.wait, 10), (
+                "Concurrent request did not release generation"
+            )
             yield "Complete response"
 
     signup(api)
@@ -363,9 +465,12 @@ def test_concurrent_generation_is_serialized(api: TestClient) -> None:
     body = {"conversation_id": identifier, "content": "First", "stream": False}
     with ThreadPoolExecutor(max_workers=1) as pool:
         future = pool.submit(api.post, "/api/v1/chat/completions", json=body)
-        assert started.wait(timeout=2)
-        assert api.post("/api/v1/chat/completions", json=body).status_code == 409
-        assert future.result(timeout=3).status_code == 200
+        try:
+            assert started.wait(timeout=5)
+            assert api.post("/api/v1/chat/completions", json=body).status_code == 409
+        finally:
+            release.set()
+        assert future.result(timeout=5).status_code == 200
 
 
 def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, pg: Engine) -> None:
@@ -399,6 +504,7 @@ def test_network_disconnect_cancels_without_partial_assistant(api: TestClient, p
     try:
         with httpx.Client(
             base_url=f"http://127.0.0.1:{port}",
+            trust_env=False,
             cookies=dict(api.cookies),
             headers={"Origin": "http://localhost:3000", "X-CSRF-Token": api.cookies["onesa_csrf"]},
         ) as client:
@@ -472,3 +578,39 @@ def test_real_adapter_metadata_usage_and_recovery(api: TestClient, pg: Engine) -
     history = api.get(f"/api/v1/conversations/{identifier}").json()["messages"]
     assert len(history) == 5
     assert history[-1]["content"]["inference"]["model"]["model_identifier"] == "test-model"
+
+
+def test_provider_sse_parser_bounds_unterminated_lines_and_preserves_split_utf8():
+    import asyncio
+
+    import app.inference as inference
+
+    class Chunks:
+        def __init__(self, *values):
+            self.values = values
+
+        async def aiter_bytes(self):
+            for value in self.values:
+                yield value
+
+    async def collect(response):
+        return [line async for line in inference.bounded_sse_lines(response)]
+
+    assert asyncio.run(collect(Chunks(b'data: {"text":"caf', b"\xc3", b'\xa9"}\r', b"\n\r\n"))) == [
+        'data: {"text":"café"}',
+        "",
+    ]
+    assert asyncio.run(collect(Chunks(b"data: first\rdata: second\r"))) == [
+        "data: first",
+        "data: second",
+    ]
+
+    oversized = Chunks(b"x" * inference.MAX_SSE_LINE_BYTES, b"x")
+    with pytest.raises(inference.InferenceError) as failure:
+        asyncio.run(collect(oversized))
+    assert failure.value.code == "invalid_inference_response"
+
+    malformed = Chunks(b"data: \xff\n")
+    with pytest.raises(InferenceError) as failure:
+        asyncio.run(collect(malformed))
+    assert failure.value.reason == "invalid_stream_utf8"

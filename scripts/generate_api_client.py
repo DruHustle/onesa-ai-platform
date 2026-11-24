@@ -26,26 +26,22 @@ def aliases() -> str:
             if method not in {"get", "post", "patch", "delete", "put"}:
                 continue
             route = f"paths[{json.dumps(path)}][{json.dumps(method)}]"
-            body = (
-                f'{route}["requestBody"]["content"]["application/json"]'
-                if "application/json"
-                in operation.get("requestBody", {}).get("content", {})
-                else "undefined"
-            )
-            success = next(
-                (
-                    (code, value)
-                    for code, value in operation["responses"].items()
-                    if code.startswith("2")
-                ),
-                ("204", {}),
-            )
-            code, response = success
-            result = (
+            request_body = operation.get("requestBody", {})
+            body = "undefined"
+            if "application/json" in request_body.get("content", {}):
+                request_type = f'{route}["requestBody"]'
+                if request_body.get("required"):
+                    body = f'{request_type}["content"]["application/json"]'
+                else:
+                    body = f'NonNullable<{request_type}>["content"]["application/json"] | undefined'
+            success_types = dict.fromkeys(
                 f'{route}["responses"][{code}]["content"]["application/json"]'
                 if "application/json" in response.get("content", {})
                 else "void"
+                for code, response in operation["responses"].items()
+                if code.startswith("2")
             )
+            result = " | ".join(success_types) or "void"
             key = method.upper() + " " + path.removeprefix("/api/v1")
             lines.append(
                 f"  {json.dumps(key)}: {{ body: {body}; response: {result} }};"

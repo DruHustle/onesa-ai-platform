@@ -18,9 +18,18 @@ test("register, stream, reopen, rename, delete, sign in", async ({ page }) => {
   ).toBeVisible();
   await page.getByLabel("Message Onesa AI").fill("Hello from browser");
   await page.getByLabel("Send message").click();
+  // A streamed content_delta is intentionally not a durable assistant reply.
+  // The backend commits only after the provider stream completes and emits
+  // message_end. Reloading at the first visible delta aborts the run and must
+  // not be misconstrued as a persistence failure.
   await expect(
     page.getByText("[Mock response — no AI inference] Hello from browser"),
   ).toBeVisible();
+  await expect(
+    page.locator(".messages .message.assistant").getByText(
+      "[Mock response — no AI inference] Hello from browser",
+    ),
+  ).toBeVisible({ timeout: 15000 });
   await page.screenshot({
     path: "../../../data/screenshots/chat-desktop.png",
     fullPage: true,

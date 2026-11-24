@@ -17,7 +17,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PRODUCT = ROOT.name
+# The canonical repository identity does not depend on a clone/worktree directory.
+PRODUCT = "onesa-ai-platform"
 OWNER = "DruHustle"
 REPOSITORY = OWNER + "/" + PRODUCT
 GATES = (
@@ -580,7 +581,7 @@ def require_platform_workflows(stage):
         and all(checks[name] == "PASS" for name in platform_workflow_check_names())
         and isinstance(model, dict)
         and model.get("real_inference") is True
-        and model.get("backend") in {"cloudflare", "ollama", "vllm"},
+        and model.get("backend") in {"cloudflare", "ollama", "vllm", "llamacpp"},
         "Critical hosted application workflows unresolved",
     )
 

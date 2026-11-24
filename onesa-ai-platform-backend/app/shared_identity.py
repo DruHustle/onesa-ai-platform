@@ -1,9 +1,10 @@
 """Shared Onesa sign-in adapter for native AI ownership and host-only sessions."""
 
 import json
+import re
 import secrets
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 from uuid import UUID
 
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -33,6 +34,7 @@ from app.onesa_identity import (
     authorization_url,
     exchange_code,
     new_transaction,
+    pkce_challenge,
     revoke_session,
     validate_session,
 )
@@ -45,6 +47,14 @@ FLOW_COOKIE = "onesa_identity_flow"
 class Start(Strict):
     next: str = Field(default="/", max_length=1000)
     reauthenticate: bool = False
+    mobile: bool = False
+    code_challenge: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{43}$")
+
+
+class MobileExchange(Strict):
+    state: str = Field(pattern=r"^native_[A-Za-z0-9_-]{43}$")
+    code: str = Field(min_length=1, max_length=4096)
+    code_verifier: str = Field(min_length=43, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
 
 
 class Authorization(Strict):
@@ -60,10 +70,12 @@ class Link(PasswordProof):
     email: str = Field(min_length=3, max_length=254)
 
 
-def configuration(request: Request) -> IdentityConfig:
+def configuration(request: Request, *, native: bool = False) -> IdentityConfig:
     config = request.app.state.settings
     if not config.identity_enabled:
         fail(404, "identity_disabled", "Shared Onesa sign-in is not enabled")
+    if native and not config.identity_mobile_enabled:
+        fail(404, "native_identity_disabled", "Native Onesa sign-in is not configured")
     return IdentityConfig(
         config.identity_issuer,
         config.identity_client_id,
@@ -71,6 +83,10 @@ def configuration(request: Request) -> IdentityConfig:
         config.identity_callback_url,
         "ai",
         config.environment in {"development", "test"},
+        config.identity_audience,
+        config.identity_public_jwks,
+        config.identity_mapping_issuer,
+        config.identity_account_url,
     )
 
 
@@ -170,7 +186,7 @@ def _authenticate_shared(
         fail(401, "unauthorized", "Sign in to continue")
     mapping = db.scalar(
         select(SharedIdentity).where(
-            SharedIdentity.issuer == identity.issuer,
+            SharedIdentity.issuer == (configuration(request).mapping_issuer or identity.issuer),
             SharedIdentity.subject == identity.subject,
             SharedIdentity.user_id == user.id,
         )
@@ -246,7 +262,9 @@ def method(request: Request) -> Method:
             fail(503, "identity_unavailable", "Onesa sign-in is temporarily unavailable")
         return Method(enabled=False)
     config = configuration(request)
-    # The issuer is the existing Company Portal; this link is informational only.
+    if config.audience:
+        return Method(enabled=True, account_url=config.account_url)
+    # Legacy account URL remains available while migration is disabled.
     return Method(
         enabled=True, account_url=config.issuer.removesuffix("/api/v1/identity") + "/account"
     )
@@ -254,9 +272,13 @@ def method(request: Request) -> Method:
 
 @router.post("/start", response_model=Authorization)
 def start(body: Start, request: Request, response: Response, db: DB) -> Authorization:
-    config = configuration(request)
+    config = configuration(request, native=body.mobile)
     origin(request)
     throttle(request, db, "shared-sign-in")
+    if body.mobile and (body.reauthenticate or body.code_challenge is None):
+        fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+    if not body.mobile and body.code_challenge is not None:
+        fail(422, "invalid_flow", "PKCE challenge is only valid for native sign-in")
     target = safe_next(body.next)
     binding = None
     if body.reauthenticate:
@@ -271,18 +293,28 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
             "issuer": identity.issuer,
         }
     state, nonce, verifier = new_transaction()
+    if body.mobile:
+        state = "native_" + state
     browser = secrets.token_urlsafe(32)
+    browser_hash = digest(browser)
+    if body.mobile:
+        challenge = body.code_challenge
+        if challenge is None:
+            fail(422, "invalid_flow", "Native sign-in requires a fresh PKCE challenge")
+        browser_hash = digest("native:" + challenge)
     db.execute(delete(IdentityTransaction).where(IdentityTransaction.expires_at <= now()))
     db.add(
         IdentityTransaction(
             state_hash=digest(state),
-            browser_hash=digest(browser),
+            browser_hash=browser_hash,
             payload=encrypt(
                 request,
                 json.dumps(
                     {
                         "nonce": nonce,
-                        "verifier": verifier,
+                        "verifier": None if body.mobile else verifier,
+                        "code_challenge": body.code_challenge,
+                        "native": body.mobile,
                         "next": target,
                         "reauthenticate": body.reauthenticate,
                         "binding": binding,
@@ -293,25 +325,35 @@ def start(body: Start, request: Request, response: Response, db: DB) -> Authoriz
         )
     )
     db.commit()
-    response.set_cookie(
-        FLOW_COOKIE,
-        state + "." + browser,
-        httponly=True,
-        secure=request.app.state.settings.secure_cookies,
-        samesite="lax",
-        max_age=300,
-        path="/api/v1/auth/onesa",
-    )
+    if not body.mobile:
+        response.set_cookie(
+            FLOW_COOKIE,
+            state + "." + browser,
+            httponly=True,
+            secure=request.app.state.settings.secure_cookies,
+            samesite="lax",
+            max_age=300,
+            path="/api/v1/auth/onesa",
+        )
     return Authorization(
         authorize_url=authorization_url(
-            config, state, nonce, verifier, reauthenticate=body.reauthenticate
+            config,
+            state,
+            nonce,
+            None if body.mobile else verifier,
+            reauthenticate=body.reauthenticate,
+            code_challenge=body.code_challenge,
         )
     )
 
 
 def transaction(request: Request, db: Session, state: str | None = None) -> IdentityTransaction:
     pieces = request.cookies.get(FLOW_COOKIE, "").split(".")
-    if len(pieces) != 2 or any(len(piece) != 43 for piece in pieces):
+    if (
+        len(pieces) != 2
+        or not re.fullmatch(r"(?:native_)?[A-Za-z0-9_-]{43}", pieces[0])
+        or not re.fullmatch(r"[A-Za-z0-9_-]{43}", pieces[1])
+    ):
         fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     if state is not None and not secrets.compare_digest(pieces[0], state):
         fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
@@ -331,34 +373,108 @@ def transaction(request: Request, db: Session, state: str | None = None) -> Iden
 
 def issue_shared(
     request: Request, response: Response, db: Session, user: User, identity: Identity, token: str
-) -> None:
+) -> str:
     from app.auth import issue
 
     if user.status != "active":
         fail(403, "account_disabled", "This application account is disabled")
     request.state.onesa_identity = identity
     request.state.onesa_user_id = str(user.id)
-    issue(request, response, db, user, shared=(identity, token))
+    csrf = issue(request, response, db, user, shared=(identity, token))
     response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
+    return csrf
 
 
 @router.get("/callback", include_in_schema=False)
 def callback(
     request: Request, db: DB, state: str = "", code: str = "", error: str = ""
 ) -> Response:
-    configuration(request)
-    row = transaction(request, db, state)
+    native = re.fullmatch(r"native_[A-Za-z0-9_-]{43}", state) is not None
+    config = configuration(request, native=native)
+    if native:
+        pairs = request.query_params
+        row = db.get(IdentityTransaction, digest(state))
+        if (
+            not row
+            or row.consumed_at
+            or row.expires_at <= now()
+            or any(len(pairs.getlist(key)) != 1 for key in pairs)
+            or pairs.get("iss", config.issuer) != config.issuer
+            or set(pairs) - {"state", "code", "error", "error_description", "iss"}
+        ):
+            fail(400, "identity_callback_invalid", "Start sign-in again")
+        params = {"state": state}
+        if error or not code or len(code) > 4096:
+            params["error"] = "cancelled"
+        else:
+            params["code"] = code
+        return RedirectResponse("onesaai://account/callback?" + urlencode(params), status_code=303)
+    return finish_sign_in(request, db, state, code, error)
+
+
+@router.post("/mobile/exchange", include_in_schema=False)
+def mobile_exchange(body: MobileExchange, request: Request, db: DB) -> Response:
+    origin(request)
+    response = finish_sign_in(
+        request, db, body.state, body.code, "", native_verifier=body.code_verifier
+    )
+    if response.status_code != 200:
+        fail(403, "mobile_sign_in_unavailable", "Sign-in requires account support or a new attempt")
+    return response
+
+
+def finish_sign_in(
+    request: Request,
+    db: Session,
+    state: str,
+    code: str,
+    error: str,
+    *,
+    native_verifier: str | None = None,
+) -> Response:
+    row: IdentityTransaction | None
+    if native_verifier is None:
+        row = transaction(request, db, state)
+    else:
+        configuration(request, native=True)
+        row = db.scalar(
+            select(IdentityTransaction)
+            .where(IdentityTransaction.state_hash == digest(state))
+            .with_for_update()
+        )
+        if row is None or row.expires_at <= now() or row.consumed_at is not None:
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
+        native_payload = json.loads(decrypt(request, row.payload))
+        challenge = native_payload.get("code_challenge")
+        if (
+            native_payload.get("native") is not True
+            or not isinstance(challenge, str)
+            or not secrets.compare_digest(row.browser_hash, digest("native:" + challenge))
+            or not secrets.compare_digest(pkce_challenge(native_verifier), challenge)
+        ):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     if row.consumed_at is not None:
         fail(400, "identity_callback_invalid", "Sign-in has already been used. Please start again")
     payload = json.loads(decrypt(request, row.payload))
+    if payload.get("native") is not state.startswith("native_"):
+        fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
     row.consumed_at = now()
     db.commit()  # Code exchange is never retried after an ambiguous network result.
     if error or not code:
-        response = RedirectResponse("/?identity=cancelled", status_code=303)
+        response: Response = RedirectResponse("/?identity=cancelled", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
         return response
     try:
-        token = exchange_code(configuration(request), code, payload["verifier"])
+        config = configuration(request, native=payload.get("native") is True)
+        verifier = native_verifier if payload.get("native") is True else payload["verifier"]
+        if not isinstance(verifier, str):
+            fail(400, "identity_callback_invalid", "Sign-in has expired. Please start again")
+        if config.audience:
+            from app.managed_oidc import exchange
+
+            token = exchange(config, code, verifier, payload["nonce"])
+        else:
+            token = exchange_code(config, code, verifier)
     except IdentityError:
         response = RedirectResponse("/?identity=unavailable", status_code=303)
         response.delete_cookie(FLOW_COOKIE, path="/api/v1/auth/onesa")
@@ -410,7 +526,8 @@ def callback(
             )
     mapping = db.scalar(
         select(SharedIdentity).where(
-            SharedIdentity.issuer == identity.issuer, SharedIdentity.subject == identity.subject
+            SharedIdentity.issuer == (configuration(request).mapping_issuer or identity.issuer),
+            SharedIdentity.subject == identity.subject,
         )
     )
     user = (
@@ -455,7 +572,11 @@ def callback(
         try:
             db.flush()
             db.add(
-                SharedIdentity(issuer=identity.issuer, subject=identity.subject, user_id=user.id)
+                SharedIdentity(
+                    issuer=configuration(request).mapping_issuer or identity.issuer,
+                    subject=identity.subject,
+                    user_id=user.id,
+                )
             )
             db.flush()
         except IntegrityError:
@@ -466,6 +587,15 @@ def callback(
         db.add(IdentityAudit(actor_id=user.id, event="identity.created", record_id=user.id))
     if user is None:
         fail(401, "identity_rejected", "The application account is unavailable")
+    if state.startswith("native_"):
+        # The CSRF value travels in a cookie as it does on the web. Returning it
+        # here lets the native client retain the header value in its OS keychain.
+        response = Response(headers={"cache-control": "no-store"}, media_type="application/json")
+        db.delete(row)
+        csrf = issue_shared(request, response, db, user, identity, token)
+        response.body = json.dumps({"csrf": csrf}).encode()
+        response.headers["content-length"] = str(len(response.body))
+        return response
     response = RedirectResponse(safe_next(payload["next"]), status_code=303)
     db.delete(row)
     issue_shared(request, response, db, user, identity, token)
@@ -504,7 +634,13 @@ def link(body: Link, request: Request, response: Response, db: DB) -> dict[str, 
         )
     if db.scalar(select(SharedIdentity.id).where(SharedIdentity.user_id == user.id)):
         fail(409, "identity_link_conflict", "This application account is already connected")
-    db.add(SharedIdentity(issuer=identity.issuer, subject=identity.subject, user_id=user.id))
+    db.add(
+        SharedIdentity(
+            issuer=configuration(request).mapping_issuer or identity.issuer,
+            subject=identity.subject,
+            user_id=user.id,
+        )
+    )
     try:
         db.flush()
     except IntegrityError:

@@ -8,6 +8,7 @@ import DocumentationHelp from "../components/documentation-help";
 import {documentationUrls} from "../lib/documentation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import OnesaSignIn, { IdentityEntryStatus, useOnesaIdentity } from "../components/onesa-sign-in";
+import { parseBrowserLogout } from "../lib/identity-method";
 
 const MessageContent = lazy(() => import("../components/message-content"));
 
@@ -365,13 +366,20 @@ export default function Chat() {
     detailRequest.current += 1;
     try {
       let notice = "";
+      let redirect: URL | null = null;
       try {
-        await call("/auth/logout", "POST");
+        const response = await call("/auth/logout", "POST", { browser: true });
+        if (response.status === 200) {
+          const handoff: unknown = await response.json().catch(() => null);
+          redirect = parseBrowserLogout(handoff, window.location.origin);
+          if (!redirect) notice = "Signed out here. Onesa sign-out could not be opened.";
+        }
       } catch (reason) {
         if (!(reason instanceof ApiError && reason.code === "identity_logout_incomplete")) throw reason;
         notice = reason.message;
       }
       identityEpoch.current += 1;
+      abort.current?.abort();
       setUser(null);
       setHasWorkspace(false);
       setError(notice);
@@ -383,6 +391,7 @@ export default function Chat() {
       setMessages([]);
       setSelected(null);
       setList([]);
+      if (redirect) window.location.replace(redirect.href);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -509,7 +518,16 @@ export default function Chat() {
         </nav>
         <nav className="workspace-resources" aria-label="Workspace resources">
           <Link href="/settings" prefetch={false} lang="en">Account settings</Link>
-          {user.administrator && identityMethod?.account_url && <><a href={identityMethod.account_url + "?tab=access"}>{locale === "de" ? "Anwendungen verwalten" : "Manage applications"}</a><a href={new URL("/admin?product=ai", identityMethod.account_url).toString()}>{locale === "de" ? "Onesa-Administratoren verwalten" : "Manage Onesa administrators"}</a></>}
+          {user.administrator && identityMethod?.account_url && (
+            <>
+              <a href={identityMethod.account_url + "?tab=access"}>
+                {locale === "de" ? "Anwendungen verwalten" : "Manage applications"}
+              </a>
+              <a href={new URL("/admin?product=ai", identityMethod.account_url).toString()}>
+                {locale === "de" ? "Onesa-Administratoren verwalten" : "Manage Onesa administrators"}
+              </a>
+            </>
+          )}
           <DocumentationNav />
         </nav>
         <ApplicationsNav />

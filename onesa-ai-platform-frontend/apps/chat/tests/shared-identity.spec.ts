@@ -1,4 +1,4 @@
-import { test, expect, type Route } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 
 const method = { enabled: true, account_url: "https://account.example.test/account" };
 const user = { id: "shared-user", email: "shared@example.com", display_name: "Shared user", identity_mode: "onesa", global_admin: false, administrator: false };
@@ -24,6 +24,13 @@ for (const locale of ["en", "de"] as const) {
     await expect(button).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
     await expect(page.getByRole("link", { name: locale === "de" ? "Konto und Zugriff" : "Account and access" })).toHaveAttribute("href", method.account_url);
+    for (const audience of ["user", "admin"]) {
+      const entry = page.locator('a[href*="audience=' + audience + '"]');
+      const url = new URL((await entry.getAttribute("href"))!);
+      expect(url.origin + url.pathname).toBe(new URL(method.account_url).origin + "/register");
+      expect(url.searchParams.get("product")).toBe("ai");
+      expect(url.searchParams.get("platform")).toBe("web");
+    }
     await button.focus();
     await expect(button).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -72,12 +79,13 @@ test("existing data is connected only after explicit local account proof", async
   expect(proofs).toBe(1);
 });
 
-test("shared account settings offer one administration hub and explicit step-up", async ({ page }) => {
+test("product administrator sees personal account settings and explicit step-up", async ({ page }) => {
   await page.route("**/api/v1/auth/me", route => json(route, { ...user, global_admin: true, administrator: true }));
   await page.route("**/api/v1/auth/sessions", route => json(route, { items: [], total: 0, limit: 100 }));
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Your Onesa account" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Manage access across applications" })).toHaveAttribute("href", method.account_url + "?tab=access");
+  await expect(page.getByRole("link", { name: "Open account and access" })).toHaveAttribute("href", method.account_url);
+  await expect(page.getByRole("link", { name: "Manage access across applications" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Confirm Onesa sign-in in a new window" })).toHaveAttribute("target", "_blank");
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Delete AI workspace data" })).toBeVisible();
@@ -112,21 +120,17 @@ test("configuration failure offers a retry before any credential form", async ({
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
 });
 
-test("a disconnected production sign-in page still opens Company Portal", async ({ page, baseURL }) => {
+test("a disconnected production sign-in page offers retry without a Portal administrator link", async ({ page, baseURL }) => {
   const frontend = new URL(baseURL || "http://localhost:3100");
   await page.route(frontend.origin + "/", async route => {
     const document = await route.fetch({ headers: { ...route.request().headers(), host: "platform.onesa.eu" } });
     await route.fulfill({ response: document });
   });
   await page.route("**/api/v1/auth/onesa/config", route => json(route, {}, 404));
-  await page.route("https://portal.onesa.eu/admin", route => route.fulfill({ contentType: "text/html", body: "<h1>Company Portal fixture</h1>" }));
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Retry sign-in" })).toBeEnabled();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
-  const account = page.getByRole("link", { name: "Open Company Portal" });
-  await expect(account).toHaveAttribute("href", "https://portal.onesa.eu/admin");
-  await account.click();
-  await expect(page.getByRole("heading", { name: "Company Portal fixture" })).toBeVisible();
+  await expect(page.locator('a[href="https://portal.onesa.eu/admin"]')).toHaveCount(0);
 });
 
 test("completion page verifies the session before confirming sign-in", async ({ page }) => {
@@ -135,12 +139,16 @@ test("completion page verifies the session before confirming sign-in", async ({ 
   await expect(page.getByText("Your Onesa sign-in is confirmed.", { exact: false })).toHaveCount(0);
 });
 
-test("partial global logout clears the local private workspace and shows the limitation", async ({ page }) => {
+async function stubChatWorkspace(page: Page) {
   await page.route("**/api/v1/auth/me", route => json(route, user));
   await page.route("**/api/v1/models", route => json(route, { items: [] }));
   for (const path of ["conversations", "knowledge/documents"])
     await page.route(`**/api/v1/${path}{,?*}`, route => json(route, { items: [], total: 0, limit: 20, offset: 0 }));
   await page.route("**/api/v1/documentation/access", route => json(route, { engineering: false }));
+}
+
+test("partial global logout clears the local private workspace and shows the limitation", async ({ page }) => {
+  await stubChatWorkspace(page);
   await page.route("**/api/v1/auth/logout", route => json(route, { error: { code: "identity_logout_incomplete", message: "Signed out here. Central sign-out is unavailable" } }, 503));
   await page.goto("/");
   await page.getByLabel("Message Onesa AI").fill("Private draft to clear");
@@ -150,13 +158,70 @@ test("partial global logout clears the local private workspace and shows the lim
   await expect(page.getByLabel("Message Onesa AI")).toHaveCount(0);
 });
 
+test("browser sign-out hands off to the exact Onesa issuer and product return address", async ({ page, baseURL }) => {
+  const product = new URL("/", baseURL).href;
+  const provider = new URL("https://auth.onesa.eu/oidc/logout");
+  provider.search = new URLSearchParams({ client_id: "synthetic-ai", post_logout_redirect_uri: product }).toString();
+  await stubChatWorkspace(page);
+  await page.route("**/api/v1/auth/logout", route => {
+    expect(route.request().postDataJSON()).toEqual({ browser: true });
+    return json(route, { browser_logout_url: provider.href });
+  });
+  await page.route("https://auth.onesa.eu/oidc/logout?*", route => {
+    expect(route.request().url()).toBe(provider.href);
+    return route.fulfill({ contentType: "text/html", body: "<h1>Synthetic Onesa signed out</h1>" });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sign out of Onesa", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Synthetic Onesa signed out" })).toBeVisible();
+});
+
+test("a foreign browser sign-out response clears the private view without navigation", async ({ page, baseURL }) => {
+  const product = new URL("/", baseURL).href;
+  const wrongProvider = new URL("https://foreign.example.test/oidc/logout");
+  wrongProvider.search = new URLSearchParams({ client_id: "synthetic-ai", post_logout_redirect_uri: product }).toString();
+  await stubChatWorkspace(page);
+  await page.route("**/api/v1/auth/logout", route => json(route, { browser_logout_url: wrongProvider.href }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sign out of Onesa", exact: true }).click();
+  await expect(page).toHaveURL(product);
+  await expect(page.getByRole("alert").filter({ hasText: "Onesa sign-out could not be opened." })).toBeVisible();
+  await expect(page.getByLabel("Message Onesa AI")).toHaveCount(0);
+});
+
 
 for (const path of ["/invitation", "/recovery"]) {
-  test(`legacy bookmark ${path} opens Company Portal account management`, async ({ page }) => {
+  test(`legacy bookmark ${path} opens shared account management`, async ({ page }) => {
     await page.goto(path + "#token=synthetic-legacy-bookmark");
     await expect(page.getByRole("button", { name: "Continue with Onesa" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Account and access" })).toHaveAttribute("href", method.account_url);
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
     expect(new URL(page.url()).hash).toBe("");
+  });
+}
+
+for (const [tier, linkName] of [["user", "Create an Onesa account"], ["admin", "Request administrator access"]]) {
+  test(`${tier} registration returns to AI and retries its code flow for the original page`, async ({ page, baseURL }) => {
+    const resume = new URL("/auth/continue?registration=complete", baseURL || "http://localhost:3100").href;
+    let starts = 0;
+    await page.route("https://account.example.test/register?*", route => {
+      expect(Object.fromEntries(new URL(route.request().url()).searchParams)).toEqual({ product: "ai", platform: "web", audience: tier });
+      return route.fulfill({ contentType: "text/html", body: `<!doctype html><script>location.replace(${JSON.stringify(resume)})</script>` });
+    });
+    await page.route("**/api/v1/auth/onesa/start", route => {
+      expect(route.request().postDataJSON()).toEqual({ next: "/?next=%2Fknowledge", reauthenticate: false });
+      if (++starts === 1)
+        return json(route, { error: { code: "identity_unavailable", message: "Synthetic sign-in outage" } }, 503);
+      return json(route, { authorize_url: "https://account.example.test/authorize?state=synthetic" });
+    });
+    await page.goto("/?next=%2Fknowledge");
+    await Promise.all([
+      page.waitForRequest(request => request.isNavigationRequest() && request.url() === resume),
+      page.getByRole("link", { name: linkName, exact: true }).click(),
+    ]);
+    await expect(page.getByRole("alert").filter({ hasText: "Synthetic sign-in outage" })).toBeVisible();
+    await page.getByRole("button", { name: "Retry sign-in" }).click();
+    await expect(page.getByRole("heading", { name: "Synthetic central account" })).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe("/authorize");
   });
 }

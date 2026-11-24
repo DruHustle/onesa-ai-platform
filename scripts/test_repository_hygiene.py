@@ -1,34 +1,104 @@
-"""Guard the narrow public fixture exception in the publication scanner."""
+"""Regression checks for the publication scanner’s exact fixture rules."""
 
 import unittest
 
-from scripts import repository_hygiene as hygiene
+from repository_hygiene import secrets
 
 
-class PublicationFixtureTests(unittest.TestCase):
-    PATH = "onesa-ai-platform-backend/tests/test_embedding_service.py"
-    FIXTURE = b'        embedding_api_key="synthetic-embedding-key",\n'
+class RepositoryHygieneTests(unittest.TestCase):
+    def test_exact_historical_synthetic_fixture_is_path_scoped(self):
+        path = "onesa-ai-platform-backend/tests/test_embedding_service.py"
+        fixture = b'        embedding_api_key="synthetic-embedding-key",\n'
+        self.assertNotIn("credential-assignment", secrets(fixture, path))
+        self.assertIn("credential-assignment", secrets(fixture, "app/config.py"))
 
-    def test_historical_public_synthetic_value_is_not_a_secret(self):
-        self.assertEqual(hygiene.secrets(self.FIXTURE, self.PATH), [])
+    def test_a_changed_embedding_fixture_is_checked_as_a_credential(self):
+        path = "onesa-ai-platform-backend/tests/test_embedding_service.py"
+        for value in (
+            b"synthetic-embedding-key-not-approved",
+            b"synthetic-embedding-key:unexpected-tail",
+        ):
+            with self.subTest(length=len(value)):
+                assignment = b'embedding_api_key="' + value + b'",\n'
+                self.assertIn("credential-assignment", secrets(assignment, path))
 
-    def test_changed_fixture_still_requires_review(self):
-        changed = b'embedding_api_key="synthetic-embedding-key-not-approved"\n'
-        self.assertIn("credential-assignment", hygiene.secrets(changed, self.PATH))
+    def test_other_long_credentials_remain_detected_in_test_paths(self):
+        credentials = [
+            b'embedding_api_key="real-looking-value-that-is-not-a-test-fixture"',
+            b'embedding_api_key="test-looking-value-that-is-not-a-placeholder"',
+            b'embedding_api_key="example-looking-value-that-is-not-an-example"',
+            b'embedding_api_key="real-value-with-replace-in-the-middle"',
+        ]
+        for credential in credentials:
+            with self.subTest(credential_length=len(credential)):
+                self.assertIn(
+                    "credential-assignment",
+                    secrets(
+                        credential,
+                        "onesa-ai-platform-backend/tests/test_embedding_service.py",
+                    ),
+                )
 
-    def test_fixture_prefix_with_other_data_still_requires_review(self):
-        changed = b'embedding_api_key="synthetic-embedding-key:unexpected-tail",\n'
-        self.assertIn("credential-assignment", hygiene.secrets(changed, self.PATH))
-
-    def test_fixture_literal_in_other_source_still_requires_review(self):
-        other_path = "onesa-ai-platform-backend/app/config.py"
+    def test_high_entropy_credentials_remain_detected_in_test_paths(self):
+        token = bytes(
+            (
+                82,
+                52,
+                110,
+                100,
+                48,
+                109,
+                75,
+                57,
+                86,
+                55,
+                109,
+                50,
+                81,
+                56,
+                112,
+                53,
+                76,
+                49,
+                120,
+                54,
+                67,
+                51,
+                122,
+                48,
+                66,
+                52,
+                110,
+                56,
+                83,
+                50,
+                119,
+                54,
+                89,
+                57,
+            )
+        )
+        credential = b'embedding_api_key="' + token + b'"'
         self.assertIn(
-            "credential-assignment", hygiene.secrets(self.FIXTURE, other_path)
+            "credential-assignment",
+            secrets(
+                credential, "onesa-ai-platform-backend/tests/test_embedding_service.py"
+            ),
         )
 
-    def test_realistic_long_credential_still_requires_review(self):
-        actual = b'embedding_api_key="actualValue1234567890ABCDEFG"\n'
-        self.assertIn("credential-assignment", hygiene.secrets(actual, self.PATH))
+    def test_explicit_replacement_prefixes_remain_ignored(self):
+        for value in (
+            b"replace-with-a-provider-key",
+            b"replace_with_a_random_token",
+            b"replace-if-provider-requires-it",
+            b"replace_if_provider_requires_it",
+        ):
+            credential = b'embedding_api_key="' + value + b'"'
+            with self.subTest(prefix=value[:12]):
+                self.assertNotIn(
+                    "credential-assignment",
+                    secrets(credential, ".env.example"),
+                )
 
 
 if __name__ == "__main__":
