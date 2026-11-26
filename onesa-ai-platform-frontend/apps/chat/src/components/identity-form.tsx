@@ -67,7 +67,7 @@ export default function IdentityForm({ invitation = false }: { invitation?: bool
     finally { if (isCurrent()) { pending.current = null; setBusy(false); } }
   }
   if (!method || method.unavailable || method.enabled) return <main className="auth-shell"><section className="auth-card">
-    <h1>{invitation ? "Your Onesa account" : "Onesa account recovery"}</h1>
+    <h1>{invitation ? "Your account" : "Reset your password"}</h1>
     {method?.enabled && !method.unavailable
       ? <><p>Use Company Portal to manage your account and recover access.</p><OnesaSignIn method={method} next="/settings" /></>
       : <IdentityEntryStatus method={method}/>}

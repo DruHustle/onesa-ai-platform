@@ -47,7 +47,7 @@ export async function beginOnesaSignIn(next: string, reauthenticate = false) {
   const value = await response.json();
   const url = new URL(value.authorize_url);
   if (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
-    throw new Error("Onesa sign-in is unavailable. Please try again.");
+    throw new Error("Sign-in is unavailable. Please try again.");
   window.location.assign(url.href);
 }
 
@@ -65,7 +65,7 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
       setLinking(state === "link_required");
       if (state === "cancelled") setError(de ? "Anmeldung abgebrochen. Du kannst es erneut versuchen." : "Sign-in was cancelled. You can try again.");
       if (state === "unavailable") setError(de ? "Die Anmeldung konnte nicht abgeschlossen werden. Bitte erneut versuchen." : "Sign-in could not finish. Please try again.");
-      if (state === "access_required") setError(de ? "Dein Onesa-Konto hat noch keinen Zugriff auf AI Platform. Bitte deinen Administrator um Zugriff." : "Your Onesa account does not have AI Platform access yet. Ask your administrator to grant access.");
+      if (state === "access_required") setError(de ? "Dein Konto hat noch keinen Zugriff auf AI Platform. Bitte deinen Administrator um Zugriff." : "Your account does not have AI Platform access yet. Ask your administrator to grant access.");
     });
     return () => { active = false; if (timer.current) clearInterval(timer.current); };
   }, [de]);
@@ -124,7 +124,6 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
   }
 
   return <div className="onesa-shared-signin">
-    <p>{de ? "Melde dich im Company Portal an oder erstelle dort dein Onesa-Konto." : "Sign in or create your Onesa account in Company Portal."}</p>
     {linking ? <form onSubmit={link}>
       <h2>{de ? "Bisheriges AI-Konto verbinden" : "Connect your existing AI account"}</h2>
       <p>{de ? "Bestätige dein bisheriges AI-Passwort einmalig. Deine Gespräche und Dateien bleiben deinem Konto zugeordnet." : "Confirm your existing AI password once. Your conversations and files stay with your account."}</p>
@@ -132,8 +131,9 @@ export default function OnesaSignIn({ method, next = "/", preserveDraft = false,
       <label>{de ? "Bisheriges AI-Passwort" : "Existing AI password"}<input name="password" type="password" autoComplete="current-password" required disabled={busy}/></label>
       <button className="send" disabled={busy || method.pending}>{busy ? (de ? "Wird verbunden…" : "Connecting…") : (de ? "Konto verbinden" : "Connect account")}</button>
     </form> : <button className="send" type="button" onClick={start} disabled={busy || method.pending}>
-      {busy ? (de ? "Anmeldung wird bestätigt…" : "Waiting for sign-in…") : (de ? "Mit Onesa fortfahren" : "Continue with Onesa")}
+      {busy ? (de ? "Anmeldung wird bestätigt…" : "Waiting for sign-in…") : (de ? "Anmelden" : "Sign in")}
     </button>}
+    {!linking && !preserveDraft && <p><a href="https://account.onesa.eu/register?product=ai&platform=web">{de ? "Registrieren" : "Sign up"}</a></p>}
     {busy && preserveDraft && <p role="status">{de ? "Schließe die Anmeldung im neuen Fenster ab. Dein Entwurf bleibt hier erhalten." : "Finish signing in in the new window. Your draft stays here."}</p>}
     {error && <p className="error" role="alert">{error}</p>}
     {method.account_url && <p><a href={method.account_url}>{de ? "Konto und Zugriff" : "Account and access"}</a></p>}

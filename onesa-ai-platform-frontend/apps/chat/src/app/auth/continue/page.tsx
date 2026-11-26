@@ -15,7 +15,7 @@ export default function ContinueSignIn() {
       .catch(reason => setError(reason instanceof Error ? reason.message : "Sign-in is unavailable"));
   }, []);
   return <main className="auth-shell"><section className="auth-card">
-    <h1>{de ? "Mit Onesa fortfahren" : "Continue with Onesa"}</h1>
-    {error ? <p role="alert">{error} <a href="/">{de ? "Zurück zur Anmeldung" : "Return to sign in"}</a></p> : <p role="status">{de ? "Onesa-Konto wird geöffnet…" : "Opening your Onesa account…"}</p>}
+    <h1>{de ? "Anmelden" : "Sign in"}</h1>
+    {error ? <p role="alert">{error} <a href="/">{de ? "Zurück zur Anmeldung" : "Return to sign in"}</a></p> : <p role="status">{de ? "Anmeldung wird geöffnet…" : "Opening sign-in…"}</p>}
   </section></main>;
 }

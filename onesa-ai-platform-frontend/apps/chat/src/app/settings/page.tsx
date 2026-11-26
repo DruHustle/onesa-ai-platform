@@ -103,7 +103,7 @@ export default function Settings() {
         setUser(null);
         setSessions(null);
         setNotice(user?.identity_mode === "onesa"
-          ? "Your AI workspace data were deleted. Your shared Onesa account and other applications remain available. Backup retention is handled separately."
+          ? "Your AI workspace data were deleted. Your account and other applications remain available. Backup retention is handled separately."
           : "Your account and live application data were deleted. Backup retention is handled separately.");
         return;
       } else {
@@ -146,12 +146,12 @@ export default function Settings() {
       {user && (
         <>
           {user.identity_mode === "onesa" ? <section className="feature-card">
-            <h2>Your Onesa account</h2><p>Signed in as {user.email}</p>
+            <h2>Your account</h2><p>Signed in as {user.email}</p>
             <p>Manage your profile, password, MFA and application access in one place.</p>
             {identityMethod?.account_url && <p><a href={identityMethod.account_url}>Open account and access</a></p>}
             {user.administrator && identityMethod?.account_url && <p><a href={identityMethod.account_url + "?tab=access"}>Manage access across applications</a></p>}
             <p>Before exporting or deleting data, confirm a recent sign-in. Your current workspace stays open.</p>
-            <a href="/auth/continue?next=/auth/complete&reauthenticate=true" target="_blank" rel="noopener noreferrer">Confirm Onesa sign-in in a new window</a>
+            <a href="/auth/continue?next=/auth/complete&reauthenticate=true" target="_blank" rel="noopener noreferrer">Confirm sign-in in a new window</a>
           </section> : <>
           <form
             className="feature-card"
@@ -281,7 +281,7 @@ export default function Settings() {
             onSubmit={(event) => submit(event, "delete")}
           >
             <h2>{user.identity_mode === "onesa" ? "Delete AI workspace data" : "Delete your account"}</h2>
-            {user.identity_mode === "onesa" && <p>Your shared Onesa account and access to other applications stay available.</p>}
+            {user.identity_mode === "onesa" && <p>Your account and access to other applications stay available.</p>}
             <p>
               This permanently deletes your profile, sessions, conversations,
               documents and their search vectors, tool runs, trips and Industrial investigations from the
