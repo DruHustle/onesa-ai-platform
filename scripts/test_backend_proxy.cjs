@@ -91,6 +91,74 @@ async function identityMethodBootstrap() {
   console.log('Identity method bootstrap: PASS; native/shared rendering capability, explicit legacy404, credential-free transport, malformed/unavailable responses and bounded timeout');
 }
 
+async function nativeTransport() {
+  const token = 'nai_' + 's'.repeat(43);
+  const credential = {origin: 'onesaai://native', authorization: 'Bearer ' + token};
+  const id = '19f22161-4fc9-4e75-a11e-2587a03a1011';
+  context.fetch = async (url, options) => {
+    fetches++; upstream = {url, ...options};
+    return Response.json({ok: true}, {headers: {'set-cookie': 'onesa_session=must-not-reach-native; HttpOnly'}});
+  };
+  for (const [methods, route] of [
+    ['GET', '/auth/me'], ['GET', '/models'], ['GET', '/models/default'],
+    ['GET|POST', '/conversations'], ['GET|PATCH|DELETE', '/conversations/' + id],
+    ['POST', '/conversations/' + id + '/cancel'], ['POST', '/chat/completions'],
+    ['GET|POST', '/knowledge/documents'], ['GET|DELETE', '/knowledge/documents/' + id],
+    ['POST', '/knowledge/documents/' + id + '/reindex'], ['POST', '/knowledge/search'],
+    ['GET', '/agents/tools'], ['GET|POST', '/agents/runs'],
+    ['GET', '/agents/runs/' + id], ['POST', '/agents/runs/' + id + '/cancel'],
+    ['GET|POST', '/travel/trips'], ['GET|PUT|DELETE', '/travel/trips/' + id],
+    ['POST', '/auth/native/logout'],
+  ]) for (const method of methods.split('|')) {
+    const count = fetches;
+    const response = await exported.proxy(new Request('https://platform.example.test/api/v1' + route, {method, headers: credential}));
+    assert.equal(response.status, 200, method + ' ' + route);
+    assert.equal(fetches, count + 1);
+    assert.equal(upstream.headers.get('origin'), 'onesaai://native');
+    assert.equal(upstream.headers.get('authorization'), 'Bearer ' + token);
+    assert.equal(upstream.headers.get('cookie'), null);
+    assert.equal(upstream.headers.get('x-csrf-token'), null);
+    assert.equal(upstream.redirect, 'manual');
+    assert.equal(response.headers.get('set-cookie'), null, 'Native API cannot install browser authority');
+  }
+  for (const route of ['start', 'token']) {
+    assert.equal((await exported.proxy(new Request('https://platform.example.test/api/v1/auth/native/' + route,
+      {method: 'POST', headers: {origin: 'onesaai://native'}}))).status, 200);
+    assert.equal(upstream.headers.get('authorization'), null);
+  }
+  for (const change of [
+    {origin: 'https://platform.example.test'}, {origin: 'https://external.example.test'},
+    {origin: 'null'}, {origin: ''}, {cookie: ''}, {cookie: 'onesa_session=synthetic'},
+    {'x-csrf-token': ''}, {'sec-fetch-site': 'same-origin'}, {'sec-fetch-site': 'cross-site'},
+  ]) {
+    const count = fetches;
+    const response = await exported.proxy(new Request('https://platform.example.test/api/v1/auth/me',
+      {headers: {...credential, ...change}}));
+    assert.equal(response.status, 403);
+    assert.equal(fetches, count, 'Mixed/native browser credentials are rejected before transport');
+  }
+  for (const [method, route] of [
+    ['GET', '/auth/sessions'], ['POST', '/auth/refresh'], ['POST', '/auth/logout'],
+    ['GET', '/auth/native/requests/' + id], ['POST', '/auth/native/requests/' + id + '/approve'],
+    ['POST', '/inference/completions'], ['GET', '/documentation/access'],
+    ['GET', '/industrial/investigations'], ['GET', '/twins/assets'],
+    ['GET', '/cybersecurity/findings'], ['OPTIONS', '/models'],
+    ['POST', '/travel/trips/' + id], ['GET', '/conversations/' + id + '/extra'],
+  ]) {
+    const count = fetches;
+    assert.equal((await exported.proxy(new Request('https://platform.example.test/api/v1' + route,
+      {method, headers: credential}))).status, 403);
+    assert.equal(fetches, count, 'Native transport has no generic authenticated API access');
+  }
+  context.fetch = async () => new Response(null, {status: 307, headers: {location: '/api/v1/auth/me'}});
+  assert.equal((await exported.proxy(new Request('https://platform.example.test/api/v1/models',
+    {headers: credential}))).status, 503);
+  context.fetch = async () => Response.json({error: {code: 'unauthorized'}}, {status: 401});
+  assert.equal((await exported.proxy(new Request('https://platform.example.test/api/v1/auth/me',
+    {headers: credential}))).status, 401, 'The proxy never confers identity on a native origin');
+  console.log('Native proxy boundary: PASS; exact product routes, issuer-authorized me, native cookie isolation, mixed/browser rejection and redirects refused');
+}
+
 async function main() {
   const response = await exported.proxy(new Request('https://preview.example.invalid/api/v1/auth/me', {
     headers: {
@@ -239,6 +307,47 @@ async function main() {
   assert.equal(unavailable.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(fetches, count + 2);
   console.log('Proxy credential/session boundary: PASS; 6 absent-session, 6 delegated-cookie, 8 unchanged-route, 4 hosted credential denials, configuration, sleeping-upstream and failed-session cases');
+  await legacyMobileCallbackBoundary();
+  await nativeTransport();
   await identityMethodBootstrap();
+}
+
+async function legacyMobileCallbackBoundary() {
+  const state = 'native_' + 'a'.repeat(43);
+  const callback = 'onesaai://account/callback?state=' + state;
+  const path = '/api/v1/auth/onesa/callback';
+  let destination = callback;
+  let status = 303;
+  context.fetch = async () => {
+    fetches++;
+    return new Response(null, {status, headers: {location: destination}});
+  };
+  const request = (route = path, method = 'GET', headers = {}) =>
+    new Request('https://preview.example.invalid' + route, {method, headers});
+  const valid = await exported.proxy(request());
+  assert.equal(valid.status, 303);
+  assert.equal(valid.headers.get('location'), callback, 'Existing browser-mediated mobile callback remains exact');
+  assert.equal(valid.headers.get('cache-control'), 'no-store');
+  for (const invalid of [
+    'onesaai://other/callback?state=' + state,
+    'onesaai://account/other?state=' + state,
+    'onesaai://user@account/callback?state=' + state,
+    callback + '#unexpected',
+    callback + '&state=' + state,
+    'onesaai://account/callback?state=invalid',
+  ]) {
+    destination = invalid;
+    assert.equal((await exported.proxy(request())).status, 503);
+  }
+  destination = callback;
+  assert.equal((await exported.proxy(request('/api/v1/models'))).status, 503);
+  assert.equal((await exported.proxy(request(path, 'POST'))).status, 503);
+  status = 302;
+  assert.equal((await exported.proxy(request())).status, 503);
+  status = 303;
+  const priorFetches = fetches;
+  assert.equal((await exported.proxy(request(path, 'GET', {origin: 'onesaai://native'}))).status, 403);
+  assert.equal(fetches, priorFetches, 'New native transport cannot enter the browser callback path');
+  console.log('Legacy mobile callback boundary: PASS; exact browser callback preserved, invalid redirects and new native transport rejected');
 }
 main().catch(error => {console.error(error);process.exitCode=1;});

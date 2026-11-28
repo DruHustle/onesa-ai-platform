@@ -1,6 +1,6 @@
 # Implemented AI PostgreSQL schema
 
-Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261104_email_presentation. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
+Generated from current SQLAlchemy PostgreSQL types and the Alembic revision 20261128_native_sessions. Schema metadata is not live database data. Foreign keys do not replace user ownership checks. ORM defaults and server defaults remain distinct.
 
 ## access_grants
 
@@ -486,6 +486,39 @@ Constraints: ["ForeignKeyConstraint: conversation_id", "PrimaryKeyConstraint: id
 Indexes: [{"name": "ix_model_leases_expires_at", "columns": ["expires_at"], "unique": false}, {"name": "ix_model_leases_user_id", "columns": ["user_id"], "unique": false}]
 
 Constraints: ["ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id"]
+
+## native_auth_requests
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| platform | VARCHAR(10) | False |  |
+| code_challenge | VARCHAR(43) | False |  |
+| state | VARCHAR(128) | False |  |
+| expires_at | TIMESTAMP WITH TIME ZONE | False |  |
+| user_id | UUID | True | FK users.id / CASCADE |
+| browser_session_id | UUID | True | FK auth_sessions.id / CASCADE |
+| approved_at | TIMESTAMP WITH TIME ZONE | True |  |
+| code_hash | VARCHAR(64) | True | unique |
+| code_expires_at | TIMESTAMP WITH TIME ZONE | True |  |
+| consumed_at | TIMESTAMP WITH TIME ZONE | True |  |
+| id | UUID | False | primary key; ORM default |
+| created_at | TIMESTAMP WITH TIME ZONE | False | ORM default |
+
+Indexes: [{"name": "ix_native_auth_requests_expires_at", "columns": ["expires_at"], "unique": false}]
+
+Constraints: ["(code_hash IS NULL AND code_expires_at IS NULL AND approved_at IS NULL) OR (code_hash IS NOT NULL AND code_expires_at IS NOT NULL AND approved_at IS NOT NULL AND user_id IS NOT NULL)", "(user_id IS NULL) = (browser_session_id IS NULL)", "ForeignKeyConstraint: browser_session_id", "ForeignKeyConstraint: user_id", "PrimaryKeyConstraint: id", "UniqueConstraint: code_hash", "consumed_at IS NULL OR approved_at IS NOT NULL", "platform IN ('ios', 'android')"]
+
+## native_sessions
+
+| Field | PostgreSQL type | Nullable | Constraints / relationship |
+| --- | --- | --- | --- |
+| session_id | UUID | False | primary key; FK auth_sessions.id / CASCADE |
+| token_hash | VARCHAR(64) | False | unique |
+| platform | VARCHAR(10) | False |  |
+
+Indexes: []
+
+Constraints: ["ForeignKeyConstraint: session_id", "PrimaryKeyConstraint: session_id", "UniqueConstraint: token_hash", "platform IN ('ios', 'android')"]
 
 ## rate_buckets
 

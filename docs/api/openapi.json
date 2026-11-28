@@ -347,6 +347,203 @@
         ]
       }
     },
+    "/api/v1/auth/native/start": {
+      "post": {
+        "tags": [
+          "native authentication"
+        ],
+        "summary": "Start",
+        "operationId": "start_api_v1_auth_native_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__native_auth__Start"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__native_auth__Authorization"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/native/requests/{identifier}": {
+      "get": {
+        "tags": [
+          "native authentication"
+        ],
+        "summary": "Details",
+        "operationId": "details_api_v1_auth_native_requests__identifier__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Consent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/native/requests/{identifier}/approve": {
+      "post": {
+        "tags": [
+          "native authentication"
+        ],
+        "summary": "Approve",
+        "operationId": "approve_api_v1_auth_native_requests__identifier__approve_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Approved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/native/token": {
+      "post": {
+        "tags": [
+          "native authentication"
+        ],
+        "summary": "Exchange",
+        "operationId": "exchange_api_v1_auth_native_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Exchange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NativeToken"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/native/logout": {
+      "post": {
+        "tags": [
+          "native authentication"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_native_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "NativeSession": []
+          }
+        ]
+      }
+    },
     "/api/v1/admin/invitations": {
       "post": {
         "tags": [
@@ -635,7 +832,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Authorization"
+                  "$ref": "#/components/schemas/app__shared_identity__Authorization"
                 }
               }
             }
@@ -7871,6 +8068,20 @@
         ],
         "title": "AgentRunOut"
       },
+      "Approved": {
+        "properties": {
+          "redirect_url": {
+            "type": "string",
+            "title": "Redirect Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "redirect_url"
+        ],
+        "title": "Approved"
+      },
       "AssetChange": {
         "properties": {
           "expected_revision": {
@@ -7911,20 +8122,6 @@
           "stage"
         ],
         "title": "AssetChange"
-      },
-      "Authorization": {
-        "properties": {
-          "authorize_url": {
-            "type": "string",
-            "title": "Authorize Url"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "authorize_url"
-        ],
-        "title": "Authorization"
       },
       "BaselineCreate": {
         "properties": {
@@ -8331,6 +8528,56 @@
           "name"
         ],
         "title": "Component"
+      },
+      "Consent": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "app_name": {
+            "type": "string",
+            "const": "Onesa AI Platform",
+            "title": "App Name",
+            "default": "Onesa AI Platform"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "title": "Platform"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "consumed"
+            ],
+            "title": "Status"
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeUser"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "platform",
+          "expires_at",
+          "status",
+          "user"
+        ],
+        "title": "Consent"
       },
       "ConsumerCompletion": {
         "properties": {
@@ -9178,6 +9425,27 @@
           "expected_sha256"
         ],
         "title": "EvidenceRequest"
+      },
+      "Exchange": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "title": "Code"
+          },
+          "code_verifier": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~-]{43,128}$",
+            "title": "Code Verifier"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "code_verifier"
+        ],
+        "title": "Exchange"
       },
       "ExplodeMotion": {
         "properties": {
@@ -10439,6 +10707,30 @@
           "real_inference"
         ],
         "title": "ModelOut"
+      },
+      "NativeToken": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeUser"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_at",
+          "user"
+        ],
+        "title": "NativeToken"
       },
       "NoteCreate": {
         "properties": {
@@ -11980,6 +12272,70 @@
         ],
         "title": "SourceCreate"
       },
+      "app__native_auth__Authorization": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "authorize_url": {
+            "type": "string",
+            "title": "Authorize Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "authorize_url"
+        ],
+        "title": "Authorization"
+      },
+      "app__native_auth__Start": {
+        "properties": {
+          "code_challenge": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "title": "Code Challenge"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43,128}$",
+            "title": "State"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "title": "Platform"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code_challenge",
+          "state",
+          "platform"
+        ],
+        "title": "Start"
+      },
+      "app__shared_identity__Authorization": {
+        "properties": {
+          "authorize_url": {
+            "type": "string",
+            "title": "Authorize Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authorize_url"
+        ],
+        "title": "Authorization"
+      },
       "app__shared_identity__Start": {
         "properties": {
           "next": {
@@ -12146,6 +12502,10 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "onesa_session"
+      },
+      "NativeSession": {
+        "type": "http",
+        "scheme": "bearer"
       },
       "APIKeyHeader": {
         "type": "apiKey",

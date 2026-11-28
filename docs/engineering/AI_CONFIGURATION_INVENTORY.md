@@ -1,5 +1,16 @@
 # AI configuration inventory and provisioning delta — 2026-10-10
 
+## Installed AI app configuration — 2026-11-28 candidate
+
+`ONESA_NATIVE_CLIENT_ENABLED=false` is a server-only default. Enabling it requires
+the additive `20261128_native_sessions` schema and existing owner-controlled
+exact-source qualification. It adds no provider, browser secret or CORS origin.
+The fixed native origin is `onesaai://native`; the only callback is
+`onesaai://auth/callback`. Browser consent stays at the configured canonical
+`ONESA_PUBLIC_ORIGIN`. See [native sign-in](SHARED_IDENTITY.md#installed-ai-app-sign-in--source-candidate-2026-11-28)
+for code expiry, secure storage, revocation and the API scope. Flag-off browser
+deployments remain compatible with the earlier accepted schema revisions.
+
 ## Shared account configuration — 2026-11-02 candidate
 
 `ONESA_IDENTITY_ENABLED=false` retains the existing native flow. Enabling shared

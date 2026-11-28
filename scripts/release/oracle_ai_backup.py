@@ -63,6 +63,7 @@ def snapshot_revision(sql):
             "20261026_cybersecurity",
             "20261102_shared_identity",
             "20261104_email_presentation",
+            "20261128_native_sessions",
         ],
         "UNKNOWN_OR_INCOMPLETE_MIGRATION_HEAD",
     )

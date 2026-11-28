@@ -436,7 +436,7 @@ def bound_environments(binding, plan):
         and plan.get("expected_schema_revision")
         == plan.get("migration_revision")
         == old.get("compatible_schema_revision")
-        == r.IDENTITY_SCHEMA
+        and plan.get("migration_revision") in r.IDENTITY_SCHEMAS
         and old.get("retain_additive_schema_and_files") is True
         and r.profiles.same_product(binding, retained)
         and r.profiles.kind(retained) == "api"
@@ -615,7 +615,7 @@ def check(folder, binding, operation, plan):
             "candidate_image": binding["artifact_digest"],
             "rollback_image": old["image"],
             "retained_source": old["binding"]["candidate_commit"],
-            "schema_revision": r.IDENTITY_SCHEMA,
+            "schema_revision": plan["migration_revision"],
             "network": "none",
             "production_writes": 0,
             "automatic_retry": False,
@@ -656,6 +656,11 @@ def check(folder, binding, operation, plan):
             "identity_transactions",
             *TABLES,
             *CYBER_TABLES,
+            *(
+                ["native_auth_requests", "native_sessions"]
+                if plan["migration_revision"] == r.NATIVE_SESSION_SCHEMA
+                else []
+            ),
         }
     )
 
@@ -692,7 +697,7 @@ def check(folder, binding, operation, plan):
         r.sync_directory(folder)
         sql = schema.run(
             "alembic",
-            ["upgrade", r.IDENTITY_SCHEMA, "--sql"],
+            ["upgrade", plan["migration_revision"], "--sql"],
             environment=[
                 "HOME=/tmp",
                 "ONESA_DATABASE_URL=postgresql+psycopg://onesa_restore:synthetic@localhost/onesa_identity_rollback_test",
@@ -813,7 +818,7 @@ def check(folder, binding, operation, plan):
             "candidate_image": binding["artifact_digest"],
             "rollback_image": old["image"],
             "retained_source": old["binding"]["candidate_commit"],
-            "schema_revision": r.IDENTITY_SCHEMA,
+            "schema_revision": plan["migration_revision"],
             "synthetic_database_restore": "PASS",
             "environments": environments,
             "production_writes": 0,

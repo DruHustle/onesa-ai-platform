@@ -62,6 +62,44 @@ class IdentitySession(Base):
     encrypted_token: Mapped[str] = mapped_column(String(8192))
 
 
+class NativeSession(Base):
+    """A native bearer is separate from the unissued cookie authority it backs."""
+
+    __tablename__ = "native_sessions"
+    session_id: Mapped[UUID] = mapped_column(
+        ForeignKey("auth_sessions.id", ondelete="CASCADE"), primary_key=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    platform: Mapped[str] = mapped_column(String(10))
+    __table_args__ = (CheckConstraint("platform IN ('ios', 'android')"),)
+
+
+class NativeAuthRequest(Record):
+    __tablename__ = "native_auth_requests"
+    platform: Mapped[str] = mapped_column(String(10))
+    code_challenge: Mapped[str] = mapped_column(String(43))
+    state: Mapped[str] = mapped_column(String(128))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    browser_session_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("auth_sessions.id", ondelete="CASCADE")
+    )
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    code_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
+    code_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    __table_args__ = (
+        CheckConstraint("platform IN ('ios', 'android')"),
+        CheckConstraint("(user_id IS NULL) = (browser_session_id IS NULL)"),
+        CheckConstraint(
+            "(code_hash IS NULL AND code_expires_at IS NULL AND approved_at IS NULL) OR "
+            "(code_hash IS NOT NULL AND code_expires_at IS NOT NULL "
+            "AND approved_at IS NOT NULL AND user_id IS NOT NULL)"
+        ),
+        CheckConstraint("consumed_at IS NULL OR approved_at IS NOT NULL"),
+    )
+
+
 class SharedIdentity(Record):
     __tablename__ = "shared_identities"
     issuer: Mapped[str] = mapped_column(String(1000))

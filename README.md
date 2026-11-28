@@ -182,6 +182,8 @@ are implemented; other workspace copy remains English and is not claimed fully t
 | Location | Responsibility |
 | --- | --- |
 | `onesa-ai-platform-frontend/apps/chat` | Next.js Chat/Work/Plugins/Knowledge/Agents/Travel workspace |
+| `onesa-ai-platform-frontend/apps/mobile` | Native iOS/Android Chat, Knowledge, Agents and Travel release candidate |
+| `onesa-ai-platform-frontend/mobile` | Retained earlier native prototype and its cookie-based identity checks |
 | `onesa-ai-platform-frontend/apps/docs` | Separately classified public/internal Docusaurus builds |
 | `onesa-ai-platform-frontend/packages/api-client` | Generated contracts and bounded SSE transport |
 | `onesa-ai-platform-backend` | FastAPI, Alembic, tests and optional model tooling |
@@ -190,6 +192,10 @@ are implemented; other workspace copy remains English and is not claimed fully t
 
 This is the independent `DruHustle/onesa-ai-platform` Git repository.
 Frontend/backend builds use their own contexts; builds do not import sibling source.
+
+## Native iOS and Android projects
+
+The [native project](onesa-ai-platform-frontend/apps/mobile/README.md) contains React Native screens, reproducible Xcode/Gradle project generation and credential-free build checks. System-browser Onesa consent and a PKCE-bound native session preserve existing account authority. The additive native server bridge remains disabled until the existing backend/frontend release process qualifies it. The new candidate retains the existing `eu.onesa.aiplatform` application identity and `onesaai` callback scheme. The earlier prototype remains available at `onesa-ai-platform-frontend/mobile`; the protected internal release workflow selects `apps/mobile`. This source addition does not claim a signed store build or production activation.
 
 ## Local quickstart
 

@@ -61,7 +61,10 @@ IDENTITY_KEYS = frozenset(
 )
 IDENTITY_SCHEMA = "20261102_shared_identity"
 MAIL_PRESENTATION_SCHEMA = "20261104_email_presentation"
-IDENTITY_SCHEMAS = frozenset({IDENTITY_SCHEMA, MAIL_PRESENTATION_SCHEMA})
+NATIVE_SESSION_SCHEMA = "20261128_native_sessions"
+IDENTITY_SCHEMAS = frozenset(
+    {IDENTITY_SCHEMA, MAIL_PRESENTATION_SCHEMA, NATIVE_SESSION_SCHEMA}
+)
 IDENTITY_CHECKS = frozenset(
     {
         "shared_identity_pkce",
@@ -2614,7 +2617,7 @@ from alembic import command
 from urllib.parse import urlsplit
 request=json.load(sys.stdin)
 target=request.get('target_revision','20261025_twins')
-identity_targets=['20261102_shared_identity','20261104_email_presentation']
+identity_targets=['20261102_shared_identity','20261104_email_presentation','20261128_native_sessions']
 assert target in ['20261025_twins','20261026_cybersecurity']+identity_targets
 role=urlsplit(request['runtime']).username
 assert re.fullmatch('[a-z_][a-z0-9_]{0,62}',role)
@@ -2640,6 +2643,7 @@ with engine.begin() as connection:
  tables=['industrial_investigations','twin_files','twin_templates','twin_assets','twin_models','twin_notes','twin_sources','twin_readings','twin_events']
  if target in ['20261026_cybersecurity']+identity_targets:tables+=['cyber_assets','cyber_sources','cyber_mappings','cyber_policies','cyber_baselines','cyber_events','cyber_findings','cyber_results','cyber_investigations','cyber_actions','cyber_reports','cyber_summaries']
  if target in identity_targets:tables+=['identity_sessions','identity_transactions','shared_identities']
+ if target == '20261128_native_sessions':tables+=['native_auth_requests','native_sessions']
  connection.execute(text('GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE '+','.join('public.'+table for table in tables)+' TO "'+role+'"'))
  assert not connection.scalar(text("SELECT has_schema_privilege(:role,'public','CREATE') OR has_table_privilege(:role,'alembic_version','INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')"),{'role':role})
  assert connection.scalar(text('SELECT version_num FROM alembic_version'))==target
@@ -2696,7 +2700,9 @@ def migrate(binding, env, operation, plan):
             "migration_revision": plan["migration_revision"],
             "runtime_DDL_granted": False,
             "runtime_new_tables_DML_granted": (
-                24
+                26
+                if plan["migration_revision"] == NATIVE_SESSION_SCHEMA
+                else 24
                 if plan["migration_revision"] in IDENTITY_SCHEMAS
                 else 21
                 if plan["migration_revision"] == "20261026_cybersecurity"

@@ -166,7 +166,11 @@ class IdentityReleaseTests(unittest.TestCase):
     def test_mail_schema_requires_exact_plan_and_preserves_runtime_identity(self):
         binding, plan, runtimes, _ = fixture()
         values = runtimes["staging"]
-        for schema in [r.IDENTITY_SCHEMA, r.MAIL_PRESENTATION_SCHEMA]:
+        for schema in [
+            r.IDENTITY_SCHEMA,
+            r.MAIL_PRESENTATION_SCHEMA,
+            r.NATIVE_SESSION_SCHEMA,
+        ]:
             candidate = {
                 **plan,
                 "migration_revision": schema,
@@ -179,6 +183,7 @@ class IdentityReleaseTests(unittest.TestCase):
             (r.MAIL_PRESENTATION_SCHEMA, r.IDENTITY_SCHEMA),
             (r.IDENTITY_SCHEMA, r.MAIL_PRESENTATION_SCHEMA),
             ("unknown", "unknown"),
+            (r.NATIVE_SESSION_SCHEMA, r.MAIL_PRESENTATION_SCHEMA),
         ]:
             candidate = {
                 **plan,
@@ -464,6 +469,33 @@ class IdentityReleaseTests(unittest.TestCase):
                 )
                 with self.subTest(grants=grants), self.assertRaises(r.Refused):
                     r.migrate(binding, "staging", "ignored-in-this-pure-adapter", plan)
+
+    def test_native_schema_requires_exact_twenty_six_table_grants(self):
+        binding, plan, _, _ = fixture()
+        plan["migration_revision"] = plan["expected_schema_revision"] = (
+            r.NATIVE_SESSION_SCHEMA
+        )
+        runtime = {
+            "ONESA_DATABASE_URL": "postgresql://synthetic:synthetic@example.test/onesa"
+        }
+        response = {
+            "migration_revision": r.NATIVE_SESSION_SCHEMA,
+            "runtime_DDL_granted": False,
+            "runtime_new_tables_DML_granted": 26,
+        }
+        with (
+            patch.object(r, "runtime_values", return_value=runtime),
+            patch.object(r, "docker", return_value=r.canonical(response)) as docker,
+        ):
+            self.assertEqual(r.migrate(binding, "staging", "synthetic", plan), response)
+            request = json.loads(docker.call_args.kwargs["data"])
+            self.assertEqual(request["target_revision"], r.NATIVE_SESSION_SCHEMA)
+            for grants in [9, 21, 24, 25, 27]:
+                docker.return_value = r.canonical(
+                    {**response, "runtime_new_tables_DML_granted": grants}
+                )
+                with self.subTest(grants=grants), self.assertRaises(r.Refused):
+                    r.migrate(binding, "staging", "synthetic", plan)
 
     def test_new_schema_rollback_requires_fresh_proof_for_both_native_configurations(
         self,

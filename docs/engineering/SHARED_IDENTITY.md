@@ -1,5 +1,56 @@
 # Shared Onesa account — source candidate, 2026-11-02
 
+## Installed AI app sign-in — source candidate, 2026-11-28
+
+`ONESA_NATIVE_CLIENT_ENABLED=false` is the default. The additive
+`20261128_native_sessions` migration and exact-source owner qualification are
+required before enabling the installed app. Existing browser deployments keep
+their current readiness compatibility when this flag is off. Adding the schema
+to the owner migration allowlist does not approve a configuration change: the
+existing exact schema, retained-image restore, runtime role, source and owner
+release checks still apply.
+
+The Expo app sends `Origin: onesaai://native`, omits cookies, refuses redirects,
+and stores a short-lived opaque native bearer in platform secure storage. It
+starts `POST /api/v1/auth/native/start` with platform, a random state and an S256
+PKCE challenge. Only the canonical web origin's `/auth/native?request=<uuid>`
+consent page is returned. Reading consent requires browser session and CSRF
+proof and binds the displayed account and exact browser session. Explicit
+approval revalidates that same authority and returns a one-use code through the
+fixed `onesaai://auth/callback` destination. Pending requests last five minutes;
+approved codes last at most sixty seconds. No arbitrary callback is accepted.
+
+`POST /api/v1/auth/native/token` checks the original verifier, revalidates the
+approving browser's current local and central authority, and atomically consumes
+the code. Concurrent exchanges can issue only one session. The bearer hash is
+stored in a separate `native_sessions` row linked to a dedicated `auth_sessions`
+authority row whose cookie and CSRF preimages are never issued. The server copies
+the encrypted central binding only after validation; native clients receive no
+central token or browser cookie. Session expiry is capped by the approving
+browser, issuer and configured session lifetime. Managed issuer sessions retain
+the signed token pair's shorter expiry and historical account mapping; remote
+issuer validation keeps an unconsumed, unexpired code retryable during a temporary
+outage. Explicit rejection revokes the approving authority. An uncertain
+successful exchange requires a new sign-in.
+
+Native requests use the existing ownership, eligibility, configured issuer checks,
+capacity admission, stream cancellation and final persistence fences. The exact
+method/path allowlist covers identity readback and the existing Chat, Knowledge,
+Agents and Travel APIs. Account administration, browser refresh, shared identity
+management, industrial, digital twin, cybersecurity and documentation APIs are
+excluded. Native origin alone grants no access; browser and native credentials
+cannot substitute for or accompany each other. No CORS exception is introduced.
+The native Agents endpoint uses only the default local computation tool registry;
+crafted requests cannot invoke optional Knowledge, industrial or cybersecurity
+evidence tools through an otherwise permitted route. Existing browser tool policy
+remains intact; native Knowledge remains available through its own reviewed APIs.
+
+`POST /api/v1/auth/native/logout` revokes only that native authority and remains
+available during an issuer outage. Existing browser session controls revoke its
+linked authority too. Native logout does not claim central sign-out or revoke a
+different device. Native feature activation, signing, physical-device acceptance
+and store distribution remain separate exact-source release gates.
+
 This source adds one Company Portal identity for AI Platform, Drone and Robot.
 It is disabled by default. A source merge is not a hosted activation record: the
 existing owner-controlled dev → staging → main release, current deployment

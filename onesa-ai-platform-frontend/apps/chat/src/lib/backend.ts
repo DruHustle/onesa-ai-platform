@@ -2,11 +2,43 @@ import "./server/tls-trust";
 // Server-only same-origin BFF; the destination is operator configuration.
 import "server-only";
 
+const nativeOrigin = "onesaai://native";
+const nativeUUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const nativeRoutes: [string, string][] = [
+  ["GET", "/api/v1/auth/me"],
+  ["POST", "/api/v1/auth/native/(?:start|token|logout)"],
+  ["GET", "/api/v1/models(?:/[A-Za-z0-9_.-]{1,80})?"],
+  ["GET|POST", "/api/v1/conversations"],
+  ["GET|PATCH|DELETE", `/api/v1/conversations/${nativeUUID}`],
+  ["POST", `/api/v1/conversations/${nativeUUID}/cancel`],
+  ["POST", "/api/v1/chat/completions"],
+  ["GET|POST", "/api/v1/knowledge/documents"],
+  ["GET|DELETE", `/api/v1/knowledge/documents/${nativeUUID}`],
+  ["POST", `/api/v1/knowledge/documents/${nativeUUID}/reindex`],
+  ["POST", "/api/v1/knowledge/search"],
+  ["GET", "/api/v1/agents/tools"],
+  ["GET|POST", "/api/v1/agents/runs"],
+  ["GET", `/api/v1/agents/runs/${nativeUUID}`],
+  ["POST", `/api/v1/agents/runs/${nativeUUID}/cancel`],
+  ["GET|POST", "/api/v1/travel/trips"],
+  ["GET|PUT|DELETE", `/api/v1/travel/trips/${nativeUUID}`],
+];
+
 export async function proxy(request: Request): Promise<Response> {
   const incoming = new URL(request.url);
   if (!incoming.pathname.startsWith("/api/v1/") &&
       incoming.pathname !== "/health" && incoming.pathname !== "/ready") {
     return new Response(null, { status: 404 });
+  }
+  const native = request.headers.get("origin") === nativeOrigin ||
+    (request.headers.get("authorization") || "").startsWith("Bearer nai_");
+  if (native && (request.headers.get("origin") !== nativeOrigin ||
+      request.headers.has("cookie") || request.headers.has("x-csrf-token") ||
+      ![null, "none"].includes(request.headers.get("sec-fetch-site")) ||
+      !nativeRoutes.some(([methods, path]) => methods.split("|").includes(request.method) &&
+        new RegExp(`^${path}$`).test(incoming.pathname)))) {
+    return Response.json({ error: { code: "native_route_rejected", message: "Use the native sign-in session for an allowed app route" } },
+      { status: 403, headers: { "cache-control": "no-store" } });
   }
   try {
     const base = new URL(process.env.ONESA_API_URL || "http://127.0.0.1:8000");
@@ -50,11 +82,12 @@ export async function proxy(request: Request): Promise<Response> {
     if (!Number.isFinite(timeout) || timeout < 1 || timeout > 600) {
       throw new Error("Invalid proxy timeout");
     }
-    // The backend authenticates this route only with its fixed, nonempty session cookie.
+    // Cookie requests use the fixed session cookie; native requests must reach
+    // the backend for independent bearer, owner and issuer validation.
     // This negative result avoids waking a sleeping API for signed-out startup; it is not readiness.
     const hasSession = applicationCookies.some(cookie =>
       cookie.startsWith('onesa_session=') && cookie.slice('onesa_session='.length) !== '');
-    if (request.method === 'GET' && incoming.pathname === '/api/v1/auth/me' && !hasSession) {
+    if (!native && request.method === 'GET' && incoming.pathname === '/api/v1/auth/me' && !hasSession) {
       const requestId = crypto.randomUUID();
       return Response.json({error: {code: 'unauthorized', message: 'Sign in to continue', request_id: requestId}}, {
         status: 401,
@@ -77,6 +110,7 @@ export async function proxy(request: Request): Promise<Response> {
     }
     const location = responseHeaders.get('location');
     if (location) {
+      if (native) throw new Error("Native API redirects are not allowed");
       const redirect = new URL(location, base);
       const mobileCallback = incoming.pathname === '/api/v1/auth/onesa/callback' &&
         request.method === 'GET' && upstream.status === 303 &&
@@ -87,16 +121,18 @@ export async function proxy(request: Request): Promise<Response> {
       if (!mobileCallback) responseHeaders.set('location', redirect.pathname + redirect.search + redirect.hash);
     }
     responseHeaders.delete('set-cookie');
-    const allowedResponseCookies = new Set([
-      'onesa_session',
-      'onesa_csrf',
-      'onesa_identity_flow',
-    ]);
-    for (const cookie of upstream.headers.getSetCookie()) {
-      const pair = cookie.split(';', 1)[0];
-      const separator = pair.indexOf('=');
-      const name = separator > 0 ? pair.slice(0, separator).trim() : '';
-      if (allowedResponseCookies.has(name)) responseHeaders.append('set-cookie', cookie);
+    if (!native) {
+      const allowedResponseCookies = new Set([
+        'onesa_session',
+        'onesa_csrf',
+        'onesa_identity_flow',
+      ]);
+      for (const cookie of upstream.headers.getSetCookie()) {
+        const pair = cookie.split(';', 1)[0];
+        const separator = pair.indexOf('=');
+        const name = separator > 0 ? pair.slice(0, separator).trim() : '';
+        if (allowedResponseCookies.has(name)) responseHeaders.append('set-cookie', cookie);
+      }
     }
     responseHeaders.set('cache-control', 'no-store');
     // Forward the stream directly: response-body cancellation closes the upstream stream.

@@ -30,6 +30,7 @@ from app import (
     documentation,
     industrial,
     knowledge,
+    native_auth,
     observability,
     release_identity,
     travel,
@@ -75,6 +76,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
         else travel.ModelItineraryPlanner(model_client)
     )
     api.include_router(auth.router)
+    api.include_router(native_auth.router)
     from app.identity import router as identity_router
 
     api.include_router(identity_router)
@@ -135,6 +137,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
         started = time.monotonic()
         lease_id = None
         try:
+            native_auth.request_guard(request)
             if engine is not None and capacity.applies(request):
                 lease_id = await run_in_threadpool(capacity.begin, request)
             response = await call_next(request)
@@ -208,6 +211,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 revision = db.scalar(text("SELECT version_num FROM alembic_version"))
                 valid = revision in {
                     REQUIRED_SCHEMA_REVISION,
+                    "20261104_email_presentation",
                     "20261102_shared_identity",
                     "20261026_cybersecurity",
                     "20261025_twins",
@@ -217,6 +221,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.industrial_demo_enabled:
                     valid = revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261104_email_presentation",
                         "20261102_shared_identity",
                         "20261026_cybersecurity",
                         "20261025_twins",
@@ -225,6 +230,7 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.digital_twins_enabled:
                     valid = revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261104_email_presentation",
                         "20261102_shared_identity",
                         "20261026_cybersecurity",
                         "20261025_twins",
@@ -232,8 +238,11 @@ def create_app(settings: Settings | None = None, client: ModelClient | None = No
                 if config.identity_enabled:
                     valid = valid and revision in {
                         REQUIRED_SCHEMA_REVISION,
+                        "20261104_email_presentation",
                         "20261102_shared_identity",
                     }
+                if config.native_client_enabled:
+                    valid = valid and revision == native_auth.NATIVE_SCHEMA_REVISION
                 if config.environment in {"staging", "production"}:
                     superuser = db.scalar(
                         text(

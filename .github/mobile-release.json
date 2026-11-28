@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "repository": "DruHustle/onesa-ai-platform",
+  "mobilePath": "onesa-ai-platform-frontend/apps/mobile",
+  "framework": "expo",
+  "appId": "eu.onesa.aiplatform",
+  "scheme": "OnesaAIPlatform",
+  "xcodeKind": "workspace",
+  "xcodeContainer": "ios/OnesaAIPlatform.xcworkspace",
+  "generatedNative": true,
+  "requiredChecks": [
+    "backend",
+    "browser",
+    "changes",
+    "ci-summary",
+    "containers",
+    "documentation",
+    "frontend",
+    "image-security (onesa-ai-platform-backend)",
+    "image-security (onesa-ai-platform-frontend)",
+    "pipeline-security / workflow-security",
+    "publication-hygiene",
+    "tls-acceptance",
+    "Native source and platform bundles",
+    "Android native debug build",
+    "iOS native unsigned simulator build"
+  ]
+}
