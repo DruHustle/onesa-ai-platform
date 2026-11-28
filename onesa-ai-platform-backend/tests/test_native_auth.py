@@ -415,6 +415,27 @@ def test_account_disable_during_issuer_call_cannot_issue_native_authority(
         assert db.scalar(select(func.count()).select_from(NativeSession)) == 0
 
 
+@pytest.mark.parametrize("native_enabled", [False, True])
+def test_unrelated_bearer_retains_existing_cookie_authentication(native_api, native_enabled):
+    native_api.app.state.settings.native_client_enabled = native_enabled
+    owner = native_api.get("/api/v1/auth/me").json()["id"]
+    headers = {"authorization": "Bearer " + "s" * 43}
+    # A collector credential does not select native auth or change cookie owner.
+    response = native_api.get("/api/v1/auth/me", headers=headers)
+    assert response.status_code == 200 and response.json()["id"] == owner
+    visitor = TestClient(native_api.app)
+    visitor.headers["origin"] = native_api.app.state.settings.public_origin
+    visitor.cookies.set("onesa_session", "invalid")
+    assert visitor.get("/api/v1/auth/me", headers=headers).status_code == 401
+    visitor.cookies.clear()
+    assert visitor.get("/api/v1/auth/me", headers=headers).status_code == 401
+    # Declaring native transport still requires an actual native bearer.
+    visitor.headers["origin"] = NATIVE_ORIGIN
+    assert visitor.get("/api/v1/auth/me", headers=headers).status_code == (
+        401 if native_enabled else 404
+    )
+
+
 def test_native_cookie_and_browser_bearer_are_not_interchangeable(native_api):
     mobile, result, _ = exchange(native_api)
     cookie = TestClient(native_api.app)

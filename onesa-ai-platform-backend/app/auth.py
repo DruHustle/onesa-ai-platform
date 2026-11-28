@@ -87,7 +87,9 @@ cookie_scheme = APIKeyCookie(name="onesa_session", auto_error=False)
 def authenticated(
     request: Request, db: DB, token: Annotated[str | None, Depends(cookie_scheme)]
 ) -> tuple[User, AuthSession]:
-    if request.headers.get("authorization") is not None or (
+    # Other product-scoped bearer credentials retain their existing handlers;
+    # only the reserved native token prefix or Origin selects native authority.
+    if request.headers.get("authorization", "").startswith("Bearer nai_") or (
         request.headers.get("origin") == "onesaai://native"
     ):
         from app.native_auth import authenticate_native
