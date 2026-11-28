@@ -109,6 +109,18 @@ production/closed tracks, cancel another review, retry a failed commit, or fall 
 to a public track. A known precommit failure attempts to delete only its owned edit.
 A commit with an unknown response stays explicitly unknown for console inspection.
 
+An edit commit can also submit unrelated Console changes that are ready for review.
+Before every Android or `both` dispatch, inspect this app's Publishing overview and
+confirm there are no unrelated ready-for-review changes and no concurrent Console
+or API writer. Set the false-default `play_console_reviewed` input to true only
+after that fresh observation. The helper checks it before OAuth, provider calls,
+or receipt changes and does not save the acknowledgement in a receipt or reuse a
+repository variable. It also requires `GITHUB_RUN_ATTEMPT=1`: inspect any previous
+outcome and start a new dispatch with a fresh Console observation instead of
+rerunning release jobs. The existing `ERROR_IF_IN_REVIEW` commit behavior remains
+required; the Console observation also covers changes still ready for review.
+These Play checks do not apply to an iOS-only dispatch.
+
 Apple requires approved API access, the existing app and an existing **internal**
 TestFlight group. The helper checks the app's bundle ID and group ownership before
 upload. It validates/uploads with Apple's CLI, waits up to 30 minutes for the exact

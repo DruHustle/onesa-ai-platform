@@ -162,7 +162,23 @@ def release_track(record):
     }
 
 
+def require_play_console_reviewed():
+    # An edit commit can also submit unrelated Console changes ready for review.
+    # This is a fresh operator observation for this dispatch, never a saved flag.
+    require(
+        os.environ.get("PLAY_CONSOLE_REVIEWED") == "true",
+        "Google Play release blocked: play_console_reviewed must be explicitly true after checking "
+        "this app has no unrelated ready-for-review changes or concurrent Console/API writer",
+    )
+    require(
+        os.environ.get("GITHUB_RUN_ATTEMPT") == "1",
+        "Google Play release blocked: GITHUB_RUN_ATTEMPT must be 1; inspect any previous outcome "
+        "and make a new dispatch after a fresh Play Console check instead of re-running jobs",
+    )
+
+
 def upload_google(record, artifact, token, *, call=request):
+    require_play_console_reviewed()
     base = (
         GOOGLE
         + "/androidpublisher/v3/applications/"
@@ -419,6 +435,9 @@ def upload_apple(record, artifact, private):
 
 
 def upload(config, record, platform, work, *, source_digest):
+    if platform == "android":
+        # Refuse before OAuth, provider requests, or marking an upload as started.
+        require_play_console_reviewed()
     artifacts = work / "artifacts"
     receipt_file = artifacts / "receipt.json"
     receipt = json.loads(receipt_file.read_text())

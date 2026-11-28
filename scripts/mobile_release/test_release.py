@@ -319,6 +319,12 @@ class PlayTransactionTests(unittest.TestCase):
         self.fail = None
         self.existing = "16"
         self.wrong_hash = False
+        reviewed = patch.dict(
+            os.environ,
+            {"PLAY_CONSOLE_REVIEWED": "true", "GITHUB_RUN_ATTEMPT": "1"},
+        )
+        reviewed.start()
+        self.addCleanup(reviewed.stop)
 
     def tearDown(self):
         self.directory.cleanup()
@@ -371,6 +377,97 @@ class PlayTransactionTests(unittest.TestCase):
                 ":commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW"
             )
         )
+
+    def prepare_receipt(self):
+        work = Path(self.directory.name)
+        artifacts = work / "artifacts"
+        artifacts.mkdir()
+        self.artifact = artifacts / "upload.aab"
+        self.artifact.write_bytes(b"synthetic-bundle")
+        receipt = {
+            **self.record,
+            "platform": "android",
+            "artifactSha256": release.sha256(self.artifact),
+            "preparedSourceSha256": "a" * 64,
+            "distribution": "signed-not-uploaded",
+        }
+        receipt_file = artifacts / "receipt.json"
+        receipt_file.write_text(json.dumps(receipt))
+        return work, receipt_file
+
+    def test_unreviewed_console_blocks_before_oauth_edit_or_receipt_change(self):
+        work, receipt_file = self.prepare_receipt()
+        before = receipt_file.read_bytes()
+        for value in (None, "", "false", "1", "True", "true "):
+            env = {} if value is None else {"PLAY_CONSOLE_REVIEWED": value}
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, env, clear=True),
+                patch("upload.google_token") as token,
+                patch("upload.request") as provider,
+            ):
+                with self.assertRaisesRegex(ValueError, "play_console_reviewed"):
+                    upload.upload(
+                        {}, self.record, "android", work, source_digest="a" * 64
+                    )
+                with self.assertRaisesRegex(ValueError, "play_console_reviewed"):
+                    upload.upload_google(
+                        self.record, self.artifact, "synthetic", call=self.call
+                    )
+                token.assert_not_called()
+                provider.assert_not_called()
+                self.assertEqual(self.calls, [])
+                self.assertEqual(receipt_file.read_bytes(), before)
+
+    def test_rerun_or_missing_attempt_blocks_before_oauth_edit_or_receipt_change(self):
+        work, receipt_file = self.prepare_receipt()
+        before = receipt_file.read_bytes()
+        for value in (None, "", "0", "01", "2", "true", "1 "):
+            env = {"PLAY_CONSOLE_REVIEWED": "true"}
+            if value is not None:
+                env["GITHUB_RUN_ATTEMPT"] = value
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, env, clear=True),
+                patch("upload.google_token") as token,
+                patch("upload.request") as provider,
+            ):
+                with self.assertRaisesRegex(ValueError, "GITHUB_RUN_ATTEMPT"):
+                    upload.upload(
+                        {}, self.record, "android", work, source_digest="a" * 64
+                    )
+                with self.assertRaisesRegex(ValueError, "GITHUB_RUN_ATTEMPT"):
+                    upload.upload_google(
+                        self.record, self.artifact, "synthetic", call=self.call
+                    )
+                token.assert_not_called()
+                provider.assert_not_called()
+                self.assertEqual(self.calls, [])
+                self.assertEqual(receipt_file.read_bytes(), before)
+
+    def test_fresh_review_allows_one_verified_upload_without_persisting_acknowledgement(
+        self,
+    ):
+        work, receipt_file = self.prepare_receipt()
+        google = upload.upload_google
+        with (
+            patch("upload.google_token", return_value="synthetic") as token,
+            patch(
+                "upload.upload_google",
+                side_effect=lambda record, artifact, access: google(
+                    record, artifact, access, call=self.call
+                ),
+            ) as provider,
+        ):
+            upload.upload({}, self.record, "android", work, source_digest="a" * 64)
+        token.assert_called_once()
+        provider.assert_called_once()
+        receipt = json.loads(receipt_file.read_text())
+        self.assertEqual(receipt["distribution"], "internal-track-committed")
+        self.assertEqual(receipt["artifactSha256"], release.sha256(self.artifact))
+        self.assertNotIn("PLAY_CONSOLE_REVIEWED", receipt)
+        self.assertNotIn("play_console_reviewed", receipt)
+        self.assertEqual(sum(":commit?" in url for _, url, _ in self.calls), 1)
 
     def test_duplicate_build_is_rejected_before_upload_and_owned_edit_deleted(self):
         self.existing = "17"

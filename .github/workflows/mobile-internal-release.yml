@@ -29,6 +29,11 @@ on:
         options: [both, android, ios]
         default: both
         required: true
+      play_console_reviewed:
+        description: Play Console checked for this dispatch; no unrelated ready-for-review changes or concurrent writers
+        type: boolean
+        default: false
+        required: false
 permissions:
   contents: read
   checks: read
@@ -49,6 +54,19 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Require a fresh Google Play Console observation
+        if: github.event_name == 'workflow_dispatch' && (inputs.platform == 'both' || inputs.platform == 'android')
+        env:
+          PLAY_CONSOLE_REVIEWED: ${{ inputs.play_console_reviewed }}
+        run: |
+          if [[ "$GITHUB_RUN_ATTEMPT" != '1' ]]; then
+            echo 'Android release blocked: do not re-run a release. Inspect any previous outcome and make a new dispatch after a fresh Play Console check.' >&2
+            exit 1
+          fi
+          if [[ "$PLAY_CONSOLE_REVIEWED" != 'true' ]]; then
+            echo 'Android release blocked: check this app in Play Console for unrelated ready-for-review changes and concurrent writers, then set play_console_reviewed for this dispatch.' >&2
+            exit 1
+          fi
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24.22.1'
@@ -117,6 +135,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_CONSOLE_REVIEWED: ${{ inputs.play_console_reviewed }}
         run: python3 scripts/mobile_release/release.py upload --platform android --work "$RUNNER_TEMP/onesa-mobile-release"
       - name: Retain only signed bundle and sanitized receipt
         if: always()
