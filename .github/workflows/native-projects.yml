@@ -25,6 +25,7 @@ env:
 jobs:
   source:
     name: Native source and platform bundles
+    if: github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     defaults:
@@ -50,6 +51,7 @@ jobs:
   android:
     name: Android native debug build
     needs: source
+    if: github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 70
     defaults:
@@ -77,6 +79,7 @@ jobs:
   ios:
     name: iOS native unsigned simulator build
     needs: source
+    if: github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true'
     runs-on: macos-26
     timeout-minutes: 70
     defaults:
