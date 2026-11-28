@@ -18,7 +18,15 @@ from sqlalchemy.orm import Session
 
 from app.database import database
 from app.errors import fail
-from app.models import AccessGrant, AuthSession, IdentitySession, RateBucket, User, now
+from app.models import (
+    AccessGrant,
+    AuthSession,
+    IdentitySession,
+    NativeSession,
+    RateBucket,
+    User,
+    now,
+)
 from app.onesa_identity import Identity
 from app.schemas import (
     Credentials,
@@ -79,6 +87,12 @@ cookie_scheme = APIKeyCookie(name="onesa_session", auto_error=False)
 def authenticated(
     request: Request, db: DB, token: Annotated[str | None, Depends(cookie_scheme)]
 ) -> tuple[User, AuthSession]:
+    if request.headers.get("authorization") is not None or (
+        request.headers.get("origin") == "onesaai://native"
+    ):
+        from app.native_auth import authenticate_native
+
+        return authenticate_native(request, db)
     token = token or ""
     row = db.scalar(
         select(AuthSession).where(
@@ -90,6 +104,19 @@ def authenticated(
     user = db.get(User, row.user_id) if row else None
     if row is None or user is None or user.status != "active":
         fail(401, "unauthorized", "Sign in to continue")
+    if request.app.state.settings.native_client_enabled and db.get(NativeSession, row.id):
+        fail(401, "unauthorized", "Sign in to continue")
+    validate_authority(request, db, user, row)
+    if request.method not in {"GET", "HEAD", "OPTIONS"}:
+        origin(request)
+        csrf = request.headers.get("X-CSRF-Token", "")
+        if not csrf or not secrets.compare_digest(digest(csrf), row.csrf_hash):
+            fail(403, "csrf_rejected", "Invalid CSRF token")
+    return user, row
+
+
+def validate_authority(request: Request, db: Session, user: User, row: AuthSession) -> None:
+    """Both transports retain the same live central and local eligibility checks."""
     if request.app.state.settings.identity_enabled:
         from app.shared_identity import authenticate_shared
 
@@ -104,12 +131,6 @@ def authenticated(
         # session. Pre-migration schemas and genuine legacy sessions still work.
         fail(401, "shared_sign_in_required", "Shared sign-in is currently unavailable")
     eligible(request, db, user)
-    if request.method not in {"GET", "HEAD", "OPTIONS"}:
-        origin(request)
-        csrf = request.headers.get("X-CSRF-Token", "")
-        if not csrf or not secrets.compare_digest(digest(csrf), row.csrf_hash):
-            fail(403, "csrf_rejected", "Invalid CSRF token")
-    return user, row
 
 
 Auth = Annotated[tuple[User, AuthSession], Depends(authenticated)]

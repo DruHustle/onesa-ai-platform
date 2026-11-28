@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     auth_peer_rate_limit: int = Field(default=100, ge=1, le=10000)
     registration_mode: Literal["open", "invitation"] = "open"
     identity_enabled: bool = False
+    native_client_enabled: bool = False
     identity_mobile_enabled: bool = False
     # Enable after registering the app root as an allowed Auth0 logout URL.
     identity_browser_logout_enabled: bool = False

@@ -37,4 +37,4 @@ def database(request: Request) -> Iterator[Session]:
         yield db
 
 
-REQUIRED_SCHEMA_REVISION = "20261104_email_presentation"
+REQUIRED_SCHEMA_REVISION = "20261128_native_sessions"

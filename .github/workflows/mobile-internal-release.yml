@@ -1,0 +1,190 @@
+name: Internal mobile store release
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mobile-internal-release.yml'
+      - '.github/mobile-release.json'
+      - 'scripts/mobile_release/**'
+      - 'onesa-ai-platform-frontend/apps/mobile/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mobile-internal-release.yml'
+      - '.github/mobile-release.json'
+      - 'scripts/mobile_release/**'
+      - 'onesa-ai-platform-frontend/apps/mobile/**'
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact reviewed current-main commit (40 lowercase hex characters)
+        type: string
+        required: true
+      build_number:
+        description: Explicit unused positive store build counter; marketing version stays in source
+        type: string
+        required: true
+      platform:
+        description: Internal destination
+        type: choice
+        options: [both, android, ios]
+        default: both
+        required: true
+permissions:
+  contents: read
+  checks: read
+concurrency:
+  group: mobile-internal-${{ github.repository }}
+  cancel-in-progress: false
+env:
+  CI: '1'
+  EXPO_NO_TELEMETRY: '1'
+
+jobs:
+  qualify:
+    name: Native source and release contract
+    if: github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.1'
+      - name: Verify reviewed dispatch source
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+          RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/mobile_release/release.py source --source-sha "$RELEASE_SOURCE_SHA" --build-number "$RELEASE_BUILD_NUMBER"
+      - name: Test native source and credential-free release failures
+        run: bash scripts/mobile_release/build.sh quality
+
+  android:
+    name: Sign and publish Google Play internal bundle
+    needs: qualify
+    if: (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && github.event_name == 'workflow_dispatch' && github.repository == 'DruHustle/onesa-ai-platform' && github.ref == 'refs/heads/main' && (inputs.platform == 'both' || inputs.platform == 'android')
+    environment: mobile-internal
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+      RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+      ANDROID_PLAY_UPLOAD_ALIAS: ${{ vars.ANDROID_PLAY_UPLOAD_ALIAS }}
+      ANDROID_PLAY_UPLOAD_CERT_SHA256: ${{ vars.ANDROID_PLAY_UPLOAD_CERT_SHA256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Recheck exact main source
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/mobile_release/release.py source --source-sha "$RELEASE_SOURCE_SHA" --build-number "$RELEASE_BUILD_NUMBER"
+      - name: Check protected Android input names
+        env:
+          ANDROID_PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_PLAY_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_PLAY_UPLOAD_STORE_PASSWORD }}
+          ANDROID_PLAY_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_PLAY_UPLOAD_KEY_PASSWORD }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: python3 scripts/mobile_release/release.py preflight --platform android
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.1'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Android toolchain and bundle inspector
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" "ndk;27.1.12297006"
+          if [[ '37.0' == '37.0' && ! -e "$ANDROID_HOME/platforms/android-37" ]]; then ln -s android-37.0 "$ANDROID_HOME/platforms/android-37"; fi
+          curl --fail --location --silent --show-error --retry 3 'https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar' -o "$RUNNER_TEMP/bundletool.jar"
+          echo "a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  $RUNNER_TEMP/bundletool.jar" | sha256sum --check -
+          echo "BUNDLETOOL_JAR=$RUNNER_TEMP/bundletool.jar" >> "$GITHUB_ENV"
+      - name: Prepare native source with explicit build counter
+        run: bash scripts/mobile_release/build.sh prepare android "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Compile unsigned release bundle
+        run: bash scripts/mobile_release/build.sh android android "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Sign and verify the existing Play upload identity
+        env:
+          ANDROID_PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_PLAY_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_PLAY_UPLOAD_STORE_PASSWORD }}
+          ANDROID_PLAY_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_PLAY_UPLOAD_KEY_PASSWORD }}
+        run: python3 scripts/mobile_release/release.py sign --platform android --work "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Upload verified bundle to existing internal track
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: python3 scripts/mobile_release/release.py upload --platform android --work "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Retain only signed bundle and sanitized receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: internal-android-${{ github.sha }}-${{ inputs.build_number }}
+          path: ${{ runner.temp }}/onesa-mobile-release/artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove temporary release material
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/onesa-mobile-release" "$RUNNER_TEMP/bundletool.jar"
+
+  ios:
+    name: Sign and publish internal TestFlight build
+    needs: qualify
+    if: (github.event.repository.private == false || vars.ONESA_PRIVATE_HOSTED_VALIDATION_ENABLED == 'true') && github.event_name == 'workflow_dispatch' && github.repository == 'DruHustle/onesa-ai-platform' && github.ref == 'refs/heads/main' && (inputs.platform == 'both' || inputs.platform == 'ios')
+    environment: mobile-internal
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
+      RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      APPLE_DISTRIBUTION_CERT_SHA256: ${{ vars.APPLE_DISTRIBUTION_CERT_SHA256 }}
+      APP_STORE_CONNECT_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_APP_ID: ${{ vars.APP_STORE_CONNECT_APP_ID }}
+      APP_STORE_CONNECT_INTERNAL_GROUP_ID: ${{ vars.APP_STORE_CONNECT_INTERNAL_GROUP_ID }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Recheck exact main source
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/mobile_release/release.py source --source-sha "$RELEASE_SOURCE_SHA" --build-number "$RELEASE_BUILD_NUMBER"
+      - name: Check protected Apple input names
+        env:
+          APPLE_DISTRIBUTION_P12_BASE64: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
+          APPLE_DISTRIBUTION_P12_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: python3 scripts/mobile_release/release.py preflight --platform ios
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.1'
+      - name: Prepare native source and CocoaPods without signing credentials
+        run: bash scripts/mobile_release/build.sh prepare ios "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Archive, export and verify the existing distribution identity
+        env:
+          APPLE_DISTRIBUTION_P12_BASE64: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
+          APPLE_DISTRIBUTION_P12_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_P12_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+        run: python3 scripts/mobile_release/release.py sign --platform ios --work "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Upload and assign the processed build to the existing internal group
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: python3 scripts/mobile_release/release.py upload --platform ios --work "$RUNNER_TEMP/onesa-mobile-release"
+      - name: Retain only signed IPA and sanitized receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: internal-ios-${{ github.sha }}-${{ inputs.build_number }}
+          path: ${{ runner.temp }}/onesa-mobile-release/artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove temporary release material
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/onesa-mobile-release"

@@ -157,6 +157,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/native/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start_api_v1_auth_native_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/native/requests/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Details */
+        get: operations["details_api_v1_auth_native_requests__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/native/requests/{identifier}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_api_v1_auth_native_requests__identifier__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/native/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange */
+        post: operations["exchange_api_v1_auth_native_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/native/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logout */
+        post: operations["logout_api_v1_auth_native_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/invitations": {
         parameters: {
             query?: never;
@@ -1988,6 +2073,11 @@ export interface components {
              */
             created_at: string;
         };
+        /** Approved */
+        Approved: {
+            /** Redirect Url */
+            redirect_url: string;
+        };
         /** AssetChange */
         AssetChange: {
             /** Expected Revision */
@@ -1999,11 +2089,6 @@ export interface components {
             stage: "identity" | "model" | "mapping" | "documents" | "signals" | "preview" | "active";
             /** Model Id */
             model_id?: string | null;
-        };
-        /** Authorization */
-        Authorization: {
-            /** Authorize Url */
-            authorize_url: string;
         };
         /** BaselineCreate */
         BaselineCreate: {
@@ -2183,6 +2268,36 @@ export interface components {
              * @default false
              */
             housing: boolean;
+        };
+        /** Consent */
+        Consent: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * App Name
+             * @default Onesa AI Platform
+             * @constant
+             */
+            app_name: "Onesa AI Platform";
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "ios" | "android";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "consumed";
+            user: components["schemas"]["SafeUser"];
         };
         /** ConsumerCompletion */
         ConsumerCompletion: {
@@ -2533,6 +2648,13 @@ export interface components {
             investigation_id: string;
             /** Expected Sha256 */
             expected_sha256: string;
+        };
+        /** Exchange */
+        Exchange: {
+            /** Code */
+            code: string;
+            /** Code Verifier */
+            code_verifier: string;
         };
         /** ExplodeMotion */
         ExplodeMotion: {
@@ -3068,6 +3190,17 @@ export interface components {
             revision: string | null;
             /** Real Inference */
             real_inference: boolean;
+        };
+        /** NativeToken */
+        NativeToken: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            user: components["schemas"]["SafeUser"];
         };
         /** NoteCreate */
         NoteCreate: {
@@ -3736,6 +3869,33 @@ export interface components {
             /** Review Note */
             review_note: string;
         };
+        /** Authorization */
+        app__native_auth__Authorization: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Authorize Url */
+            authorize_url: string;
+        };
+        /** Start */
+        app__native_auth__Start: {
+            /** Code Challenge */
+            code_challenge: string;
+            /** State */
+            state: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "ios" | "android";
+        };
+        /** Authorization */
+        app__shared_identity__Authorization: {
+            /** Authorize Url */
+            authorize_url: string;
+        };
         /** Start */
         app__shared_identity__Start: {
             /**
@@ -4083,6 +4243,152 @@ export interface operations {
             };
         };
     };
+    start_api_v1_auth_native_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__native_auth__Start"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["app__native_auth__Authorization"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    details_api_v1_auth_native_requests__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Consent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_v1_auth_native_requests__identifier__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Approved"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exchange_api_v1_auth_native_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Exchange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeToken"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_native_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     invite_api_v1_admin_invitations_post: {
         parameters: {
             query?: never;
@@ -4291,7 +4597,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Authorization"];
+                    "application/json": components["schemas"]["app__shared_identity__Authorization"];
                 };
             };
             /** @description Validation Error */

@@ -61,6 +61,10 @@ def scoped_registry(request: Request, user_id: UUID) -> ToolRegistry:
     from app.industrial import owned
     from app.knowledge import Search, retrieve
 
+    if getattr(request.state, "native_session_id", None) is not None:
+        # The installed app has only the reviewed local computation tools.
+        # Its permitted /agents route cannot tunnel into excluded evidence APIs.
+        return registry
     current = ScopedToolRegistry()
     current.tools.update(registry.tools)
 

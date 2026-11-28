@@ -218,7 +218,8 @@ class RollbackCleanupTests(unittest.TestCase):
             "candidate_commit": "d" * 40,
         }
         self.plan = {
-            "rollback": {"binding": retained, "image": retained["artifact_digest"]}
+            "rollback": {"binding": retained, "image": retained["artifact_digest"]},
+            "migration_revision": r.IDENTITY_SCHEMA,
         }
         self.daemon = DockerFixture(
             self.folder, self.binding, self.plan, self.operation
@@ -247,6 +248,24 @@ class RollbackCleanupTests(unittest.TestCase):
 
     def check(self):
         return rollback.check(self.folder, self.binding, self.operation, self.plan)
+
+    def test_native_schema_restore_uses_exact_revision_and_includes_both_auth_tables(
+        self,
+    ):
+        self.plan["migration_revision"] = r.NATIVE_SESSION_SCHEMA
+        result = self.check()
+        self.assertEqual(result["schema_revision"], r.NATIVE_SESSION_SCHEMA)
+        self.assertTrue(
+            any(r.NATIVE_SESSION_SCHEMA in args for args, _ in self.daemon.commands)
+        )
+        for table in ["native_auth_requests", "native_sessions"]:
+            self.assertTrue(
+                any(
+                    ("FROM public." + table + " t;").encode()
+                    in (kwargs.get("data") or b"")
+                    for _, kwargs in self.daemon.commands
+                )
+            )
 
     @property
     def socket(self):

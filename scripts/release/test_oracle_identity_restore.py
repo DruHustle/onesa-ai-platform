@@ -217,6 +217,19 @@ class RollbackTests(unittest.TestCase):
         with self.assertRaisesRegex(r.Refused, "CONFIGURATION_BINDING"):
             rollback.bound_environments(self.binding, self.plan)
 
+    def test_native_schema_rollback_remains_bound_to_exact_expected_revision(self):
+        plan = copy.deepcopy(self.plan)
+        for schema in [r.MAIL_PRESENTATION_SCHEMA, r.NATIVE_SESSION_SCHEMA]:
+            plan["migration_revision"] = plan["expected_schema_revision"] = schema
+            plan["rollback"]["compatible_schema_revision"] = schema
+            self.assertEqual(
+                set(rollback.bound_environments(self.binding, plan)),
+                {"staging", "production"},
+            )
+            plan["rollback"]["compatible_schema_revision"] = r.IDENTITY_SCHEMA
+            with self.assertRaisesRegex(r.Refused, "EXACT_IDENTITY_ROLLBACK_BINDING"):
+                rollback.bound_environments(self.binding, plan)
+
     def test_retained_identity_enable_or_native_flag_changes_refuse_even_if_hash_bound(
         self,
     ):
